@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, ArrowRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 
 const tiles = [
   {
@@ -38,12 +39,17 @@ const pokeLines = [
 
 export default function Hub() {
   const [poke, setPoke] = useState(null);
+  const { speak, speaking } = useSpeechSynthesis();
+  const timerRef = useRef(null);
 
   const handlePoke = () => {
     const line = pokeLines[Math.floor(Math.random() * pokeLines.length)];
-    setPoke({ id: Date.now(), line });
-    setTimeout(() => {
-      setPoke((p) => (p && Date.now() - p.id >= 2400 ? null : p));
+    const id = Date.now();
+    setPoke({ id, line });
+    speak(line);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setPoke((p) => (p && p.id === id ? null : p));
     }, 2500);
   };
 
@@ -57,7 +63,7 @@ export default function Hub() {
             aria-label="Poke the orb"
             className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
           >
-            <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" />
+            <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" speaking={speaking || !!poke} />
           </button>
 
           {poke && (
