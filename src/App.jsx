@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import Hub from '@/pages/Hub';
-import Explore from '@/pages/Explore.jsx';
+import Explore from '@/pages/Explore';
 import Scan from '@/pages/Scan';
 import Collection from '@/pages/Collection';
 import Admin from '@/pages/Admin';
