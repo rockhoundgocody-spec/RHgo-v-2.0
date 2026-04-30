@@ -2,6 +2,9 @@ import React from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Home, Shield, FileCode2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
+import FloatingOracleButton from '@/components/oracle/FloatingOracleButton.jsx';
+import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
 
 const navItems = [
   { to: '/', label: 'Hub', icon: Home },
@@ -22,6 +25,7 @@ export default function Layout() {
   );
 
   return (
+    <OracleProvider>
     <div className="min-h-screen text-foreground">
       {isAdminOrDocs && (
         <header className="sticky top-0 z-40 hud-panel border-b border-hud-cyan/20 px-6 py-3 flex items-center justify-between">
@@ -83,6 +87,10 @@ export default function Layout() {
           ))}
         </nav>
       )}
+
+      <FloatingOracleButton />
+      <OracleOverlay />
     </div>
+    </OracleProvider>
   );
 }

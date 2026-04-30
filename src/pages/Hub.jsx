@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, ArrowRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import { useOracle } from '@/components/oracle/OracleContext.jsx';
 
 const tiles = [
   {
@@ -29,13 +30,20 @@ const tiles = [
 ];
 
 export default function Hub() {
+  const { openOracle } = useOracle();
   return (
     <div className="min-h-screen px-6 pt-12 pb-24 max-w-md mx-auto">
       {/* hero orb */}
       <div className="flex flex-col items-center mb-10">
-        <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" />
+        <button
+          onClick={openOracle}
+          aria-label="Talk to the Oracle"
+          className="rounded-full transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
+        >
+          <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" />
+        </button>
         <p className="text-amethyst/70 text-sm tracking-wider mt-6 text-center max-w-xs">
-          Discover. Identify. Collect. The field guide for modern rockhounds.
+          Tap the orb to speak with the Oracle. Discover. Identify. Collect.
         </p>
       </div>
 
