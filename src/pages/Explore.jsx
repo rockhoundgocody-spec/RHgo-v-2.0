@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { MapPin, Mountain, Lock, Loader2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
+import HotspotMap from '@/components/explore/HotspotMap.jsx';
 
 const landBadge = {
   public: { color: 'text-emerald-300 border-emerald-400/40 bg-emerald-400/10', label: 'PUBLIC' },
@@ -33,19 +34,23 @@ export default function Explore() {
         </p>
       </div>
 
-      {/* HUD scanner panel */}
+      {/* HUD map panel */}
       <GlassPanel variant="hud" className="mb-6">
-        <HudFrame label="Region Scan">
-          <div className="hud-grid-bg h-32 rounded-md relative overflow-hidden">
-            <div
-              className="absolute inset-x-0 h-12 bg-gradient-to-b from-hud-cyan/30 to-transparent animate-hud-scan"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
+        <HudFrame label="Region Map">
+          {loading ? (
+            <div className="hud-grid-bg h-80 rounded-md flex items-center justify-center">
               <div className="text-hud text-xs tracking-[0.4em] uppercase glow-hud">
-                {loading ? 'SCANNING…' : `${hotspots.length} SITES DETECTED`}
+                SCANNING…
               </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <HotspotMap hotspots={hotspots} height={320} />
+              <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-hud-cyan/70 text-center">
+                {hotspots.length} sites detected
+              </div>
+            </>
+          )}
         </HudFrame>
       </GlassPanel>
 
