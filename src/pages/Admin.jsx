@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Database, Activity, Shield, Trash2, Plus, Loader2 } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import HudFrame from '@/components/visuals/HudFrame';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Button } from '@/components/ui/button';
 
 const SEED_HOTSPOTS = [

@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 export default function HudFrame({ children, label, className = '' }) {
   return (
     <div className={cn('relative', className)}>
-      {/* corner brackets */}
       {['top-0 left-0', 'top-0 right-0 rotate-90', 'bottom-0 right-0 rotate-180', 'bottom-0 left-0 -rotate-90'].map((p, i) => (
         <div
           key={i}

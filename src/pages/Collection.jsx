@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Gem, Calendar, Loader2 } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const rarityColor = {
   common: 'text-white/60 border-white/15',

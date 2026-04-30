@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, ArrowRight } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import AmethystOrb from '@/components/visuals/AmethystOrb';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 
 const tiles = [
   {

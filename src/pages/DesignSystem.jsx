@@ -1,8 +1,8 @@
 import React from 'react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import HudFrame from '@/components/visuals/HudFrame';
-import AmethystOrb from '@/components/visuals/AmethystOrb';
-import LiquidGlassShader from '@/components/visuals/LiquidGlassShader';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import HudFrame from '@/components/visuals/HudFrame.jsx';
+import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import LiquidGlassShader from '@/components/visuals/LiquidGlassShader.jsx';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, Lock } from 'lucide-react';
 

@@ -20,9 +20,7 @@ export default function GlassPanel({
       )}
       {...rest}
     >
-      {/* top inner highlight line */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-      {/* edge sheen */}
       <div
         className="pointer-events-none absolute inset-0 rounded-2xl opacity-40 mix-blend-screen"
         style={{

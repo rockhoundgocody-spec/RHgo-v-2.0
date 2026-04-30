@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { MapPin, Mountain, Lock, Loader2 } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import HudFrame from '@/components/visuals/HudFrame';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import HudFrame from '@/components/visuals/HudFrame.jsx';
 
 const landBadge = {
   public: { color: 'text-emerald-300 border-emerald-400/40 bg-emerald-400/10', label: 'PUBLIC' },

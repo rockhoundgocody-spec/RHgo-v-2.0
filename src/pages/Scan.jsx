@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Camera, Upload, Loader2, Sparkles, RotateCcw } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import HudFrame from '@/components/visuals/HudFrame';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Button } from '@/components/ui/button';
 
 export default function Scan() {

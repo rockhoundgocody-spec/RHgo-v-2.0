@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import GlassPanel from '@/components/visuals/GlassPanel';
-import HudFrame from '@/components/visuals/HudFrame';
+import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { FileCode2, Database, Network, Cpu, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

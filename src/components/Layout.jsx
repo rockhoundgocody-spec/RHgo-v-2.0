@@ -23,7 +23,6 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen text-foreground">
-      {/* top bar — only on admin/docs */}
       {isAdminOrDocs && (
         <header className="sticky top-0 z-40 hud-panel border-b border-hud-cyan/20 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -62,7 +61,6 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* mobile bottom nav — only on app pages */}
       {!isAdminOrDocs && (
         <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-2 py-2 flex items-center gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
