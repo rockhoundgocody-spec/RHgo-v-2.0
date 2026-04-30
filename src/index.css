@@ -158,6 +158,14 @@
   .animate-amethyst-pulse { animation: amethyst-pulse 4s ease-in-out infinite; }
   .animate-orb-speak { animation: orb-speak 0.9s ease-in-out infinite; }
   .animate-orb-ring { animation: orb-ring 1.2s ease-in-out infinite; }
+  @keyframes poke-bubble {
+    0% { opacity: 0; transform: translate(-50%, 8px) scale(0.85); }
+    15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+    30% { transform: translate(-50%, 0) scale(1); }
+    85% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -6px) scale(0.95); }
+  }
+  .animate-poke-bubble { animation: poke-bubble 2.5s ease-out forwards; }
   .animate-hud-scan { animation: hud-scan 3s linear infinite; }
   .animate-liquid-shift { animation: liquid-shift 12s ease-in-out infinite; }
 }

@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, ArrowRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
-import { useOracle } from '@/components/oracle/OracleContext.jsx';
 
 const tiles = [
   {
@@ -29,21 +28,49 @@ const tiles = [
   },
 ];
 
+const pokeLines = [
+  'Please don\'t poke me.',
+  'Hey — I\'m trying to meditate.',
+  'Ouch. Rude.',
+  'I am not a button.',
+  'Poke me again and I\'ll turn you to quartz.',
+];
+
 export default function Hub() {
-  const { openOracle } = useOracle();
+  const [poke, setPoke] = useState(null);
+
+  const handlePoke = () => {
+    const line = pokeLines[Math.floor(Math.random() * pokeLines.length)];
+    setPoke({ id: Date.now(), line });
+    setTimeout(() => {
+      setPoke((p) => (p && Date.now() - p.id >= 2400 ? null : p));
+    }, 2500);
+  };
+
   return (
     <div className="min-h-screen px-6 pt-12 pb-24 max-w-md mx-auto">
       {/* hero orb */}
       <div className="flex flex-col items-center mb-10">
-        <button
-          onClick={openOracle}
-          aria-label="Talk to the Oracle"
-          className="rounded-full transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
-        >
-          <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={handlePoke}
+            aria-label="Poke the orb"
+            className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
+          >
+            <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" />
+          </button>
+
+          {poke && (
+            <div
+              key={poke.id}
+              className="absolute left-1/2 -translate-x-1/2 -top-4 px-3 py-1.5 rounded-full glass-panel text-white text-xs whitespace-nowrap animate-poke-bubble pointer-events-none"
+            >
+              {poke.line}
+            </div>
+          )}
+        </div>
         <p className="text-amethyst/70 text-sm tracking-wider mt-6 text-center max-w-xs">
-          Tap the orb to speak with the Oracle. Discover. Identify. Collect.
+          Discover. Identify. Collect.
         </p>
       </div>
 
