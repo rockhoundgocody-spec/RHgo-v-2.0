@@ -135,6 +135,16 @@
     0%, 100% { transform: scale(1); filter: brightness(1) blur(0px); }
     50% { transform: scale(1.04); filter: brightness(1.15) blur(0.5px); }
   }
+  @keyframes orb-speak {
+    0%, 100% { transform: scale(1); filter: brightness(1.1) saturate(1.1); }
+    25% { transform: scale(1.07); filter: brightness(1.3) saturate(1.3); }
+    50% { transform: scale(1.02); filter: brightness(1.15) saturate(1.2); }
+    75% { transform: scale(1.09); filter: brightness(1.35) saturate(1.4); }
+  }
+  @keyframes orb-ring {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.06); }
+  }
   @keyframes hud-scan {
     0% { transform: translateY(-100%); opacity: 0; }
     50% { opacity: 1; }
@@ -146,6 +156,8 @@
     66% { transform: translate(-2%, 2%) rotate(-1deg); }
   }
   .animate-amethyst-pulse { animation: amethyst-pulse 4s ease-in-out infinite; }
+  .animate-orb-speak { animation: orb-speak 0.9s ease-in-out infinite; }
+  .animate-orb-ring { animation: orb-ring 1.2s ease-in-out infinite; }
   .animate-hud-scan { animation: hud-scan 3s linear infinite; }
   .animate-liquid-shift { animation: liquid-shift 12s ease-in-out infinite; }
 }

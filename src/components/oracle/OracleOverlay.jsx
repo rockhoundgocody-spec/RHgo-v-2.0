@@ -72,7 +72,7 @@ export default function OracleOverlay() {
         {/* header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
           <div className="w-10 h-10 shrink-0">
-            <AmethystOrb size={40} />
+            <AmethystOrb size={40} speaking={speaking} />
           </div>
           <div className="flex-1">
             <div className="text-white font-semibold tracking-wide">Amethyst Oracle</div>
