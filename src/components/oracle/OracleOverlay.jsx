@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { useOracle } from './OracleContext.jsx';
-import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech.jsx';
+import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 
 export default function OracleOverlay() {
