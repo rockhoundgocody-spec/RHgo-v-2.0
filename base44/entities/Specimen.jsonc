@@ -1,0 +1,57 @@
+{
+  "name": "Specimen",
+  "type": "object",
+  "properties": {
+    "mineral_name": {
+      "type": "string"
+    },
+    "common_name": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "found_at": {
+      "type": "string"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "found_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "ai_confidence": {
+      "type": "number"
+    },
+    "ai_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "mineral_name"
+  ]
+}

@@ -5,7 +5,14 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import Layout from '@/components/Layout';
+import Hub from '@/pages/Hub';
+import Explore from '@/pages/Explore';
+import Scan from '@/pages/Scan';
+import Collection from '@/pages/Collection';
+import Admin from '@/pages/Admin';
+import Docs from '@/pages/Docs';
+import DesignSystem from '@/pages/DesignSystem';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,7 +40,15 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Hub />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/scan" element={<Scan />} />
+        <Route path="/collection" element={<Collection />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/design-system" element={<DesignSystem />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

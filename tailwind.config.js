@@ -10,6 +10,16 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			amethyst: {
+  				DEFAULT: 'hsl(var(--amethyst))',
+  				deep: 'hsl(var(--amethyst-deep))',
+  				glow: 'hsl(var(--amethyst-glow))'
+  			},
+  			hud: {
+  				cyan: 'hsl(var(--hud-cyan))',
+  				blue: 'hsl(var(--hud-blue))',
+  				grid: 'hsl(var(--hud-grid))'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

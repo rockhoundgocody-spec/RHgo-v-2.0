@@ -1,0 +1,71 @@
+{
+  "name": "Hotspot",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "USA"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "land_type": {
+      "type": "string",
+      "enum": [
+        "public",
+        "blm",
+        "forest_service",
+        "state_park",
+        "private",
+        "unknown"
+      ],
+      "default": "public"
+    },
+    "minerals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "moderate",
+        "hard",
+        "expert"
+      ],
+      "default": "moderate"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "string"
+    },
+    "trust_score": {
+      "type": "number",
+      "default": 0.7
+    },
+    "source": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "lat",
+    "lng"
+  ]
+}

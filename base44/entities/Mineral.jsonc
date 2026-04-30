@@ -1,0 +1,49 @@
+{
+  "name": "Mineral",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "formula": {
+      "type": "string"
+    },
+    "crystal_system": {
+      "type": "string"
+    },
+    "hardness": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "luster": {
+      "type": "string"
+    },
+    "streak": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

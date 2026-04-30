@@ -4,8 +4,15 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 240 15% 4%;
+    --foreground: 270 20% 96%;
+    --amethyst: 270 70% 60%;
+    --amethyst-deep: 265 80% 35%;
+    --amethyst-glow: 280 100% 75%;
+    --hud-cyan: 195 100% 60%;
+    --hud-blue: 215 90% 55%;
+    --hud-grid: 210 40% 20%;
+    --glass-edge: 270 30% 70%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
@@ -84,5 +91,61 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse at top, hsl(265 60% 12%) 0%, hsl(240 30% 5%) 45%, hsl(240 20% 3%) 100%);
+    background-attachment: fixed;
   }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: linear-gradient(135deg, hsla(270, 30%, 20%, 0.35) 0%, hsla(240, 30%, 10%, 0.55) 100%);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid hsla(270, 40%, 60%, 0.18);
+    box-shadow:
+      inset 0 1px 0 hsla(270, 80%, 90%, 0.15),
+      inset 0 -1px 0 hsla(240, 30%, 0%, 0.4),
+      0 8px 32px hsla(265, 80%, 20%, 0.45),
+      0 0 0 1px hsla(270, 30%, 50%, 0.08);
+  }
+  .hud-panel {
+    background: linear-gradient(180deg, hsla(215, 70%, 12%, 0.6) 0%, hsla(220, 60%, 6%, 0.75) 100%);
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    border: 1px solid hsla(195, 100%, 60%, 0.25);
+    box-shadow:
+      inset 0 1px 0 hsla(195, 100%, 80%, 0.15),
+      0 0 24px hsla(195, 100%, 50%, 0.12),
+      0 4px 24px hsla(220, 80%, 5%, 0.5);
+  }
+  .hud-grid-bg {
+    background-image:
+      linear-gradient(hsla(195, 100%, 60%, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(195, 100%, 60%, 0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .text-amethyst { color: hsl(var(--amethyst-glow)); }
+  .text-hud { color: hsl(var(--hud-cyan)); }
+  .glow-amethyst { text-shadow: 0 0 20px hsla(280, 100%, 75%, 0.6), 0 0 40px hsla(265, 80%, 50%, 0.3); }
+  .glow-hud { text-shadow: 0 0 12px hsla(195, 100%, 60%, 0.7); }
+
+  @keyframes amethyst-pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1) blur(0px); }
+    50% { transform: scale(1.04); filter: brightness(1.15) blur(0.5px); }
+  }
+  @keyframes hud-scan {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+  @keyframes liquid-shift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -3%) rotate(1deg); }
+    66% { transform: translate(-2%, 2%) rotate(-1deg); }
+  }
+  .animate-amethyst-pulse { animation: amethyst-pulse 4s ease-in-out infinite; }
+  .animate-hud-scan { animation: hud-scan 3s linear infinite; }
+  .animate-liquid-shift { animation: liquid-shift 12s ease-in-out infinite; }
 }
