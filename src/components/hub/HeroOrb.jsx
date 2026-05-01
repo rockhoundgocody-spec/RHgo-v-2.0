@@ -2,16 +2,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import DepthWell from './DepthWell.jsx';
+import VoiceprintRing from './VoiceprintRing.jsx';
+import SpecimenGhosts from './SpecimenGhosts.jsx';
+import CompassRing from './CompassRing.jsx';
+import MineralOfDay from './MineralOfDay.jsx';
+import IdleWhispers from './IdleWhispers.jsx';
+import useMicLevel from './useMicLevel';
+import useHaptic from './useHaptic';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
 
-/**
- * HeroOrb — free-floating, no chat box, no popup.
- * Tap once → orb comes alive: starts listening, you speak, it answers in voice.
- * Speech transcript and reply float as ambient subtitles around the orb.
- */
 export default function HeroOrb() {
   const { openOracle } = useOracle();
   const [ripples, setRipples] = useState([]);
@@ -25,6 +27,7 @@ export default function HeroOrb() {
   const historyRef = useRef([]);
 
   const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
+  const mic = useMicLevel();
 
   const handleTranscript = useCallback(async (transcript) => {
     if (!transcript?.trim()) return;
@@ -45,7 +48,7 @@ export default function HeroOrb() {
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // When orb finishes speaking, auto-resume listening
+  // Auto-resume listening between turns
   useEffect(() => {
     if (!active) return;
     if (!speaking && !thinking && !listening) {
@@ -56,8 +59,21 @@ export default function HeroOrb() {
     }
   }, [active, speaking, thinking, listening, startListen]);
 
-  // Cleanup
-  useEffect(() => () => { stopSpeak(); stopListen(); }, [stopSpeak, stopListen]);
+  // Mic level mirrors listening state
+  const micRef = useRef(mic);
+  micRef.current = mic;
+  useEffect(() => {
+    if (active && listening) micRef.current.start();
+    else micRef.current.stop();
+  }, [active, listening]);
+
+  // Haptic feedback while orb is alive
+  useHaptic({ active: active && (speaking || listening), getAmplitude });
+
+  useEffect(() => () => {
+    stopSpeak(); stopListen();
+    try { micRef.current.stop(); } catch {}
+  }, [stopSpeak, stopListen]);
 
   const awaken = (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -66,7 +82,6 @@ export default function HeroOrb() {
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
     if (!micSupported) {
-      // graceful fallback only when no mic at all
       openOracle({ live: false });
       return;
     }
@@ -77,21 +92,61 @@ export default function HeroOrb() {
       historyRef.current = [{ role: 'oracle', content: greeting }];
       speak(greeting);
     } else {
-      // tap again → sleep
       stopSpeak();
       stopListen();
+      mic.stop();
       setActive(false);
       setReply('');
       setInterim('');
     }
   };
 
+  const handleGhostTap = (ghost) => {
+    if (!active) {
+      setActive(true);
+      historyRef.current = [];
+    }
+    const q = `Tell me about ${ghost.name} in one short paragraph.`;
+    handleTranscript(q);
+  };
+
+  const handleMineralTap = (mineral) => {
+    if (!active) {
+      setActive(true);
+      historyRef.current = [];
+    }
+    const q = `Today's mineral is ${mineral.name}. Give me a vivid one-line description.`;
+    handleTranscript(q);
+  };
+
   const removeRipple = (id) =>
     setRipples((r) => r.filter((rp) => rp.id !== id));
 
+  const isOrbBusy = active || speaking || thinking || listening;
+
   return (
     <DepthWell>
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex flex-col items-center" style={{ transformStyle: 'preserve-3d' }}>
+        {/* Compass arc — sits inside the well rim */}
+        <CompassRing size={420} />
+
+        {/* Orbiting specimen ghosts */}
+        <SpecimenGhosts active={active} onTap={handleGhostTap} />
+
+        {/* Mineral of the day companion */}
+        <MineralOfDay active={active} onIdentify={handleMineralTap} />
+
+        {/* Voiceprint waveform around the orb */}
+        <VoiceprintRing
+          size={300}
+          active={active}
+          getAmplitude={getAmplitude}
+          getSpectrum={getSpectrum}
+          getMicLevel={mic.getLevel}
+          speaking={speaking || thinking}
+          listening={listening}
+        />
+
         <div
           className="relative cursor-pointer select-none active:scale-[0.97] transition-transform"
           ref={containerRef}
@@ -112,7 +167,7 @@ export default function HeroOrb() {
           ))}
         </div>
 
-        {/* Floating status — replaces chat box entirely */}
+        {/* Status pill */}
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] font-mono">
           {active ? (
             <>
@@ -128,9 +183,10 @@ export default function HeroOrb() {
           )}
         </div>
 
-        {/* Free-floating subtitles — your voice + oracle reply, no chat box */}
         <FloatingCaption text={interim} variant="user" visible={!!interim} />
         <FloatingCaption text={reply} variant="oracle" visible={!!reply && active} />
+
+        <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
       </div>
     </DepthWell>
   );
@@ -143,7 +199,7 @@ function FloatingCaption({ text, variant, visible }) {
     <div
       className="pointer-events-none absolute left-1/2 -translate-x-1/2 max-w-xs sm:max-w-sm text-center transition-all duration-500"
       style={{
-        top: isOracle ? 'calc(100% + 36px)' : 'calc(100% + 84px)',
+        top: isOracle ? 'calc(100% + 40px)' : 'calc(100% + 90px)',
         opacity: 0.95,
       }}
     >

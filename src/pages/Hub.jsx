@@ -3,6 +3,8 @@ import { Compass, ScanLine, Gem, Brain } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import MissionCard from '@/components/hub/MissionCard.jsx';
 import StatStrip from '@/components/hub/StatStrip.jsx';
+import TiltContainer from '@/components/hub/TiltContainer.jsx';
+import CelestialDial from '@/components/hub/CelestialDial.jsx';
 
 const missions = [
   {
@@ -60,7 +62,7 @@ export default function Hub() {
 
         <HeroOrb />
 
-        <h1 className="mt-10 text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+        <h1 className="mt-12 text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
           ROCKHOUND
           <span className="text-amethyst glow-amethyst">·</span>
           <span className="text-amethyst glow-amethyst">GO</span>
@@ -70,10 +72,12 @@ export default function Hub() {
           <span className="block text-amethyst/80 mt-1">Discover. Identify. Collect.</span>
         </p>
 
-        {/* Field log line */}
-        <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] font-mono uppercase tracking-[0.3em] text-amethyst/80">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Field Systems Online
+        <div className="mt-6 flex items-center gap-3 flex-wrap justify-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] font-mono uppercase tracking-[0.3em] text-amethyst/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Field Systems Online
+          </div>
+          <CelestialDial />
         </div>
       </section>
 
@@ -86,11 +90,13 @@ export default function Hub() {
           <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {missions.map((m) => (
-            <MissionCard key={m.to} {...m} />
-          ))}
-        </div>
+        <TiltContainer max={3}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {missions.map((m) => (
+              <MissionCard key={m.to} {...m} />
+            ))}
+          </div>
+        </TiltContainer>
       </section>
 
       {/* STATS */}
@@ -101,7 +107,9 @@ export default function Hub() {
           </div>
           <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
         </div>
-        <StatStrip />
+        <TiltContainer max={2}>
+          <StatStrip />
+        </TiltContainer>
       </section>
     </div>
   );

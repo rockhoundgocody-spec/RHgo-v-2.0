@@ -5,7 +5,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 export default function MissionCard({ to, code, title, desc, icon: Icon, accent }) {
   return (
-    <Link to={to} className="group block">
+    <Link to={to} className="group block" style={{ transformStyle: 'preserve-3d' }}>
       <GlassPanel className="h-full transition-transform group-hover:scale-[1.02] group-hover:-translate-y-0.5">
         <div className="p-5 h-full flex flex-col">
           <div className="flex items-start justify-between mb-4">
