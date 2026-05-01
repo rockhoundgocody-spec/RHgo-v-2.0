@@ -21,10 +21,17 @@ export default function HeroOrb() {
     setRipples((r) => r.filter((rp) => rp.id !== id));
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center animate-hero-breathe">
+      <style>{`
+        @keyframes hero-breathe {
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.06); }
+        }
+        .animate-hero-breathe { animation: hero-breathe 5s ease-in-out infinite; }
+      `}</style>
       {/* concave shadow ring beneath orb */}
       <div
-        className="absolute -bottom-6 w-72 h-12 rounded-[50%] blur-2xl opacity-60 pointer-events-none"
+        className="absolute -bottom-4 w-48 h-8 rounded-[50%] blur-2xl opacity-60 pointer-events-none"
         style={{
           background:
             'radial-gradient(ellipse, hsla(280,100%,50%,0.45) 0%, transparent 70%)',
@@ -36,7 +43,7 @@ export default function HeroOrb() {
           aria-label="Talk to the Amethyst Oracle"
           className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
         >
-          <AmethystOrb size={260} />
+          <AmethystOrb size={169} />
         </button>
 
         {ripples.map((r) => (

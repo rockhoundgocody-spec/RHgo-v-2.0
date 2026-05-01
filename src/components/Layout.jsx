@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import FloatingOracleButton from '@/components/oracle/FloatingOracleButton.jsx';
 import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
+import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
+import { useOracle } from '@/components/oracle/OracleContext.jsx';
 
 const navItems = [
   { to: '/', label: 'Hub', icon: Home },
@@ -89,8 +91,14 @@ export default function Layout() {
       )}
 
       <FloatingOracleButton />
-      <OracleOverlay />
+      <OracleOverlays />
     </div>
     </OracleProvider>
   );
+}
+
+// Picks live (full-screen, themed) vs chat overlay based on context
+function OracleOverlays() {
+  const { autoLive } = useOracle();
+  return autoLive ? <OracleLiveOverlay /> : <OracleOverlay />;
 }
