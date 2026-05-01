@@ -42,22 +42,22 @@ export default function AmethystOrb({
         style={{
           borderColor: speaking ? 'hsla(145,90%,70%,0.45)' : 'hsla(270,60%,75%,0.25)',
           boxShadow: speaking
-            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 50px hsla(0,0%,0%,0.85)'
-            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 55px hsla(0,0%,0%,0.9)',
+            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 30px hsla(0,0%,0%,0.5)'
+            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 35px hsla(0,0%,0%,0.6)',
         }}
       >
         {/* LAYER 1 — Black opal main */}
         <BlackOpalShader
-          intensity={speaking ? 1.45 : 1.1}
+          intensity={speaking ? 1.85 : 1.5}
           speed={speaking ? 0.55 : 0.28}
           hueShift={speaking ? 1.6 : 0}
         />
 
         {/* LAYER 2 — Low-opacity iridescent liquid-gas overlay (two-layered depth) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-25 pointer-events-none">
+        <div className="absolute inset-0 mix-blend-screen opacity-35 pointer-events-none">
           <LiquidGlassShader
             hue={speaking ? 0.36 : 0.78}
-            intensity={speaking ? 1.1 : 0.95}
+            intensity={speaking ? 1.3 : 1.15}
             speed={speaking ? 0.5 : 0.22}
           />
         </div>
@@ -94,7 +94,7 @@ export default function AmethystOrb({
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(circle at 50% 105%, hsla(0,0%,0%,0.85) 0%, transparent 55%)',
+              'radial-gradient(circle at 50% 105%, hsla(0,0%,0%,0.55) 0%, transparent 55%)',
           }}
         />
         {/* Subtle iridescent rim */}

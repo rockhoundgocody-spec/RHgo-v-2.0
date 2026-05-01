@@ -96,27 +96,28 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
           float band = swirl * 6.2831 + u_hueShift + t * 0.8;
           float h = fract(0.55 + 0.5 * sin(band) + n2 * 0.25);
 
-          // sharp flame-like highlights (the opal "fire")
-          float flame = pow(smoothstep(0.45, 0.85, swirl), 2.0);
-          float sparkle = pow(smoothstep(0.7, 1.0, fbm(q * 6.0 + t)), 4.0);
+          // sharp flame-like highlights (the opal "fire") — broader & brighter
+          float flame = pow(smoothstep(0.30, 0.85, swirl), 1.4);
+          float glow = smoothstep(0.15, 0.9, swirl) * 0.7;
+          float sparkle = pow(smoothstep(0.6, 1.0, fbm(q * 6.0 + t)), 3.0);
 
-          float s = 0.85;
-          float v = (flame * 0.95 + sparkle * 1.4) * u_intensity;
+          float s = 0.8;
+          float v = (flame * 1.6 + glow + sparkle * 1.8) * u_intensity;
 
           vec3 fire = hsv2rgb(vec3(h, s, v));
 
-          // base = near-black with faint blueish depth
-          vec3 base = vec3(0.012, 0.008, 0.025) + 0.04 * vec3(0.1, 0.15, 0.3) * (1.0 - d * 1.5);
+          // base = dark with violet/blue depth (less black)
+          vec3 base = vec3(0.04, 0.025, 0.08) + 0.10 * vec3(0.25, 0.2, 0.5) * (1.0 - d * 1.2);
 
           vec3 col = base + fire;
 
-          // soft inner shadow toward edge so it reads as a sphere
+          // gentler inner shadow so it stays luminous
           float shade = smoothstep(0.5, 0.05, d);
-          col *= mix(0.55, 1.0, shade);
+          col *= mix(0.78, 1.05, shade);
 
-          // faint specular hint (subtle, the highlight comes from the overlay layer)
-          float spec = smoothstep(0.22, 0.0, length(uv - vec2(-0.15, 0.18)));
-          col += spec * 0.12;
+          // brighter specular hint
+          float spec = smoothstep(0.28, 0.0, length(uv - vec2(-0.15, 0.18)));
+          col += spec * 0.25;
 
           // alpha falls off at the very edge for clean rim
           float a = smoothstep(0.5, 0.46, d);
