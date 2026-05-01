@@ -154,7 +154,7 @@ export default function AmethystOrb({
         </div>
 
         {/* LAYER 6 — Wispy gas/smoke drifting on top (frequency-reactive) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-55 pointer-events-none">
+        <div className="absolute inset-0 mix-blend-screen opacity-35 pointer-events-none">
           <GasSmokeShader
             speed={speaking ? 0.28 : 0.15}
             getAmplitude={getAmplitude}

@@ -118,14 +118,14 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude, getSpectrum
           // rim — treble sharpens edge highlights
           float rim = smoothstep(0.04 + u_treble * 0.02, 0.0, abs(smoke - thickness - 0.04));
 
-          // iridescent tint — shifts toward emerald/cyan when speaking
-          vec3 cool = vec3(0.78, 0.72, 0.95);    // lavender
-          vec3 warm = vec3(0.95, 0.92, 1.00);    // bright silver
-          vec3 reactive = mix(vec3(0.55, 0.95, 0.85), vec3(0.85, 0.7, 1.0), 0.5 + 0.5 * sin(t + smoke * 4.0));
+          // UV-neon palette — saturated violets/magentas, no white silver
+          vec3 cool = vec3(0.45, 0.25, 0.85);    // deep violet
+          vec3 warm = vec3(0.7, 0.4, 1.0);       // neon magenta
+          vec3 reactive = mix(vec3(0.3, 0.85, 0.7), vec3(0.65, 0.35, 1.0), 0.5 + 0.5 * sin(t + smoke * 4.0));
           vec3 base = mix(cool, warm, wisps);
           vec3 col = mix(base, reactive, u_amp * 0.6);
-          // rim highlight punches brightness on wisp edges
-          col += rim * (0.35 + u_amp * 0.4) * vec3(1.0, 0.95, 1.0);
+          // dim rim — keep edges glowing violet, not white
+          col += rim * (0.18 + u_amp * 0.25) * vec3(0.7, 0.4, 1.0);
 
           // ULTRA-SOFT inner-edge falloff — pushed wider for seamless fade
           float edge = smoothstep(0.5, 0.0, d);
@@ -133,7 +133,7 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude, getSpectrum
           // tiny breath of opacity variation for living feel
           float breath = 0.85 + 0.15 * sin(t * 0.6);
 
-          float alpha = (wisps * 0.85 + rim * 0.5) * edge * breath * (0.42 + u_amp * 0.3);
+          float alpha = (wisps * 0.7 + rim * 0.35) * edge * breath * (0.32 + u_amp * 0.25);
 
           gl_FragColor = vec4(col, alpha);
         }

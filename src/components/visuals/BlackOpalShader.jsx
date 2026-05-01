@@ -130,23 +130,24 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
           float pool = smoothstep(0.1 - bass * 0.05, 0.95 - bass * 0.1, flow);
           float shimmer = 0.5 + 0.5 * sin(flow * (8.0 + treble * 12.0) + t * (1.4 + treble * 2.0));
 
-          float s = 0.75 + amp * 0.2;
-          float v = (pool * (1.2 + bass * 0.7) + shimmer * (0.35 + treble * 0.6)) * u_intensity;
+          // higher saturation + lower brightness = neon UV glow vs. white wash
+          float s = 0.92 + amp * 0.08;
+          float v = (pool * (0.75 + bass * 0.5) + shimmer * (0.22 + treble * 0.4)) * u_intensity;
 
           vec3 liquid = hsv2rgb(vec3(h, s, v));
 
-          // base = dark with violet/blue depth (less black)
-          vec3 base = vec3(0.04, 0.025, 0.08) + 0.10 * vec3(0.25, 0.2, 0.5) * (1.0 - d * 1.2);
+          // darker base — deep violet-black core
+          vec3 base = vec3(0.02, 0.012, 0.05) + 0.06 * vec3(0.25, 0.15, 0.55) * (1.0 - d * 1.2);
 
           vec3 col = base + liquid;
 
-          // gentler inner shadow so it stays luminous
+          // deeper inner shadow for richer contrast
           float shade = smoothstep(0.5, 0.05, d);
-          col *= mix(0.78, 1.05, shade);
+          col *= mix(0.55, 0.92, shade);
 
-          // brighter specular hint
+          // dim specular — barely a hint, no white blowout
           float spec = smoothstep(0.28, 0.0, length(uv - vec2(-0.15, 0.18)));
-          col += spec * 0.25;
+          col += spec * 0.08;
 
           // alpha falls off at the very edge for clean rim
           float a = smoothstep(0.5, 0.46, d);
