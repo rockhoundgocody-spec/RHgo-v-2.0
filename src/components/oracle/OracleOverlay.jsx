@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio } from 'lucide-react';
+import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
@@ -11,9 +11,12 @@ export default function OracleOverlay() {
     {
       role: 'assistant',
       content:
-        "I am the Amethyst Oracle. Ask me about minerals, hotspots, or anything you've found.",
+        "I am the Amethyst Oracle. Ask me about minerals, hotspots, or say \"log a specimen\" to dictate a new find.",
     },
   ]);
+  const [dictationMode, setDictationMode] = useState(false);
+  const dictationModeRef = useRef(false);
+  dictationModeRef.current = dictationMode;
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -70,14 +73,68 @@ export default function OracleOverlay() {
     }
   }, [liveMode, speaking, thinking, listening, startListen]);
 
+  // Detect intents like "log a specimen", "save this find", "record this rock"
+  const detectLogIntent = (text) => {
+    const t = text.toLowerCase();
+    return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
+      || /\b(new specimen|log this|save this|record this)\b/.test(t);
+  };
+
+  const getCoords = () =>
+    new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve({});
+      navigator.geolocation.getCurrentPosition(
+        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => resolve({}),
+        { timeout: 4000, maximumAge: 60000 }
+      );
+    });
+
+  const handleDictation = async (transcript) => {
+    setThinking(true);
+    const coords = await getCoords();
+    const res = await base44.functions.invoke('parseSpecimenDictation', {
+      transcript,
+      create: true,
+      ...coords,
+    });
+    const data = res?.data || {};
+    const f = data.fields || {};
+    const ok = !!data.created;
+    const summary = ok
+      ? `Logged ${f.mineral_name}${f.found_at ? ` from ${f.found_at}` : ''}${
+          f.rarity && f.rarity !== 'common' ? ` — ${f.rarity}` : ''
+        }. Weather and lunar phase will fill in shortly.`
+      : `I couldn't save that one. Try again with the mineral name.`;
+    setMessages((m) => [...m, { role: 'assistant', content: summary }]);
+    setDictationMode(false);
+    setThinking(false);
+    if (!muted) speak(summary);
+  };
+
   const sendMessage = async (textOverride) => {
     const text = (textOverride ?? input).trim();
     if (!text || thinking) return;
     const next = [...messages, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
-    setThinking(true);
 
+    // If already in dictation mode, this message IS the specimen description
+    if (dictationModeRef.current) {
+      await handleDictation(text);
+      return;
+    }
+
+    // Detect intent to start logging
+    if (detectLogIntent(text)) {
+      setDictationMode(true);
+      const ask = "Yes — describe the specimen. Mineral name, where you found it, and any notes.";
+      setMessages((m) => [...m, { role: 'assistant', content: ask }]);
+      if (!muted) speak(ask);
+      return;
+    }
+
+    setThinking(true);
     const history = next
       .slice(-8)
       .map((m) => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`)
@@ -103,9 +160,16 @@ export default function OracleOverlay() {
             <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
           </div>
           <div className="flex-1">
-            <div className="text-white font-semibold tracking-wide">Amethyst Oracle</div>
+            <div className="text-white font-semibold tracking-wide flex items-center gap-2">
+              Amethyst Oracle
+              {dictationMode && (
+                <span className="text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-amethyst/30 text-white border border-amethyst/50 flex items-center gap-1">
+                  <Gem size={10} /> Logging
+                </span>
+              )}
+            </div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-amethyst/70">
-              {speaking ? 'Speaking…' : listening ? 'Listening…' : thinking ? 'Thinking…' : 'Online'}
+              {speaking ? 'Speaking…' : listening ? 'Listening…' : thinking ? 'Thinking…' : dictationMode ? 'Awaiting specimen…' : 'Online'}
             </div>
           </div>
           {micSupported && (
