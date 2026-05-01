@@ -1,30 +1,24 @@
 import React, { useState, useRef } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
-import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
-
-const pokeLines = [
-  "Please don't poke me.",
-  "Hey — I'm trying to meditate.",
-  "Ouch. Rude.",
-  "I am not a button.",
-  "Poke me again and I'll turn you to quartz.",
-];
+import WaterRipple from '@/components/visuals/WaterRipple.jsx';
+import { useOracle } from '@/components/oracle/OracleContext.jsx';
 
 export default function HeroOrb() {
-  const [poke, setPoke] = useState(null);
-  const { speak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
-  const timerRef = useRef(null);
+  const { openOracle } = useOracle();
+  const [ripples, setRipples] = useState([]);
+  const containerRef = useRef(null);
 
-  const handlePoke = () => {
-    const line = pokeLines[Math.floor(Math.random() * pokeLines.length)];
-    const id = Date.now();
-    setPoke({ id, line });
-    speak(line);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setPoke((p) => (p && p.id === id ? null : p));
-    }, 2500);
+  const handleTap = (e) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const x = rect ? e.clientX - rect.left : 130;
+    const y = rect ? e.clientY - rect.top : 130;
+    const id = Date.now() + Math.random();
+    setRipples((r) => [...r, { id, x, y }]);
+    openOracle({ live: true });
   };
+
+  const removeRipple = (id) =>
+    setRipples((r) => r.filter((rp) => rp.id !== id));
 
   return (
     <div className="relative flex flex-col items-center">
@@ -36,28 +30,23 @@ export default function HeroOrb() {
             'radial-gradient(ellipse, hsla(280,100%,50%,0.45) 0%, transparent 70%)',
         }}
       />
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <button
-          onClick={handlePoke}
-          aria-label="Poke the orb"
+          onClick={handleTap}
+          aria-label="Talk to the Amethyst Oracle"
           className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
         >
-          <AmethystOrb
-            size={260}
-            speaking={speaking || !!poke}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-          />
+          <AmethystOrb size={260} />
         </button>
 
-        {poke && (
-          <div
-            key={poke.id}
-            className="absolute left-1/2 -translate-x-1/2 -top-6 px-3 py-1.5 rounded-full glass-panel text-white text-xs whitespace-nowrap animate-poke-bubble pointer-events-none"
-          >
-            {poke.line}
-          </div>
-        )}
+        {ripples.map((r) => (
+          <WaterRipple
+            key={r.id}
+            x={r.x}
+            y={r.y}
+            onDone={() => removeRipple(r.id)}
+          />
+        ))}
       </div>
     </div>
   );

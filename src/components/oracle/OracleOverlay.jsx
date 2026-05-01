@@ -6,7 +6,7 @@ import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 
 export default function OracleOverlay() {
-  const { open, closeOracle } = useOracle();
+  const { open, autoLive, closeOracle } = useOracle();
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -47,6 +47,17 @@ export default function OracleOverlay() {
       setLiveMode(false);
     }
   }, [open, stopSpeak, stopListen]);
+
+  // Auto-start live conversation when opened with live=true (tap-to-talk)
+  useEffect(() => {
+    if (open && autoLive && micSupported && !liveMode) {
+      setLiveMode(true);
+      setMuted(false);
+      const t = setTimeout(() => startListen(), 350);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, autoLive, micSupported]);
 
   // Live conversation: when oracle finishes speaking, auto-resume listening
   useEffect(() => {

@@ -4,11 +4,20 @@ const OracleContext = createContext(null);
 
 export function OracleProvider({ children }) {
   const [open, setOpen] = useState(false);
-  const openOracle = useCallback(() => setOpen(true), []);
-  const closeOracle = useCallback(() => setOpen(false), []);
+  const [autoLive, setAutoLive] = useState(false);
+  const openOracle = useCallback((opts = {}) => {
+    setAutoLive(!!opts.live);
+    setOpen(true);
+  }, []);
+  const closeOracle = useCallback(() => {
+    setOpen(false);
+    setAutoLive(false);
+  }, []);
   const toggleOracle = useCallback(() => setOpen((o) => !o), []);
   return (
-    <OracleContext.Provider value={{ open, openOracle, closeOracle, toggleOracle }}>
+    <OracleContext.Provider
+      value={{ open, autoLive, openOracle, closeOracle, toggleOracle }}
+    >
       {children}
     </OracleContext.Provider>
   );
