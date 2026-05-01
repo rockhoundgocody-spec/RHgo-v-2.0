@@ -85,31 +85,34 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
           float d = length(uv);
           if (d > 0.5) { gl_FragColor = vec4(0.0); return; }
 
-          // distorted polar coords for swirling gas/fire
-          float t = u_time * 0.6;
-          vec2 q = uv * 2.2;
-          float n = fbm(q + vec2(t * 0.3, -t * 0.25));
-          float n2 = fbm(q * 1.8 - vec2(n, t * 0.4));
-          float swirl = fbm(q * 3.0 + vec2(n2 * 1.2, n * 1.4));
+          // domain-warped flow field — feeds noise into itself for liquid currents
+          float t = u_time * 0.5;
+          vec2 q = uv * 1.8;
 
-          // iridescent palette: cycles through cyan/magenta/green/orange
-          float band = swirl * 6.2831 + u_hueShift + t * 0.8;
-          float h = fract(0.55 + 0.5 * sin(band) + n2 * 0.25);
+          // multi-step warp creates smooth, drifting currents (like ink in water)
+          vec2 warp1 = vec2(fbm(q + vec2(t * 0.2, t * 0.15)),
+                            fbm(q + vec2(-t * 0.18, t * 0.22) + 5.2));
+          vec2 warp2 = vec2(fbm(q + 1.6 * warp1 + vec2(t * 0.25, 0.0)),
+                            fbm(q + 1.6 * warp1 + vec2(0.0, -t * 0.3) + 3.7));
+          float flow = fbm(q + 2.2 * warp2);
 
-          // sharp flame-like highlights (the opal "fire") — broader & brighter
-          float flame = pow(smoothstep(0.30, 0.85, swirl), 1.4);
-          float glow = smoothstep(0.15, 0.9, swirl) * 0.7;
-          float sparkle = pow(smoothstep(0.6, 1.0, fbm(q * 6.0 + t)), 3.0);
+          // smooth iridescent palette — flowing bands of color
+          float band = flow * 4.5 + u_hueShift + t * 0.6 + length(warp2) * 1.2;
+          float h = fract(0.6 + 0.45 * sin(band) + warp1.x * 0.2);
 
-          float s = 0.8;
-          float v = (flame * 1.6 + glow + sparkle * 1.8) * u_intensity;
+          // soft luminance — no hard edges, just gentle pooling of light
+          float pool = smoothstep(0.1, 0.95, flow);
+          float shimmer = 0.5 + 0.5 * sin(flow * 8.0 + t * 1.4);
 
-          vec3 fire = hsv2rgb(vec3(h, s, v));
+          float s = 0.75;
+          float v = (pool * 1.2 + shimmer * 0.35) * u_intensity;
+
+          vec3 liquid = hsv2rgb(vec3(h, s, v));
 
           // base = dark with violet/blue depth (less black)
           vec3 base = vec3(0.04, 0.025, 0.08) + 0.10 * vec3(0.25, 0.2, 0.5) * (1.0 - d * 1.2);
 
-          vec3 col = base + fire;
+          vec3 col = base + liquid;
 
           // gentler inner shadow so it stays luminous
           float shade = smoothstep(0.5, 0.05, d);
