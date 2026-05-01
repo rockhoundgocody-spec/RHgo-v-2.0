@@ -25,13 +25,13 @@ export default function StereoDepthLayers({ speaking, getAmplitude, getSpectrum 
     let raf;
     const tick = () => {
       const t = performance.now() * 0.001;
-      // Anaglyph: small horizontal offset (~3px equivalent at 260px orb)
-      const anaOffset = 2.2 + Math.sin(t * 0.7) * 0.6;
-      // Parallax: slow oscillating drift to simulate viewer head motion
-      const px = Math.sin(t * 0.35) * 4.5;
-      const py = Math.cos(t * 0.28) * 2.2;
-      // Chromatic aberration: radial split that breathes with time
-      const ca = 1.5 + Math.sin(t * 0.9) * 0.5;
+      // Anaglyph: small horizontal offset, very slow breath
+      const anaOffset = 2.2 + Math.sin(t * 0.25) * 0.4;
+      // Parallax: slower oscillating drift
+      const px = Math.sin(t * 0.18) * 4.5;
+      const py = Math.cos(t * 0.14) * 2.2;
+      // Chromatic aberration: slow, smooth radial breath
+      const ca = 1.5 + Math.sin(t * 0.3) * 0.4;
 
       if (redRef.current) {
         redRef.current.style.transform = `translateX(${-anaOffset}px)`;

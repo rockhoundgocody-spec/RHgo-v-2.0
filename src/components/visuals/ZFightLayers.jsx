@@ -14,16 +14,16 @@ export default function ZFightLayers({ speaking, getAmplitude, getSpectrum }) {
     let raf;
     const tick = () => {
       const t = performance.now() * 0.001;
-      // Tiny sub-pixel jitter — classic z-fight flicker
-      const jx1 = Math.sin(t * 23.0) * 0.6 + Math.sin(t * 7.3) * 0.3;
-      const jy1 = Math.cos(t * 19.0) * 0.6 + Math.sin(t * 5.1) * 0.3;
-      const jx2 = Math.sin(t * 31.0 + 1.7) * 0.5 + Math.cos(t * 9.4) * 0.25;
-      const jy2 = Math.cos(t * 27.0 + 0.9) * 0.5 + Math.sin(t * 6.8) * 0.25;
-      const s1 = 1 + Math.sin(t * 11.0) * 0.0025;
-      const s2 = 1 + Math.cos(t * 13.0) * 0.0025;
-      // Flicker opacity in/out of dominance — the core of z-fighting look
-      const f1 = 0.35 + 0.25 * Math.sin(t * 17.0);
-      const f2 = 0.35 + 0.25 * Math.cos(t * 21.0 + 1.2);
+      // Slow, smooth drift — no more high-freq flicker
+      const jx1 = Math.sin(t * 1.4) * 0.4 + Math.sin(t * 0.7) * 0.2;
+      const jy1 = Math.cos(t * 1.2) * 0.4 + Math.sin(t * 0.5) * 0.2;
+      const jx2 = Math.sin(t * 1.7 + 1.7) * 0.35 + Math.cos(t * 0.9) * 0.18;
+      const jy2 = Math.cos(t * 1.5 + 0.9) * 0.35 + Math.sin(t * 0.6) * 0.18;
+      const s1 = 1 + Math.sin(t * 0.8) * 0.0018;
+      const s2 = 1 + Math.cos(t * 0.9) * 0.0018;
+      // Gentle, slow opacity breathing — eliminates strobing
+      const f1 = 0.32 + 0.08 * Math.sin(t * 1.1);
+      const f2 = 0.32 + 0.08 * Math.cos(t * 1.3 + 1.2);
       if (aRef.current) {
         aRef.current.style.transform = `translate(${jx1}px, ${jy1}px) scale(${s1})`;
         aRef.current.style.opacity = String(f1);
