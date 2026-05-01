@@ -1,12 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
-import LiquidGlassShader from './LiquidGlassShader.jsx';
-import GasSmokeShader from './GasSmokeShader.jsx';
-import ZFightLayers from './ZFightLayers.jsx';
-import StereoDepthLayers from './StereoDepthLayers.jsx';
 import SphereVolume from './SphereVolume.jsx';
-import InnerCaustic from './InnerCaustic.jsx';
-import EnvironmentLights from './EnvironmentLights.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -122,8 +116,8 @@ export default function AmethystOrb({
         }}
       >
         {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
-            Reduced opacity so internal volume reads through the surface. */}
-        <div className="absolute inset-0 opacity-65">
+            Single WebGL canvas to avoid context-loss from too many stacked shaders. */}
+        <div className="absolute inset-0">
           <BlackOpalShader
             intensity={speaking ? 1.85 : 1.5}
             speed={speaking ? 0.55 : 0.32}
@@ -133,54 +127,24 @@ export default function AmethystOrb({
           />
         </div>
 
-        {/* LAYER 1.5 — Z-FIGHT: coplanar duplicates with sub-pixel jitter */}
-        <div className="absolute inset-0 opacity-70">
-          <ZFightLayers
-            speaking={speaking}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-          />
-        </div>
-
-        {/* LAYER 1.7 — STEREO DEPTH: anaglyph + parallax + chromatic rim */}
-        <StereoDepthLayers
-          speaking={speaking}
-          getAmplitude={getAmplitude}
-          getSpectrum={getSpectrum}
+        {/* Amethyst tint wash — restores the purple gradient theme over the opal */}
+        <div
+          className="absolute inset-0 pointer-events-none mix-blend-overlay"
+          style={{
+            background:
+              'radial-gradient(circle at 35% 30%, hsla(280,100%,70%,0.45) 0%, hsla(270,90%,50%,0.35) 40%, hsla(265,90%,25%,0.55) 75%, hsla(260,90%,10%,0.7) 100%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-50"
+          style={{
+            background:
+              'radial-gradient(circle at 65% 70%, hsla(290,100%,65%,0.4) 0%, transparent 55%)',
+          }}
         />
 
-        {/* LAYER 2 — Iridescent liquid-gas (lowered for translucency) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-30 pointer-events-none">
-          <LiquidGlassShader
-            hue={speaking ? 0.36 : 0.78}
-            intensity={speaking ? 1.35 : 1.2}
-            speed={speaking ? 0.6 : 0.28}
-          />
-        </div>
-
-        {/* LAYER 6 — Wispy gas/smoke (lowered for translucency) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-25 pointer-events-none">
-          <GasSmokeShader
-            speed={speaking ? 0.28 : 0.15}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-          />
-        </div>
-
-        {/* LAYER 7 — VOLUMETRIC SPHERE: terminator shading, specular,
-            rim light, back-face silhouette. Converts the flat disc into
-            a perceived translucent 3D glass orb. */}
+        {/* Volumetric sphere shading — pure CSS, no WebGL context */}
         <SphereVolume />
-
-        {/* LAYER 8 — INNER CAUSTIC: refracted-light shimmer that drifts
-            counter to the viewer's perspective, simulating light bending
-            through the glass interior. */}
-        <InnerCaustic />
-
-        {/* LAYER 9 — ENVIRONMENT LIGHTS: animated HDRI/IBL reflections
-            orbiting the sphere (After Effects environment-light style).
-            Two key/fill lights + fresnel rim sell true 3D reflectivity. */}
-        <EnvironmentLights />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
