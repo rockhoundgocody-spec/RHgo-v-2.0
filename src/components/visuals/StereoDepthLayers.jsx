@@ -185,7 +185,20 @@ export default function StereoDepthLayers({ speaking, getAmplitude, getSpectrum 
       </div>
 
       {/* SVG color matrix filters — isolate single channels for true anaglyph + chroma */}
-      <svg width="0" height="0" style={{ position: 'absolute' }}>
+      <svg
+        width="0"
+        height="0"
+        aria-hidden
+        style={{
+          position: 'absolute',
+          width: 0,
+          height: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          left: -9999,
+          top: -9999,
+        }}
+      >
         <defs>
           <filter id="anaglyph-red">
             <feColorMatrix

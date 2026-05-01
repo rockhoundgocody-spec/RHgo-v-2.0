@@ -63,7 +63,7 @@ export default function AmethystOrb({
     <div
       ref={wrapRef}
       className={cn(
-        'relative transition-transform',
+        'relative transition-transform isolate',
         !getAmplitude && (speaking ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
         className
       )}

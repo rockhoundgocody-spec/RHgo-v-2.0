@@ -37,14 +37,16 @@ export default function HeroOrb() {
             'radial-gradient(ellipse, hsla(280,100%,50%,0.45) 0%, transparent 70%)',
         }}
       />
-      <div className="relative" ref={containerRef}>
-        <button
-          onClick={handleTap}
-          aria-label="Talk to the Amethyst Oracle"
-          className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
-        >
-          <AmethystOrb size={169} />
-        </button>
+      <div
+        className="relative cursor-pointer select-none active:scale-95 transition-transform"
+        ref={containerRef}
+        onClick={handleTap}
+        role="button"
+        aria-label="Talk to the Amethyst Oracle"
+        tabIndex={0}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleTap(e)}
+      >
+        <AmethystOrb size={169} />
 
         {ripples.map((r) => (
           <WaterRipple
