@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import WebGPUOpalShader from './WebGPUOpalShader.jsx';
+import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
 import { cn } from '@/lib/utils';
 
@@ -142,6 +143,19 @@ export default function AmethystOrb({
             />
           )}
         </div>
+
+        {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only) */}
+        {useWebGPU && (
+          <div className="absolute inset-0">
+            <WebGPUFluidOverlay
+              resolution={128}
+              intensity={speaking ? 1.4 : 1.0}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+              onUnsupported={() => setUseWebGPU(false)}
+            />
+          </div>
+        )}
 
         {/* Amethyst tint wash — restores the purple gradient theme over the opal */}
         <div
