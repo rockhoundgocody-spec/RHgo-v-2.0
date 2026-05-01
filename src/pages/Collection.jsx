@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Gem, Calendar, Loader2, GitCompareArrows } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
 
 const rarityColor = {
   common: 'text-white/60 border-white/15',
@@ -67,6 +68,8 @@ export default function Collection() {
           </div>
         </div>
       </GlassPanel>
+
+      <CrystalSystemInsights specimens={specimens} />
 
       {loading ? (
         <div className="flex justify-center py-12 text-amethyst/60">
