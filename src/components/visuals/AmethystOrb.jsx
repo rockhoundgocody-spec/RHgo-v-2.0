@@ -3,6 +3,7 @@ import BlackOpalShader from './BlackOpalShader.jsx';
 import LiquidGlassShader from './LiquidGlassShader.jsx';
 import GasSmokeShader from './GasSmokeShader.jsx';
 import ZFightLayers from './ZFightLayers.jsx';
+import StereoDepthLayers from './StereoDepthLayers.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -130,6 +131,14 @@ export default function AmethystOrb({
             chromatic split. Creates the flickering "two planes occupying the
             same space" look. */}
         <ZFightLayers
+          speaking={speaking}
+          getAmplitude={getAmplitude}
+          getSpectrum={getSpectrum}
+        />
+
+        {/* LAYER 1.7 — STEREO DEPTH: anaglyph red/cyan split + parallax
+            copies + chromatic aberration rim. Creates perceived 3D depth. */}
+        <StereoDepthLayers
           speaking={speaking}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
