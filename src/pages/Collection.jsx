@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Gem, Calendar, Loader2 } from 'lucide-react';
+import { Gem, Calendar, Loader2, GitCompareArrows } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const rarityColor = {
@@ -29,6 +30,16 @@ export default function Collection() {
           Your finds
         </p>
       </div>
+
+      {specimens.length >= 2 && (
+        <Link
+          to="/compare"
+          className="mb-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition"
+        >
+          <GitCompareArrows size={14} />
+          Compare Specimens
+        </Link>
+      )}
 
       <GlassPanel className="mb-6">
         <div className="grid grid-cols-3 divide-x divide-white/10 text-center py-4">

@@ -10,6 +10,7 @@ import Hub from '@/pages/Hub';
 import Explore from '@/pages/Explore';
 import Scan from '@/pages/Scan';
 import Collection from '@/pages/Collection';
+import Compare from '@/pages/Compare';
 import Admin from '@/pages/Admin';
 import Docs from '@/pages/Docs';
 import DesignSystem from '@/pages/DesignSystem';
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
         <Route path="/explore" element={<Explore />} />
         <Route path="/scan" element={<Scan />} />
         <Route path="/collection" element={<Collection />} />
+        <Route path="/compare" element={<Compare />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/design-system" element={<DesignSystem />} />
