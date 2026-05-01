@@ -6,10 +6,12 @@ import * as THREE from 'three';
  * Soft, translucent volumetric tendrils that drift across the orb surface.
  * Designed to be stacked on top via mix-blend-screen at low opacity.
  */
-export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
+export default function GasSmokeShader({ speed = 0.15, getAmplitude, getSpectrum }) {
   const mountRef = useRef(null);
   const ampGetterRef = useRef(getAmplitude);
+  const specGetterRef = useRef(getSpectrum);
   ampGetterRef.current = getAmplitude;
+  specGetterRef.current = getSpectrum;
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -29,6 +31,9 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
     const uniforms = {
       u_time: { value: 0 },
       u_amp: { value: 0 },
+      u_bass: { value: 0 },
+      u_mid: { value: 0 },
+      u_treble: { value: 0 },
       u_resolution: { value: new THREE.Vector2(width, height) },
     };
 
@@ -47,6 +52,9 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
         varying vec2 vUv;
         uniform float u_time;
         uniform float u_amp;
+        uniform float u_bass;
+        uniform float u_mid;
+        uniform float u_treble;
 
         // simplex-like gradient noise — smoother than value noise
         vec2 hash2(vec2 p) {
@@ -95,20 +103,20 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
           float ca = cos(ang), sa = sin(ang);
           q = mat2(ca, -sa, sa, ca) * q;
 
-          // curl-driven flow — currents actually circulate
+          // curl-driven flow — bass = stronger swirling currents
           vec2 flow = curl(q * 0.7 + vec2(0.0, t * 0.1));
-          q += flow * (0.5 + u_amp * 0.4);
+          q += flow * (0.5 + u_bass * 0.7);
 
-          // two-tier smoke: large billows + finer wisps
-          float bigBillow = fbm(q + flow * 0.3);
-          float fineWisps = fbm(q * 2.6 - flow * 0.4 + t * 0.15);
-          float smoke = bigBillow * 0.65 + fineWisps * 0.35;
+          // two-tier smoke: bass = big billows, treble = fine wisps
+          float bigBillow = fbm(q + flow * (0.3 + u_bass * 0.3));
+          float fineWisps = fbm(q * (2.6 + u_treble * 1.5) - flow * 0.4 + t * (0.15 + u_treble * 0.4));
+          float smoke = bigBillow * (0.65 + u_bass * 0.15) + fineWisps * (0.35 + u_treble * 0.2);
 
-          // sharper density curve — voice amp thickens the cloud
-          float thickness = 0.42 - u_amp * 0.12;
+          // sharper density — mid frequencies thicken the cloud
+          float thickness = 0.42 - u_mid * 0.16;
           float wisps = smoothstep(thickness, thickness + 0.32, smoke);
-          // edge highlight: brighten where density transitions (rim glow on wisps)
-          float rim = smoothstep(0.04, 0.0, abs(smoke - thickness - 0.04));
+          // rim — treble sharpens edge highlights
+          float rim = smoothstep(0.04 + u_treble * 0.02, 0.0, abs(smoke - thickness - 0.04));
 
           // iridescent tint — shifts toward emerald/cyan when speaking
           vec3 cool = vec3(0.78, 0.72, 0.95);    // lavender
@@ -140,7 +148,14 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
     const animate = () => {
       uniforms.u_time.value = ((performance.now() - start) / 1000) * speed * Math.PI;
       const getAmp = ampGetterRef.current;
+      const getSpec = specGetterRef.current;
       uniforms.u_amp.value = getAmp ? getAmp() : 0;
+      if (getSpec) {
+        const s = getSpec();
+        uniforms.u_bass.value = s.bass || 0;
+        uniforms.u_mid.value = s.mid || 0;
+        uniforms.u_treble.value = s.treble || 0;
+      }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
     };
