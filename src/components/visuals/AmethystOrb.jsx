@@ -67,18 +67,18 @@ export default function AmethystOrb({
       style={{ width: size, height: size, willChange: 'transform' }}
     >
       {/* HOVERING AFTERGLOW — sits outside the orb body, like a floating aura.
-          Two stacked layers (outer wide bloom + inner ring) give it depth. */}
+          Two stacked layers (outer wide bloom + inner ring) give it depth.
+          Lowered opacity for darker, neon-UV exposure. */}
       <div
         ref={auraRef}
         aria-hidden
         className="pointer-events-none absolute rounded-full blur-3xl"
         style={{
-          // extends well beyond the orb, hovering "above and around" but not on it
           inset: `-${Math.round(size * 0.55)}px`,
           willChange: 'transform, opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 22%, hsla(280,100%,72%,0.85) 38%, hsla(270,95%,58%,0.7) 54%, hsla(265,85%,48%,0.4) 72%, transparent 92%)'
-            : 'radial-gradient(circle, transparent 24%, hsla(280,100%,70%,0.82) 40%, hsla(270,95%,58%,0.65) 56%, hsla(265,85%,48%,0.36) 74%, transparent 92%)',
+            ? 'radial-gradient(circle, transparent 22%, hsla(280,100%,55%,0.55) 38%, hsla(270,95%,42%,0.45) 54%, hsla(265,85%,35%,0.25) 72%, transparent 92%)'
+            : 'radial-gradient(circle, transparent 24%, hsla(280,100%,52%,0.5) 40%, hsla(270,95%,42%,0.4) 56%, hsla(265,85%,32%,0.22) 74%, transparent 92%)',
         }}
       />
       {/* Inner aura ring — tighter, slightly outside the orb edge */}
@@ -90,8 +90,8 @@ export default function AmethystOrb({
           inset: `-${Math.round(size * 0.22)}px`,
           willChange: 'opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 40%, hsla(280,100%,78%,0.9) 54%, hsla(270,98%,62%,0.7) 68%, transparent 88%)'
-            : 'radial-gradient(circle, transparent 42%, hsla(280,100%,78%,0.88) 56%, hsla(270,98%,62%,0.65) 70%, transparent 88%)',
+            ? 'radial-gradient(circle, transparent 40%, hsla(280,100%,58%,0.6) 54%, hsla(270,98%,45%,0.45) 68%, transparent 88%)'
+            : 'radial-gradient(circle, transparent 42%, hsla(280,100%,55%,0.55) 56%, hsla(270,98%,42%,0.4) 70%, transparent 88%)',
         }}
       />
 
