@@ -5,6 +5,7 @@ import GasSmokeShader from './GasSmokeShader.jsx';
 import ZFightLayers from './ZFightLayers.jsx';
 import StereoDepthLayers from './StereoDepthLayers.jsx';
 import SphereVolume from './SphereVolume.jsx';
+import InnerCaustic from './InnerCaustic.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -169,6 +170,11 @@ export default function AmethystOrb({
             rim light, back-face silhouette. Converts the flat disc into
             a perceived translucent 3D glass orb. */}
         <SphereVolume />
+
+        {/* LAYER 8 — INNER CAUSTIC: refracted-light shimmer that drifts
+            counter to the viewer's perspective, simulating light bending
+            through the glass interior. */}
+        <InnerCaustic />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">

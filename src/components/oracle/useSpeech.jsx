@@ -168,9 +168,14 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported, voices, getAmplitude, getSpectrum };
 }
 
-export function useSpeechRecognition({ onResult } = {}) {
+export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const recRef = useRef(null);
   const [listening, setListening] = useState(false);
+  const onResultRef = useRef(onResult);
+  const onInterimRef = useRef(onInterim);
+  onResultRef.current = onResult;
+  onInterimRef.current = onInterim;
+
   const SR =
     typeof window !== 'undefined'
       ? window.SpeechRecognition || window.webkitSpeechRecognition
@@ -180,22 +185,28 @@ export function useSpeechRecognition({ onResult } = {}) {
   useEffect(() => {
     if (!SR) return;
     const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = false;
+    rec.continuous = true;        // keep mic open across pauses
+    rec.interimResults = true;    // stream partial transcripts for snappy UX
     rec.lang = 'en-US';
+
     rec.onresult = (e) => {
-      const transcript = e.results[0]?.[0]?.transcript;
-      if (transcript && onResult) onResult(transcript);
+      let interim = '';
+      let finalText = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      if (interim && onInterimRef.current) onInterimRef.current(interim);
+      if (finalText && onResultRef.current) onResultRef.current(finalText.trim());
     };
     rec.onend = () => setListening(false);
     rec.onerror = () => setListening(false);
     recRef.current = rec;
     return () => {
-      try {
-        rec.abort();
-      } catch {}
+      try { rec.abort(); } catch {}
     };
-  }, [SR, onResult]);
+  }, [SR]);
 
   const start = useCallback(() => {
     if (!recRef.current) return;
@@ -207,9 +218,7 @@ export function useSpeechRecognition({ onResult } = {}) {
 
   const stop = useCallback(() => {
     if (!recRef.current) return;
-    try {
-      recRef.current.stop();
-    } catch {}
+    try { recRef.current.stop(); } catch {}
     setListening(false);
   }, []);
 

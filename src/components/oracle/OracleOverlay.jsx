@@ -24,13 +24,15 @@ export default function OracleOverlay() {
 
   const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
   const handleVoiceResult = useCallback((transcript) => {
-    setInput(transcript);
-    // auto-send after voice result
+    setInput('');
     setTimeout(() => sendMessage(transcript), 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const handleInterim = useCallback((partial) => {
+    setInput(partial);
+  }, []);
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useSpeechRecognition({ onResult: handleVoiceResult });
+    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
 
   useEffect(() => {
     if (scrollRef.current) {
