@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import LiquidGlassShader from './LiquidGlassShader.jsx';
 import GasSmokeShader from './GasSmokeShader.jsx';
+import ZFightLayers from './ZFightLayers.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -75,8 +76,8 @@ export default function AmethystOrb({
           inset: `-${Math.round(size * 0.55)}px`,
           willChange: 'transform, opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 28%, hsla(145,90%,55%,0.32) 38%, hsla(280,100%,70%,0.28) 52%, hsla(195,100%,65%,0.16) 68%, transparent 82%)'
-            : 'radial-gradient(circle, transparent 30%, hsla(280,100%,70%,0.34) 42%, hsla(265,90%,55%,0.22) 58%, hsla(195,100%,60%,0.12) 72%, transparent 86%)',
+            ? 'radial-gradient(circle, transparent 26%, hsla(280,100%,70%,0.55) 40%, hsla(270,90%,55%,0.45) 56%, hsla(265,80%,45%,0.25) 72%, transparent 88%)'
+            : 'radial-gradient(circle, transparent 28%, hsla(280,100%,68%,0.55) 42%, hsla(270,90%,55%,0.42) 58%, hsla(265,80%,45%,0.22) 74%, transparent 90%)',
         }}
       />
       {/* Inner aura ring — tighter, slightly outside the orb edge */}
@@ -88,8 +89,8 @@ export default function AmethystOrb({
           inset: `-${Math.round(size * 0.22)}px`,
           willChange: 'opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 44%, hsla(145,90%,65%,0.45) 56%, hsla(280,100%,75%,0.3) 70%, transparent 84%)'
-            : 'radial-gradient(circle, transparent 46%, hsla(280,100%,75%,0.42) 58%, hsla(265,90%,65%,0.22) 72%, transparent 86%)',
+            ? 'radial-gradient(circle, transparent 44%, hsla(280,100%,75%,0.6) 56%, hsla(270,95%,60%,0.45) 70%, transparent 86%)'
+            : 'radial-gradient(circle, transparent 46%, hsla(280,100%,75%,0.6) 58%, hsla(270,95%,60%,0.4) 72%, transparent 88%)',
         }}
       />
 
@@ -121,6 +122,15 @@ export default function AmethystOrb({
           intensity={speaking ? 1.85 : 1.5}
           speed={speaking ? 0.55 : 0.32}
           hueShift={speaking ? 1.6 : 0}
+          getAmplitude={getAmplitude}
+          getSpectrum={getSpectrum}
+        />
+
+        {/* LAYER 1.5 — Z-FIGHT: coplanar duplicates with sub-pixel jitter +
+            chromatic split. Creates the flickering "two planes occupying the
+            same space" look. */}
+        <ZFightLayers
+          speaking={speaking}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
         />

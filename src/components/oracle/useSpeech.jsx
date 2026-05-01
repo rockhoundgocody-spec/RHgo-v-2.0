@@ -97,8 +97,8 @@ export function useSpeechSynthesis() {
 
         const utter = new SpeechSynthesisUtterance(String(text));
         utter.lang = 'en-US';
-        utter.rate = 1;
-        utter.pitch = 1;
+        utter.rate = 0.92;
+        utter.pitch = 1.05;
         utter.volume = 1;
         const v = pickVoice();
         if (v) utter.voice = v;
