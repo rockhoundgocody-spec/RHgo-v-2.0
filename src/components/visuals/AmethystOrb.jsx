@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import LiquidGlassShader from './LiquidGlassShader.jsx';
 import { cn } from '@/lib/utils';
@@ -14,22 +14,48 @@ export default function AmethystOrb({
   label,
   sublabel,
   speaking = false,
+  getAmplitude,
 }) {
+  // Drive a CSS scale variable from amplitude on each frame — physical pulse,
+  // no React re-renders.
+  const wrapRef = useRef(null);
+  const haloRef = useRef(null);
+  useEffect(() => {
+    if (!getAmplitude) return;
+    let raf;
+    const tick = () => {
+      const a = getAmplitude() || 0;
+      if (wrapRef.current) {
+        wrapRef.current.style.transform = `scale(${1 + a * 0.06})`;
+      }
+      if (haloRef.current) {
+        haloRef.current.style.opacity = String(0.6 + a * 0.4);
+        haloRef.current.style.transform = `scale(${1 + a * 0.18})`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [getAmplitude]);
+
   return (
     <div
+      ref={wrapRef}
       className={cn(
-        'relative',
-        speaking ? 'animate-orb-speak' : 'animate-amethyst-pulse',
+        'relative transition-transform',
+        !getAmplitude && (speaking ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
         className
       )}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform' }}
     >
       {/* Outer ambient glow — iridescent halo */}
       <div
+        ref={haloRef}
         className={cn(
-          'absolute inset-0 rounded-full blur-3xl transition-opacity duration-500',
+          'absolute inset-0 rounded-full blur-3xl transition-opacity duration-300',
           speaking ? 'opacity-90' : 'opacity-70'
         )}
+        style={{ willChange: 'transform, opacity' }}
         style={{
           background: speaking
             ? 'radial-gradient(circle, hsla(145,90%,55%,0.5) 0%, hsla(280,100%,65%,0.4) 40%, hsla(195,100%,60%,0.25) 65%, transparent 80%)'
@@ -46,19 +72,20 @@ export default function AmethystOrb({
             : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 35px hsla(0,0%,0%,0.6)',
         }}
       >
-        {/* LAYER 1 — Black opal main */}
+        {/* LAYER 1 — Black opal main (audio-reactive via getAmplitude) */}
         <BlackOpalShader
           intensity={speaking ? 1.85 : 1.5}
-          speed={speaking ? 0.55 : 0.28}
+          speed={speaking ? 0.55 : 0.32}
           hueShift={speaking ? 1.6 : 0}
+          getAmplitude={getAmplitude}
         />
 
         {/* LAYER 2 — Low-opacity iridescent liquid-gas overlay (two-layered depth) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-35 pointer-events-none">
+        <div className="absolute inset-0 mix-blend-screen opacity-40 pointer-events-none">
           <LiquidGlassShader
             hue={speaking ? 0.36 : 0.78}
-            intensity={speaking ? 1.3 : 1.15}
-            speed={speaking ? 0.5 : 0.22}
+            intensity={speaking ? 1.35 : 1.2}
+            speed={speaking ? 0.6 : 0.28}
           />
         </div>
 

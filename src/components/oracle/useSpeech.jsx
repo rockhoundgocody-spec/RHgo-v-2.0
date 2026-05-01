@@ -5,6 +5,35 @@ export function useSpeechSynthesis() {
   const [voices, setVoices] = useState([]);
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
+  // Live amplitude (0..1) driven by boundary events + continuous oscillation.
+  // Read via getAmplitude() in animation frames — does NOT trigger re-renders.
+  const amplitudeRef = useRef(0);
+  const targetAmpRef = useRef(0);
+  const rafRef = useRef(null);
+
+  const startAmpLoop = useCallback(() => {
+    if (rafRef.current) return;
+    const tick = () => {
+      // ease toward target, then decay target so each boundary "pulses"
+      amplitudeRef.current += (targetAmpRef.current - amplitudeRef.current) * 0.18;
+      targetAmpRef.current *= 0.92;
+      // continuous low-amplitude tremor while speaking so it feels alive
+      const baseline = 0.15 + 0.1 * Math.sin(performance.now() * 0.012);
+      if (amplitudeRef.current < baseline) amplitudeRef.current = baseline;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopAmpLoop = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    amplitudeRef.current = 0;
+    targetAmpRef.current = 0;
+  }, []);
+
+  const getAmplitude = useCallback(() => amplitudeRef.current, []);
+
   // Load voices (Chrome populates them asynchronously)
   useEffect(() => {
     if (!supported) return;
@@ -41,9 +70,24 @@ export function useSpeechSynthesis() {
         utter.volume = 1;
         const v = pickVoice();
         if (v) utter.voice = v;
-        utter.onstart = () => setSpeaking(true);
-        utter.onend = () => setSpeaking(false);
-        utter.onerror = () => setSpeaking(false);
+        utter.onstart = () => {
+          setSpeaking(true);
+          startAmpLoop();
+        };
+        utter.onend = () => {
+          setSpeaking(false);
+          stopAmpLoop();
+        };
+        utter.onerror = () => {
+          setSpeaking(false);
+          stopAmpLoop();
+        };
+        // Each word/sentence boundary kicks the amplitude up — this is our
+        // best proxy for voice envelope since Web Speech has no analyser node.
+        utter.onboundary = (e) => {
+          const isWord = e.name === 'word';
+          targetAmpRef.current = Math.min(1, 0.55 + Math.random() * (isWord ? 0.45 : 0.25));
+        };
 
         // Tiny delay helps Chrome after a cancel()
         setTimeout(() => window.speechSynthesis.speak(utter), 60);
@@ -58,9 +102,12 @@ export function useSpeechSynthesis() {
     if (!supported) return;
     window.speechSynthesis.cancel();
     setSpeaking(false);
-  }, [supported]);
+    stopAmpLoop();
+  }, [supported, stopAmpLoop]);
 
-  return { speak, stop, speaking, supported, voices };
+  useEffect(() => () => stopAmpLoop(), [stopAmpLoop]);
+
+  return { speak, stop, speaking, supported, voices, getAmplitude };
 }
 
 export function useSpeechRecognition({ onResult } = {}) {

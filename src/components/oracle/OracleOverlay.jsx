@@ -19,7 +19,7 @@ export default function OracleOverlay() {
   const [muted, setMuted] = useState(false);
   const scrollRef = useRef(null);
 
-  const { speak, stop: stopSpeak, speaking } = useSpeechSynthesis();
+  const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
   const handleVoiceResult = useCallback((transcript) => {
     setInput(transcript);
     // auto-send after voice result
@@ -72,7 +72,7 @@ export default function OracleOverlay() {
         {/* header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
           <div className="w-10 h-10 shrink-0">
-            <AmethystOrb size={40} speaking={speaking} />
+            <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
           </div>
           <div className="flex-1">
             <div className="text-white font-semibold tracking-wide">Amethyst Oracle</div>

@@ -12,7 +12,7 @@ const pokeLines = [
 
 export default function HeroOrb() {
   const [poke, setPoke] = useState(null);
-  const { speak, speaking } = useSpeechSynthesis();
+  const { speak, speaking, getAmplitude } = useSpeechSynthesis();
   const timerRef = useRef(null);
 
   const handlePoke = () => {
@@ -42,7 +42,7 @@ export default function HeroOrb() {
           aria-label="Poke the orb"
           className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
         >
-          <AmethystOrb size={260} speaking={speaking || !!poke} />
+          <AmethystOrb size={260} speaking={speaking || !!poke} getAmplitude={getAmplitude} />
         </button>
 
         {poke && (

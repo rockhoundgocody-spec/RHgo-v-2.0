@@ -8,8 +8,10 @@ import * as THREE from 'three';
  *  - speed: animation speed (default 0.25)
  *  - hueShift: shifts the iridescence palette (default 0)
  */
-export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShift = 0 }) {
+export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShift = 0, getAmplitude }) {
   const mountRef = useRef(null);
+  const ampGetterRef = useRef(getAmplitude);
+  ampGetterRef.current = getAmplitude;
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -29,6 +31,7 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
       u_time: { value: 0 },
       u_intensity: { value: intensity },
       u_hueShift: { value: hueShift },
+      u_amp: { value: 0 },
       u_resolution: { value: new THREE.Vector2(width, height) },
     };
 
@@ -48,6 +51,7 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
         uniform float u_time;
         uniform float u_intensity;
         uniform float u_hueShift;
+        uniform float u_amp;
 
         vec3 hsv2rgb(vec3 c) {
           vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -86,26 +90,33 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
           if (d > 0.5) { gl_FragColor = vec4(0.0); return; }
 
           // domain-warped flow field — feeds noise into itself for liquid currents
-          float t = u_time * 0.5;
+          // amplitude (voice) accelerates the flow + boosts color shifting
+          float amp = u_amp;
+          float t = u_time * (0.5 + amp * 0.6);
           vec2 q = uv * 1.8;
+
+          // gentle global rotation for swirling motion
+          float ang = t * 0.15 + amp * 0.6;
+          float ca = cos(ang), sa = sin(ang);
+          q = mat2(ca, -sa, sa, ca) * q;
 
           // multi-step warp creates smooth, drifting currents (like ink in water)
           vec2 warp1 = vec2(fbm(q + vec2(t * 0.2, t * 0.15)),
                             fbm(q + vec2(-t * 0.18, t * 0.22) + 5.2));
-          vec2 warp2 = vec2(fbm(q + 1.6 * warp1 + vec2(t * 0.25, 0.0)),
-                            fbm(q + 1.6 * warp1 + vec2(0.0, -t * 0.3) + 3.7));
-          float flow = fbm(q + 2.2 * warp2);
+          vec2 warp2 = vec2(fbm(q + (1.6 + amp * 0.8) * warp1 + vec2(t * 0.25, 0.0)),
+                            fbm(q + (1.6 + amp * 0.8) * warp1 + vec2(0.0, -t * 0.3) + 3.7));
+          float flow = fbm(q + (2.2 + amp * 1.2) * warp2);
 
-          // smooth iridescent palette — flowing bands of color
-          float band = flow * 4.5 + u_hueShift + t * 0.6 + length(warp2) * 1.2;
-          float h = fract(0.6 + 0.45 * sin(band) + warp1.x * 0.2);
+          // iridescent palette — voice amplitude widens hue spread
+          float band = flow * (4.5 + amp * 3.0) + u_hueShift + t * 0.6 + length(warp2) * 1.2;
+          float h = fract(0.6 + 0.5 * sin(band) + warp1.x * 0.25 + amp * 0.15);
 
           // soft luminance — no hard edges, just gentle pooling of light
           float pool = smoothstep(0.1, 0.95, flow);
           float shimmer = 0.5 + 0.5 * sin(flow * 8.0 + t * 1.4);
 
-          float s = 0.75;
-          float v = (pool * 1.2 + shimmer * 0.35) * u_intensity;
+          float s = 0.75 + amp * 0.2;
+          float v = (pool * (1.2 + amp * 0.6) + shimmer * (0.35 + amp * 0.4)) * u_intensity;
 
           vec3 liquid = hsv2rgb(vec3(h, s, v));
 
@@ -138,6 +149,8 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
     const start = performance.now();
     const animate = () => {
       uniforms.u_time.value = ((performance.now() - start) / 1000) * speed * Math.PI;
+      const getAmp = ampGetterRef.current;
+      uniforms.u_amp.value = getAmp ? getAmp() : 0;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
     };
