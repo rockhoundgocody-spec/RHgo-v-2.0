@@ -109,12 +109,11 @@ export default function AmethystOrb({
       />
 
       <div
-        className="relative w-full h-full rounded-full overflow-hidden border transition-colors duration-500"
+        className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-500"
         style={{
-          borderColor: speaking ? 'hsla(145,90%,70%,0.45)' : 'hsla(270,60%,75%,0.25)',
           boxShadow: speaking
-            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 30px hsla(0,0%,0%,0.5)'
-            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 35px hsla(0,0%,0%,0.6)',
+            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35)'
+            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2)',
         }}
       >
         {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum) */}
@@ -143,50 +142,6 @@ export default function AmethystOrb({
             getSpectrum={getSpectrum}
           />
         </div>
-
-        {/* Speaking ring pulse */}
-        {speaking && (
-          <div
-            className="pointer-events-none absolute inset-0 mix-blend-screen animate-orb-ring"
-            style={{
-              background:
-                'radial-gradient(circle, transparent 55%, hsla(145,90%,60%,0.4) 72%, transparent 82%)',
-            }}
-          />
-        )}
-
-        {/* Top-left specular highlight — sells the glass sphere */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(circle at 30% 24%, hsla(0,0%,100%,0.55) 0%, hsla(0,0%,100%,0) 18%)',
-          }}
-        />
-        {/* Secondary smaller highlight for wet-glass feel */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(circle at 38% 30%, hsla(195,100%,90%,0.4) 0%, transparent 6%)',
-          }}
-        />
-        {/* Bottom inner shadow for spherical depth */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(circle at 50% 105%, hsla(0,0%,0%,0.55) 0%, transparent 55%)',
-          }}
-        />
-        {/* Subtle iridescent rim */}
-        <div
-          className="pointer-events-none absolute inset-0 rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, transparent 68%, hsla(280,100%,75%,0.18) 78%, hsla(195,100%,70%,0.12) 88%, transparent 100%)',
-          }}
-        />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
