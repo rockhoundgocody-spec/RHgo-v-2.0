@@ -1,124 +1,108 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, ArrowRight } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
-import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
+import React from 'react';
+import { Compass, ScanLine, Gem, Brain } from 'lucide-react';
+import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import MissionCard from '@/components/hub/MissionCard.jsx';
+import StatStrip from '@/components/hub/StatStrip.jsx';
 
-const tiles = [
+const missions = [
   {
     to: '/explore',
-    title: 'Explore',
-    desc: 'Find legal hotspots near you',
+    code: 'M-01',
+    title: 'Discover',
+    desc: 'BLM-aware hotspot maps, terrain & live overlays, route to legal sites.',
     icon: Compass,
     accent: 'from-amethyst/40 to-amethyst-deep/30',
   },
   {
     to: '/scan',
-    title: 'Scan',
-    desc: 'AI mineral identification',
+    code: 'M-02',
+    title: 'Identify',
+    desc: 'Point your camera. AI mineralogy returns species, rarity, confidence.',
     icon: ScanLine,
-    accent: 'from-hud-cyan/30 to-hud-blue/20',
+    accent: 'from-hud-cyan/30 to-hud-blue/30',
   },
   {
     to: '/collection',
-    title: 'Collection',
-    desc: 'Your finds & achievements',
+    code: 'M-03',
+    title: 'Collect',
+    desc: 'A living vault of every find — geo-tagged, ranked, immortalized.',
     icon: Gem,
     accent: 'from-amethyst/40 to-amethyst-deep/40',
   },
-];
-
-const pokeLines = [
-  'Please don\'t poke me.',
-  'Hey — I\'m trying to meditate.',
-  'Ouch. Rude.',
-  'I am not a button.',
-  'Poke me again and I\'ll turn you to quartz.',
+  {
+    to: '/docs',
+    code: 'M-04',
+    title: 'Intelligence',
+    desc: 'The Amethyst Oracle: field tips, geology, regulations — on demand.',
+    icon: Brain,
+    accent: 'from-hud-cyan/30 to-amethyst/30',
+  },
 ];
 
 export default function Hub() {
-  const [poke, setPoke] = useState(null);
-  const { speak, speaking } = useSpeechSynthesis();
-  const timerRef = useRef(null);
-
-  const handlePoke = () => {
-    const line = pokeLines[Math.floor(Math.random() * pokeLines.length)];
-    const id = Date.now();
-    setPoke({ id, line });
-    speak(line);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setPoke((p) => (p && p.id === id ? null : p));
-    }, 2500);
-  };
-
   return (
-    <div className="min-h-screen px-6 pt-12 pb-24 max-w-md mx-auto">
-      {/* hero orb */}
-      <div className="flex flex-col items-center mb-10">
-        <div className="relative">
-          <button
-            onClick={handlePoke}
-            aria-label="Poke the orb"
-            className="rounded-full transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-amethyst-glow/60"
-          >
-            <AmethystOrb size={240} label="ROCKHOUND" sublabel="GO" speaking={speaking || !!poke} />
-          </button>
+    <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
+      {/* ambient backdrop */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[520px] -z-10 opacity-70"
+        style={{
+          background:
+            'radial-gradient(60% 50% at 50% 20%, hsla(280,90%,50%,0.25) 0%, transparent 70%)',
+        }}
+      />
 
-          {poke && (
-            <div
-              key={poke.id}
-              className="absolute left-1/2 -translate-x-1/2 -top-4 px-3 py-1.5 rounded-full glass-panel text-white text-xs whitespace-nowrap animate-poke-bubble pointer-events-none"
-            >
-              {poke.line}
-            </div>
-          )}
+      {/* HERO */}
+      <section className="flex flex-col items-center text-center mb-16">
+        <div className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.5em] text-hud-cyan/70 glow-hud mb-6">
+          // Geological Intelligence OS
         </div>
-        <p className="text-amethyst/70 text-sm tracking-wider mt-6 text-center max-w-xs">
-          Discover. Identify. Collect.
+
+        <HeroOrb />
+
+        <h1 className="mt-10 text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+          ROCKHOUND
+          <span className="text-amethyst glow-amethyst">·</span>
+          <span className="text-amethyst glow-amethyst">GO</span>
+        </h1>
+        <p className="mt-4 max-w-md text-white/65 text-sm sm:text-base leading-relaxed">
+          The field platform for mineral discovery, identification, and collector intelligence.
+          <span className="block text-amethyst/80 mt-1">Discover. Identify. Collect.</span>
         </p>
-      </div>
 
-      {/* nav tiles */}
-      <div className="space-y-4">
-        {tiles.map(({ to, title, desc, icon: Icon, accent }) => (
-          <Link key={to} to={to}>
-            <GlassPanel className="group hover:scale-[1.02] transition-transform">
-              <div className="flex items-center gap-4 p-5">
-                <div
-                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center border border-white/10`}
-                >
-                  <Icon className="text-white" size={26} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-white font-semibold text-lg">{title}</div>
-                  <div className="text-white/60 text-sm">{desc}</div>
-                </div>
-                <ArrowRight className="text-amethyst/60 group-hover:text-amethyst group-hover:translate-x-1 transition" />
-              </div>
-            </GlassPanel>
-          </Link>
-        ))}
-      </div>
+        {/* Field log line */}
+        <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] font-mono uppercase tracking-[0.3em] text-amethyst/80">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Field Systems Online
+        </div>
+      </section>
 
-      {/* stats strip */}
-      <GlassPanel variant="hud" className="mt-8">
-        <div className="grid grid-cols-3 divide-x divide-hud-cyan/20 text-center py-4">
-          {[
-            { v: '15', l: 'Hotspots' },
-            { v: '0', l: 'Specimens' },
-            { v: 'Lv 1', l: 'Rank' },
-          ].map((s) => (
-            <div key={s.l}>
-              <div className="text-hud font-mono text-xl glow-hud">{s.v}</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-hud-cyan/60 mt-1">
-                {s.l}
-              </div>
-            </div>
+      {/* MISSION GRID */}
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70">
+            Mission Console
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {missions.map((m) => (
+            <MissionCard key={m.to} {...m} />
           ))}
         </div>
-      </GlassPanel>
+      </section>
+
+      {/* STATS */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70">
+            Field Telemetry
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
+        </div>
+        <StatStrip />
+      </section>
     </div>
   );
 }
