@@ -4,6 +4,7 @@ import LiquidGlassShader from './LiquidGlassShader.jsx';
 import GasSmokeShader from './GasSmokeShader.jsx';
 import ZFightLayers from './ZFightLayers.jsx';
 import StereoDepthLayers from './StereoDepthLayers.jsx';
+import SphereVolume from './SphereVolume.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -114,38 +115,40 @@ export default function AmethystOrb({
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-500"
         style={{
           boxShadow: speaking
-            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35)'
-            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2)',
+            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 60px hsla(265,90%,8%,0.6)'
+            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 50px hsla(265,90%,8%,0.55)',
         }}
       >
-        {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum) */}
-        <BlackOpalShader
-          intensity={speaking ? 1.85 : 1.5}
-          speed={speaking ? 0.55 : 0.32}
-          hueShift={speaking ? 1.6 : 0}
-          getAmplitude={getAmplitude}
-          getSpectrum={getSpectrum}
-        />
+        {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
+            Reduced opacity so internal volume reads through the surface. */}
+        <div className="absolute inset-0 opacity-65">
+          <BlackOpalShader
+            intensity={speaking ? 1.85 : 1.5}
+            speed={speaking ? 0.55 : 0.32}
+            hueShift={speaking ? 1.6 : 0}
+            getAmplitude={getAmplitude}
+            getSpectrum={getSpectrum}
+          />
+        </div>
 
-        {/* LAYER 1.5 — Z-FIGHT: coplanar duplicates with sub-pixel jitter +
-            chromatic split. Creates the flickering "two planes occupying the
-            same space" look. */}
-        <ZFightLayers
-          speaking={speaking}
-          getAmplitude={getAmplitude}
-          getSpectrum={getSpectrum}
-        />
+        {/* LAYER 1.5 — Z-FIGHT: coplanar duplicates with sub-pixel jitter */}
+        <div className="absolute inset-0 opacity-70">
+          <ZFightLayers
+            speaking={speaking}
+            getAmplitude={getAmplitude}
+            getSpectrum={getSpectrum}
+          />
+        </div>
 
-        {/* LAYER 1.7 — STEREO DEPTH: anaglyph red/cyan split + parallax
-            copies + chromatic aberration rim. Creates perceived 3D depth. */}
+        {/* LAYER 1.7 — STEREO DEPTH: anaglyph + parallax + chromatic rim */}
         <StereoDepthLayers
           speaking={speaking}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
         />
 
-        {/* LAYER 2 — Low-opacity iridescent liquid-gas overlay (two-layered depth) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-40 pointer-events-none">
+        {/* LAYER 2 — Iridescent liquid-gas (lowered for translucency) */}
+        <div className="absolute inset-0 mix-blend-screen opacity-30 pointer-events-none">
           <LiquidGlassShader
             hue={speaking ? 0.36 : 0.78}
             intensity={speaking ? 1.35 : 1.2}
@@ -153,14 +156,19 @@ export default function AmethystOrb({
           />
         </div>
 
-        {/* LAYER 6 — Wispy gas/smoke drifting on top (frequency-reactive) */}
-        <div className="absolute inset-0 mix-blend-screen opacity-35 pointer-events-none">
+        {/* LAYER 6 — Wispy gas/smoke (lowered for translucency) */}
+        <div className="absolute inset-0 mix-blend-screen opacity-25 pointer-events-none">
           <GasSmokeShader
             speed={speaking ? 0.28 : 0.15}
             getAmplitude={getAmplitude}
             getSpectrum={getSpectrum}
           />
         </div>
+
+        {/* LAYER 7 — VOLUMETRIC SPHERE: terminator shading, specular,
+            rim light, back-face silhouette. Converts the flat disc into
+            a perceived translucent 3D glass orb. */}
+        <SphereVolume />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
