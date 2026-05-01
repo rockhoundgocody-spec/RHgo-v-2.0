@@ -4,6 +4,8 @@ import { Camera, Upload, Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Button } from '@/components/ui/button';
+import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
+import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 
 export default function Scan() {
   const [image, setImage] = useState(null);
@@ -12,6 +14,7 @@ export default function Scan() {
   const [result, setResult] = useState(null);
   const [savedId, setSavedId] = useState(null);
   const fileRef = useRef(null);
+  const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
@@ -63,6 +66,8 @@ export default function Scan() {
       found_date: new Date().toISOString().split('T')[0],
     });
     setSavedId(created.id);
+    // Re-evaluate badges after save — pops the unlock overlay if any new ones earned
+    refreshBadges();
   };
 
   const reset = () => {
@@ -127,6 +132,10 @@ export default function Scan() {
           <Upload className="mr-2" size={18} />
           {image ? 'Try Another Image' : 'Capture or Upload'}
         </Button>
+      )}
+
+      {pendingBadge && (
+        <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
       )}
 
       {result && (
