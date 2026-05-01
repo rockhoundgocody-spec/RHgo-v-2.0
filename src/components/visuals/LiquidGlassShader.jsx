@@ -65,8 +65,20 @@ export default function LiquidGlassShader({ hue = 0.78, intensity = 1.0, speed =
           vec2 uv = vUv - 0.5;
           float d = length(uv);
 
-          float n1 = noise(uv * 3.0 + u_time * 0.3);
-          float n2 = noise(uv * 5.0 - u_time * 0.2);
+          // counter-rotating swirl — flows opposite to the main opal layer
+          float ang = -u_time * 0.18 + d * 1.6;
+          float ca = cos(ang), sa = sin(ang);
+          vec2 suv = mat2(ca, -sa, sa, ca) * uv;
+
+          // domain-warp drift so currents bend organically
+          vec2 drift = vec2(
+            sin(u_time * 0.4 + suv.y * 3.0),
+            cos(u_time * 0.35 - suv.x * 3.0)
+          ) * 0.08;
+          suv += drift;
+
+          float n1 = noise(suv * 3.0 + u_time * 0.3);
+          float n2 = noise(suv * 5.0 - u_time * 0.2);
           float swirl = n1 * 0.5 + n2 * 0.5;
 
           float h = u_hue + swirl * 0.08;
