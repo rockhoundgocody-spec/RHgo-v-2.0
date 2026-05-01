@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import LiquidGlassShader from './LiquidGlassShader.jsx';
+import GasSmokeShader from './GasSmokeShader.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -87,6 +88,11 @@ export default function AmethystOrb({
             intensity={speaking ? 1.35 : 1.2}
             speed={speaking ? 0.6 : 0.28}
           />
+        </div>
+
+        {/* LAYER 6 — Wispy gas/smoke drifting on top */}
+        <div className="absolute inset-0 mix-blend-screen opacity-55 pointer-events-none">
+          <GasSmokeShader speed={speaking ? 0.28 : 0.15} getAmplitude={getAmplitude} />
         </div>
 
         {/* Speaking ring pulse */}
