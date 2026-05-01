@@ -1,6 +1,52 @@
 import React, { useEffect, useRef } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
-import { usePerspective } from './usePerspective';
+
+/**
+ * Tracks viewer perspective for stereoscopic 4D effect.
+ * Refs update each frame with normalized (-1..1) x/y offsets driven by
+ * cursor (desktop) or device orientation (mobile).
+ * After Effects stereoscopic camera offset reference:
+ * https://helpx.adobe.com/after-effects/kb/stereoscopic-3d-effects.html
+ */
+function usePerspective() {
+  const xRef = useRef(0);
+  const yRef = useRef(0);
+  const targetX = useRef(0);
+  const targetY = useRef(0);
+
+  useEffect(() => {
+    const handleMouse = (e) => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      targetX.current = (e.clientX / w) * 2 - 1;
+      targetY.current = (e.clientY / h) * 2 - 1;
+    };
+    const handleOrient = (e) => {
+      if (e.gamma == null || e.beta == null) return;
+      targetX.current = Math.max(-1, Math.min(1, e.gamma / 30));
+      targetY.current = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
+    };
+
+    window.addEventListener('mousemove', handleMouse, { passive: true });
+    window.addEventListener('deviceorientation', handleOrient, { passive: true });
+
+    let raf;
+    const tick = () => {
+      xRef.current += (targetX.current - xRef.current) * 0.08;
+      yRef.current += (targetY.current - yRef.current) * 0.08;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouse);
+      window.removeEventListener('deviceorientation', handleOrient);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return { xRef, yRef };
+}
 
 /**
  * Stacked depth-illusion layers on top of the main orb:

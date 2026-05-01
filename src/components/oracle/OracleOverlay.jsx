@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio } from 'lucide-react';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
@@ -17,7 +17,10 @@ export default function OracleOverlay() {
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [liveMode, setLiveMode] = useState(false);
   const scrollRef = useRef(null);
+  const liveModeRef = useRef(false);
+  liveModeRef.current = liveMode;
 
   const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
   const handleVoiceResult = useCallback((transcript) => {
@@ -39,8 +42,20 @@ export default function OracleOverlay() {
     if (!open) {
       stopSpeak();
       stopListen();
+      setLiveMode(false);
     }
   }, [open, stopSpeak, stopListen]);
+
+  // Live conversation: when oracle finishes speaking, auto-resume listening
+  useEffect(() => {
+    if (!liveMode) return;
+    if (!speaking && !thinking && !listening) {
+      const t = setTimeout(() => {
+        if (liveModeRef.current && !speaking && !thinking) startListen();
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [liveMode, speaking, thinking, listening, startListen]);
 
   const sendMessage = async (textOverride) => {
     const text = (textOverride ?? input).trim();
@@ -80,6 +95,31 @@ export default function OracleOverlay() {
               {speaking ? 'Speaking…' : listening ? 'Listening…' : thinking ? 'Thinking…' : 'Online'}
             </div>
           </div>
+          {micSupported && (
+            <button
+              onClick={() => {
+                setLiveMode((v) => {
+                  const next = !v;
+                  if (next) {
+                    setMuted(false);
+                    if (!speaking && !thinking && !listening) startListen();
+                  } else {
+                    stopListen();
+                  }
+                  return next;
+                });
+              }}
+              className={`p-2 rounded-md transition ${
+                liveMode
+                  ? 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/40'
+                  : 'text-amethyst/70 hover:text-white hover:bg-white/5'
+              }`}
+              aria-label={liveMode ? 'End live conversation' : 'Start live conversation'}
+              title={liveMode ? 'End live conversation' : 'Start live conversation'}
+            >
+              <Radio size={16} className={liveMode ? 'animate-pulse' : ''} />
+            </button>
+          )}
           <button
             onClick={() => setMuted((m) => !m)}
             className="p-2 rounded-md text-amethyst/70 hover:text-white hover:bg-white/5"
