@@ -49,6 +49,42 @@
     "verified": {
       "type": "boolean",
       "default": false
+    },
+    "weather": {
+      "type": "object",
+      "description": "Weather snapshot at time/place of finding",
+      "properties": {
+        "temperature_f": {
+          "type": "number"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "humidity": {
+          "type": "number"
+        },
+        "wind_mph": {
+          "type": "number"
+        },
+        "fetched_at": {
+          "type": "string"
+        }
+      }
+    },
+    "lunar_phase": {
+      "type": "object",
+      "description": "Lunar phase at time of finding",
+      "properties": {
+        "phase_name": {
+          "type": "string"
+        },
+        "illumination": {
+          "type": "number"
+        },
+        "phase_value": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [

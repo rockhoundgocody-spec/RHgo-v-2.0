@@ -23,28 +23,33 @@ export function useSpeechSynthesis() {
     if (rafRef.current) return;
     const tick = () => {
       const now = performance.now();
-      // master amplitude — slow pulse, follows targets
-      amplitudeRef.current += (targetAmpRef.current - amplitudeRef.current) * 0.18;
-      targetAmpRef.current *= 0.92;
+      // SMOOTHED envelope — lower alpha = slower follow, longer decay = silkier
+      // transitions that flow with the orb's liquid-gas animation.
+      amplitudeRef.current += (targetAmpRef.current - amplitudeRef.current) * 0.09;
+      targetAmpRef.current *= 0.965;
 
-      // per-band envelopes — each decays at its own rate (bass slowest, treble fastest)
-      bassRef.current += (targetBassRef.current - bassRef.current) * 0.12;
-      midRef.current += (targetMidRef.current - midRef.current) * 0.22;
-      trebleRef.current += (targetTrebleRef.current - trebleRef.current) * 0.35;
-      targetBassRef.current *= 0.94;
-      targetMidRef.current *= 0.88;
-      targetTrebleRef.current *= 0.78;
+      // per-band envelopes — gentler attack + slower decay across all bands
+      bassRef.current += (targetBassRef.current - bassRef.current) * 0.06;
+      midRef.current += (targetMidRef.current - midRef.current) * 0.11;
+      trebleRef.current += (targetTrebleRef.current - trebleRef.current) * 0.18;
+      targetBassRef.current *= 0.975;
+      targetMidRef.current *= 0.945;
+      targetTrebleRef.current *= 0.88;
 
-      // formant-like oscillators add the "breathing" texture between word events
-      const bassOsc = 0.18 + 0.10 * Math.sin(now * 0.006);
-      const midOsc = 0.12 + 0.08 * Math.sin(now * 0.018 + 1.3);
-      const trebleOsc = 0.08 + 0.06 * Math.sin(now * 0.045 + 2.7);
-      if (bassRef.current < bassOsc) bassRef.current = bassOsc;
-      if (midRef.current < midOsc) midRef.current = midOsc;
-      if (trebleRef.current < trebleOsc) trebleRef.current = trebleOsc;
+      // formant-like oscillators — slower drift, deeper baseline (smoother breathing)
+      const bassOsc = 0.22 + 0.12 * Math.sin(now * 0.0035);
+      const midOsc = 0.16 + 0.10 * Math.sin(now * 0.011 + 1.3);
+      const trebleOsc = 0.10 + 0.07 * Math.sin(now * 0.028 + 2.7);
+      // soft-blend the floor instead of hard clamp — eliminates micro-pops
+      bassRef.current = Math.max(bassRef.current, bassRef.current * 0.7 + bassOsc * 0.3);
+      midRef.current = Math.max(midRef.current, midRef.current * 0.7 + midOsc * 0.3);
+      trebleRef.current = Math.max(trebleRef.current, trebleRef.current * 0.7 + trebleOsc * 0.3);
 
-      const baseline = 0.15 + 0.1 * Math.sin(now * 0.012);
-      if (amplitudeRef.current < baseline) amplitudeRef.current = baseline;
+      const baseline = 0.18 + 0.08 * Math.sin(now * 0.0065);
+      amplitudeRef.current = Math.max(
+        amplitudeRef.current,
+        amplitudeRef.current * 0.7 + baseline * 0.3
+      );
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -97,8 +102,8 @@ export function useSpeechSynthesis() {
 
         const utter = new SpeechSynthesisUtterance(String(text));
         utter.lang = 'en-US';
-        utter.rate = 0.92;
-        utter.pitch = 1.05;
+        utter.rate = 0.88;
+        utter.pitch = 1.02;
         utter.volume = 1;
         const v = pickVoice();
         if (v) utter.voice = v;
@@ -124,18 +129,21 @@ export function useSpeechSynthesis() {
           const wordWeight = Math.min(1, charLen / 8); // 0..1
           const energy = isWord ? 0.55 + Math.random() * 0.45 : 0.4 + Math.random() * 0.3;
 
-          targetAmpRef.current = Math.min(1, energy);
-          // bass — driven by vowel-rich (longer) words
-          targetBassRef.current = Math.min(
-            1,
-            0.35 + wordWeight * 0.55 + Math.random() * 0.15
+          // BLEND new target with current target — softens word-to-word jumps
+          // so the spectrum flows like liquid instead of stepping abruptly.
+          const blend = (cur, next) => cur * 0.4 + next * 0.6;
+          targetAmpRef.current = blend(targetAmpRef.current, Math.min(1, energy));
+          targetBassRef.current = blend(
+            targetBassRef.current,
+            Math.min(1, 0.35 + wordWeight * 0.5 + Math.random() * 0.1)
           );
-          // mid — formant body, fairly consistent during speech
-          targetMidRef.current = Math.min(1, 0.4 + Math.random() * 0.5);
-          // treble — sibilance/consonant flicker, sharper on short words
-          targetTrebleRef.current = Math.min(
-            1,
-            0.3 + (1 - wordWeight) * 0.5 + Math.random() * 0.3
+          targetMidRef.current = blend(
+            targetMidRef.current,
+            Math.min(1, 0.4 + Math.random() * 0.4)
+          );
+          targetTrebleRef.current = blend(
+            targetTrebleRef.current,
+            Math.min(1, 0.3 + (1 - wordWeight) * 0.45 + Math.random() * 0.2)
           );
         };
 

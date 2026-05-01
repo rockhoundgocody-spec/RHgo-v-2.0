@@ -87,13 +87,10 @@ export default function LiquidGlassShader({ hue = 0.78, intensity = 1.0, speed =
 
           vec3 col = hsv2rgb(vec3(h, s, v));
 
-          // edge falloff for orb-like feel
-          float edge = smoothstep(0.55, 0.2, d);
+          // ULTRA-SOFT edge — wide gaussian-like falloff, no hard rim
+          float edge = smoothstep(0.5, 0.0, d);
+          edge = edge * edge; // squared for organic, blob-like fade
           col *= edge;
-
-          // specular highlight
-          float spec = smoothstep(0.35, 0.0, length(uv - vec2(-0.18, 0.22)));
-          col += spec * 0.35;
 
           gl_FragColor = vec4(col, edge);
         }

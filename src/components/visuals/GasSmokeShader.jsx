@@ -127,8 +127,9 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude, getSpectrum
           // rim highlight punches brightness on wisp edges
           col += rim * (0.35 + u_amp * 0.4) * vec3(1.0, 0.95, 1.0);
 
-          // soft inner-edge falloff
-          float edge = smoothstep(0.5, 0.12, d);
+          // ULTRA-SOFT inner-edge falloff — pushed wider for seamless fade
+          float edge = smoothstep(0.5, 0.0, d);
+          edge = edge * edge;
           // tiny breath of opacity variation for living feel
           float breath = 0.85 + 0.15 * sin(t * 0.6);
 

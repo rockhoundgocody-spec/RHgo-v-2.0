@@ -76,8 +76,8 @@ export default function AmethystOrb({
           inset: `-${Math.round(size * 0.55)}px`,
           willChange: 'transform, opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 26%, hsla(280,100%,70%,0.55) 40%, hsla(270,90%,55%,0.45) 56%, hsla(265,80%,45%,0.25) 72%, transparent 88%)'
-            : 'radial-gradient(circle, transparent 28%, hsla(280,100%,68%,0.55) 42%, hsla(270,90%,55%,0.42) 58%, hsla(265,80%,45%,0.22) 74%, transparent 90%)',
+            ? 'radial-gradient(circle, transparent 22%, hsla(280,100%,72%,0.85) 38%, hsla(270,95%,58%,0.7) 54%, hsla(265,85%,48%,0.4) 72%, transparent 92%)'
+            : 'radial-gradient(circle, transparent 24%, hsla(280,100%,70%,0.82) 40%, hsla(270,95%,58%,0.65) 56%, hsla(265,85%,48%,0.36) 74%, transparent 92%)',
         }}
       />
       {/* Inner aura ring — tighter, slightly outside the orb edge */}
@@ -89,8 +89,8 @@ export default function AmethystOrb({
           inset: `-${Math.round(size * 0.22)}px`,
           willChange: 'opacity',
           background: speaking
-            ? 'radial-gradient(circle, transparent 44%, hsla(280,100%,75%,0.6) 56%, hsla(270,95%,60%,0.45) 70%, transparent 86%)'
-            : 'radial-gradient(circle, transparent 46%, hsla(280,100%,75%,0.6) 58%, hsla(270,95%,60%,0.4) 72%, transparent 88%)',
+            ? 'radial-gradient(circle, transparent 40%, hsla(280,100%,78%,0.9) 54%, hsla(270,98%,62%,0.7) 68%, transparent 88%)'
+            : 'radial-gradient(circle, transparent 42%, hsla(280,100%,78%,0.88) 56%, hsla(270,98%,62%,0.65) 70%, transparent 88%)',
         }}
       />
 
