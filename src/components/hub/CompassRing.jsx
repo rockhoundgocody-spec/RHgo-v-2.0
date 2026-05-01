@@ -83,29 +83,23 @@ export default function CompassRing({ size = 460 }) {
       aria-hidden
     >
       <div ref={elRef} className="absolute inset-0" style={{ willChange: 'transform' }}>
-        {/* needle pointing up at angle 0 */}
+        {/* Subtle directional glow — soft halo bloom at the top edge */}
         <div
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: 4 }}
-        >
-          <div
-            className="w-1.5 h-6 rounded-full"
-            style={{
-              background:
-                'linear-gradient(to bottom, hsla(155,90%,70%,0.95), hsla(155,90%,40%,0.4))',
-              boxShadow: '0 0 14px hsla(155,90%,55%,0.85)',
-            }}
-          />
-          <div
-            className="w-2 h-2 rounded-full mx-auto -mt-0.5"
-            style={{ background: 'hsla(155,90%,75%,1)', boxShadow: '0 0 10px hsla(155,90%,60%,1)' }}
-          />
-        </div>
+          className="absolute left-1/2 -translate-x-1/2 -top-3"
+          style={{
+            width: 90,
+            height: 30,
+            background:
+              'radial-gradient(ellipse at center, hsla(155,90%,65%,0.55) 0%, hsla(155,90%,55%,0.25) 35%, transparent 75%)',
+            filter: 'blur(8px)',
+            opacity: bearing == null ? 0.35 : 0.85,
+          }}
+        />
       </div>
-      {/* Distance pill anchored to top of well */}
+      {/* Distance pill — only when we actually have a hotspot lock */}
       {bearing != null && hotspotName && (
         <div
-          className="absolute left-1/2 -translate-x-1/2 -top-7 px-3 py-1 rounded-full glass-panel text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-300/90 whitespace-nowrap"
+          className="absolute left-1/2 -translate-x-1/2 -top-12 px-3 py-1 rounded-full glass-panel text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-300/90 whitespace-nowrap"
         >
           ◇ {hotspotName} · {formatKm(distance)}
         </div>

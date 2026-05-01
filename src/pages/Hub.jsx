@@ -5,6 +5,7 @@ import MissionCard from '@/components/hub/MissionCard.jsx';
 import StatStrip from '@/components/hub/StatStrip.jsx';
 import TiltContainer from '@/components/hub/TiltContainer.jsx';
 import CelestialDial from '@/components/hub/CelestialDial.jsx';
+import HubIntro from '@/components/hub/HubIntro.jsx';
 
 const missions = [
   {
@@ -80,6 +81,9 @@ export default function Hub() {
           <CelestialDial />
         </div>
       </section>
+
+      {/* INTRO — explains the orb + ring UI */}
+      <HubIntro />
 
       {/* MISSION GRID */}
       <section className="mb-10">
