@@ -6,6 +6,7 @@ import ZFightLayers from './ZFightLayers.jsx';
 import StereoDepthLayers from './StereoDepthLayers.jsx';
 import SphereVolume from './SphereVolume.jsx';
 import InnerCaustic from './InnerCaustic.jsx';
+import EnvironmentLights from './EnvironmentLights.jsx';
 import { cn } from '@/lib/utils';
 
 /**
@@ -175,6 +176,11 @@ export default function AmethystOrb({
             counter to the viewer's perspective, simulating light bending
             through the glass interior. */}
         <InnerCaustic />
+
+        {/* LAYER 9 — ENVIRONMENT LIGHTS: animated HDRI/IBL reflections
+            orbiting the sphere (After Effects environment-light style).
+            Two key/fill lights + fresnel rim sell true 3D reflectivity. */}
+        <EnvironmentLights />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
