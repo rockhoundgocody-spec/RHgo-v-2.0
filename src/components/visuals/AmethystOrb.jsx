@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import BlackOpalShader from './BlackOpalShader.jsx';
+import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import SphereVolume from './SphereVolume.jsx';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,10 @@ export default function AmethystOrb({
   const haloRef = useRef(null);
   const auraRef = useRef(null);
   const auraInnerRef = useRef(null);
+  // Try WebGPU first; fall back to WebGL shader if unsupported / init fails.
+  const [useWebGPU, setUseWebGPU] = useState(
+    typeof navigator !== 'undefined' && !!navigator.gpu
+  );
   useEffect(() => {
     if (!getAmplitude && !getSpectrum) return;
     let raf;
@@ -116,15 +121,26 @@ export default function AmethystOrb({
         }}
       >
         {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
-            Single WebGL canvas to avoid context-loss from too many stacked shaders. */}
+            WebGPU + TSL when available; WebGL fallback otherwise. */}
         <div className="absolute inset-0">
-          <BlackOpalShader
-            intensity={speaking ? 1.85 : 1.5}
-            speed={speaking ? 0.55 : 0.32}
-            hueShift={speaking ? 1.6 : 0}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-          />
+          {useWebGPU ? (
+            <WebGPUOpalShader
+              intensity={speaking ? 1.85 : 1.5}
+              speed={speaking ? 0.55 : 0.32}
+              hueShift={speaking ? 1.6 : 0}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+              onUnsupported={() => setUseWebGPU(false)}
+            />
+          ) : (
+            <BlackOpalShader
+              intensity={speaking ? 1.85 : 1.5}
+              speed={speaking ? 0.55 : 0.32}
+              hueShift={speaking ? 1.6 : 0}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+            />
+          )}
         </div>
 
         {/* Amethyst tint wash — restores the purple gradient theme over the opal */}
