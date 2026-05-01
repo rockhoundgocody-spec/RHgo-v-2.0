@@ -1,0 +1,47 @@
+{
+  "name": "Badge",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Stable identifier for the badge definition (e.g. 'first_find')"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "epic",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name to render in the badge core",
+      "default": "Gem"
+    },
+    "earned_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user earned this badge"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the user who earned the badge"
+    }
+  },
+  "required": [
+    "code",
+    "title",
+    "rarity",
+    "owner_email"
+  ]
+}

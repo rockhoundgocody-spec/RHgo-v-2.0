@@ -14,6 +14,7 @@ import Compare from '@/pages/Compare';
 import Admin from '@/pages/Admin';
 import Docs from '@/pages/Docs';
 import DesignSystem from '@/pages/DesignSystem';
+import Badges from '@/pages/Badges';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,6 +47,7 @@ const AuthenticatedApp = () => {
         <Route path="/explore" element={<Explore />} />
         <Route path="/scan" element={<Scan />} />
         <Route path="/collection" element={<Collection />} />
+        <Route path="/badges" element={<Badges />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/docs" element={<Docs />} />
