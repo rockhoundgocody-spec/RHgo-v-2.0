@@ -48,59 +48,83 @@ export default function GasSmokeShader({ speed = 0.15, getAmplitude }) {
         uniform float u_time;
         uniform float u_amp;
 
-        // hash + value noise
-        float hash(vec2 p) {
-          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        // simplex-like gradient noise — smoother than value noise
+        vec2 hash2(vec2 p) {
+          p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+          return -1.0 + 2.0 * fract(sin(p) * 43758.5453);
         }
-        float vnoise(vec2 p) {
+        float gnoise(vec2 p) {
           vec2 i = floor(p), f = fract(p);
-          float a = hash(i);
-          float b = hash(i + vec2(1.0, 0.0));
-          float c = hash(i + vec2(0.0, 1.0));
-          float d = hash(i + vec2(1.0, 1.0));
           vec2 u = f * f * (3.0 - 2.0 * f);
-          return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+          return mix(mix(dot(hash2(i), f),
+                         dot(hash2(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
+                     mix(dot(hash2(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
+                         dot(hash2(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x), u.y);
         }
+        // 6-octave fbm for finer wisp detail
         float fbm(vec2 p) {
           float v = 0.0;
           float a = 0.5;
-          for (int i = 0; i < 5; i++) {
-            v += a * vnoise(p);
-            p *= 2.0;
+          mat2 rot = mat2(0.8, -0.6, 0.6, 0.8);
+          for (int i = 0; i < 6; i++) {
+            v += a * gnoise(p);
+            p = rot * p * 2.02;
             a *= 0.5;
           }
-          return v;
+          return v * 0.5 + 0.5;
+        }
+        // curl noise — produces divergence-free flow (real swirling currents)
+        vec2 curl(vec2 p) {
+          float e = 0.08;
+          float n1 = fbm(p + vec2(0.0, e));
+          float n2 = fbm(p - vec2(0.0, e));
+          float n3 = fbm(p + vec2(e, 0.0));
+          float n4 = fbm(p - vec2(e, 0.0));
+          return vec2(n1 - n2, -(n3 - n4)) / (2.0 * e);
         }
 
         void main() {
           vec2 uv = vUv - 0.5;
           float d = length(uv);
-
-          // upward drift + slow swirl — feels like rising smoke
           float t = u_time;
-          vec2 q = uv * 2.6;
-          q.y += t * 0.35;
-          float ang = sin(t * 0.2) * 0.25;
+
+          // base coords with gentle upward drift + slow rotation
+          vec2 q = uv * 2.4;
+          q.y += t * 0.22;
+          float ang = sin(t * 0.18) * 0.3 + t * 0.04;
           float ca = cos(ang), sa = sin(ang);
           q = mat2(ca, -sa, sa, ca) * q;
 
-          // domain-warp for billowing wisps
-          vec2 warp = vec2(fbm(q + t * 0.15), fbm(q - t * 0.12 + 3.1));
-          float smoke = fbm(q + 1.3 * warp);
+          // curl-driven flow — currents actually circulate
+          vec2 flow = curl(q * 0.7 + vec2(0.0, t * 0.1));
+          q += flow * (0.5 + u_amp * 0.4);
 
-          // amplitude (voice) thickens the smoke
-          float thickness = 0.35 + u_amp * 0.45;
-          float wisps = smoothstep(thickness + 0.1, thickness - 0.05, smoke);
-          wisps = pow(wisps, 1.4);
+          // two-tier smoke: large billows + finer wisps
+          float bigBillow = fbm(q + flow * 0.3);
+          float fineWisps = fbm(q * 2.6 - flow * 0.4 + t * 0.15);
+          float smoke = bigBillow * 0.65 + fineWisps * 0.35;
 
-          // tint — pale lavender / silver smoke
-          vec3 col = mix(vec3(0.78, 0.72, 0.92), vec3(0.92, 0.95, 1.0), wisps * 0.6);
+          // sharper density curve — voice amp thickens the cloud
+          float thickness = 0.42 - u_amp * 0.12;
+          float wisps = smoothstep(thickness, thickness + 0.32, smoke);
+          // edge highlight: brighten where density transitions (rim glow on wisps)
+          float rim = smoothstep(0.04, 0.0, abs(smoke - thickness - 0.04));
 
-          // edge falloff so smoke fades to orb rim
-          float edge = smoothstep(0.5, 0.15, d);
+          // iridescent tint — shifts toward emerald/cyan when speaking
+          vec3 cool = vec3(0.78, 0.72, 0.95);    // lavender
+          vec3 warm = vec3(0.95, 0.92, 1.00);    // bright silver
+          vec3 reactive = mix(vec3(0.55, 0.95, 0.85), vec3(0.85, 0.7, 1.0), 0.5 + 0.5 * sin(t + smoke * 4.0));
+          vec3 base = mix(cool, warm, wisps);
+          vec3 col = mix(base, reactive, u_amp * 0.6);
+          // rim highlight punches brightness on wisp edges
+          col += rim * (0.35 + u_amp * 0.4) * vec3(1.0, 0.95, 1.0);
 
-          // overall opacity stays soft so other layers read through
-          float alpha = wisps * edge * (0.35 + u_amp * 0.25);
+          // soft inner-edge falloff
+          float edge = smoothstep(0.5, 0.12, d);
+          // tiny breath of opacity variation for living feel
+          float breath = 0.85 + 0.15 * sin(t * 0.6);
+
+          float alpha = (wisps * 0.85 + rim * 0.5) * edge * breath * (0.42 + u_amp * 0.3);
 
           gl_FragColor = vec4(col, alpha);
         }
