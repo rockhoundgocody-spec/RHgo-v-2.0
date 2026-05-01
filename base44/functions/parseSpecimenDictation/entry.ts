@@ -56,6 +56,21 @@ Transcript: """${transcript}"""`;
     if (typeof lng === 'number') payload.lng = lng;
     if (!payload.found_date) payload.found_date = today;
 
+    // Reverse-geocode coords → place name if speaker didn't provide a location.
+    if (!payload.found_at && typeof lat === 'number' && typeof lng === 'number') {
+      const key = Deno.env.get('GOOGLE_MAPS_API_KEY');
+      if (key) {
+        try {
+          const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${key}`;
+          const geo = await fetch(url).then((r) => r.json());
+          const best = geo?.results?.[0];
+          if (best?.formatted_address) payload.found_at = best.formatted_address;
+        } catch {
+          // non-fatal — leave found_at null
+        }
+      }
+    }
+
     const created = await base44.entities.Specimen.create(payload);
     return Response.json({ fields, created });
   } catch (error) {

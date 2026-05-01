@@ -23,8 +23,9 @@ export default function Scan() {
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setImageUrl(file_url);
     const r = await base44.integrations.Core.InvokeLLM({
+      model: 'gemini_3_flash',
       prompt:
-        'Identify the mineral or rock in this image. Provide your top 3 candidate identifications with confidence scores (0-1). Include common name, scientific/mineral name, key visual features observed, and a one-sentence description.',
+        'Identify the mineral or rock in this image. Provide your top 3 candidate identifications with confidence scores (0-1). Include common name, scientific/mineral name, key visual features observed (color, luster, crystal habit, hardness cues), and a one-sentence description. Be conservative with confidence — if uncertain, say so.',
       file_urls: [file_url],
       response_json_schema: {
         type: 'object',
