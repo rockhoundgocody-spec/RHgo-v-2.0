@@ -1,35 +1,61 @@
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Camera, Upload, Loader2, Sparkles, RotateCcw } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import HudFrame from '@/components/visuals/HudFrame.jsx';
-import { Button } from '@/components/ui/button';
+import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
+import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
+import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
+import HolographicResult from '@/components/scan/HolographicResult.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { useNavigate } from 'react-router-dom';
 
+/**
+ * Scan — combined flow:
+ *   live  →  capture (multi-angle)  →  reconstruct (upload + AI)  →  result
+ */
 export default function Scan() {
-  const [image, setImage] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
+  const [stage, setStage] = useState('live'); // live | capture | reconstruct | result
+  const [angles, setAngles] = useState([]);
+  const [primaryUrl, setPrimaryUrl] = useState(null);
   const [result, setResult] = useState(null);
   const [savedId, setSavedId] = useState(null);
-  const fileRef = useRef(null);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
+  const navigate = useNavigate();
 
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
+  // Fallback if camera unavailable — single-image classic flow.
+  const handleUploadFallback = async (file) => {
     if (!file) return;
-    setImage(URL.createObjectURL(file));
-    setResult(null);
-    setSavedId(null);
-    setAnalyzing(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setImageUrl(file_url);
+    const blob = file;
+    setAngles([{ key: 'front', label: 'Uploaded', captured: true, blob }]);
+    setStage('reconstruct');
+  };
+
+  const handleCaptureComplete = (capturedAngles) => {
+    setAngles(capturedAngles);
+    setStage('reconstruct');
+  };
+
+  // Run the actual upload + AI identification pipeline.
+  const runner = useCallback(async () => {
+    // Upload all blobs in parallel.
+    const uploads = await Promise.all(
+      angles
+        .filter((a) => a.blob)
+        .map(async (a) => {
+          const file = new File([a.blob], `${a.key}.jpg`, { type: 'image/jpeg' });
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          return { ...a, file_url };
+        })
+    );
+
+    const primary = uploads[0]?.file_url;
+    setPrimaryUrl(primary);
+
+    // Multi-image identification via vision LLM.
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
-        'Identify the mineral or rock in this image. Provide your top 3 candidate identifications with confidence scores (0-1). Include common name, scientific/mineral name, key visual features observed (color, luster, crystal habit, hardness cues), and a one-sentence description. Be conservative with confidence — if uncertain, say so.',
-      file_urls: [file_url],
+        'You are analyzing multiple photographs of the same mineral or rock specimen taken from different angles. Synthesize across views to identify it. Provide your top 3 candidate identifications with confidence scores (0-1). Include common name, scientific/mineral name, key visual features observed (color, luster, crystal habit, hardness cues), and a one-sentence description. Be conservative with confidence — if uncertain, say so.',
+      file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {
         type: 'object',
         properties: {
@@ -50,29 +76,39 @@ export default function Scan() {
         },
       },
     });
+
+    return { result: r, uploads };
+  }, [angles]);
+
+  const handleReconstructed = ({ result: r }) => {
     setResult(r);
-    setAnalyzing(false);
+    setStage('result');
+  };
+
+  const handleReconstructError = () => {
+    // Soft fail back to live so the user can retry.
+    setStage('live');
   };
 
   const saveToCollection = async () => {
-    if (!result || !imageUrl) return;
+    if (!result || !primaryUrl) return;
     const created = await base44.entities.Specimen.create({
       mineral_name: result.top_match,
       common_name: result.top_match,
-      image_url: imageUrl,
+      image_url: primaryUrl,
       ai_confidence: result.confidence,
       ai_candidates: result.candidates,
       notes: result.description,
       found_date: new Date().toISOString().split('T')[0],
     });
     setSavedId(created.id);
-    // Re-evaluate badges after save — pops the unlock overlay if any new ones earned
     refreshBadges();
   };
 
   const reset = () => {
-    setImage(null);
-    setImageUrl(null);
+    setStage('live');
+    setAngles([]);
+    setPrimaryUrl(null);
     setResult(null);
     setSavedId(null);
   };
@@ -82,117 +118,93 @@ export default function Scan() {
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-white tracking-wide">Scan</h1>
         <p className="text-amethyst/60 text-xs uppercase tracking-[0.3em] mt-1">
-          AI Mineral ID
+          AI Vision · 3D Reconstruction
         </p>
+        <StageStrip stage={stage} />
       </div>
 
-      <GlassPanel variant="hud" className="mb-4">
-        <HudFrame label="Specimen Capture">
-          <div className="aspect-square rounded-md overflow-hidden hud-grid-bg relative flex items-center justify-center">
-            {image ? (
-              <>
-                <img src={image} alt="specimen" className="w-full h-full object-cover" />
-                {analyzing && (
-                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center">
-                    <Loader2 className="animate-spin text-hud mb-3" size={32} />
-                    <div className="text-hud text-xs tracking-[0.3em] uppercase glow-hud">
-                      Analyzing…
-                    </div>
-                    <div
-                      className="absolute inset-x-0 h-16 bg-gradient-to-b from-hud-cyan/40 to-transparent animate-hud-scan"
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center text-white/40">
-                <Camera size={48} className="mx-auto mb-2" />
-                <p className="text-xs uppercase tracking-wider">Tap below to capture</p>
-              </div>
-            )}
-          </div>
-        </HudFrame>
-      </GlassPanel>
+      {stage === 'live' && (
+        <LiveScanStage
+          onBeginCapture={() => setStage('capture')}
+          onUploadFallback={handleUploadFallback}
+        />
+      )}
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFile}
-        className="hidden"
-      />
+      {stage === 'capture' && (
+        <MultiAngleCapture
+          onComplete={handleCaptureComplete}
+          onCancel={() => setStage('live')}
+        />
+      )}
 
-      {!result && (
-        <Button
-          onClick={() => fileRef.current?.click()}
-          disabled={analyzing}
-          className="w-full bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white h-14 rounded-xl shadow-[0_0_30px_-10px_hsla(280,100%,60%,0.6)]"
-        >
-          <Upload className="mr-2" size={18} />
-          {image ? 'Try Another Image' : 'Capture or Upload'}
-        </Button>
+      {stage === 'reconstruct' && (
+        <ReconstructionStage
+          runner={runner}
+          onDone={handleReconstructed}
+          onError={handleReconstructError}
+        />
+      )}
+
+      {stage === 'result' && result && (
+        <HolographicResult
+          primaryImageUrl={primaryUrl}
+          result={result}
+          saved={!!savedId}
+          onSave={saveToCollection}
+          onReset={reset}
+          onCompare={() => navigate('/compare')}
+        />
       )}
 
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
       )}
+    </div>
+  );
+}
 
-      {result && (
-        <GlassPanel className="mt-4">
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="text-amethyst-glow" size={16} />
-              <span className="text-amethyst-glow text-xs uppercase tracking-[0.3em]">
-                Identification
-              </span>
+function StageStrip({ stage }) {
+  const stages = [
+    { id: 'live', label: 'Vision' },
+    { id: 'capture', label: 'Capture' },
+    { id: 'reconstruct', label: 'Reconstruct' },
+    { id: 'result', label: 'Hologram' },
+  ];
+  const activeIdx = stages.findIndex((s) => s.id === stage);
+  return (
+    <div className="mt-3 flex items-center justify-center gap-1.5">
+      {stages.map((s, i) => {
+        const done = i < activeIdx;
+        const active = i === activeIdx;
+        return (
+          <React.Fragment key={s.id}>
+            <div
+              className="text-[8px] font-mono uppercase tracking-[0.25em] px-2 py-0.5 rounded-full"
+              style={{
+                color: active
+                  ? 'hsl(280 100% 85%)'
+                  : done
+                    ? 'hsl(145 80% 65%)'
+                    : 'hsla(0,0%,100%,0.3)',
+                background: active
+                  ? 'hsla(280,80%,40%,0.2)'
+                  : 'transparent',
+                border: `1px solid ${active ? 'hsla(280,100%,70%,0.5)' : done ? 'hsla(145,80%,55%,0.4)' : 'hsla(0,0%,100%,0.1)'}`,
+              }}
+            >
+              {s.label}
             </div>
-            <div className="text-2xl font-bold text-white glow-amethyst mb-1">
-              {result.top_match}
-            </div>
-            <div className="text-amethyst/70 text-xs font-mono mb-3">
-              {(result.confidence * 100).toFixed(0)}% confidence
-            </div>
-            <p className="text-white/70 text-sm mb-4">{result.description}</p>
-
-            {result.candidates?.length > 1 && (
-              <div className="space-y-1.5 mb-4">
-                <div className="text-[10px] uppercase tracking-widest text-white/40">
-                  Other candidates
-                </div>
-                {result.candidates.slice(1).map((c, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between text-xs py-1.5 px-2 rounded bg-white/5 border border-white/5"
-                  >
-                    <span className="text-white/80">{c.name}</span>
-                    <span className="font-mono text-amethyst/70">
-                      {(c.confidence * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+            {i < stages.length - 1 && (
+              <div
+                className="w-3 h-px"
+                style={{
+                  background: i < activeIdx ? 'hsl(145 80% 55%)' : 'hsla(0,0%,100%,0.15)',
+                }}
+              />
             )}
-
-            <div className="flex gap-2">
-              <Button
-                onClick={saveToCollection}
-                disabled={!!savedId}
-                className="flex-1 bg-amethyst-deep hover:bg-amethyst text-white border border-amethyst/40"
-              >
-                {savedId ? 'Saved ✓' : 'Save to Collection'}
-              </Button>
-              <Button
-                onClick={reset}
-                variant="outline"
-                className="border-white/20 text-white/80 hover:bg-white/5"
-              >
-                <RotateCcw size={16} />
-              </Button>
-            </div>
-          </div>
-        </GlassPanel>
-      )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
