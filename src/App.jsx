@@ -11,6 +11,7 @@ import Explore from '@/pages/Explore';
 import Scan from '@/pages/Scan';
 import Collection from '@/pages/Collection';
 import Compare from '@/pages/Compare';
+import CompareLive from '@/pages/CompareLive';
 import Admin from '@/pages/Admin';
 import Docs from '@/pages/Docs';
 import DesignSystem from '@/pages/DesignSystem';
@@ -49,6 +50,7 @@ const AuthenticatedApp = () => {
         <Route path="/collection" element={<Collection />} />
         <Route path="/badges" element={<Badges />} />
         <Route path="/compare" element={<Compare />} />
+        <Route path="/compare-live" element={<CompareLive />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/design-system" element={<DesignSystem />} />

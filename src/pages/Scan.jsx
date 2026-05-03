@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
@@ -34,11 +34,17 @@ export default function Scan() {
     setStage('reconstruct');
   };
 
-  // Run the actual upload + AI identification pipeline.
+  // Pipeline runs once per `angles` set — we capture angles in a ref so the
+  // runner identity is stable and ReconstructionStage's effect won't re-fire.
+  const anglesRef = useRef(angles);
+  anglesRef.current = angles;
+  const primaryRef = useRef(null);
+
   const runner = useCallback(async () => {
+    const current = anglesRef.current;
     // Upload all blobs in parallel.
     const uploads = await Promise.all(
-      angles
+      current
         .filter((a) => a.blob)
         .map(async (a) => {
           const file = new File([a.blob], `${a.key}.jpg`, { type: 'image/jpeg' });
@@ -48,7 +54,7 @@ export default function Scan() {
     );
 
     const primary = uploads[0]?.file_url;
-    setPrimaryUrl(primary);
+    primaryRef.current = primary;
 
     // Multi-image identification via vision LLM.
     const r = await base44.integrations.Core.InvokeLLM({
@@ -78,9 +84,10 @@ export default function Scan() {
     });
 
     return { result: r, uploads };
-  }, [angles]);
+  }, []);
 
   const handleReconstructed = ({ result: r }) => {
+    setPrimaryUrl(primaryRef.current);
     setResult(r);
     setStage('result');
   };
@@ -152,7 +159,11 @@ export default function Scan() {
           saved={!!savedId}
           onSave={saveToCollection}
           onReset={reset}
-          onCompare={() => navigate('/compare')}
+          onCompare={() =>
+            navigate('/compare-live', {
+              state: { scanImageUrl: primaryUrl, scanName: result.top_match },
+            })
+          }
         />
       )}
 
@@ -178,6 +189,7 @@ function StageStrip({ stage }) {
         const active = i === activeIdx;
         return (
           <React.Fragment key={s.id}>
+            {/* eslint-disable-next-line */}
             <div
               className="text-[8px] font-mono uppercase tracking-[0.25em] px-2 py-0.5 rounded-full"
               style={{

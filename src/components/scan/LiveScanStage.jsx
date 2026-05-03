@@ -8,6 +8,7 @@ import HudGridOverlay from './hud/HudGridOverlay.jsx';
 import HudSidebar from './hud/HudSidebar.jsx';
 import HudActionBar from './hud/HudActionBar.jsx';
 import WebGLTrackingLayer from './hud/WebGLTrackingLayer.jsx';
+import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
 import { Camera, AlertCircle, Upload, Crosshair } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -86,6 +87,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
 
             {/* Reticle */}
             <HolographicReticle signal={signal} locked={locked} label="SCANNING" />
+
+            {/* Floating mineral labels — periodic AI classify */}
+            <LiveLabelsOverlay videoRef={videoRef} active={ready} />
 
             {/* sidebars */}
             <HudSidebar side="left" label="ALT·M" />

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import ProcessingPulse from './ProcessingPulse.jsx';
 
 const STEPS = [
   'Uploading captures',
@@ -21,28 +22,36 @@ const STEPS = [
  */
 export default function ReconstructionStage({ runner, onDone, onError }) {
   const [step, setStep] = useState(0);
+  const startedRef = React.useRef(false);
+  const runnerRef = React.useRef(runner);
+  const onDoneRef = React.useRef(onDone);
+  const onErrorRef = React.useRef(onError);
+  runnerRef.current = runner;
+  onDoneRef.current = onDone;
+  onErrorRef.current = onError;
 
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
     let cancelled = false;
     let stepTimer;
 
     const advance = () => {
-      setStep((s) => {
-        if (s >= STEPS.length - 1) return s;
-        return s + 1;
-      });
+      setStep((s) => (s >= STEPS.length - 1 ? s : s + 1));
       stepTimer = setTimeout(advance, 1400);
     };
     stepTimer = setTimeout(advance, 1200);
 
     (async () => {
       try {
-        const result = await runner();
+        const result = await runnerRef.current();
         if (cancelled) return;
         setStep(STEPS.length - 1);
-        setTimeout(() => onDone?.(result), 600);
+        setTimeout(() => onDoneRef.current?.(result), 600);
       } catch (e) {
-        if (!cancelled) onError?.(e);
+        console.error('Reconstruction failed:', e);
+        if (!cancelled) onErrorRef.current?.(e);
       }
     })();
 
@@ -50,12 +59,13 @@ export default function ReconstructionStage({ runner, onDone, onError }) {
       cancelled = true;
       clearTimeout(stepTimer);
     };
-  }, [runner, onDone, onError]);
+  }, []);
 
   return (
     <HudFrame label="3D Reconstruction · In Progress">
       <div className="relative aspect-square w-full rounded-md overflow-hidden hud-grid-bg flex flex-col items-center justify-center">
-        <div className="relative">
+        <ProcessingPulse active />
+        <div className="relative z-10">
           <AmethystOrb size={140} speaking />
         </div>
 
