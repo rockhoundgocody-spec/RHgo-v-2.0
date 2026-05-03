@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useEntityList } from '@/lib/useEntityQuery';
 import useDeviceOrientation from '@/lib/useDeviceOrientation';
 import usePageVisible from '@/lib/usePageVisible';
 
@@ -16,16 +16,16 @@ export default function CompassRing({ size = 460 }) {
   const targetRotRef = useRef(0);
   const elRef = useRef(null);
 
-  // Compute bearing from user → nearest hotspot
+  const { data: hotspots } = useEntityList('Hotspot');
+
+  // Compute bearing from user → nearest hotspot (uses cached hotspots)
   useEffect(() => {
+    if (!navigator.geolocation || !hotspots?.length) return;
     let cancelled = false;
-    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      (pos) => {
         if (cancelled) return;
         const { latitude: lat1, longitude: lng1 } = pos.coords;
-        const hotspots = await base44.entities.Hotspot.list();
-        if (!hotspots?.length) return;
         let nearest = null;
         let minD = Infinity;
         for (const h of hotspots) {
@@ -43,7 +43,7 @@ export default function CompassRing({ size = 460 }) {
       { timeout: 5000, maximumAge: 60000 }
     );
     return () => { cancelled = true; };
-  }, []);
+  }, [hotspots]);
 
   // Device heading (where the phone is pointing) — shared singleton listener
   const onOrient = useCallback((e) => {

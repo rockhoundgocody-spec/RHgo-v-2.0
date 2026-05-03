@@ -3,6 +3,12 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { FileCode2, Database, Network, Cpu, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 
 const sections = [
   {
@@ -108,12 +114,18 @@ DATA SOURCES
   },
 ];
 
+const Body = ({ body }) => (
+  <pre className="whitespace-pre-wrap font-mono text-xs md:text-sm text-hud-cyan/90 leading-relaxed py-2 hud-grid-bg p-4 rounded">
+    {body}
+  </pre>
+);
+
 export default function Docs() {
   const [active, setActive] = useState('stack');
   const current = sections.find((s) => s.id === active);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-hud glow-hud tracking-wider">ARCHITECTURE DOCS</h1>
         <p className="text-hud-cyan/60 text-xs uppercase tracking-[0.3em] mt-2">
@@ -121,8 +133,30 @@ export default function Docs() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-4">
-        {/* sidebar */}
+      {/* Mobile: accordion. Desktop: sidebar + content. */}
+      <div className="md:hidden">
+        <GlassPanel variant="hud">
+          <HudFrame label="Index">
+            <Accordion type="single" collapsible defaultValue="stack" className="w-full">
+              {sections.map(({ id, icon: Icon, title, body }) => (
+                <AccordionItem key={id} value={id} className="border-hud-cyan/20">
+                  <AccordionTrigger className="text-hud hover:text-hud-cyan font-mono uppercase tracking-wider text-xs py-3">
+                    <span className="flex items-center gap-2">
+                      <Icon size={14} />
+                      {title}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Body body={body} />
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </HudFrame>
+        </GlassPanel>
+      </div>
+
+      <div className="hidden md:grid grid-cols-[220px,1fr] gap-4">
         <GlassPanel variant="hud" className="h-fit">
           <HudFrame label="Index">
             <div className="space-y-1 py-2">
@@ -145,12 +179,9 @@ export default function Docs() {
           </HudFrame>
         </GlassPanel>
 
-        {/* content */}
         <GlassPanel variant="hud">
           <HudFrame label={current.title}>
-            <pre className="whitespace-pre-wrap font-mono text-xs md:text-sm text-hud-cyan/90 leading-relaxed py-2 hud-grid-bg p-4 rounded">
-              {current.body}
-            </pre>
+            <Body body={current.body} />
           </HudFrame>
         </GlassPanel>
       </div>
