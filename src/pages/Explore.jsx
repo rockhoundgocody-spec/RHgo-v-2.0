@@ -4,6 +4,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
+import PredictiveFindsPanel from '@/components/explore/PredictiveFindsPanel.jsx';
 import { Button } from '@/components/ui/button';
 import { useEntityList } from '@/lib/useEntityQuery';
 
@@ -89,32 +90,36 @@ export default function Explore() {
         </GlassPanel>
 
         {/* Side list */}
-        <GlassPanel variant="hud">
-          <HudFrame label="Nearby Sites">
-            {loading ? (
-              <div className="flex justify-center py-12 text-amethyst/60">
-                <Loader2 className="animate-spin" />
-              </div>
-            ) : hotspots.length === 0 ? (
-              <div className="p-6 text-center">
-                <Mountain className="mx-auto text-amethyst/50 mb-3" size={32} />
-                <p className="text-white/70 text-sm">No hotspots seeded yet.</p>
-                <p className="text-white/40 text-xs mt-2">Visit Admin → Seed Data</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 -mr-1">
-                {hotspots.map((h) => (
-                  <HotspotListItem
-                    key={h.id}
-                    hotspot={h}
-                    active={activeId === h.id}
-                    onClick={() => setActiveId(h.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </HudFrame>
-        </GlassPanel>
+        <div>
+          <GlassPanel variant="hud">
+            <HudFrame label="Nearby Sites">
+              {loading ? (
+                <div className="flex justify-center py-12 text-amethyst/60">
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : hotspots.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Mountain className="mx-auto text-amethyst/50 mb-3" size={32} />
+                  <p className="text-white/70 text-sm">No hotspots seeded yet.</p>
+                  <p className="text-white/40 text-xs mt-2">Visit Admin → Seed Data</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 -mr-1">
+                  {hotspots.map((h) => (
+                    <HotspotListItem
+                      key={h.id}
+                      hotspot={h}
+                      active={activeId === h.id}
+                      onClick={() => setActiveId(h.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </HudFrame>
+          </GlassPanel>
+
+          <PredictiveFindsPanel userLocation={userLocation} hotspots={hotspots} />
+        </div>
       </div>
     </div>
   );

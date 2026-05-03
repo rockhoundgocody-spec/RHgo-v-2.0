@@ -1,0 +1,19 @@
+{
+  "name": "RockHound-GO",
+  "short_name": "RockHound",
+  "description": "AI-powered field companion for rockhounds — discover, identify, and collect minerals responsibly.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a14",
+  "theme_color": "#7c3aed",
+  "categories": ["education", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

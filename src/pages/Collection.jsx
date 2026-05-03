@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Gem, Calendar, Loader2, GitCompareArrows } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
+import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 
 const rarityColor = {
@@ -79,7 +80,15 @@ export default function Collection() {
             <GlassPanel key={s.id}>
               <div className="aspect-square overflow-hidden rounded-t-2xl bg-black/30">
                 {s.image_url ? (
-                  <img src={s.image_url} alt={s.mineral_name} className="w-full h-full object-cover" />
+                  <img
+                    src={s.image_url}
+                    alt={s.mineral_name}
+                    loading="lazy"
+                    decoding="async"
+                    width="200"
+                    height="200"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-amethyst/30">
                     <Gem size={32} />
@@ -109,6 +118,9 @@ export default function Collection() {
                     />
                   </div>
                 )}
+                <div className="mt-2 flex justify-end">
+                  <ShareSpecimenButton specimen={s} />
+                </div>
               </div>
             </GlassPanel>
           ))}

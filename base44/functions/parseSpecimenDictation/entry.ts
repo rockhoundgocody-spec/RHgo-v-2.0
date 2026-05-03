@@ -1,6 +1,26 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
+ * Privacy: fuzz exact coordinates by up to ±200m before persisting.
+ * Protects rockhound-find locations from being scraped/exposed precisely.
+ * (Inlined — backend functions can't share local imports.)
+ */
+function fuzzCoordinates(lat, lng, radiusMeters = 200) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return { lat, lng };
+  const r = radiusMeters / 111320;
+  const u = Math.random();
+  const v = Math.random();
+  const w = r * Math.sqrt(u);
+  const t = 2 * Math.PI * v;
+  const dLat = w * Math.cos(t);
+  const dLng = (w * Math.sin(t)) / Math.cos((lat * Math.PI) / 180);
+  return {
+    lat: +(lat + dLat).toFixed(6),
+    lng: +(lng + dLng).toFixed(6),
+  };
+}
+
+/**
  * Parses a spoken/typed dictation into structured Specimen fields using the LLM.
  * Optionally creates the Specimen record (which triggers the enrichSpecimen
  * automation for weather + lunar data).
@@ -52,11 +72,15 @@ Transcript: """${transcript}"""`;
     const payload = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== null && v !== undefined)
     );
-    if (typeof lat === 'number') payload.lat = lat;
-    if (typeof lng === 'number') payload.lng = lng;
+    // Reverse-geocode using TRUE coords (more accurate place name),
+    // then fuzz before persisting so stored coords are ±200m off true location.
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      const fuzzed = fuzzCoordinates(lat, lng, 200);
+      payload.lat = fuzzed.lat;
+      payload.lng = fuzzed.lng;
+    }
     if (!payload.found_date) payload.found_date = today;
 
-    // Reverse-geocode coords → place name if speaker didn't provide a location.
     if (!payload.found_at && typeof lat === 'number' && typeof lng === 'number') {
       const key = Deno.env.get('GOOGLE_MAPS_API_KEY');
       if (key) {
