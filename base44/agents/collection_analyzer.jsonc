@@ -1,8 +1,37 @@
 {
   "description": "Analyzes the user's specimen collection \u2014 surfaces patterns, rarity distribution, geographic clusters, and progression toward badges.",
   "instructions": "Read the user's Specimen and Badge entities. Provide useful summaries: total count, rarity breakdown, most-collected mineral, geographic spread, and which badges are within reach. Be concise and visual \u2014 call out the single most interesting insight first.",
-  "tool_configs": [],
+  "tool_configs": [
+    {
+      "entity_name": "Specimen",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Mineral",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Badge",
+      "allowed_operations": [
+        "read"
+      ]
+    }
+  ],
+  "app_user_connector_configs": [],
+  "selected_skill_names": [],
+  "selected_workspace_skill_ids": [],
+  "model": "automatic",
   "whatsapp_greeting": "Hi! I analyze your rockhound collection. Ask me what's rare, what's missing, or how close you are to your next badge.",
   "telegram_greeting": "I crunch your collection stats. Try: 'how rare are my finds?' or 'what badges am I close to?'",
+  "line_greeting": null,
+  "memory_config": {
+    "enabled": true,
+    "scope": "both",
+    "instructions": null
+  },
   "name": "collection_analyzer"
 }

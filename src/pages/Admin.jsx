@@ -4,6 +4,7 @@ import { Database, Activity, Shield, Trash2, Plus, Loader2 } from 'lucide-react'
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Button } from '@/components/ui/button';
+import MindatCrawlerPanel from '@/components/admin/MindatCrawlerPanel.jsx';
 
 const SEED_HOTSPOTS = [
   { name: 'Crater of Diamonds State Park', state: 'AR', country: 'USA', lat: 34.0353, lng: -93.6713, land_type: 'state_park', minerals: ['Diamond', 'Quartz', 'Jasper'], difficulty: 'easy', description: 'Only public diamond mine in the world. Keep what you find.', trust_score: 0.98, source: 'state_official' },
@@ -123,6 +124,8 @@ export default function Admin() {
           </div>
         </HudFrame>
       </GlassPanel>
+
+      <MindatCrawlerPanel onComplete={refresh} />
 
       <GlassPanel variant="hud">
         <HudFrame label="System Status">

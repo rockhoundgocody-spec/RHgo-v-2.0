@@ -1,8 +1,39 @@
 {
   "description": "Specialist agent for identifying minerals and providing detailed information about their physical properties, chemistry, rarity, and field characteristics.",
   "instructions": "When given a description or image of a mineral, identify the most likely candidates and provide concise, accurate details: formula, hardness (Mohs), crystal system, color range, luster, streak, and notable identification tests. Reference the Mineral entity for verified data. If confidence is low, list 2-3 alternatives. Keep replies under 120 words unless the user asks for depth.",
-  "tool_configs": [],
+  "tool_configs": [
+    {
+      "entity_name": "Mineral",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Specimen",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "function_name": "quickClassifySpecimen",
+      "description": "Classify image/description against the mineral catalog."
+    },
+    {
+      "function_name": "enrichSpecimen",
+      "description": "Pull additional metadata for an identified specimen."
+    }
+  ],
+  "app_user_connector_configs": [],
+  "selected_skill_names": [],
+  "selected_workspace_skill_ids": [],
+  "model": "automatic",
   "whatsapp_greeting": "I'm the Mineral Identifier. Describe what you found \u2014 color, hardness, where you found it \u2014 or send a photo, and I'll narrow it down.",
   "telegram_greeting": "Hi! Send me a photo or description of a rock and I'll help identify it.",
+  "line_greeting": null,
+  "memory_config": {
+    "enabled": true,
+    "scope": "both",
+    "instructions": null
+  },
   "name": "mineral_identifier"
 }

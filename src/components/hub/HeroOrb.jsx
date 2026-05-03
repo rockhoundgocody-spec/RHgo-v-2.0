@@ -7,7 +7,7 @@ import SpecimenGhosts from './SpecimenGhosts.jsx';
 import CompassRing from './CompassRing.jsx';
 import MineralOfDay from './MineralOfDay.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
-import OracleTranscript from '@/components/oracle/OracleTranscript.jsx';
+import InlineOracleChat from '@/components/oracle/InlineOracleChat.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
@@ -22,6 +22,7 @@ export default function HeroOrb() {
   const [interim, setInterim] = useState('');
   const [reply, setReply] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [history, setHistory] = useState([]);
   const containerRef = useRef(null);
   const activeRef = useRef(false);
   activeRef.current = active;
@@ -34,6 +35,7 @@ export default function HeroOrb() {
     if (!transcript?.trim()) return;
     setInterim('');
     historyRef.current.push({ role: 'user', content: transcript });
+    setHistory([...historyRef.current]);
     setThinking(true);
     const recent = historyRef.current.slice(-6)
       .map(m => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`).join('\n');
@@ -41,6 +43,7 @@ export default function HeroOrb() {
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
     const text = typeof res === 'string' ? res : String(res || '');
     historyRef.current.push({ role: 'oracle', content: text });
+    setHistory([...historyRef.current]);
     setReply(text);
     setThinking(false);
     speak(text);
@@ -91,6 +94,7 @@ export default function HeroOrb() {
       const greeting = "I'm here. What did you find?";
       setReply(greeting);
       historyRef.current = [{ role: 'oracle', content: greeting }];
+      setHistory([...historyRef.current]);
       speak(greeting);
     } else {
       stopSpeak();
@@ -106,6 +110,7 @@ export default function HeroOrb() {
     if (!active) {
       setActive(true);
       historyRef.current = [];
+      setHistory([]);
     }
     const q = `Tell me about ${ghost.name} in one short paragraph.`;
     handleTranscript(q);
@@ -115,6 +120,7 @@ export default function HeroOrb() {
     if (!active) {
       setActive(true);
       historyRef.current = [];
+      setHistory([]);
     }
     const q = `Today's mineral is ${mineral.name}. Give me a vivid one-line description.`;
     handleTranscript(q);
@@ -189,21 +195,15 @@ export default function HeroOrb() {
         <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
       </div>
 
-      {/* Dedicated transcript surface — never overlaps hero/cards */}
-      <OracleTranscript
-        active={active}
-        reply={reply}
-        interim={interim}
-        status={thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'awake'}
-        onClose={() => {
-          stopSpeak();
-          stopListen();
-          mic.stop();
-          setActive(false);
-          setReply('');
-          setInterim('');
-        }}
-      />
+      {/* Inline conversation — embedded directly under the orb, no popup */}
+      <div className="w-full max-w-md mx-auto mt-12 px-1">
+        <InlineOracleChat
+          active={active}
+          history={history}
+          interim={interim}
+          status={thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'awake'}
+        />
+      </div>
     </DepthWell>
   );
 }
