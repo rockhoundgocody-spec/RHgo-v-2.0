@@ -14,7 +14,7 @@ import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/us
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
 
-export default function HeroOrb() {
+export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const { openOracle } = useOracle();
   const [ripples, setRipples] = useState([]);
   const [active, setActive] = useState(false);
@@ -26,6 +26,10 @@ export default function HeroOrb() {
   const activeRef = useRef(false);
   activeRef.current = active;
   const historyRef = useRef([]);
+  const companionRef = useRef(companion);
+  companionRef.current = companion;
+  const todaysFindsRef = useRef(todaysSpecimens);
+  todaysFindsRef.current = todaysSpecimens;
 
   const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
   const mic = useMicLevel();
@@ -38,7 +42,22 @@ export default function HeroOrb() {
     setThinking(true);
     const recent = historyRef.current.slice(-6)
       .map(m => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`).join('\n');
-    const prompt = `You are the Amethyst Oracle, a wise, concise field guide for rockhounds. Reply in under 60 words, no markdown, conversational and warm.\n\n${recent}\nOracle:`;
+
+    // Finch-style companion persona, aware of pet state + today's activity
+    const c = companionRef.current;
+    const stateBits = c
+      ? `Your name: ${c.name || 'Amethyst'}. Level ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100. Streak: ${c.streak_days || 0} days. ` +
+        `Today's finds: ${todaysFindsRef.current}. ` +
+        (c.last_intention ? `Their intention today: "${c.last_intention}". ` : '') +
+        (c.last_mood_label ? `They felt "${c.last_mood_label}" at check-in. ` : '')
+      : '';
+
+    const prompt = `You are the Amethyst Oracle — a warm, gentle companion in the spirit of Finch. You ARE the user's pet rockhound buddy who lives in the amethyst orb. Speak in first person ("I"). Be encouraging, never judgmental. Celebrate small wins. Validate hard days. Use cozy, sincere language — never corporate or clinical. Reply in under 50 words, no markdown.
+
+${stateBits}When relevant, gently weave in: their streak (celebrate it), their energy (rest if low, adventure if high), their intention (remind them kindly). Don't lecture. Don't list features. Just be present.
+
+${recent}
+Oracle:`;
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
     const text = typeof res === 'string' ? res : String(res || '');
     historyRef.current.push({ role: 'oracle', content: text });
@@ -90,7 +109,15 @@ export default function HeroOrb() {
     }
     if (!active) {
       setActive(true);
-      const greeting = "I'm here. What did you find?";
+      const c = companionRef.current;
+      const greetings = c
+        ? c.last_check_in_date === new Date().toISOString().slice(0, 10)
+          ? [`Hey, you're back. I love it when you visit.`, `There you are. I've been resting up.`, `Good to see you again today.`]
+          : c.streak_days >= 3
+          ? [`${c.streak_days} days in a row — I'm so proud of us.`, `Day ${c.streak_days + 1}. Let's go gently.`]
+          : [`I'm here. How are you, really?`, `Hey friend. Tell me what you're feeling.`]
+        : [`I'm here. What did you find?`];
+      const greeting = greetings[Math.floor(Math.random() * greetings.length)];
       setReply(greeting);
       historyRef.current = [{ role: 'oracle', content: greeting }];
       setHistory([...historyRef.current]);

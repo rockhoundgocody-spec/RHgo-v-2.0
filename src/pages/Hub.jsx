@@ -6,6 +6,9 @@ import StatStrip from '@/components/hub/StatStrip.jsx';
 import TiltContainer from '@/components/hub/TiltContainer.jsx';
 import CelestialDial from '@/components/hub/CelestialDial.jsx';
 import HubIntro from '@/components/hub/HubIntro.jsx';
+import CompanionStatus from '@/components/hub/CompanionStatus.jsx';
+import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
+import useCompanion from '@/lib/useCompanion.js';
 
 const missions = [
   {
@@ -43,6 +46,7 @@ const missions = [
 ];
 
 export default function Hub() {
+  const { companion, todaysSpecimens, refresh } = useCompanion();
   return (
     <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
       {/* ambient backdrop */}
@@ -61,7 +65,9 @@ export default function Hub() {
           // Geological Intelligence OS
         </div>
 
-        <HeroOrb />
+        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimens} />
+
+        <CompanionStatus companion={companion} />
 
         {/* Title block — gradient backdrop ensures legibility over orb glow */}
         <div className="relative mt-14 w-full">
@@ -94,6 +100,9 @@ export default function Hub() {
           <CelestialDial />
         </div>
       </section>
+
+      {/* DAILY CHECK-IN — Finch-style mood + intention */}
+      <DailyCheckIn companion={companion} onCheckedIn={refresh} />
 
       {/* INTRO — explains the orb + ring UI */}
       <HubIntro />

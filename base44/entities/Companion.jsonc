@@ -1,0 +1,65 @@
+{
+  "name": "Companion",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the rockhound this companion belongs to"
+    },
+    "name": {
+      "type": "string",
+      "default": "Amethyst",
+      "description": "Companion's chosen name"
+    },
+    "level": {
+      "type": "integer",
+      "default": 1,
+      "description": "Companion level \u2014 grows from finds + check-ins"
+    },
+    "xp": {
+      "type": "integer",
+      "default": 0,
+      "description": "Experience points toward next level"
+    },
+    "energy": {
+      "type": "integer",
+      "default": 80,
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Today's energy 0-100. Refilled by check-ins, drained by inactivity."
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "radiant",
+        "happy",
+        "calm",
+        "drowsy",
+        "tender"
+      ],
+      "default": "calm",
+      "description": "Current vibe \u2014 drives orb tone + Oracle voice"
+    },
+    "last_check_in_date": {
+      "type": "string",
+      "format": "date",
+      "description": "YYYY-MM-DD of last daily check-in"
+    },
+    "last_intention": {
+      "type": "string",
+      "description": "What the rockhound said they wanted today"
+    },
+    "last_mood_label": {
+      "type": "string",
+      "description": "How the user said they felt at last check-in"
+    },
+    "streak_days": {
+      "type": "integer",
+      "default": 0,
+      "description": "Consecutive days with a check-in or a new find"
+    }
+  },
+  "required": [
+    "owner_email"
+  ]
+}
