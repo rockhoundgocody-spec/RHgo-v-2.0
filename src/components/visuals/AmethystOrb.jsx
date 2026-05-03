@@ -165,19 +165,19 @@ export default function AmethystOrb({
           </div>
         )}
 
-        {/* Amethyst tint wash — restores the purple gradient theme over the opal */}
+        {/* Amethyst tint wash — light touch so opal iridescence shines through */}
         <div
-          className="absolute inset-0 pointer-events-none mix-blend-overlay"
+          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-40"
           style={{
             background:
-              'radial-gradient(circle at 35% 30%, hsla(280,100%,70%,0.45) 0%, hsla(270,90%,50%,0.35) 40%, hsla(265,90%,25%,0.55) 75%, hsla(260,90%,10%,0.7) 100%)',
+              'radial-gradient(circle at 35% 30%, hsla(280,100%,75%,0.25) 0%, hsla(270,90%,50%,0.15) 45%, hsla(265,90%,20%,0.35) 80%, hsla(260,90%,8%,0.5) 100%)',
           }}
         />
         <div
-          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-50"
+          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-25"
           style={{
             background:
-              'radial-gradient(circle at 65% 70%, hsla(290,100%,65%,0.4) 0%, transparent 55%)',
+              'radial-gradient(circle at 65% 70%, hsla(290,100%,70%,0.3) 0%, transparent 60%)',
           }}
         />
 
