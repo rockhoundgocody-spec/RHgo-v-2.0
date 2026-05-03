@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 /**
  * Scan — combined flow:
  *   live  →  capture (multi-angle)  →  reconstruct (upload + AI)  →  result
+ *
+ * (Touched to force Vite to re-emit the chunk after sibling edits.)
  */
 export default function Scan() {
   const [stage, setStage] = useState('live'); // live | capture | reconstruct | result
