@@ -7,7 +7,6 @@ import SpecimenGhosts from './SpecimenGhosts.jsx';
 import CompassRing from './CompassRing.jsx';
 import MineralOfDay from './MineralOfDay.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
-import InlineOracleChat from '@/components/oracle/InlineOracleChat.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
@@ -193,16 +192,6 @@ export default function HeroOrb() {
         </div>
 
         <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
-      </div>
-
-      {/* Inline conversation — embedded directly under the orb, no popup */}
-      <div className="w-full max-w-md mx-auto mt-12 px-1">
-        <InlineOracleChat
-          active={active}
-          history={history}
-          interim={interim}
-          status={thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'awake'}
-        />
       </div>
     </DepthWell>
   );
