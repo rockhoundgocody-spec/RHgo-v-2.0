@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import useReducedMotion from '@/lib/useReducedMotion';
+import usePageVisible from '@/lib/usePageVisible';
 
 /**
  * VoiceprintRing — circular waveform that wraps the orb's well rim.
@@ -18,10 +20,13 @@ export default function VoiceprintRing({
   listening = false,
 }) {
   const canvasRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const visible = usePageVisible();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (reduceMotion || !visible) return;
     const ctx = canvas.getContext('2d');
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = size * dpr;
@@ -100,7 +105,7 @@ export default function VoiceprintRing({
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [size, active, getAmplitude, getSpectrum, getMicLevel, speaking, listening]);
+  }, [size, active, getAmplitude, getSpectrum, getMicLevel, speaking, listening, reduceMotion, visible]);
 
   return (
     <canvas

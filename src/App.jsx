@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -7,20 +8,28 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import Hub from '@/pages/Hub';
-import Explore from '@/pages/Explore';
-import Scan from '@/pages/Scan';
-import Collection from '@/pages/Collection';
-import Compare from '@/pages/Compare';
-import CompareLive from '@/pages/CompareLive';
-import Admin from '@/pages/Admin';
-import Docs from '@/pages/Docs';
-import DesignSystem from '@/pages/DesignSystem';
-import Badges from '@/pages/Badges';
+
+// Heavy pages are code-split — Three.js, Leaflet, charts, etc.
+// only load when user actually navigates there.
+const Explore = lazy(() => import('@/pages/Explore'));
+const Scan = lazy(() => import('@/pages/Scan'));
+const Collection = lazy(() => import('@/pages/Collection'));
+const Compare = lazy(() => import('@/pages/Compare'));
+const CompareLive = lazy(() => import('@/pages/CompareLive'));
+const Admin = lazy(() => import('@/pages/Admin'));
+const Docs = lazy(() => import('@/pages/Docs'));
+const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
+const Badges = lazy(() => import('@/pages/Badges'));
+
+const RouteFallback = () => (
+  <div className="fixed inset-0 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-amethyst/20 border-t-amethyst-glow rounded-full animate-spin" />
+  </div>
+);
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -29,40 +38,37 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Hub />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/scan" element={<Scan />} />
-        <Route path="/collection" element={<Collection />} />
-        <Route path="/badges" element={<Badges />} />
-        <Route path="/compare" element={<Compare />} />
-        <Route path="/compare-live" element={<CompareLive />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/docs" element={<Docs />} />
-        <Route path="/design-system" element={<DesignSystem />} />
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Hub />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/scan" element={<Scan />} />
+          <Route path="/collection" element={<Collection />} />
+          <Route path="/badges" element={<Badges />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/compare-live" element={<CompareLive />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/docs" element={<Docs />} />
+          <Route path="/design-system" element={<DesignSystem />} />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>

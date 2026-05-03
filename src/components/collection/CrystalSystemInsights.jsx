@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { Sparkles, Hexagon } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { useEntityList } from '@/lib/useEntityQuery';
 
 // Amethyst-themed palette for the bars
 const PALETTE = [
@@ -16,15 +16,7 @@ const PALETTE = [
 ];
 
 export default function CrystalSystemInsights({ specimens }) {
-  const [minerals, setMinerals] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    base44.entities.Mineral.list().then((d) => {
-      setMinerals(d || []);
-      setLoading(false);
-    });
-  }, []);
+  const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];

@@ -162,8 +162,10 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
     scene.add(mesh);
 
     let raf;
+    let paused = false;
     const start = performance.now();
     const animate = () => {
+      if (paused) { raf = requestAnimationFrame(animate); return; }
       uniforms.u_time.value = ((performance.now() - start) / 1000) * speed * Math.PI;
       const getAmp = ampGetterRef.current;
       const getSpec = specGetterRef.current;
@@ -178,6 +180,8 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
       raf = requestAnimationFrame(animate);
     };
     animate();
+    const onVis = () => { paused = !!document.hidden; };
+    document.addEventListener('visibilitychange', onVis);
 
     const handleResize = () => {
       const w = mount.clientWidth;
@@ -190,6 +194,7 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', onVis);
       ro.disconnect();
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
       geometry.dispose();

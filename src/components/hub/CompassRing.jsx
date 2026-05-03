@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import useDeviceOrientation from '@/lib/useDeviceOrientation';
+import usePageVisible from '@/lib/usePageVisible';
 
 /**
  * CompassRing — thin animated arc around the well that points toward the
@@ -43,28 +45,23 @@ export default function CompassRing({ size = 460 }) {
     return () => { cancelled = true; };
   }, []);
 
-  // Device heading (where the phone is pointing)
-  useEffect(() => {
-    const onOrient = (e) => {
-      const heading =
-        e.webkitCompassHeading != null ? e.webkitCompassHeading : (360 - (e.alpha || 0));
-      headingRef.current = heading;
-    };
-    window.addEventListener('deviceorientationabsolute', onOrient);
-    window.addEventListener('deviceorientation', onOrient);
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', onOrient);
-      window.removeEventListener('deviceorientation', onOrient);
-    };
+  // Device heading (where the phone is pointing) — shared singleton listener
+  const onOrient = useCallback((e) => {
+    const heading =
+      e.webkitCompassHeading != null ? e.webkitCompassHeading : (360 - (e.alpha || 0));
+    headingRef.current = heading;
   }, []);
+  useDeviceOrientation(onOrient);
+
+  const visible = usePageVisible();
 
   // Smooth rotate the marker toward (bearing - heading)
   useEffect(() => {
+    if (!visible) return;
     let raf;
     let current = 0;
     const tick = () => {
       const target = bearing == null ? (performance.now() * 0.02) % 360 : bearing - headingRef.current;
-      // shortest-path interp
       let delta = ((target - current + 540) % 360) - 180;
       current += delta * 0.08;
       if (elRef.current) {
@@ -74,7 +71,7 @@ export default function CompassRing({ size = 460 }) {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [bearing]);
+  }, [bearing, visible]);
 
   return (
     <div

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
 import { Gem, Calendar, Loader2, GitCompareArrows } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
+import { useEntityList } from '@/lib/useEntityQuery';
 
 const rarityColor = {
   common: 'text-white/60 border-white/15',
@@ -13,15 +13,7 @@ const rarityColor = {
 };
 
 export default function Collection() {
-  const [specimens, setSpecimens] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    base44.entities.Specimen.list('-found_date').then((d) => {
-      setSpecimens(d || []);
-      setLoading(false);
-    });
-  }, []);
+  const { data: specimens = [], isLoading: loading } = useEntityList('Specimen', '-found_date');
 
   return (
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">

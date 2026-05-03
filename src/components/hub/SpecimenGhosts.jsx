@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useEntityList } from '@/lib/useEntityQuery';
+import useReducedMotion from '@/lib/useReducedMotion';
+import usePageVisible from '@/lib/usePageVisible';
 
 /**
  * SpecimenGhosts — translucent 3D-feeling crystal silhouettes that
@@ -17,27 +19,18 @@ const FALLBACK = [
 ];
 
 export default function SpecimenGhosts({ active, onTap }) {
-  const [ghosts, setGhosts] = useState([]);
   const containerRef = useRef(null);
+  const { data: list } = useEntityList('Specimen', '-created_date');
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const list = await base44.entities.Specimen.list('-created_date', 4);
-        if (cancelled) return;
-        const arr = (list || []).map((s, i) => ({
-          name: s.mineral_name || s.common_name || 'Specimen',
-          glyph: FALLBACK[i % FALLBACK.length].glyph,
-          image: s.image_url,
-        }));
-        setGhosts(arr.length ? arr : FALLBACK.slice(0, 4));
-      } catch {
-        setGhosts(FALLBACK);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const ghosts = useMemo(() => {
+    const top = (list || []).slice(0, 4);
+    if (!top.length) return FALLBACK.slice(0, 4);
+    return top.map((s, i) => ({
+      name: s.mineral_name || s.common_name || 'Specimen',
+      glyph: FALLBACK[i % FALLBACK.length].glyph,
+      image: s.image_url,
+    }));
+  }, [list]);
 
   if (!ghosts.length) return null;
 
@@ -52,14 +45,27 @@ export default function SpecimenGhosts({ active, onTap }) {
 
 function Ghost({ ghost, index, total, active, onTap }) {
   const ref = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const visible = usePageVisible();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let raf;
     const baseAngle = (index / total) * Math.PI * 2;
     const radius = 195 + (index % 3) * 14;
+    const depth = (index % 3) - 1;
     const speed = 0.00012 + (index % 4) * 0.00004;
-    const depth = (index % 3) - 1; // -1, 0, 1 → near / mid / far
+    // Reduced-motion: pin to a static orbital position; no rAF loop
+    if (reduceMotion || !visible) {
+      const x = Math.cos(baseAngle) * radius;
+      const y = Math.sin(baseAngle) * radius * 0.55;
+      const z = depth * 60;
+      const scale = 0.8 + depth * 0.18;
+      const opacity = active ? 0.55 + depth * 0.15 : 0.22 + depth * 0.08;
+      el.style.transform = `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})`;
+      el.style.opacity = String(opacity);
+      return;
+    }
+    let raf;
     const tick = () => {
       const t = performance.now();
       const a = baseAngle + t * speed;
@@ -74,7 +80,7 @@ function Ghost({ ghost, index, total, active, onTap }) {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [index, total, active]);
+  }, [index, total, active, reduceMotion, visible]);
 
   return (
     <button

@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useState } from 'react';
 import { Mountain, Loader2, Locate } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
 import { Button } from '@/components/ui/button';
+import { useEntityList } from '@/lib/useEntityQuery';
 
 export default function Explore() {
-  const [hotspots, setHotspots] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: hotspots = [], isLoading: loading } = useEntityList('Hotspot');
   const [activeId, setActiveId] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState(null);
-
-  useEffect(() => {
-    base44.entities.Hotspot.list().then((d) => {
-      setHotspots(d || []);
-      setLoading(false);
-    });
-  }, []);
 
   const handleLocate = () => {
     if (!navigator.geolocation) {

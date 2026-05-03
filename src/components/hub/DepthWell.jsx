@@ -1,42 +1,51 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import useReducedMotion from '@/lib/useReducedMotion';
+import usePageVisible from '@/lib/usePageVisible';
+import useDeviceOrientation from '@/lib/useDeviceOrientation';
+import useMousePosition from '@/lib/useMousePosition';
 
 /**
  * DepthWell — creates the illusion that the screen is a recessed 3D well
  * with the orb rising up OUT of it.
  *
  * Pure CSS: stacked concentric rings + perspective shading + parallax tilt
- * driven by device orientation / mouse. No WebGL context — pairs cleanly
- * underneath the orb.
+ * driven by SHARED device orientation / mouse listeners (no duplicate
+ * window handlers). Skips animation when reduced-motion or tab hidden.
  */
 export default function DepthWell({ children }) {
   const ref = useRef(null);
   const targetRef = useRef({ rx: 0, ry: 0 });
   const currentRef = useRef({ rx: 0, ry: 0 });
+  const reduceMotion = useReducedMotion();
+  const visible = usePageVisible();
+
+  const onMove = useCallback((e) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / rect.width;
+    const dy = (e.clientY - cy) / rect.height;
+    targetRef.current.ry = dx * 8;
+    targetRef.current.rx = -dy * 8;
+  }, []);
+  const onOrient = useCallback((e) => {
+    if (e.gamma == null || e.beta == null) return;
+    targetRef.current.ry = Math.max(-10, Math.min(10, e.gamma / 4));
+    targetRef.current.rx = Math.max(-10, Math.min(10, (e.beta - 45) / 4));
+  }, []);
+
+  useMousePosition(reduceMotion ? () => {} : onMove);
+  useDeviceOrientation(reduceMotion ? () => {} : onOrient);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    const onMove = (e) => {
-      const rect = el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = (e.clientX - cx) / rect.width;
-      const dy = (e.clientY - cy) / rect.height;
-      // gentle tilt — invert so it feels like looking *into* a well
-      targetRef.current.ry = dx * 8;
-      targetRef.current.rx = -dy * 8;
-    };
-    const onOrient = (e) => {
-      // gamma=left/right, beta=front/back
-      if (e.gamma == null || e.beta == null) return;
-      targetRef.current.ry = Math.max(-10, Math.min(10, e.gamma / 4));
-      targetRef.current.rx = Math.max(-10, Math.min(10, (e.beta - 45) / 4));
-    };
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('deviceorientation', onOrient);
-
+    if (reduceMotion || !visible) {
+      el.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
+      return;
+    }
     let raf;
     const tick = () => {
       currentRef.current.rx += (targetRef.current.rx - currentRef.current.rx) * 0.08;
@@ -45,13 +54,8 @@ export default function DepthWell({ children }) {
       raf = requestAnimationFrame(tick);
     };
     tick();
-
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('deviceorientation', onOrient);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
+    return () => cancelAnimationFrame(raf);
+  }, [reduceMotion, visible]);
 
   return (
     <div className="relative w-full" style={{ perspective: '1200px' }}>

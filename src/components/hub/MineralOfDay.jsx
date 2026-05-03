@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useEntityList } from '@/lib/useEntityQuery';
+import useReducedMotion from '@/lib/useReducedMotion';
+import usePageVisible from '@/lib/usePageVisible';
 
 /**
  * MineralOfDay — small companion gem that orbits the main orb daily.
@@ -8,26 +10,27 @@ import { base44 } from '@/api/base44Client';
  * orb voices it.
  */
 export default function MineralOfDay({ onIdentify, active }) {
-  const [mineral, setMineral] = useState(null);
   const ref = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const visible = usePageVisible();
+  const { data: all } = useEntityList('Mineral');
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const all = await base44.entities.Mineral.list();
-        if (cancelled || !all?.length) return;
-        const day = Math.floor(Date.now() / 86400000);
-        const m = all[day % all.length];
-        setMineral(m);
-      } catch { /* silent */ }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const mineral = useMemo(() => {
+    if (!all?.length) return null;
+    const day = Math.floor(Date.now() / 86400000);
+    return all[day % all.length];
+  }, [all]);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (reduceMotion || !visible) {
+      const r = 145;
+      const x = Math.cos(1.6) * r;
+      const y = Math.sin(1.6) * r * 0.5;
+      el.style.transform = `translate3d(${x}px, ${y}px, 90px) scale(${active ? 1.15 : 1})`;
+      return;
+    }
     let raf;
     const tick = () => {
       const t = performance.now() * 0.0004;
@@ -39,7 +42,7 @@ export default function MineralOfDay({ onIdentify, active }) {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [active]);
+  }, [active, reduceMotion, visible]);
 
   if (!mineral) return null;
 

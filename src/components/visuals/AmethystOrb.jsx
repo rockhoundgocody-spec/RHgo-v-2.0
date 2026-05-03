@@ -4,6 +4,8 @@ import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
 import { cn } from '@/lib/utils';
+import useReducedMotion from '@/lib/useReducedMotion';
+import usePageVisible from '@/lib/usePageVisible';
 
 /**
  * Two-layer black opal orb:
@@ -25,12 +27,16 @@ export default function AmethystOrb({
   const haloRef = useRef(null);
   const auraRef = useRef(null);
   const auraInnerRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const visible = usePageVisible();
   // Try WebGPU first; fall back to WebGL shader if unsupported / init fails.
+  // Reduced-motion users get the lighter WebGL path AND no fluid overlay.
   const [useWebGPU, setUseWebGPU] = useState(
-    typeof navigator !== 'undefined' && !!navigator.gpu
+    typeof navigator !== 'undefined' && !!navigator.gpu && !detectInitialReduce()
   );
   useEffect(() => {
     if (!getAmplitude && !getSpectrum) return;
+    if (!visible) return; // pause when tab hidden
     let raf;
     const tick = () => {
       const a = getAmplitude ? getAmplitude() || 0 : 0;
@@ -57,7 +63,7 @@ export default function AmethystOrb({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [getAmplitude, getSpectrum]);
+  }, [getAmplitude, getSpectrum, visible]);
 
   return (
     <div
@@ -144,12 +150,14 @@ export default function AmethystOrb({
           )}
         </div>
 
-        {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only) */}
-        {useWebGPU && (
+        {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only).
+            Disabled entirely under reduced-motion or when speaking is off
+            on idle Hub view to save GPU. */}
+        {useWebGPU && !reduceMotion && speaking && (
           <div className="absolute inset-0">
             <WebGPUFluidOverlay
-              resolution={128}
-              intensity={speaking ? 1.4 : 1.0}
+              resolution={96}
+              intensity={1.4}
               getAmplitude={getAmplitude}
               getSpectrum={getSpectrum}
               onUnsupported={() => setUseWebGPU(false)}
@@ -191,4 +199,12 @@ export default function AmethystOrb({
       </div>
     </div>
   );
+}
+
+function detectInitialReduce() {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
+  const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4;
+  const lowCores = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
+  return !!(lowMem || lowCores);
 }
