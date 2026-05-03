@@ -57,24 +57,37 @@ export default function Hub() {
 
       {/* HERO */}
       <section className="flex flex-col items-center text-center mb-16">
-        <div className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.5em] text-hud-cyan/70 glow-hud mb-6">
+        <div className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.5em] text-hud-cyan/80 glow-hud mb-6">
           // Geological Intelligence OS
         </div>
 
         <HeroOrb />
 
-        <h1 className="mt-12 text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-          ROCKHOUND
-          <span className="text-amethyst glow-amethyst">·</span>
-          <span className="text-amethyst glow-amethyst">GO</span>
-        </h1>
-        <p className="mt-4 max-w-md text-white/65 text-sm sm:text-base leading-relaxed">
-          The field platform for mineral discovery, identification, and collector intelligence.
-          <span className="block text-amethyst/80 mt-1">Discover. Identify. Collect.</span>
-        </p>
+        {/* Title block — gradient backdrop ensures legibility over orb glow */}
+        <div className="relative mt-14 w-full">
+          <div
+            aria-hidden
+            className="absolute inset-x-0 -top-8 bottom-0 -z-10 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(60% 80% at 50% 60%, hsla(240,40%,4%,0.85) 0%, hsla(240,40%,4%,0.5) 55%, transparent 100%)',
+            }}
+          />
+          <h1 className="text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+            ROCKHOUND
+            <span className="text-amethyst glow-amethyst">·</span>
+            <span className="text-amethyst glow-amethyst">GO</span>
+          </h1>
+          <p className="mt-4 max-w-md mx-auto text-white/85 text-[15px] sm:text-base leading-relaxed">
+            The field platform for mineral discovery, identification, and collector intelligence.
+            <span className="block text-amethyst-glow mt-1.5 text-[14px] sm:text-[15px] font-medium tracking-wide">
+              Discover. Identify. Collect.
+            </span>
+          </p>
+        </div>
 
         <div className="mt-6 flex items-center gap-3 flex-wrap justify-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] font-mono uppercase tracking-[0.3em] text-amethyst/80">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-[0.3em] text-amethyst/90">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Field Systems Online
           </div>

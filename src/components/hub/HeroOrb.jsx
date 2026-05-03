@@ -7,6 +7,7 @@ import SpecimenGhosts from './SpecimenGhosts.jsx';
 import CompassRing from './CompassRing.jsx';
 import MineralOfDay from './MineralOfDay.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
+import OracleTranscript from '@/components/oracle/OracleTranscript.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
@@ -167,52 +168,42 @@ export default function HeroOrb() {
           ))}
         </div>
 
-        {/* Status pill */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] font-mono">
+        {/* Status pill — bigger, higher contrast, real tap target */}
+        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-amethyst/30 min-h-[44px]">
           {active ? (
             <>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300/90">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
                 {thinking ? 'Thinking' : speaking ? 'Speaking' : listening ? 'Listening' : 'Awake'}
               </span>
-              {listening ? <Mic size={10} className="text-emerald-300/80" />
-                         : <MicOff size={10} className="text-emerald-300/40" />}
+              {listening ? <Mic size={14} className="text-emerald-300" />
+                         : <MicOff size={14} className="text-emerald-300/50" />}
             </>
           ) : (
-            <span className="text-amethyst/70">Tap to awaken</span>
+            <span className="text-amethyst-glow text-[13px] font-medium tracking-[0.2em] uppercase glow-amethyst">
+              Tap to awaken
+            </span>
           )}
         </div>
 
-        <FloatingCaption text={interim} variant="user" visible={!!interim} />
-        <FloatingCaption text={reply} variant="oracle" visible={!!reply && active} />
-
         <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
       </div>
-    </DepthWell>
-  );
-}
 
-function FloatingCaption({ text, variant, visible }) {
-  if (!visible) return null;
-  const isOracle = variant === 'oracle';
-  return (
-    <div
-      className="pointer-events-none absolute left-1/2 -translate-x-1/2 max-w-xs sm:max-w-sm text-center transition-all duration-500"
-      style={{
-        top: isOracle ? 'calc(100% + 40px)' : 'calc(100% + 90px)',
-        opacity: 0.95,
-      }}
-    >
-      <div
-        className={
-          isOracle
-            ? 'text-white/90 text-sm leading-relaxed glow-amethyst'
-            : 'text-amethyst/70 text-xs italic'
-        }
-        style={isOracle ? { textShadow: '0 0 18px hsla(280,100%,70%,0.55)' } : {}}
-      >
-        {text}
-      </div>
-    </div>
+      {/* Dedicated transcript surface — never overlaps hero/cards */}
+      <OracleTranscript
+        active={active}
+        reply={reply}
+        interim={interim}
+        status={thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'awake'}
+        onClose={() => {
+          stopSpeak();
+          stopListen();
+          mic.stop();
+          setActive(false);
+          setReply('');
+          setInterim('');
+        }}
+      />
+    </DepthWell>
   );
 }

@@ -63,12 +63,22 @@ export default function Layout() {
         </header>
       )}
 
-      <main className={cn('relative', isAdminOrDocs ? 'pb-8' : 'pb-28')}>
+      <main
+        className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
+        style={
+          isAdminOrDocs
+            ? undefined
+            : { paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }
+        }
+      >
         <Outlet />
       </main>
 
       {!isAdminOrDocs && (
-        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-2 py-2 flex items-center gap-1">
+        <nav
+          className="fixed left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-2 py-2 flex items-center gap-1"
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+        >
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -76,7 +86,7 @@ export default function Layout() {
               end={to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition',
+                  'flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition min-w-[56px] min-h-[44px] justify-center',
                   isActive
                     ? 'bg-amethyst/30 text-white shadow-[inset_0_0_18px_hsla(280,100%,70%,0.4)]'
                     : 'text-amethyst/60 hover:text-amethyst'
@@ -84,7 +94,7 @@ export default function Layout() {
               }
             >
               <Icon size={18} />
-              <span className="text-[10px] tracking-wide">{label}</span>
+              <span className="text-[11px] font-medium tracking-wide">{label}</span>
             </NavLink>
           ))}
         </nav>
