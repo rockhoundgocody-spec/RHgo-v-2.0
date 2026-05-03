@@ -105,8 +105,12 @@ export default function VoiceprintRing({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 m-auto pointer-events-none"
-      style={{ width: size, height: size }}
+      className="absolute left-1/2 top-1/2 pointer-events-none"
+      style={{
+        width: size,
+        height: size,
+        transform: 'translate(-50%, -50%)',
+      }}
     />
   );
 }
