@@ -8,6 +8,7 @@ import CelestialDial from '@/components/hub/CelestialDial.jsx';
 import HubIntro from '@/components/hub/HubIntro.jsx';
 import CompanionStatus from '@/components/hub/CompanionStatus.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
+import EcosystemFooter from '@/components/hub/EcosystemFooter.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 
 const missions = [
@@ -137,6 +138,8 @@ export default function Hub() {
           <StatStrip />
         </TiltContainer>
       </section>
+
+      <EcosystemFooter />
     </div>
   );
 }

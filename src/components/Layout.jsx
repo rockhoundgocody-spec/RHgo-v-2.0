@@ -22,7 +22,7 @@ const secondary = [
 
 export default function Layout() {
   const location = useLocation();
-  const isAdminOrDocs = ['/admin', '/docs', '/design-system'].some((p) =>
+  const isAdminOrDocs = ['/admin', '/docs', '/dev'].some((p) =>
     location.pathname.startsWith(p)
   );
 

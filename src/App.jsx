@@ -15,7 +15,6 @@ const Explore = lazy(() => import('@/pages/Explore'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
 const Compare = lazy(() => import('@/pages/Compare'));
-const CompareLive = lazy(() => import('@/pages/CompareLive'));
 const Admin = lazy(() => import('@/pages/Admin'));
 const Docs = lazy(() => import('@/pages/Docs'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
@@ -57,10 +56,12 @@ const AuthenticatedApp = () => {
           <Route path="/collection" element={<Collection />} />
           <Route path="/badges" element={<Badges />} />
           <Route path="/compare" element={<Compare />} />
-          <Route path="/compare-live" element={<CompareLive />} />
+          {/* Legacy alias — CompareLive is now a tab inside /compare. */}
+          <Route path="/compare-live" element={<Compare />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/docs" element={<Docs />} />
-          <Route path="/design-system" element={<DesignSystem />} />
+          {/* /design-system moved under /dev — internal only, not in user nav. */}
+          <Route path="/dev/design-system" element={<DesignSystem />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

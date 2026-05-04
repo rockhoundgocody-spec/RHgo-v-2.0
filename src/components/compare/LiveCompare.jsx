@@ -1,19 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Gem, Loader2 } from 'lucide-react';
+import { Gem, Loader2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import SplitCompareView from '@/components/scan/SplitCompareView.jsx';
 import { Button } from '@/components/ui/button';
 
 /**
- * CompareLive — split-screen comparison between the user's current scan
+ * LiveCompare — split-screen comparison between the user's current scan
  * (passed via location.state.scanImageUrl + scanName) and a high-def
- * library specimen image. The library specimen is suggested by name match
- * but can be swapped via a quick mineral selector.
+ * library specimen image. (Previously /compare-live.)
  */
-export default function CompareLive() {
+export default function LiveCompare() {
   const location = useLocation();
   const navigate = useNavigate();
   const { scanImageUrl, scanName } = location.state || {};
@@ -29,7 +28,6 @@ export default function CompareLive() {
     });
   }, []);
 
-  // Auto-select the closest match by name.
   useEffect(() => {
     if (!scanName || !minerals.length) return;
     const lower = scanName.toLowerCase();
@@ -51,40 +49,24 @@ export default function CompareLive() {
 
   if (!scanImageUrl) {
     return (
-      <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
-        <GlassPanel className="p-10 text-center">
-          <Gem className="mx-auto text-amethyst/40 mb-3" size={40} />
-          <p className="text-white/70">No scan to compare.</p>
-          <Button onClick={() => navigate('/scan')} className="mt-4 bg-amethyst-deep hover:bg-amethyst">
-            Start a scan
-          </Button>
-        </GlassPanel>
-      </div>
+      <GlassPanel className="p-10 text-center">
+        <Gem className="mx-auto text-amethyst/40 mb-3" size={40} />
+        <p className="text-white/70">No active scan to compare.</p>
+        <p className="text-white/40 text-xs mt-2">
+          Capture a specimen on the Scan page, then tap "Compare" on the result.
+        </p>
+        <Button
+          onClick={() => navigate('/scan')}
+          className="mt-4 bg-amethyst-deep hover:bg-amethyst"
+        >
+          Start a scan
+        </Button>
+      </GlassPanel>
     );
   }
 
   return (
-    <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          to="/scan"
-          className="flex items-center gap-1.5 text-amethyst/70 hover:text-amethyst-glow text-sm"
-        >
-          <ArrowLeft size={16} />
-          Scan
-        </Link>
-        <div className="text-amethyst/60 text-[10px] uppercase tracking-[0.3em]">
-          Split · Compare
-        </div>
-      </div>
-
-      <h1 className="text-2xl font-bold text-white tracking-wide text-center mb-1">
-        {scanName || 'Your Scan'}
-      </h1>
-      <p className="text-amethyst/60 text-xs uppercase tracking-[0.3em] text-center mb-5">
-        vs · Library Reference
-      </p>
-
+    <>
       <HudFrame label="Live · Library · Comparison">
         {loading || !selected ? (
           <div className="aspect-square flex items-center justify-center">
@@ -129,6 +111,6 @@ export default function CompareLive() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
