@@ -1,0 +1,55 @@
+{
+  "name": "TrainingCandidate",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "description": "Public URL of the user's specimen photo"
+    },
+    "image_hash": {
+      "type": "string",
+      "description": "Optional SHA-256 of the image to dedupe"
+    },
+    "predicted_label": {
+      "type": "string",
+      "description": "What the model originally said"
+    },
+    "predicted_confidence": {
+      "type": "number"
+    },
+    "user_label": {
+      "type": "string",
+      "description": "What the user corrected it to"
+    },
+    "user_notes": {
+      "type": "string"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "model_version": {
+      "type": "string",
+      "description": "MLModel.version that produced predicted_label, or 'gemini-flash'"
+    },
+    "specimen_id": {
+      "type": "string",
+      "description": "Optional link back to the Specimen record"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected",
+        "trained"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "user_label"
+  ]
+}

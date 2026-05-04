@@ -10,6 +10,7 @@ import CompanionStatus from '@/components/hub/CompanionStatus.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import EcosystemFooter from '@/components/hub/EcosystemFooter.jsx';
 import ProgressDashboard from '@/components/hub/ProgressDashboard.jsx';
+import ModelStatusCard from '@/components/hub/ModelStatusCard.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 
 const missions = [
@@ -149,6 +150,10 @@ export default function Hub() {
           <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
         </div>
         <ProgressDashboard />
+      </section>
+
+      <section className="mt-6">
+        <ModelStatusCard />
       </section>
 
       <EcosystemFooter />

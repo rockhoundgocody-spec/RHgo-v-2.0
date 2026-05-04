@@ -1,0 +1,64 @@
+{
+  "name": "MLModel",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver, e.g. '1.0.0'"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "onnx",
+        "tflite",
+        "coreml"
+      ],
+      "default": "onnx",
+      "description": "Runtime format. PWA uses onnx via ONNX Runtime Web."
+    },
+    "cdn_url": {
+      "type": "string",
+      "description": "Public CDN URL of the quantized model file"
+    },
+    "size_mb": {
+      "type": "number",
+      "description": "File size in MB"
+    },
+    "checksum": {
+      "type": "string",
+      "description": "SHA-256 hex digest for integrity verification"
+    },
+    "input_shape": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "e.g. [1,3,224,224]"
+    },
+    "labels_url": {
+      "type": "string",
+      "description": "URL of JSON label list aligned with output classes"
+    },
+    "min_app_version": {
+      "type": "string",
+      "description": "Minimum app semver required to run this model"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exactly one row should be active at a time"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Release notes, e.g. '+2% top-1 on field test set'"
+    }
+  },
+  "required": [
+    "version",
+    "cdn_url"
+  ]
+}
