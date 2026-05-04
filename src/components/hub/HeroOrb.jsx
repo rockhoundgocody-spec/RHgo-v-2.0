@@ -9,14 +9,13 @@ import MineralOfDay from './MineralOfDay.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
-import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
 
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
-  const { openOracle } = useOracle();
   const [ripples, setRipples] = useState([]);
+  const [micWarning, setMicWarning] = useState(false);
   const [active, setActive] = useState(false);
   const [interim, setInterim] = useState('');
   const [reply, setReply] = useState('');
@@ -104,7 +103,8 @@ Oracle:`;
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
     if (!micSupported) {
-      openOracle({ live: false });
+      setMicWarning(true);
+      setTimeout(() => setMicWarning(false), 4000);
       return;
     }
     if (!active) {
@@ -211,6 +211,10 @@ Oracle:`;
               {listening ? <Mic size={14} className="text-emerald-300" />
                          : <MicOff size={14} className="text-emerald-300/50" />}
             </>
+          ) : micWarning ? (
+            <span className="text-rose-300 text-[12px] font-medium tracking-wider uppercase">
+              Mic unavailable — check browser permissions
+            </span>
           ) : (
             <span className="text-amethyst-glow text-[13px] font-medium tracking-[0.2em] uppercase glow-amethyst">
               Tap to awaken
