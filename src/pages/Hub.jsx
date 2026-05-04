@@ -9,6 +9,7 @@ import HubIntro from '@/components/hub/HubIntro.jsx';
 import CompanionStatus from '@/components/hub/CompanionStatus.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import EcosystemFooter from '@/components/hub/EcosystemFooter.jsx';
+import ProgressDashboard from '@/components/hub/ProgressDashboard.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 
 const missions = [
@@ -127,7 +128,7 @@ export default function Hub() {
       </section>
 
       {/* STATS */}
-      <section>
+      <section className="mb-10">
         <div className="flex items-center gap-3 mb-4">
           <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70">
             Field Telemetry
@@ -137,6 +138,17 @@ export default function Hub() {
         <TiltContainer max={2}>
           <StatStrip />
         </TiltContainer>
+      </section>
+
+      {/* PROGRESS — specimens vs mission goals (badge-driven) */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70">
+            Mission Progress
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
+        </div>
+        <ProgressDashboard />
       </section>
 
       <EcosystemFooter />
