@@ -101,6 +101,15 @@ app only *consumes* the published artifact and *feeds back* corrections.
 - Hub shows a `ModelStatusCard` reading from `getLatestModel`. When
   empty it cleanly displays "Cloud · Gemini Flash". When populated it
   shows version + size + on-device badge.
+- Scan result shows a "Correct identification" affordance that writes
+  a `TrainingCandidate` via `submitCorrection`, tagged with the active
+  `model_version` (currently `gemini-flash` until the first on-device
+  model ships).
+- `lib/modelCache.js` provides an IndexedDB cache (keyed by
+  `version`+`checksum`, with SHA-256 verification) ready to consume an
+  `.onnx` artifact the moment one is published. The PWA does **not**
+  bundle `onnxruntime-web` or `@tensorflow/tfjs` — those land in the
+  same sprint that publishes the first `MLModel` row, not before.
 
 ---
 

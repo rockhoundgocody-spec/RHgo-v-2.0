@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
-import { Sparkles, Layers, RotateCcw, Save, GitCompare } from 'lucide-react';
+import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CorrectionModal from './CorrectionModal.jsx';
 
 /**
  * HolographicResult — shows the reconstructed specimen image with floating
@@ -16,8 +17,11 @@ export default function HolographicResult({
   onReset,
   onCompare,
   saved,
+  savedId,
+  modelVersion = 'gemini-flash',
 }) {
   const tiltRef = useRef(null);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
 
   useEffect(() => {
     const el = tiltRef.current;
@@ -163,8 +167,26 @@ export default function HolographicResult({
               <RotateCcw size={16} />
             </Button>
           </div>
+
+          <button
+            onClick={() => setCorrectionOpen(true)}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.25em] text-amethyst/70 hover:text-amethyst-glow transition py-2"
+          >
+            <Pencil size={11} />
+            Not quite right? Correct identification
+          </button>
         </div>
       </GlassPanel>
+
+      <CorrectionModal
+        open={correctionOpen}
+        onClose={() => setCorrectionOpen(false)}
+        predictedLabel={result?.top_match}
+        predictedConfidence={result?.confidence}
+        modelVersion={modelVersion}
+        imageUrl={primaryImageUrl}
+        specimenId={savedId}
+      />
     </>
   );
 }

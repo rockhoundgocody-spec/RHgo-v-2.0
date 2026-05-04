@@ -159,6 +159,8 @@ export default function Scan() {
           primaryImageUrl={primaryUrl}
           result={result}
           saved={!!savedId}
+          savedId={savedId}
+          modelVersion="gemini-flash"
           onSave={saveToCollection}
           onReset={reset}
           onCompare={() =>
