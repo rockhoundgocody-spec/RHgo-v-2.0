@@ -137,3 +137,96 @@ coremltools.convert(..., compute_precision=coremltools.precision.INT8)
 ```
 
 Result: 18–22 MB, 0.4–0.7% drop, 22–28 ms inference, WebGPU-ready.
+
+---
+
+## Android-Native TFLite Runtime (separate Android wrapper / Flutter plugin)
+
+> **Not implemented in the PWA.** TFLite, `GpuDelegate`, `NnApiDelegate`,
+> and Kotlin `Interpreter` are Android-only. This section is the spec
+> for the eventual native Android shell (or Capacitor/Flutter wrapper)
+> that consumes the same `MLModel` registry exposed by this app.
+
+### Target
+18–22 MB INT8 model, p95 < 25 ms on Pixel 7/8 / Samsung S23 / OnePlus 12,
+full GPU + NNAPI delegate support, CPU fallback < 80 ms.
+
+### Conversion pipeline (CI)
+```bash
+# PyTorch → ONNX (opset 18, dynamic batch)
+python export_onnx.py --model student.pt --output student.onnx \
+    --input_shape 1,3,224,224
+
+# ONNX → TFLite (INT8 PTQ)
+tflite_convert \
+  --output_file model_int8.tflite \
+  --saved_model_dir ./onnx_export \
+  --quantize_int8 \
+  --mean_value 127.5 --std_dev 127.5 \
+  --input_shapes 1,3,224,224 \
+  --inference_type QUANTIZED_UINT8 \
+  --input_arrays input \
+  --output_arrays output
+```
+
+Apply, in order: PTQ INT8 (per-channel) → QAT (already in training) →
+30% unstructured pruning → restrict to `TFLITE_BUILTINS_INT8` ops.
+
+### Gradle dependencies
+```groovy
+implementation 'org.tensorflow:tensorflow-lite:2.16.1'
+implementation 'org.tensorflow:tensorflow-lite-gpu:2.16.1'
+implementation 'org.tensorflow:tensorflow-lite-gpu-delegate-plugin:2.16.1'
+```
+
+### Kotlin runtime
+```kotlin
+val delegateOptions = GpuDelegate.Options().apply {
+    setPrecisionLossAllowed(true)
+    setInferencePreference(GpuDelegate.INFERENCE_PREFERENCE_SUSTAINED_SPEED)
+    setCacheDir(context.cacheDir)
+    setModelToken("rockhoundgo_v1")
+}
+val options = Interpreter.Options().apply {
+    addDelegate(GpuDelegate(delegateOptions))   // primary
+    addDelegate(NnApiDelegate())                // fallback
+    setNumThreads(4)
+}
+val interpreter = Interpreter(modelBuffer, options)
+
+val input = TensorImage.fromBitmap(bitmap).buffer
+val outputs = arrayOf(FloatArray(numClasses))
+interpreter.run(input, outputs)
+```
+
+### Architecture rules (pre-conversion)
+- Fuse BatchNorm + Conv
+- Use GPU-friendly activations (ReLU6, hard-swish)
+- Static NHWC shapes only
+- Minimize depthwise convs (slow on some Adreno/Mali)
+
+### Runtime optimizations
+- Pre-allocate input/output tensors once
+- Zero-copy `TensorImage` + `ByteBuffer`
+- Inference on `HandlerThread` (THREAD_PRIORITY_DISPLAY)
+- 3–5 warm-up inferences at app launch
+
+### Expected latency on 22M INT8 model
+| Path | Latency |
+|---|---|
+| CPU INT8 | 70–90 ms |
+| GPU delegate (default) | 28–35 ms |
+| GPU + opts + kernel cache | **18–23 ms** |
+| GPU + NNAPI on supported NPU | **12–16 ms** |
+
+### Validation gate
+- Pixel 7/8, S23/A54, OnePlus 12; 50 specimens × 3 lighting conditions
+- p95 < 30 ms (GPU), top-1 ≥ 94.5%, < 0.8% regression vs CPU
+- Representative calibration set covers rare minerals
+
+### Integration with this PWA's contract
+- Native shell calls `getLatestModel` → downloads `cdn_url` → caches with
+  `checksum`
+- On user correction → POST `submitCorrection` (same endpoint as web)
+- `MLModel.format = "tflite"` row drives the Android path; `format = "onnx"`
+  drives the PWA path. Same registry, same labels, same versioning.
