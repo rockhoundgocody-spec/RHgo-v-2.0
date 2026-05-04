@@ -230,3 +230,90 @@ interpreter.run(input, outputs)
 - On user correction → POST `submitCorrection` (same endpoint as web)
 - `MLModel.format = "tflite"` row drives the Android path; `format = "onnx"`
   drives the PWA path. Same registry, same labels, same versioning.
+
+---
+
+## Flutter Native Shell (separate repo)
+
+> **Not implemented in the PWA.** Dart, `tflite_flutter_plus`, ARKit,
+> ARCore, RealityKit, Sceneform, and Filament are native-only. This
+> section is the spec for an optional Flutter wrapper that hosts the
+> Base44 web app in a WebView and adds native Scan + AR via channels.
+
+### Hybrid architecture
+```
+Flutter shell
+├── WebView (Hub, Explore, Collection — existing React PWA)
+├── Native Scan screen (TFLite + GPU delegate)
+└── Native AR screen (ARKit / ARCore + GLTF/USDZ)
+
+Both native screens read/write through the SAME Base44 endpoints:
+  - getLatestModel  → resolve model artifact
+  - submitCorrection → user fixes
+  - Specimen entity → save finds
+```
+
+### `pubspec.yaml`
+```yaml
+dependencies:
+  tflite_flutter_plus: ^3.1.0
+  ar_flutter_plugin: ^0.7.x
+  model_viewer_plus: ^1.x
+```
+
+### Inference wrapper
+```dart
+final model = await getLatestModel();
+final interpreter = await Interpreter.fromAssetOrUrl(
+  model.cdnUrl,
+  options: InterpreterOptions()..addDelegate(GpuDelegate()),
+);
+
+Future<Map<String, dynamic>> runOnDeviceInference(Uint8List bytes) async {
+  final input = _preprocess(bytes);   // 224×224 normalized
+  final outputs = interpreter.runForMultipleInputs([input], outputTensors);
+  return _postprocess(outputs);
+}
+```
+
+### iOS path
+Same plugin chain auto-selects Core ML delegate; `MLModel.format = "coreml"`
+rows drive that path.
+
+---
+
+## AR Integration (Flutter shell only)
+
+### Real-time overlay flow
+```
+Camera (ARKit/ARCore) → frame → TFLite GPU inference (192×192)
+→ if confidence > 0.75 → place ARAnchor with mineral label / 3D model
+```
+
+### Performance targets
+- Inference + render < 16 ms/frame (60 fps)
+- Battery 8–12% per hour continuous AR
+- Throttle to 30 fps after 8 min on mid-range
+
+### 3D specimen viewer
+- **Sources:** photogrammetry (COLMAP / Instant-NGP cloud job) → GLTF/USDZ
+  for user finds; curated 200+ library minerals as fallback; procedural
+  shapes for rare/unknown.
+- **Constraints:** < 2 MB per asset (draco + LOD), < 800 ms load,
+  60 fps with occlusion + shadows.
+- **Stack:** RealityKit + USDZ (iOS), Filament/Sceneform + GLTF (Android).
+- **Gestures:** rotate, pinch-scale, 2-finger slice, tap-info.
+- **Persistence:** ARWorldMap (iOS) / Cloud Anchors (Android).
+
+### PWA fallback
+WebXR + Three.js + WebGPU for basic AR preview (no native anchors,
+no occlusion). Acceptable for desktop / unsupported mobile browsers.
+
+### Integration with this PWA's contract
+- Flutter shell calls `getLatestModel`, downloads `cdn_url`, verifies
+  `checksum`, caches locally.
+- AR-flow corrections POST to `submitCorrection` with `model_version`
+  set to the on-device model's `MLModel.version`.
+- Saved 3D specimens write to the `Specimen` entity (existing) — the
+  GLTF/USDZ URL goes in `image_url` or a future `model_3d_url` field
+  (add when needed; not part of v1.5).
