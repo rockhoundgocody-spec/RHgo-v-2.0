@@ -51,13 +51,21 @@ function lunarPhase(date) {
 
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
+
+    // Authenticate caller — entity automations invoke as the triggering user.
+    // This blocks anonymous/unauthenticated webhook calls from external sources.
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { event, data } = body || {};
     if (!event || event.type !== 'create' || event.entity_name !== 'Specimen') {
       return Response.json({ skipped: true, reason: 'not a Specimen create event' });
     }
 
-    const base44 = createClientFromRequest(req);
     let specimen = data;
     if (!specimen) {
       specimen = await base44.asServiceRole.entities.Specimen.get(event.entity_id);
