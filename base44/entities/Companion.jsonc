@@ -64,16 +64,45 @@
   ],
   "rls": {
     "create": {
-      "owner_email": "{{user.email}}"
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
-      "owner_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
-      "owner_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "owner_email": "{{user.email}}"
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
