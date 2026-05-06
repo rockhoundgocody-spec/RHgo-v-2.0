@@ -28,15 +28,43 @@ const darkStyle = [
 let loaderPromise = null;
 function loadGoogleMaps(apiKey) {
   if (typeof window === 'undefined') return Promise.reject(new Error('No window'));
-  if (window.google?.maps) return Promise.resolve(window.google);
+  if (window.google?.maps?.Map) return Promise.resolve(window.google);
   if (loaderPromise) return loaderPromise;
+
   loaderPromise = new Promise((resolve, reject) => {
+    // If a previous (failed/partial) script tag exists, remove it to avoid
+    // double-loading conflicts that break the Map constructor.
+    document
+      .querySelectorAll('script[data-rockhound-gmaps]')
+      .forEach((s) => s.parentNode?.removeChild(s));
+
+    // Use the official `callback` parameter — it only fires AFTER
+    // google.maps.Map is fully defined, eliminating the race where
+    // script.onload resolves before the API is ready (loading=async).
+    const cbName = `__rhGmapsCb_${Date.now()}`;
+    const cleanup = () => {
+      try { delete window[cbName]; } catch { window[cbName] = undefined; }
+    };
+
+    window[cbName] = () => {
+      cleanup();
+      if (window.google?.maps?.Map) {
+        resolve(window.google);
+      } else {
+        reject(new Error('Google Maps loaded but Map constructor missing'));
+      }
+    };
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&libraries=places,geometry&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&libraries=places,geometry&loading=async&callback=${cbName}`;
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve(window.google);
-    script.onerror = () => reject(new Error('Failed to load Google Maps'));
+    script.dataset.rockhoundGmaps = '1';
+    script.onerror = () => {
+      cleanup();
+      loaderPromise = null;
+      reject(new Error('Failed to load Google Maps'));
+    };
     document.head.appendChild(script);
   });
   return loaderPromise;
