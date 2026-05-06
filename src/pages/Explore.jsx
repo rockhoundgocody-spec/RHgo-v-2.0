@@ -6,11 +6,18 @@ import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
 import PredictiveFindsPanel from '@/components/explore/PredictiveFindsPanel.jsx';
 import MapStatusPanel from '@/components/explore/MapStatusPanel.jsx';
+import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
 import { Button } from '@/components/ui/button';
-import { useEntityList } from '@/lib/useEntityQuery';
+import useOfflineHotspots from '@/lib/useOfflineHotspots';
 
 export default function Explore() {
-  const { data: hotspots = [], isLoading: loading, error: hotspotsError } = useEntityList('Hotspot');
+  const {
+    data: hotspots = [],
+    isLoading: loading,
+    error: hotspotsError,
+    isOffline,
+    cachedAt,
+  } = useOfflineHotspots();
   const [activeId, setActiveId] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locating, setLocating] = useState(false);
@@ -99,7 +106,10 @@ export default function Explore() {
         </Button>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
+        {isOffline && hotspots.length > 0 && (
+          <OfflineBanner cachedAt={cachedAt} count={hotspots.length} />
+        )}
         <MapStatusPanel items={statusItems} />
       </div>
 
