@@ -9,19 +9,22 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import Hub from '@/pages/Hub';
 
-// Heavy pages are code-split — Three.js, Leaflet, charts, etc.
-// only load when user actually navigates there.
+// Primary workflow pages — code-split for performance
 const Explore = lazy(() => import('@/pages/Explore'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
-const Compare = lazy(() => import('@/pages/Compare'));
+const Market = lazy(() => import('@/pages/Market'));
+
+// Secondary systems — admin/tools only
 const Admin = lazy(() => import('@/pages/Admin'));
 const Docs = lazy(() => import('@/pages/Docs'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
-const Badges = lazy(() => import('@/pages/Badges'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const Settings = lazy(() => import('@/pages/Settings'));
+
+// Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));
-const ProgressiveVerify = lazy(() => import('@/pages/ProgressiveVerify'));
 
 const RouteFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -53,20 +56,22 @@ const AuthenticatedApp = () => {
     <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route element={<Layout />}>
+          {/* PRIMARY WORKFLOW ROUTES */}
           <Route path="/" element={<Hub />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />
-          <Route path="/badges" element={<Badges />} />
-          <Route path="/compare" element={<Compare />} />
-          {/* Legacy alias — CompareLive is now a tab inside /compare. */}
-          <Route path="/compare-live" element={<Compare />} />
+          <Route path="/market" element={<Market />} />
+
+          {/* SECONDARY / ADMIN ROUTES */}
           <Route path="/admin" element={<Admin />} />
           <Route path="/docs" element={<Docs />} />
-          <Route path="/verify" element={<ProgressiveVerify />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+
+          {/* LEGACY / FEATURE ROUTES (kept for backwards compat, not in main nav) */}
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          {/* /design-system moved under /dev — internal only, not in user nav. */}
           <Route path="/dev/design-system" element={<DesignSystem />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />

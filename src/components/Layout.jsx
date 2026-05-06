@@ -13,13 +13,15 @@ const navItems = [
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/scan', label: 'Scan', icon: ScanLine },
   { to: '/collection', label: 'Collection', icon: Gem },
-  { to: '/badges', label: 'Badges', icon: Award },
-  { to: '/verify', label: 'Verify', icon: Microscope },
+  { to: '/market', label: 'Market', icon: Award },
 ];
 
-const secondary = [
+// Secondary system routes (admin, docs, etc.) — not in main nav
+const secondaryRoutes = [
   { to: '/admin', label: 'Admin', icon: Shield },
   { to: '/docs', label: 'Docs', icon: FileCode2 },
+  { to: '/profile', label: 'Profile', icon: Home },
+  { to: '/settings', label: 'Settings', icon: FileCode2 },
 ];
 
 export default function Layout() {
@@ -45,7 +47,7 @@ export default function Layout() {
             </div>
           </div>
           <nav className="flex gap-2">
-            {secondary.map(({ to, label, icon: Icon }) => (
+            {secondaryRoutes.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
