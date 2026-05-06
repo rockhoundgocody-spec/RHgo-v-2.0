@@ -4,6 +4,7 @@ import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionModal from './CorrectionModal.jsx';
+import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
 
 /**
  * HolographicResult — shows the reconstructed specimen image with floating
@@ -177,6 +178,8 @@ export default function HolographicResult({
           </button>
         </div>
       </GlassPanel>
+
+      <SpecimenPassportPanel result={result} />
 
       <CorrectionModal
         open={correctionOpen}

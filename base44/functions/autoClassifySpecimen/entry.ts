@@ -54,13 +54,23 @@ Deno.serve(async (req) => {
       // non-fatal — keep gemini-flash tag
     }
 
-    // Run vision classification
+    // Run vision classification — explainable, observational geology mode.
+    const localityHint = (specimen.lat && specimen.lng)
+      ? ` The specimen was found at approximately ${specimen.lat.toFixed(2)}, ${specimen.lng.toFixed(2)}. Use this locality to weigh geological plausibility.`
+      : '';
+
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
-        'Identify the mineral or rock in this photo. Return up to 3 ranked candidates ' +
-        'with common name, rarity (common, uncommon, rare, legendary), and confidence (0-1). ' +
-        'Pick the single most likely mineral as the primary. Be conservative with rarity.',
+        'You are an assisted geological observation system, not an oracle. ' +
+        'Identify the mineral or rock in this photo using observational geology. ' +
+        'Return: (1) primary mineral_name + common_name, rarity, calibrated confidence (0-1, be conservative); ' +
+        '(2) up to 3 ranked candidates each with a one-sentence rationale; ' +
+        '(3) reasoning — a plain-language explanation of why primary was chosen, citing color, luster, habit, fracture, host rock; ' +
+        '(4) observed_features — discrete {feature, value} pairs you actually see; ' +
+        '(5) lookalikes — minerals that resemble primary and a one-line differentiator; ' +
+        '(6) verification_tests — hands-on tests (streak, hardness, magnetism, acid) with expected outcome; ' +
+        '(7) image_quality_score (0-1) and geological_plausibility (0-1) given any locality.' + localityHint,
       file_urls: [specimen.image_url],
       response_json_schema: {
         type: 'object',
@@ -69,6 +79,9 @@ Deno.serve(async (req) => {
           common_name: { type: 'string' },
           rarity: { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
           confidence: { type: 'number' },
+          reasoning: { type: 'string' },
+          image_quality_score: { type: 'number' },
+          geological_plausibility: { type: 'number' },
           candidates: {
             type: 'array',
             items: {
@@ -77,6 +90,37 @@ Deno.serve(async (req) => {
                 name: { type: 'string' },
                 rarity: { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
                 confidence: { type: 'number' },
+                rationale: { type: 'string' },
+              },
+            },
+          },
+          observed_features: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                feature: { type: 'string' },
+                value: { type: 'string' },
+              },
+            },
+          },
+          lookalikes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                differentiator: { type: 'string' },
+              },
+            },
+          },
+          verification_tests: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                test: { type: 'string' },
+                expected: { type: 'string' },
               },
             },
           },
@@ -98,6 +142,32 @@ Deno.serve(async (req) => {
     if (r.common_name) updates.common_name = r.common_name;
 
     await base44.asServiceRole.entities.Specimen.update(event.entity_id, updates);
+
+    // Append a passport entry — append-only provenance + explainability.
+    try {
+      await base44.asServiceRole.entities.SpecimenPassport.create({
+        specimen_id: event.entity_id,
+        owner_email: specimen.created_by,
+        event_type: 'identification',
+        primary_name: r.mineral_name,
+        confidence: updates.ai_confidence,
+        candidates: updates.ai_candidates,
+        reasoning: r.reasoning || '',
+        observed_features: Array.isArray(r.observed_features) ? r.observed_features : [],
+        lookalikes: Array.isArray(r.lookalikes) ? r.lookalikes : [],
+        verification_tests: Array.isArray(r.verification_tests)
+          ? r.verification_tests.map((t) => ({ ...t, performed: false }))
+          : [],
+        image_quality_score: typeof r.image_quality_score === 'number' ? r.image_quality_score : null,
+        geological_plausibility: typeof r.geological_plausibility === 'number' ? r.geological_plausibility : null,
+        model_version: modelVersion,
+        input_image_urls: [specimen.image_url],
+        lat: specimen.lat ?? null,
+        lng: specimen.lng ?? null,
+      });
+    } catch (e) {
+      // non-fatal — Specimen update already succeeded
+    }
 
     return Response.json({
       updated: true,

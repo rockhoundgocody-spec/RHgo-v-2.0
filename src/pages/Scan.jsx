@@ -58,11 +58,16 @@ export default function Scan() {
     const primary = uploads[0]?.file_url;
     primaryRef.current = primary;
 
-    // Multi-image identification via vision LLM.
+    // Multi-image identification — explainable observational geology mode.
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
-        'You are analyzing multiple photographs of the same mineral or rock specimen taken from different angles. Synthesize across views to identify it. Provide your top 3 candidate identifications with confidence scores (0-1). Include common name, scientific/mineral name, key visual features observed (color, luster, crystal habit, hardness cues), and a one-sentence description. Be conservative with confidence — if uncertain, say so.',
+        'You are an assisted geological observation system analyzing multiple photographs of the same specimen from different angles. ' +
+        'Synthesize across views. Return: top_match (best mineral name), calibrated confidence (0-1, conservative), short description, ' +
+        'reasoning (why top_match was chosen — color, luster, habit, fracture), observed_features (discrete {feature,value} pairs you actually see), ' +
+        'lookalikes (minerals that resemble it + a one-line differentiator), verification_tests (hands-on tests with expected outcome), ' +
+        'image_quality_score (0-1), geological_plausibility (0-1), and up to 3 ranked candidates each with confidence and a one-sentence rationale. ' +
+        'Be honest about uncertainty — teach observational geology rather than overclaiming.',
       file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {
         type: 'object',
@@ -70,6 +75,9 @@ export default function Scan() {
           top_match: { type: 'string' },
           confidence: { type: 'number' },
           description: { type: 'string' },
+          reasoning: { type: 'string' },
+          image_quality_score: { type: 'number' },
+          geological_plausibility: { type: 'number' },
           candidates: {
             type: 'array',
             items: {
@@ -78,7 +86,29 @@ export default function Scan() {
                 name: { type: 'string' },
                 confidence: { type: 'number' },
                 features: { type: 'string' },
+                rationale: { type: 'string' },
               },
+            },
+          },
+          observed_features: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { feature: { type: 'string' }, value: { type: 'string' } },
+            },
+          },
+          lookalikes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { name: { type: 'string' }, differentiator: { type: 'string' } },
+            },
+          },
+          verification_tests: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { test: { type: 'string' }, expected: { type: 'string' } },
             },
           },
         },
