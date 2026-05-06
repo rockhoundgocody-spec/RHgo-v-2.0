@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Compass, ScanLine, Gem, Brain } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import MissionCard from '@/components/hub/MissionCard.jsx';
@@ -14,6 +14,8 @@ import ProgressDashboard from '@/components/hub/ProgressDashboard.jsx';
 import ModelStatusCard from '@/components/hub/ModelStatusCard.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 import FieldCommandBar from '@/components/hub/FieldCommandBar.jsx';
+import FieldCoreCard from '@/components/hub/FieldCoreCard.jsx';
+import FieldCorePanel from '@/components/hub/FieldCorePanel.jsx';
 
 const missions = [
   {
@@ -52,6 +54,7 @@ const missions = [
 
 export default function Hub() {
   const { companion, todaysSpecimens, refresh } = useCompanion();
+  const [fieldCoreOpen, setFieldCoreOpen] = useState(false);
   return (
     <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
       {/* ambient backdrop */}
@@ -109,6 +112,11 @@ export default function Hub() {
       {/* FIELD COMMAND BAR — natural-language goal router */}
       <section className="mb-8">
         <FieldCommandBar collectionCount={todaysSpecimens?.length ?? 0} />
+      </section>
+
+      {/* FIELD CORE — portable offline AI command kit */}
+      <section className="mb-8">
+        <FieldCoreCard onOpen={() => setFieldCoreOpen(true)} />
       </section>
 
       {/* DAILY CHECK-IN — Finch-style mood + intention */}
@@ -169,6 +177,9 @@ export default function Hub() {
       </section>
 
       <EcosystemFooter />
+
+      {/* Field Core Detail Panel */}
+      {fieldCoreOpen && <FieldCorePanel onClose={() => setFieldCoreOpen(false)} />}
     </div>
   );
 }

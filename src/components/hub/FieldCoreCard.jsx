@@ -1,102 +1,61 @@
-/**
- * FieldCoreCard — Premium system panel for RockHound-GO Field Core
- * Portable offline AI command kit: expedition launch + sync status
- */
-import React, { useState } from 'react';
-import { HardDrive, Zap, Lock, ChevronRight, Wifi, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { HardDrive, ChevronRight, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
+const StatusChip = ({ label, value, alert = false }) => (
+  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.2em] font-mono ${
+    alert 
+      ? 'bg-amber-500/10 border border-amber-500/25 text-amber-300'
+      : 'bg-amethyst/10 border border-amethyst/25 text-amethyst/70'
+  }`}>
+    <span className={`w-1.5 h-1.5 rounded-full ${alert ? 'bg-amber-400' : 'bg-emerald-400'} ${!alert && 'animate-pulse'}`} />
+    <span className="text-white/70">{label}:</span> <span className="font-bold">{value}</span>
+  </div>
+);
+
 export default function FieldCoreCard({ onOpen }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Mock data — in production, fetch from a FieldCore entity or state
-  const offlinePacked = true;
-  const syncQueueCount = 4;
-  const cloverPackReady = true;
-
   return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onOpen}
-      className="cursor-pointer transition-transform active:scale-[0.98]"
-    >
-      <GlassPanel
-        variant="amethyst"
-        className={`p-5 border-l-2 transition-all ${
-          isHovered
-            ? 'border-l-amethyst-glow shadow-[0_0_40px_-10px_hsla(280,100%,60%,0.5)]'
-            : 'border-l-amethyst/30'
-        }`}
-        glow={isHovered}
-      >
+    <GlassPanel variant="amethyst" className="p-5 cursor-pointer hover:shadow-[0_0_80px_-20px_hsla(280,80%,55%,0.5)] transition-shadow">
+      <div onClick={onOpen} className="space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-amethyst-glow/70 mb-1">
-              Field Core
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-10 h-10 rounded-lg bg-amethyst/15 border border-amethyst/30 flex items-center justify-center shrink-0">
+              <HardDrive size={18} className="text-amethyst-glow" />
             </div>
-            <h3 className="text-lg font-bold text-white">Portable Offline AI</h3>
-            <p className="text-xs text-white/50 mt-1">Command kit for remote zones</p>
+            <div>
+              <div className="text-sm font-bold text-white">Field Core</div>
+              <div className="text-[11px] text-amethyst/60">Portable offline AI command kit</div>
+            </div>
           </div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amethyst-deep/40 border border-amethyst/25 text-[9px] font-mono uppercase tracking-[0.2em] text-amethyst-glow">
-            Concept Layer
+          <div className="text-[8px] uppercase tracking-[0.25em] px-2 py-1 rounded-full border border-amethyst/30 bg-amethyst/10 text-amethyst/70 font-mono shrink-0">
+            Concept
           </div>
         </div>
 
-        {/* Status chips */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <StatusChip
-            icon={<HardDrive size={11} />}
-            label="Offline Pack"
-            status={offlinePacked ? 'Ready' : 'Not Cached'}
-            color={offlinePacked ? 'emerald' : 'slate'}
-          />
-          <StatusChip
-            icon={syncQueueCount > 0 ? <AlertCircle size={11} /> : <Wifi size={11} />}
-            label="Sync Queue"
-            status={syncQueueCount > 0 ? `${syncQueueCount} pending` : 'Synced'}
-            color={syncQueueCount > 0 ? 'amber' : 'emerald'}
-          />
-          <StatusChip
-            icon={<Zap size={11} />}
-            label="Clover Pack"
-            status={cloverPackReady ? 'Updated' : 'Updating'}
-            color={cloverPackReady ? 'emerald' : 'slate'}
-          />
+        {/* Status Chips */}
+        <div className="flex flex-wrap gap-2">
+          <StatusChip label="Field Pack" value="Ready" />
+          <StatusChip label="Local DB" value="Healthy" />
+          <StatusChip label="Offline Finds" value="128" />
+          <StatusChip label="Pending Sync" value="4" />
+          <StatusChip label="Conflicts" value="0" />
         </div>
 
-        {/* Description + CTA */}
-        <p className="text-sm text-white/70 mb-4 leading-relaxed">
-          Cache maps, scans, notes, and AI tools for expeditions with little or no signal. Field Core turns
-          RockHound-GO into a portable expedition brain.
+        {/* Copy */}
+        <p className="text-xs text-white/60 leading-relaxed">
+          Cache maps, scans, notes, and AI tools for remote zones. Work offline, sync safely later.
         </p>
 
+        {/* CTA */}
         <button
-          className="w-full flex items-center justify-between py-3 px-3 rounded-lg bg-amethyst-deep/50 border border-amethyst/40 text-white text-sm font-semibold hover:bg-amethyst-deep hover:border-amethyst/60 transition group"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen?.();
-          }}
+          onClick={onOpen}
+          className="w-full flex items-center justify-between py-3 px-4 rounded-xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-semibold text-sm active:scale-[0.98] transition"
         >
           <span>Open Field Core</span>
-          <ChevronRight size={16} className="group-hover:translate-x-0.5 transition" />
+          <ChevronRight size={16} />
         </button>
-      </GlassPanel>
-    </div>
-  );
-}
-
-function StatusChip({ icon, label, status, color = 'slate' }) {
-  const colorMap = {
-    emerald: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
-    amber: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
-    slate: 'bg-slate-500/15 border-slate-500/30 text-slate-300',
-  };
-  return (
-    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-medium ${colorMap[color]}`}>
-      {icon}
-      <span>{label}</span>
-    </div>
+      </div>
+    </GlassPanel>
   );
 }
