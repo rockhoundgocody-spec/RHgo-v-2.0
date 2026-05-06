@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
-import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil } from 'lucide-react';
+import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil, Microscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
 import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
 import ReasoningSummary from '@/components/reasoning/ReasoningSummary.jsx';
@@ -25,6 +26,7 @@ export default function HolographicResult({
 }) {
   const tiltRef = useRef(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const el = tiltRef.current;
@@ -172,8 +174,16 @@ export default function HolographicResult({
           </div>
 
           <button
+            onClick={() => navigate('/verify')}
+            className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-amethyst/30 text-amethyst/80 hover:text-white hover:bg-amethyst/10 text-xs font-semibold uppercase tracking-[0.25em] transition"
+          >
+            <Microscope size={13} />
+            Progressive Verification (6-agent deep analysis)
+          </button>
+
+          <button
             onClick={() => setCorrectionOpen(true)}
-            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.25em] text-amethyst/70 hover:text-amethyst-glow transition py-2"
+            className="mt-2 w-full flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.25em] text-amethyst/50 hover:text-amethyst-glow transition py-2"
           >
             <Pencil size={11} />
             Not quite right? Correct identification
