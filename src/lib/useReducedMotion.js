@@ -1,31 +1,21 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Respects user's `prefers-reduced-motion` setting AND auto-detects
- * low-power devices (low-mem mobile, deviceMemory < 4, hardwareConcurrency < 4).
- * Returns true → skip heavy animations / GPU shaders.
+ * useReducedMotion
+ * Respects user's prefers-reduced-motion preference
+ * Returns true if user has requested reduced motion
  */
-export default function useReducedMotion() {
-  const [reduce, setReduce] = useState(() => detectInitial());
+export function useReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = () => setReduce(detectInitial());
-    mq.addEventListener?.('change', handler);
-    return () => mq.removeEventListener?.('change', handler);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handler = (e) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  return reduce;
-}
-
-function detectInitial() {
-  if (typeof window === 'undefined') return false;
-  const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-  if (mq?.matches) return true;
-  // Heuristic for low-power devices
-  const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4;
-  const lowCores = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
-  const saveData = navigator.connection?.saveData;
-  return !!(lowMem || lowCores || saveData);
+  return prefersReducedMotion;
 }

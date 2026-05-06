@@ -4,7 +4,7 @@ import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
 import { cn } from '@/lib/utils';
-import useReducedMotion from '@/lib/useReducedMotion';
+import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
 
 /**
