@@ -1,0 +1,92 @@
+{
+  "name": "IdentificationReasoning",
+  "type": "object",
+  "description": "Append-only log of WHY an identification was made—evidence, reasoning, alternatives considered. Feeds transparency & learning.",
+  "properties": {
+    "specimen_id": {
+      "type": "string",
+      "description": "Reference to Specimen"
+    },
+    "draft_id": {
+      "type": "string",
+      "description": "Reference to SpecimenDraft that generated this reasoning"
+    },
+    "reasoning_type": {
+      "type": "string",
+      "enum": ["initial_classification", "field_verification", "expert_review", "user_correction", "lookalike_elimination"],
+      "description": "What stage of reasoning is this"
+    },
+    "model_or_agent": {
+      "type": "string",
+      "description": "Which AI system generated this (e.g., 'gemini-flash', 'mineral_id_specialist', 'user')"
+    },
+    "primary_candidate": {
+      "type": "string",
+      "description": "What it thinks the mineral is"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence score"
+    },
+    "key_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trait": {"type": "string"},
+          "observed": {"type": "string"},
+          "expected": {"type": "string"},
+          "weight": {"type": "number"}
+        }
+      },
+      "description": "Evidence supporting/opposing the ID"
+    },
+    "alternative_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "confidence": {"type": "number"},
+          "why_eliminated": {"type": "string"}
+        }
+      },
+      "description": "Why other minerals were ruled out"
+    },
+    "uncertainty_factors": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "What made this ID uncertain (e.g., 'poor lighting', 'need hardness test')"
+    },
+    "next_verification_steps": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Tests that would confirm/refute this ID"
+    },
+    "geological_context_applied": {
+      "type": "boolean",
+      "description": "Did we factor in regional geology?"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["specimen_id"],
+  "rls": {
+    "create": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "read": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    }
+  }
+}

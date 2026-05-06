@@ -1,0 +1,172 @@
+{
+  "name": "Specimen",
+  "type": "object",
+  "description": "Geological specimen with full provenance, multi-angle photos, reasoning history, and family/memory integration.",
+  "properties": {
+    "mineral_name": {
+      "type": "string",
+      "description": "Primary identification (e.g., 'Amethyst', 'Magnetite')"
+    },
+    "common_name": {
+      "type": "string",
+      "description": "Alternative/local name"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Primary specimen photo (legacy; use SpecimenPhoto for full gallery)"
+    },
+    "photo_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "SpecimenPhoto IDs with multi-angle capture data, quality scores"
+    },
+    "found_at": {
+      "type": "string",
+      "description": "Location name/description"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "found_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Collector notes"
+    },
+    "ai_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Latest confidence. See IdentificationReasoning for full history."
+    },
+    "ai_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "confidence": {"type": "number"}
+        }
+      },
+      "description": "Alternative identifications from AI"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": ["common", "uncommon", "rare", "legendary"],
+      "default": "common",
+      "description": "Geological rarity (how rare this mineral is, globally)"
+    },
+    "collector_rarity_score": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 1,
+      "description": "Personal collection rarity (1-5 stars for this collector)"
+    },
+    "geological_context_id": {
+      "type": "string",
+      "description": "Link to GeologicalContext (mineral + region geological data)"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "User or expert has verified the ID"
+    },
+    "verification_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "How many field tests or verification steps completed"
+    },
+    "reasoning_history_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "IdentificationReasoning IDs for full reasoning audit trail"
+    },
+    "family_profile_id": {
+      "type": "string",
+      "description": "Which family this specimen belongs to (for family collections)"
+    },
+    "memory_capsule_id": {
+      "type": "string",
+      "description": "Which expedition MemoryCapsule it was found on"
+    },
+    "shared_collection_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "SharedCollection IDs this specimen is featured in"
+    },
+    "weather": {
+      "type": "object",
+      "description": "Weather snapshot at time/place of finding",
+      "properties": {
+        "temperature_f": {"type": "number"},
+        "condition": {"type": "string"},
+        "humidity": {"type": "number"},
+        "wind_mph": {"type": "number"},
+        "fetched_at": {"type": "string"}
+      }
+    },
+    "lunar_phase": {
+      "type": "object",
+      "description": "Lunar phase at time of finding",
+      "properties": {
+        "phase_name": {"type": "string"},
+        "illumination": {"type": "number"},
+        "phase_value": {"type": "number"}
+      }
+    },
+    "educational_value": {
+      "type": "string",
+      "enum": ["trivial", "interesting", "significant", "exceptional"],
+      "default": "interesting",
+      "description": "Why this specimen teaches something valuable"
+    },
+    "collection_value_range": {
+      "type": "string",
+      "description": "Estimated $ range (e.g., '$10-50', '$500+')"
+    },
+    "badges_unlocked": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Badge IDs earned by this specimen"
+    },
+    "synced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Has this been synced to cloud (for offline tracking)"
+    }
+  },
+  "required": ["mineral_name"],
+  "rls": {
+    "create": {
+      "$or": [
+        {"user_condition": {"role": "admin"}},
+        {"created_by": "{{user.email}}"}
+      ]
+    },
+    "read": {
+      "$or": [
+        {"user_condition": {"role": "admin"}},
+        {"created_by": "{{user.email}}"}
+      ]
+    },
+    "update": {
+      "$or": [
+        {"user_condition": {"role": "admin"}},
+        {"created_by": "{{user.email}}"}
+      ]
+    },
+    "delete": {
+      "$or": [
+        {"user_condition": {"role": "admin"}},
+        {"created_by": "{{user.email}}"}
+      ]
+    }
+  }
+}

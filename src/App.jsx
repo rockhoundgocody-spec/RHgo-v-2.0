@@ -13,7 +13,10 @@ import Hub from '@/pages/Hub';
 const Explore = lazy(() => import('@/pages/Explore'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
+const Collections = lazy(() => import('@/pages/Collections'));
 const Market = lazy(() => import('@/pages/Market'));
+const Expeditions = lazy(() => import('@/pages/Expeditions'));
+const ExpeditionDetail = lazy(() => import('@/pages/ExpeditionDetail'));
 
 // Secondary systems — admin/tools only
 const Admin = lazy(() => import('@/pages/Admin'));
@@ -62,6 +65,9 @@ const AuthenticatedApp = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/expeditions" element={<Expeditions />} />
+          <Route path="/expedition/:expeditionId" element={<ExpeditionDetail />} />
           <Route path="/market" element={<Market />} />
 
           {/* SECONDARY / ADMIN ROUTES */}

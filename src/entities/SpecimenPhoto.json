@@ -1,0 +1,92 @@
+{
+  "name": "SpecimenPhoto",
+  "type": "object",
+  "description": "Individual photo from a specimen scan session with capture metadata for multi-angle verification workflows.",
+  "properties": {
+    "specimen_id": {
+      "type": "string",
+      "description": "Reference to parent Specimen record"
+    },
+    "draft_id": {
+      "type": "string",
+      "description": "Reference to SpecimenDraft if captured during scanning"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "CDN URL of the full-resolution photo"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Thumbnail for gallery/list views (pre-compressed)"
+    },
+    "capture_angle": {
+      "type": "string",
+      "enum": ["frontal", "side", "macro", "streak", "under-light", "polarized"],
+      "description": "Geological capture technique/lighting condition"
+    },
+    "quality_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0-1 sharpness/exposure/relevance score"
+    },
+    "capture_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lat": {
+      "type": "number",
+      "description": "GPS coordinates at capture"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "device_orientation": {
+      "type": "string",
+      "enum": ["portrait", "landscape"],
+      "description": "Phone orientation at capture"
+    },
+    "lighting_condition": {
+      "type": "string",
+      "enum": ["natural", "overcast", "bright-sun", "shade", "artificial"],
+      "description": "Environmental lighting context"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Scientist notes about this photo (e.g., 'good cleavage showing')"
+    },
+    "is_primary": {
+      "type": "boolean",
+      "default": false,
+      "description": "Featured photo for the specimen"
+    }
+  },
+  "required": ["file_url", "capture_angle"],
+  "rls": {
+    "create": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "read": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "update": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "delete": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    }
+  }
+}

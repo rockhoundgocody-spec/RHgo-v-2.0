@@ -1,0 +1,82 @@
+{
+  "name": "SyncQueue",
+  "type": "object",
+  "description": "Offline-first sync queue: pending local changes waiting for network. Critical for field resilience.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "entity_type": {
+      "type": "string",
+      "enum": ["Specimen", "SpecimenPhoto", "SpecimenDraft", "MemoryCapsule", "Badge"],
+      "description": "What kind of record is being synced"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the record to sync"
+    },
+    "operation": {
+      "type": "string",
+      "enum": ["create", "update", "delete"],
+      "description": "What operation to perform"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Data to sync (full entity state)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "syncing", "synced", "conflict", "failed"],
+      "default": "pending"
+    },
+    "attempt_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "How many times sync has been attempted"
+    },
+    "last_attempt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "If failed, why"
+    },
+    "queued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "priority": {
+      "type": "integer",
+      "default": 0,
+      "description": "Higher = sync sooner (photos=5, specimens=10, badges=3)"
+    }
+  },
+  "required": ["owner_email", "entity_type", "entity_id", "operation"],
+  "rls": {
+    "create": {
+      "$or": [
+        {"created_by": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "read": {
+      "$or": [
+        {"data.owner_email": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "update": {
+      "$or": [
+        {"data.owner_email": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    },
+    "delete": {
+      "$or": [
+        {"data.owner_email": "{{user.email}}"},
+        {"user_condition": {"role": "admin"}}
+      ]
+    }
+  }
+}
