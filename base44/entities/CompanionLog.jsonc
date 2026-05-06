@@ -1,0 +1,100 @@
+{
+  "name": "CompanionLog",
+  "type": "object",
+  "description": "Daily snapshot of a user's companion state \u2014 used for the daily summary and progress charts.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the rockhound this log belongs to"
+    },
+    "log_date": {
+      "type": "string",
+      "format": "date",
+      "description": "YYYY-MM-DD of the snapshot"
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "radiant",
+        "happy",
+        "calm",
+        "drowsy",
+        "tender"
+      ],
+      "default": "calm"
+    },
+    "level": {
+      "type": "integer",
+      "default": 1
+    },
+    "xp": {
+      "type": "integer",
+      "default": 0
+    },
+    "xp_gained": {
+      "type": "integer",
+      "default": 0,
+      "description": "XP gained on this date vs the previous log"
+    },
+    "energy": {
+      "type": "integer",
+      "default": 80
+    },
+    "streak_days": {
+      "type": "integer",
+      "default": 0
+    },
+    "specimens_today": {
+      "type": "integer",
+      "default": 0,
+      "description": "Number of specimens logged on this date"
+    }
+  },
+  "required": [
+    "owner_email",
+    "log_date"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

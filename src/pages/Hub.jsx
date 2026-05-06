@@ -8,6 +8,7 @@ import CelestialDial from '@/components/hub/CelestialDial.jsx';
 import HubIntro from '@/components/hub/HubIntro.jsx';
 import CompanionStatus from '@/components/hub/CompanionStatus.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
+import DailyCompanionSummary from '@/components/hub/DailyCompanionSummary.jsx';
 import EcosystemFooter from '@/components/hub/EcosystemFooter.jsx';
 import ProgressDashboard from '@/components/hub/ProgressDashboard.jsx';
 import ModelStatusCard from '@/components/hub/ModelStatusCard.jsx';
@@ -106,6 +107,11 @@ export default function Hub() {
 
       {/* DAILY CHECK-IN — Finch-style mood + intention */}
       <DailyCheckIn companion={companion} onCheckedIn={refresh} />
+
+      {/* DAILY SUMMARY — mood + XP gained today, 7-day mini history */}
+      <section className="mt-6">
+        <DailyCompanionSummary companion={companion} />
+      </section>
 
       {/* INTRO — explains the orb + ring UI */}
       <HubIntro />

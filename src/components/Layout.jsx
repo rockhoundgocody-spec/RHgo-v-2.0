@@ -6,6 +6,7 @@ import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
 import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
+import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 
 const navItems = [
   { to: '/', label: 'Hub', icon: Home },
@@ -100,6 +101,7 @@ export default function Layout() {
         </nav>
       )}
 
+      <HotspotProximityWatcher />
       <OracleOverlays />
     </div>
     </OracleProvider>
