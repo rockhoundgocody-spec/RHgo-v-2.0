@@ -4,6 +4,8 @@
  * Run via: base44.functions.invoke('seedGeologicalDatabase', { phase: 1-4 })
  */
 
+// deno-lint-ignore no-undef
+
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Core mineral reference data (10 minerals for MVP)
@@ -254,7 +256,6 @@ const GEOLOGICAL_CONTEXTS = [
   },
 ];
 
-// deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);

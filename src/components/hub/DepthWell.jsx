@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import useReducedMotion from '@/lib/useReducedMotion';
+import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
 import useDeviceOrientation from '@/lib/useDeviceOrientation';
 import useMousePosition from '@/lib/useMousePosition';
