@@ -19,6 +19,8 @@ const Admin = lazy(() => import('@/pages/Admin'));
 const Docs = lazy(() => import('@/pages/Docs'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
 const Badges = lazy(() => import('@/pages/Badges'));
+const About = lazy(() => import('@/pages/About'));
+const Contact = lazy(() => import('@/pages/Contact'));
 
 const RouteFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -60,6 +62,8 @@ const AuthenticatedApp = () => {
           <Route path="/compare-live" element={<Compare />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/docs" element={<Docs />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           {/* /design-system moved under /dev — internal only, not in user nav. */}
           <Route path="/dev/design-system" element={<DesignSystem />} />
         </Route>

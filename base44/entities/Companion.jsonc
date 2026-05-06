@@ -61,7 +61,7 @@
     "description": {
       "type": "string",
       "maxLength": 1000,
-      "description": "Optional free-form description of the companion"
+      "description": "Optional free-form description of this companion (up to 1000 characters)"
     }
   },
   "required": [

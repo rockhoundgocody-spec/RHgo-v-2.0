@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 /**
  * EcosystemFooter — small "Powered by RockHound-GO" link that bridges
@@ -20,6 +21,15 @@ export default function EcosystemFooter() {
       <div className="text-[10px] text-white/30 tracking-wider">
         Field App · rhgo.base44.app
       </div>
+      <nav className="mt-2 flex items-center gap-4 text-[11px] font-mono uppercase tracking-[0.3em]">
+        <Link to="/about" className="text-amethyst/60 hover:text-amethyst-glow transition">
+          About
+        </Link>
+        <span className="text-white/20">·</span>
+        <Link to="/contact" className="text-amethyst/60 hover:text-amethyst-glow transition">
+          Contact
+        </Link>
+      </nav>
     </footer>
   );
 }

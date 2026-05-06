@@ -51,7 +51,7 @@
     "description": {
       "type": "string",
       "maxLength": 1000,
-      "description": "Optional free-form description of the training candidate"
+      "description": "Optional free-form description of this training candidate (up to 1000 characters)"
     }
   },
   "required": [
