@@ -32,7 +32,7 @@ function loadGoogleMaps(apiKey) {
   if (loaderPromise) return loaderPromise;
   loaderPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&libraries=places,geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&libraries=places,geometry&loading=async`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.google);
@@ -94,9 +94,18 @@ export default function HotspotMap({
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await base44.functions.invoke('getMapsKey', {});
-        if (!data?.apiKey) throw new Error('Missing API key');
-        const google = await loadGoogleMaps(data.apiKey);
+        let apiKey;
+        try {
+          const { data } = await base44.functions.invoke('getMapsKey', {});
+          apiKey = data?.apiKey;
+        } catch (err) {
+          if (err?.response?.status === 401) {
+            throw new Error('Please log in to view the map.');
+          }
+          throw err;
+        }
+        if (!apiKey) throw new Error('Missing API key');
+        const google = await loadGoogleMaps(apiKey);
         if (cancelled || !containerRef.current) return;
 
         mapRef.current = new google.maps.Map(containerRef.current, {
