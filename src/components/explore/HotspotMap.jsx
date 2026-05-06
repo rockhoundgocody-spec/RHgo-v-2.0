@@ -46,7 +46,17 @@ function loadGoogleMaps(apiKey) {
 const BLM_TILES = 'https://gis.blm.gov/arcgis/rest/services/admin_boundaries/BLM_Natl_SMA_LimitedScale/MapServer/tile/{z}/{y}/{x}';
 const PARCEL_TILES = 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Parcels/MapServer/tile/{z}/{y}/{x}';
 
-function makeOverlay(google, urlTemplate, opacity = 0.55) {
+function makeOverlay(google, urlTemplate, opacity = 0.55, onStatus) {
+  // Probe a single low-zoom tile so we can surface clear status to the user
+  // (CORS, 4xx, network failure) without breaking the map render.
+  if (typeof onStatus === 'function') {
+    onStatus('pending', 'Probing tile server…');
+    const probeUrl = urlTemplate.replace('{z}', 2).replace('{x}', 1).replace('{y}', 1);
+    fetch(probeUrl, { method: 'GET', mode: 'no-cors' })
+      .then(() => onStatus('ok', 'Tile server reachable'))
+      .catch((err) => onStatus('warn', err?.message || 'Tile probe failed'));
+  }
+
   return new google.maps.ImageMapType({
     getTileUrl: ({ x, y }, z) =>
       urlTemplate.replace('{z}', z).replace('{x}', x).replace('{y}', y),
@@ -63,7 +73,15 @@ export default function HotspotMap({
   activeId = null,
   onMarkerClick,
   userLocation = null,
+  onStatus,
 }) {
+  // Helper: report a status item up to the Explore page.
+  const report = useCallback(
+    (key, state, label, detail) => {
+      if (typeof onStatus === 'function') onStatus(key, { key, state, label, detail });
+    },
+    [onStatus]
+  );
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -94,18 +112,34 @@ export default function HotspotMap({
     let cancelled = false;
     (async () => {
       try {
+        report('apiKey', 'pending', 'Maps API key', 'Fetching from getMapsKey…');
         let apiKey;
         try {
           const { data } = await base44.functions.invoke('getMapsKey', {});
           apiKey = data?.apiKey;
         } catch (err) {
           if (err?.response?.status === 401) {
+            report('apiKey', 'error', 'Maps API key', 'Unauthorized — please log in.');
             throw new Error('Please log in to view the map.');
           }
+          report('apiKey', 'error', 'Maps API key', err?.message || 'Failed to fetch key');
           throw err;
         }
-        if (!apiKey) throw new Error('Missing API key');
-        const google = await loadGoogleMaps(apiKey);
+        if (!apiKey) {
+          report('apiKey', 'error', 'Maps API key', 'No key returned from server');
+          throw new Error('Missing API key');
+        }
+        report('apiKey', 'ok', 'Maps API key', 'Loaded');
+
+        report('mapsSdk', 'pending', 'Google Maps SDK', 'Loading script…');
+        let google;
+        try {
+          google = await loadGoogleMaps(apiKey);
+        } catch (err) {
+          report('mapsSdk', 'error', 'Google Maps SDK', err?.message || 'Script failed to load');
+          throw err;
+        }
+        report('mapsSdk', 'ok', 'Google Maps SDK', 'Ready');
         if (cancelled || !containerRef.current) return;
 
         mapRef.current = new google.maps.Map(containerRef.current, {
@@ -121,8 +155,12 @@ export default function HotspotMap({
         });
 
         infoRef.current = new google.maps.InfoWindow();
-        blmRef.current = makeOverlay(google, BLM_TILES, 0.5);
-        parcelRef.current = makeOverlay(google, PARCEL_TILES, 0.55);
+        blmRef.current = makeOverlay(google, BLM_TILES, 0.5, (state, detail) =>
+          report('blmTiles', state, 'BLM land overlay', detail)
+        );
+        parcelRef.current = makeOverlay(google, PARCEL_TILES, 0.55, (state, detail) =>
+          report('parcelTiles', state, 'Parcel overlay', detail)
+        );
         directionsRendererRef.current = new google.maps.DirectionsRenderer({
           map: mapRef.current,
           suppressMarkers: true,
@@ -133,7 +171,9 @@ export default function HotspotMap({
         mapRef.current.overlayMapTypes.insertAt(0, blmRef.current);
 
         setReady(true);
+        report('map', 'ok', 'Map renderer', 'Initialized');
       } catch (e) {
+        report('map', 'error', 'Map renderer', e.message);
         setError(e.message);
       }
     })();
