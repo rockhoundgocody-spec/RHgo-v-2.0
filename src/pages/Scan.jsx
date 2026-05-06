@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { scoreToBand } from '@/lib/reasoningEngine';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
@@ -20,6 +21,7 @@ export default function Scan() {
   const [primaryUrl, setPrimaryUrl] = useState(null);
   const [result, setResult] = useState(null);
   const [savedId, setSavedId] = useState(null);
+  const [reasoningResult, setReasoningResult] = useState(null);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
 
@@ -115,12 +117,40 @@ export default function Scan() {
       },
     });
 
-    return { result: r, uploads };
+    // Build HRM-style reasoning result from the LLM output.
+    const modelConf = typeof r?.confidence === 'number' ? r.confidence : 0.5;
+    const imgEvidence = uploads.map((u, i) => ({
+      type: 'image', label: i === 0 ? 'Primary photo' : `Angle ${i + 1}`, weight: 0.25,
+    }));
+    const featureEvidence = (r?.observed_features || []).slice(0, 5).map((f) => ({
+      type: 'feature', label: f.feature, value: f.value, weight: 0.05,
+    }));
+    const combinedScore = Math.min(imgEvidence.length * 0.15 + modelConf * 0.7, 1);
+    const band = scoreToBand(combinedScore);
+    const hints = [];
+    if (uploads.length === 1) hints.push('More angles improve accuracy');
+    if (!r?.observed_features?.length) hints.push('Note color and luster for better results');
+
+    const reasoningResult = {
+      primaryResult: r?.top_match || 'Unknown',
+      confidenceBand: band,
+      confidenceScore: combinedScore,
+      evidenceUsed: [...imgEvidence, ...featureEvidence],
+      uncertainties: band === 'low' ? ['Low confidence — re-scan recommended'] : [],
+      improvementHints: hints,
+      recommendedAction: band === 'high' ? 'save' : band === 'medium' ? 'compare' : 'rescan',
+      reasoningSummary: r?.reasoning || '',
+      needsMoreEvidence: band === 'low',
+      isOfflineFallback: false,
+    };
+
+    return { result: r, uploads, reasoningResult };
   }, []);
 
-  const handleReconstructed = ({ result: r }) => {
+  const handleReconstructed = ({ result: r, reasoningResult: rr }) => {
     setPrimaryUrl(primaryRef.current);
     setResult(r);
+    setReasoningResult(rr || null);
     setStage('result');
   };
 
@@ -150,6 +180,7 @@ export default function Scan() {
     setPrimaryUrl(null);
     setResult(null);
     setSavedId(null);
+    setReasoningResult(null);
   };
 
   return (
@@ -188,6 +219,7 @@ export default function Scan() {
         <HolographicResult
           primaryImageUrl={primaryUrl}
           result={result}
+          reasoningResult={reasoningResult}
           saved={!!savedId}
           savedId={savedId}
           modelVersion="gemini-flash"

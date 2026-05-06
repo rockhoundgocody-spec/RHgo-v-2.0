@@ -5,6 +5,7 @@ import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import CorrectionModal from './CorrectionModal.jsx';
 import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
+import ReasoningSummary from '@/components/reasoning/ReasoningSummary.jsx';
 
 /**
  * HolographicResult — shows the reconstructed specimen image with floating
@@ -14,6 +15,7 @@ import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
 export default function HolographicResult({
   primaryImageUrl,
   result,
+  reasoningResult,
   onSave,
   onReset,
   onCompare,
@@ -180,6 +182,18 @@ export default function HolographicResult({
       </GlassPanel>
 
       <SpecimenPassportPanel result={result} />
+
+      {reasoningResult && (
+        <ReasoningSummary
+          result={reasoningResult}
+          className="mt-4"
+          onAction={(action) => {
+            if (action === 'save') onSave?.();
+            if (action === 'compare') onCompare?.();
+            if (action === 'rescan') onReset?.();
+          }}
+        />
+      )}
 
       <CorrectionModal
         open={correctionOpen}
