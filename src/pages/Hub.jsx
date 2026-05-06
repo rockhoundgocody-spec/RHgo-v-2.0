@@ -13,6 +13,7 @@ import EcosystemFooter from '@/components/hub/EcosystemFooter.jsx';
 import ProgressDashboard from '@/components/hub/ProgressDashboard.jsx';
 import ModelStatusCard from '@/components/hub/ModelStatusCard.jsx';
 import useCompanion from '@/lib/useCompanion.js';
+import FieldCommandBar from '@/components/hub/FieldCommandBar.jsx';
 
 const missions = [
   {
@@ -103,6 +104,11 @@ export default function Hub() {
           </div>
           <CelestialDial />
         </div>
+      </section>
+
+      {/* FIELD COMMAND BAR — natural-language goal router */}
+      <section className="mb-8">
+        <FieldCommandBar collectionCount={todaysSpecimens?.length ?? 0} />
       </section>
 
       {/* DAILY CHECK-IN — Finch-style mood + intention */}
