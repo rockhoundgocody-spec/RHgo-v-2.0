@@ -57,6 +57,11 @@
       "type": "integer",
       "default": 0,
       "description": "Consecutive days with a check-in or a new find"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of the companion"
     }
   },
   "required": [
