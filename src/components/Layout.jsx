@@ -7,6 +7,7 @@ import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
 import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
+import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 
 const navItems = [
   { to: '/', label: 'Hub', icon: Home },
@@ -46,24 +47,28 @@ export default function Layout() {
               </div>
             </div>
           </div>
-          <nav className="flex gap-2">
-            {secondaryRoutes.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 px-3 py-1.5 text-xs uppercase tracking-wider rounded-md border',
-                    isActive
-                      ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
-                      : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
-                  )
-                }
-              >
-                <Icon size={14} /> {label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="flex gap-2">
+              {secondaryRoutes.slice(0, 2).map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-2 px-3 py-1.5 text-xs uppercase tracking-wider rounded-md border',
+                      isActive
+                        ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
+                        : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
+                    )
+                  }
+                >
+                  <Icon size={14} /> {label}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="w-px h-6 bg-white/10" />
+            <ProfileDrawer />
+          </div>
         </header>
       )}
 

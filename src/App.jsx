@@ -21,6 +21,7 @@ const Docs = lazy(() => import('@/pages/Docs'));
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries'));
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
           <Route path="/docs" element={<Docs />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/dev/architecture" element={<ArchitectureBoundaries />} />
 
           {/* LEGACY / FEATURE ROUTES (kept for backwards compat, not in main nav) */}
           <Route path="/about" element={<About />} />
