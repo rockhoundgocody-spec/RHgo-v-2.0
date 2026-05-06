@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import MapLayerControls from './MapLayerControls.jsx';
 import StreetViewPanel from './StreetViewPanel.jsx';
 import NearbyPlacesPanel from './NearbyPlacesPanel.jsx';
@@ -32,15 +33,10 @@ function loadGoogleMaps(apiKey) {
   if (loaderPromise) return loaderPromise;
 
   loaderPromise = new Promise((resolve, reject) => {
-    // If a previous (failed/partial) script tag exists, remove it to avoid
-    // double-loading conflicts that break the Map constructor.
     document
       .querySelectorAll('script[data-rockhound-gmaps]')
       .forEach((s) => s.parentNode?.removeChild(s));
 
-    // Use the official `callback` parameter — it only fires AFTER
-    // google.maps.Map is fully defined, eliminating the race where
-    // script.onload resolves before the API is ready (loading=async).
     const cbName = `__rhGmapsCb_${Date.now()}`;
     const cleanup = () => {
       try { delete window[cbName]; } catch { window[cbName] = undefined; }
@@ -73,10 +69,10 @@ function loadGoogleMaps(apiKey) {
 // ArcGIS public services for land overlays
 const BLM_TILES = 'https://gis.blm.gov/arcgis/rest/services/admin_boundaries/BLM_Natl_SMA_LimitedScale/MapServer/tile/{z}/{y}/{x}';
 const PARCEL_TILES = 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Parcels/MapServer/tile/{z}/{y}/{x}';
+// USGS National Geologic Map Database (SGMC2 public TMS, y-axis inverted)
+const USGS_GEO_TILES = 'https://mrdata.usgs.gov/mapcache/tms/1.0.0/sgmc2/{z}/{x}/{y}.png';
 
 function makeOverlay(google, urlTemplate, opacity = 0.55, onStatus) {
-  // Probe a single low-zoom tile so we can surface clear status to the user
-  // (CORS, 4xx, network failure) without breaking the map render.
   if (typeof onStatus === 'function') {
     onStatus('pending', 'Probing tile server…');
     const probeUrl = urlTemplate.replace('{z}', 2).replace('{x}', 1).replace('{y}', 1);
@@ -103,32 +99,36 @@ export default function HotspotMap({
   userLocation = null,
   onStatus,
 }) {
-  // Helper: report a status item up to the Explore page.
   const report = useCallback(
     (key, state, label, detail) => {
       if (typeof onStatus === 'function') onStatus(key, { key, state, label, detail });
     },
     [onStatus]
   );
+
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const clustererRef = useRef(null);
   const userMarkerRef = useRef(null);
   const infoRef = useRef(null);
   const blmRef = useRef(null);
   const parcelRef = useRef(null);
+  const geoRef = useRef(null);
   const directionsRendererRef = useRef(null);
 
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
   const [layers, setLayers] = useState({
-    type: 'hybrid', // roadmap | satellite | hybrid | terrain
+    type: 'hybrid',
     tilt: false,
     blm: true,
     parcels: false,
     traffic: false,
+    geology: false,
+    cluster: true,
   });
-  const [selected, setSelected] = useState(null); // for street view + nearby
+  const [selected, setSelected] = useState(null);
 
   const points = useMemo(
     () => hotspots.filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number'),
@@ -183,12 +183,25 @@ export default function HotspotMap({
         });
 
         infoRef.current = new google.maps.InfoWindow();
+
         blmRef.current = makeOverlay(google, BLM_TILES, 0.5, (state, detail) =>
           report('blmTiles', state, 'BLM land overlay', detail)
         );
         parcelRef.current = makeOverlay(google, PARCEL_TILES, 0.55, (state, detail) =>
           report('parcelTiles', state, 'Parcel overlay', detail)
         );
+        // USGS geology TMS — y-axis is inverted relative to XYZ
+        geoRef.current = new google.maps.ImageMapType({
+          getTileUrl: ({ x, y }, z) => {
+            const yTms = Math.pow(2, z) - 1 - y;
+            return USGS_GEO_TILES.replace('{z}', z).replace('{x}', x).replace('{y}', yTms);
+          },
+          tileSize: new google.maps.Size(256, 256),
+          opacity: 0.55,
+          maxZoom: 14,
+          name: 'geology',
+        });
+
         directionsRendererRef.current = new google.maps.DirectionsRenderer({
           map: mapRef.current,
           suppressMarkers: true,
@@ -205,9 +218,7 @@ export default function HotspotMap({
         setError(e.message);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   // Apply layer changes
@@ -217,10 +228,11 @@ export default function HotspotMap({
     map.setMapTypeId(layers.type);
     map.setTilt(layers.tilt && (layers.type === 'satellite' || layers.type === 'hybrid') ? 45 : 0);
 
-    // Rebuild overlay stack in deterministic order
+    // Rebuild overlay stack in deterministic order: parcels → BLM → geology (top)
     map.overlayMapTypes.clear();
     if (layers.parcels && parcelRef.current) map.overlayMapTypes.push(parcelRef.current);
     if (layers.blm && blmRef.current) map.overlayMapTypes.push(blmRef.current);
+    if (layers.geology && geoRef.current) map.overlayMapTypes.push(geoRef.current);
 
     // Traffic
     if (layers.traffic) {
@@ -233,21 +245,26 @@ export default function HotspotMap({
     }
   }, [layers, ready]);
 
-  // Render markers
+  // Render markers + clustering
   useEffect(() => {
     if (!ready || !mapRef.current || !window.google?.maps) return;
     const google = window.google;
 
+    // Destroy previous clusterer
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+      clustererRef.current = null;
+    }
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
+
     if (!points.length) return;
 
     const bounds = new google.maps.LatLngBounds();
-    points.forEach((h) => {
+    const newMarkers = points.map((h) => {
       const color = landColors[h.land_type] || landColors.unknown;
       const marker = new google.maps.Marker({
         position: { lat: h.lat, lng: h.lng },
-        map: mapRef.current,
         title: h.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -274,9 +291,40 @@ export default function HotspotMap({
         if (onMarkerClick) onMarkerClick(h);
       });
       marker.__hotspotId = h.id;
-      markersRef.current.push(marker);
       bounds.extend(marker.getPosition());
+      return marker;
     });
+    markersRef.current = newMarkers;
+
+    if (layers.cluster) {
+      clustererRef.current = new MarkerClusterer({
+        map: mapRef.current,
+        markers: newMarkers,
+        renderer: {
+          render: ({ count, position }) =>
+            new google.maps.Marker({
+              position,
+              label: {
+                text: String(count),
+                color: '#0b1020',
+                fontSize: '12px',
+                fontWeight: '700',
+              },
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 18,
+                fillColor: '#a78bfa',
+                fillOpacity: 0.9,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+              },
+              zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+            }),
+        },
+      });
+    } else {
+      newMarkers.forEach((m) => m.setMap(mapRef.current));
+    }
 
     if (points.length === 1) {
       mapRef.current.setCenter({ lat: points[0].lat, lng: points[0].lng });
@@ -284,7 +332,7 @@ export default function HotspotMap({
     } else {
       mapRef.current.fitBounds(bounds, 60);
     }
-  }, [points, ready, onMarkerClick]);
+  }, [points, ready, onMarkerClick, layers.cluster]);
 
   // Pan to active hotspot
   useEffect(() => {
@@ -334,17 +382,13 @@ export default function HotspotMap({
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (res, status) => {
-        if (status === 'OK') {
-          directionsRendererRef.current.setDirections(res);
-        }
+        if (status === 'OK') directionsRendererRef.current.setDirections(res);
       }
     );
   }, [selected, userLocation]);
 
   const clearRoute = useCallback(() => {
-    if (directionsRendererRef.current) {
-      directionsRendererRef.current.set('directions', null);
-    }
+    if (directionsRendererRef.current) directionsRendererRef.current.set('directions', null);
   }, []);
 
   return (

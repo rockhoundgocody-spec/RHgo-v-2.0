@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Mountain, Loader2, Locate } from 'lucide-react';
+import OfflineTilePackButton from '@/components/explore/OfflineTilePackButton.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
@@ -92,18 +93,21 @@ export default function Explore() {
             Hotspots near you
           </p>
         </div>
-        <Button
-          onClick={handleLocate}
-          disabled={locating}
-          className="bg-hud-cyan/20 hover:bg-hud-cyan/30 border border-hud-cyan/50 text-hud"
-        >
-          {locating ? (
-            <Loader2 className="animate-spin mr-2" size={14} />
-          ) : (
-            <Locate size={14} className="mr-2" />
-          )}
-          My Location
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <OfflineTilePackButton userLocation={userLocation} />
+          <Button
+            onClick={handleLocate}
+            disabled={locating}
+            className="bg-hud-cyan/20 hover:bg-hud-cyan/30 border border-hud-cyan/50 text-hud"
+          >
+            {locating ? (
+              <Loader2 className="animate-spin mr-2" size={14} />
+            ) : (
+              <Locate size={14} className="mr-2" />
+            )}
+            My Location
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4 space-y-2">

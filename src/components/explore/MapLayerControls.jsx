@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Box, Mountain, Satellite, Map as MapIcon, Activity, Navigation, X } from 'lucide-react';
+import { Layers, Box, Mountain, Satellite, Map as MapIcon, Activity, Navigation, X, FlaskConical, Grid2X2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TYPES = [
@@ -66,6 +66,12 @@ export default function MapLayerControls({
         </Chip>
         <Chip active={layers.parcels} onClick={() => set({ parcels: !layers.parcels })}>
           Parcels
+        </Chip>
+        <Chip active={layers.geology} onClick={() => set({ geology: !layers.geology })} icon={FlaskConical} title="USGS National Geologic Map">
+          Geology
+        </Chip>
+        <Chip active={layers.cluster} onClick={() => set({ cluster: !layers.cluster })} icon={Grid2X2} title="Cluster nearby markers">
+          Cluster
         </Chip>
         <Chip active={layers.traffic} onClick={() => set({ traffic: !layers.traffic })} icon={Activity}>
           Live
