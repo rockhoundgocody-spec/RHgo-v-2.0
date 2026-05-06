@@ -11,8 +11,8 @@ const bandColor = (pct) => {
 export default function PsvDraftCard({ draft, revisions, confidencePct }) {
   const bc = bandColor(confidencePct);
   const [showDetails, setShowDetails] = useState(false);
-  const traits = draft.verification_plan?.flatMap?.(() => []) || [];
-  const uncertainties = draft.next_question ? [] : [];
+  const observedTraits = draft.review_results?._observed_traits || [];
+  const uncertaintyFlags = draft.review_results?._uncertainty_flags || [];
 
   return (
     <GlassPanel className="p-5">
@@ -60,7 +60,30 @@ export default function PsvDraftCard({ draft, revisions, confidencePct }) {
         )}
       </div>
 
-      {/* Expandable: lookalikes + uncertainty */}
+      {/* Observed traits inline */}
+      {observedTraits.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {observedTraits.slice(0, 6).map((t, i) => (
+            <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-amethyst/10 border border-amethyst/20 text-amethyst/70">
+              {t.trait}: {t.value}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Uncertainty flags */}
+      {uncertaintyFlags.length > 0 && (
+        <div className="mt-2 space-y-1">
+          {uncertaintyFlags.slice(0, 3).map((flag, i) => (
+            <div key={i} className="flex items-start gap-1.5 text-[11px] text-amber-300/60">
+              <AlertCircle size={10} className="mt-0.5 shrink-0" />
+              {flag}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Expandable: verification plan */}
       {(draft.verification_plan?.length > 0) && (
         <button
           onClick={() => setShowDetails(p => !p)}

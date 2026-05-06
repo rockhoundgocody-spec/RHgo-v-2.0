@@ -6,6 +6,7 @@ import PsvDraftCard from '@/components/psv/PsvDraftCard.jsx';
 import PsvQuestionCard from '@/components/psv/PsvQuestionCard.jsx';
 import PsvFinalCard from '@/components/psv/PsvFinalCard.jsx';
 import PsvDeltaLog from '@/components/psv/PsvDeltaLog.jsx';
+import PsvProvenancePanel from '@/components/psv/PsvProvenancePanel.jsx';
 import { Loader2 } from 'lucide-react';
 
 export default function ProgressiveVerify() {
@@ -13,15 +14,17 @@ export default function ProgressiveVerify() {
   const [stage, setStage] = useState('photo'); // photo | drafting | refining | finalising | done
   const [draft, setDraft] = useState(null);
   const [finalResult, setFinalResult] = useState(null);
+  const [engine, setEngine] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const handlePhotos = useCallback(async ({ imageUrls, lat, lng }) => {
     setBusy(true);
     setStage('drafting');
-    const res = await base44.functions.invoke('progressiveVerify.js', {
+    const res = await base44.functions.invoke('progressiveVerify', {
       action: 'init', image_urls: imageUrls, lat, lng
     });
     setDraft(res.data.draft);
+    if (res.data.engine) setEngine(res.data.engine);
     setBusy(false);
     setStage('refining');
   }, []);
@@ -29,11 +32,12 @@ export default function ProgressiveVerify() {
   const handleAnswer = useCallback(async (key, text) => {
     if (!draft) return;
     setBusy(true);
-    const res = await base44.functions.invoke('progressiveVerify.js', {
+    const res = await base44.functions.invoke('progressiveVerify', {
       action: 'refine', draft_id: draft.id, answer_key: key, answer_text: text
     });
     const updated = res.data.draft;
     setDraft(updated);
+    if (res.data.engine) setEngine(res.data.engine);
     setBusy(false);
   }, [draft]);
 
@@ -41,11 +45,12 @@ export default function ProgressiveVerify() {
     if (!draft) return;
     setBusy(true);
     setStage('finalising');
-    const res = await base44.functions.invoke('progressiveVerify.js', {
+    const res = await base44.functions.invoke('progressiveVerify', {
       action: 'finalise', draft_id: draft.id
     });
     setDraft(res.data.draft);
     setFinalResult(res.data.final);
+    if (res.data.engine) setEngine(res.data.engine);
     setBusy(false);
     setStage('done');
   }, [draft]);
@@ -107,11 +112,12 @@ export default function ProgressiveVerify() {
               ) : (
                 <button
                   onClick={handleFinalise}
-                  className="w-full py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-semibold text-base transition"
+                  className="w-full py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-bold text-base transition"
                 >
                   Run Final Multi-Agent Review →
                 </button>
               )}
+              {engine && <PsvProvenancePanel engine={engine} revision={revisions} />}
               {draft.delta_log?.length > 1 && <PsvDeltaLog log={draft.delta_log} />}
             </div>
           )}
@@ -126,7 +132,8 @@ export default function ProgressiveVerify() {
 
           {stage === 'done' && finalResult && (
             <div className="space-y-4">
-              <PsvFinalCard result={finalResult} draft={draft} onSave={handleSave} onRescan={() => { setStage('photo'); setDraft(null); setFinalResult(null); }} />
+              <PsvFinalCard result={finalResult} draft={draft} onSave={handleSave} onRescan={() => { setStage('photo'); setDraft(null); setFinalResult(null); setEngine(null); }} />
+              {engine && <PsvProvenancePanel engine={engine} revision={revisions} />}
               {draft?.delta_log?.length > 0 && <PsvDeltaLog log={draft.delta_log} />}
             </div>
           )}
