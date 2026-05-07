@@ -102,9 +102,9 @@ export function useSpeechSynthesis() {
 
         const utter = new SpeechSynthesisUtterance(String(text));
         utter.lang = 'en-US';
-        utter.rate = 0.88;
-        utter.pitch = 1.02;
-        utter.volume = 1;
+        utter.rate = 0.92;
+        utter.pitch = 1.18;
+        utter.volume = 0.95;
         const v = pickVoice();
         if (v) utter.voice = v;
         utter.onstart = () => {
