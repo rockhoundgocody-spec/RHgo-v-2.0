@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award } from 'lucide-react';
@@ -8,12 +8,18 @@ export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ findings: 0, badges: 0 });
 
-  React.useEffect(() => {
-    base44.auth.me().then((u) => {
+  useEffect(() => {
+    base44.auth.me().then(async (u) => {
       setUser(u);
+      const [specimens, badges] = await Promise.all([
+        base44.entities.Specimen.filter({ created_by: u.email }),
+        base44.entities.Badge.filter({ owner_email: u.email }),
+      ]);
+      setStats({ findings: specimens.length, badges: badges.length });
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   const handleLogout = async () => {
@@ -46,16 +52,16 @@ export default function Profile() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-amethyst-glow">128</div>
+          <div className="text-xl font-bold text-amethyst-glow">{stats.findings}</div>
           <div className="text-xs text-white/50 mt-1">Findings</div>
         </GlassPanel>
         <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-emerald-400">12</div>
+          <div className="text-xl font-bold text-emerald-400">{stats.badges}</div>
           <div className="text-xs text-white/50 mt-1">Badges</div>
         </GlassPanel>
         <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-hud-cyan">5</div>
-          <div className="text-xs text-white/50 mt-1">Listings</div>
+          <div className="text-xl font-bold text-hud-cyan">{user?.role === 'admin' ? 'ADM' : 'USR'}</div>
+          <div className="text-xs text-white/50 mt-1">Role</div>
         </GlassPanel>
       </div>
 

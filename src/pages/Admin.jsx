@@ -28,6 +28,11 @@ export default function Admin() {
   const [counts, setCounts] = useState({ hotspots: 0, specimens: 0, minerals: 0 });
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [user, setUser] = useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   const refresh = async () => {
     setLoading(true);
@@ -63,6 +68,18 @@ export default function Admin() {
     { label: 'Specimens', value: counts.specimens, icon: Activity },
     { label: 'Minerals', value: counts.minerals, icon: Shield },
   ];
+
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-rose-400 text-center">
+          <Shield size={40} className="mx-auto mb-3 opacity-60" />
+          <p className="font-bold text-lg">Access Denied</p>
+          <p className="text-white/50 text-sm mt-1">Admin access required.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">

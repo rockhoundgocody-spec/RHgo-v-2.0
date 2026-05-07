@@ -53,11 +53,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authenticate caller — entity automations invoke as the triggering user.
-    // This blocks anonymous/unauthenticated webhook calls from external sources.
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Auth model: entity automations run without a user token.
+    // Direct callers must be admin. Automation callers (no user) are allowed.
+    const caller = await base44.auth.me().catch(() => null);
+    if (caller && caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const body = await req.json();

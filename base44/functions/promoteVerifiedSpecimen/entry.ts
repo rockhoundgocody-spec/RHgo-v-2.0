@@ -29,17 +29,18 @@ function applyXP(currentXP, currentLevel, xpToAdd) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { event, data, payload_too_large } = body || {};
 
-    // ── Auth: allow entity automations (no user token) or admin direct calls ──
+    // Auth model: entity automations run without a user token.
+    // Direct callers must be admin. Automation callers (no user) are allowed.
     const caller = await base44.auth.me().catch(() => null);
-    const isAutomation = !event?.type === undefined || !caller; // automations have no caller
     if (caller && caller.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── Gate: must be a Specimen event ───────────────────────────────────────
+    const body = await req.json();
+    const { event, data, payload_too_large } = body || {};
+
+    // Must be a Specimen event
     if (!event || event.entity_name !== 'Specimen') {
       return Response.json({ skipped: true, reason: 'not a Specimen event' });
     }
