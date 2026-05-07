@@ -1,3 +1,4 @@
+/* eslint-disable */
 // deno-lint-ignore-file
 /**
  * Seed RockHound-GO with geological reference data

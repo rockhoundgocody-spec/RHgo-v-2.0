@@ -92,6 +92,8 @@ export async function queueWrite({ entity, op = 'create', id, data }) {
   const queue = loadQueue();
   queue.push({ entity, op, id, data, queuedAt: Date.now() });
   saveQueue(queue);
+  // Start background retry loop so this queued item syncs once signal returns
+  if (typeof window !== 'undefined') schedulePeriodicRetry();
   return { ok: true, offline: true };
 }
 
@@ -100,14 +102,75 @@ export function getQueueLength() {
 }
 
 /**
+ * Probe for a genuine working connection by hitting a tiny public endpoint.
+ * Returns true only if we get a real HTTP response.
+ */
+async function isConnectionStable() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+  try {
+    const res = await fetch('https://www.gstatic.com/generate_204', {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4000),
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Flush only after confirming a stable connection via network probe.
+ */
+export async function flushWhenStable() {
+  if (getQueueLength() === 0) return { flushed: 0, remaining: 0 };
+  const stable = await isConnectionStable();
+  if (!stable) return { flushed: 0, remaining: getQueueLength() };
+  return flushQueue();
+}
+
+const PERIODIC_INTERVAL_MS = 30_000; // retry every 30 s while queue has items
+let retryTimer = null;
+
+function schedulePeriodicRetry() {
+  if (retryTimer) return; // already running
+  retryTimer = setInterval(async () => {
+    if (getQueueLength() === 0) {
+      clearInterval(retryTimer);
+      retryTimer = null;
+      return;
+    }
+    await flushWhenStable();
+  }, PERIODIC_INTERVAL_MS);
+}
+
+/**
  * Wire automatic flush on window load + when the browser fires `online`.
+ * Uses a connectivity probe to wait for a *stable* connection before flushing.
  * Safe to call multiple times — listeners are idempotent.
  */
 let installed = false;
 export function installOfflineQueue() {
   if (installed || typeof window === 'undefined') return;
   installed = true;
-  window.addEventListener('online', () => { flushQueue(); });
-  // also flush on app boot in case we have stale items
-  setTimeout(() => { flushQueue(); }, 1500);
+
+  // Flush when browser reports online — but probe first to confirm stability
+  window.addEventListener('online', () => {
+    // Short debounce: the `online` event can fire before routes are reachable
+    setTimeout(() => { flushWhenStable(); }, 1500);
+  });
+
+  // Flush on app boot for any stale items from a previous session
+  setTimeout(() => {
+    flushWhenStable();
+    // If items remain after boot flush, start periodic retry
+    schedulePeriodicRetry();
+  }, 2000);
+
+  // Also start periodic retry whenever a new item is queued (via storage event)
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && getQueueLength() > 0) {
+      schedulePeriodicRetry();
+    }
+  });
 }
