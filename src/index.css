@@ -91,6 +91,7 @@
 
   html, body, #root {
     overscroll-behavior: none;
+    font-size: 20px;
   }
 
   body {
