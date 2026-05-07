@@ -17,6 +17,7 @@ import FieldCommandBar from '@/components/hub/FieldCommandBar.jsx';
 import FieldCoreCard from '@/components/hub/FieldCoreCard.jsx';
 import FieldCorePanel from '@/components/hub/FieldCorePanel.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
+import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
 
 const missions = [
   {
@@ -54,7 +55,10 @@ const missions = [
 ];
 
 export default function Hub() {
-  const { companion, todaysSpecimenCount, refresh } = useCompanion();
+  const [milestone, setMilestone] = useState(null);
+  const { companion, todaysSpecimenCount, refresh } = useCompanion({
+    onMilestone: setMilestone,
+  });
   const [fieldCoreOpen, setFieldCoreOpen] = useState(false);
   return (
     <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
@@ -186,6 +190,9 @@ export default function Hub() {
 
       {/* Field Core Detail Panel */}
       {fieldCoreOpen && <FieldCorePanel onClose={() => setFieldCoreOpen(false)} />}
+
+      {/* Companion milestone toast */}
+      <CompanionMilestoneToast notification={milestone} onDismiss={() => setMilestone(null)} />
     </div>
   );
 }
