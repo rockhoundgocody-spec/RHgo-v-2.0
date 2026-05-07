@@ -74,43 +74,38 @@ export default function Hub() {
 
       {/* HERO */}
       <section className="flex flex-col items-center text-center mb-16">
-        <div className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.5em] text-hud-cyan/80 glow-hud mb-6">
-          // Geological Intelligence OS
-        </div>
-
-        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
-
-        <CompanionStatus companion={companion} />
-
-        {/* Title block — gradient backdrop ensures legibility over orb glow */}
-        <div className="relative mt-14 w-full">
+        {/* Brand splash — no bubble, no title text, enlarged orb, GO as the hero */}
+        <div className="relative flex flex-col items-center">
+          {/* Ambient halo backdrop — expands behind the orb */}
           <div
             aria-hidden
-            className="absolute inset-x-0 -top-8 bottom-0 -z-10 pointer-events-none"
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10"
             style={{
+              height: '560px',
               background:
-                'radial-gradient(60% 80% at 50% 60%, hsla(240,40%,4%,0.85) 0%, hsla(240,40%,4%,0.5) 55%, transparent 100%)',
+                'radial-gradient(55% 45% at 50% 40%, hsla(280,90%,55%,0.22) 0%, hsla(265,80%,35%,0.12) 50%, transparent 80%)',
             }}
           />
-          <h1 className="text-4xl sm:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-            ROCKHOUND
-            <span className="text-amethyst glow-amethyst">·</span>
-            <span className="text-amethyst glow-amethyst">GO</span>
-          </h1>
-          <p className="mt-4 max-w-md mx-auto text-white/85 text-[15px] sm:text-base leading-relaxed">
-            The field platform for mineral discovery, identification, and collector intelligence.
-            <span className="block text-amethyst-glow mt-1.5 text-[14px] sm:text-[15px] font-medium tracking-wide">
-              Discover. Identify. Collect.
-            </span>
-          </p>
-        </div>
 
-        <div className="mt-6 flex items-center gap-3 flex-wrap justify-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel text-[11px] font-mono uppercase tracking-[0.3em] text-amethyst/90">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Field Systems Online
+          <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
+
+          {/* GO — the single visual CTA, replaces title + button */}
+          <div className="relative mt-6 flex flex-col items-center select-none">
+            <span
+              className="text-[72px] sm:text-[96px] font-black leading-none tracking-tight text-amethyst-glow glow-amethyst"
+              style={{ letterSpacing: '-0.02em', textShadow: '0 0 60px hsla(280,100%,75%,0.7), 0 0 120px hsla(265,80%,50%,0.4)' }}
+            >
+              GO
+            </span>
+            <p className="mt-2 text-white/60 text-sm sm:text-base font-light tracking-[0.15em] uppercase">
+              Discover · Identify · Collect
+            </p>
           </div>
-          <CelestialDial />
+
+          <div className="mt-5 flex items-center gap-3 flex-wrap justify-center">
+            <CompanionStatus companion={companion} />
+            <CelestialDial />
+          </div>
         </div>
       </section>
 

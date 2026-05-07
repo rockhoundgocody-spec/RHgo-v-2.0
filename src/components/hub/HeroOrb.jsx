@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
-import DepthWell from './DepthWell.jsx';
 import VoiceprintRing from './VoiceprintRing.jsx';
 import SpecimenGhosts from './SpecimenGhosts.jsx';
 import CompassRing from './CompassRing.jsx';
@@ -158,10 +157,10 @@ Oracle:`;
   const isOrbBusy = active || speaking || thinking || listening;
 
   return (
-    <DepthWell>
-      <div className="relative flex flex-col items-center" style={{ transformStyle: 'preserve-3d' }}>
+    <div className="relative w-full flex justify-center">
+      <div className="relative flex flex-col items-center">
         {/* Compass arc — sits inside the well rim */}
-        <CompassRing size={420} />
+        <CompassRing size={560} />
 
         {/* Orbiting specimen ghosts */}
         <SpecimenGhosts active={active} onTap={handleGhostTap} />
@@ -171,7 +170,7 @@ Oracle:`;
 
         {/* Voiceprint waveform around the orb */}
         <VoiceprintRing
-          size={300}
+          size={560}
           active={active}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
@@ -190,7 +189,7 @@ Oracle:`;
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
         >
           <AmethystOrb
-            size={240}
+            size={480}
             speaking={speaking || thinking}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
@@ -224,6 +223,6 @@ Oracle:`;
 
         <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
       </div>
-    </DepthWell>
+    </div>
   );
 }
