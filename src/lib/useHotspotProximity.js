@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import useOfflineHotspots from '@/lib/useOfflineHotspots';
 
 // Haversine distance in meters
 function distanceMeters(a, b) {
@@ -33,21 +33,14 @@ export default function useHotspotProximity({ enabled = true } = {}) {
   const hotspotsRef = useRef([]);
   const lastNotifiedRef = useRef({}); // { [hotspotId]: timestamp }
 
-  // Load hotspots once
+  // Use shared offline-cached hotspot data — avoids duplicate network requests
+  const { data: hotspotList } = useOfflineHotspots();
   useEffect(() => {
     if (!enabled) return;
-    let cancelled = false;
-    base44.entities.Hotspot.list().then((list) => {
-      if (!cancelled) {
-        hotspotsRef.current = (list || []).filter(
-          (h) => typeof h.lat === 'number' && typeof h.lng === 'number'
-        );
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
+    hotspotsRef.current = (hotspotList || []).filter(
+      (h) => typeof h.lat === 'number' && typeof h.lng === 'number'
+    );
+  }, [enabled, hotspotList]);
 
   // Watch position
   useEffect(() => {

@@ -40,15 +40,16 @@ export async function buildGemmaResponse(
           enum: ['very-high', 'high', 'moderate', 'low'],
         },
       },
+      required: ['text'],
     },
   });
 
   return {
-    text: response.text,
-    teaching_point: response.teaching_point,
-    next_step: response.next_step,
+    text: response?.text ?? "I couldn't generate a response right now.",
+    teaching_point: response?.teaching_point ?? null,
+    next_step: response?.next_step ?? null,
     intent,
-    confidence: response.confidence_level,
+    confidence: response?.confidence_level ?? 'moderate',
   };
 }
 

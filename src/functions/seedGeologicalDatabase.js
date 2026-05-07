@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-undef
+// deno-lint-ignore-file
 /**
  * Seed RockHound-GO with geological reference data
  * Sources: USGS MRDS, Mindat.org, USGS Commodity Summaries

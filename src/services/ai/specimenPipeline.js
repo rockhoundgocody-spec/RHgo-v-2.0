@@ -51,39 +51,9 @@ const MOCK_MINERALS = [
   }
 ];
 
-async function specimenIdentificationPipeline(input, options = {}) {
-  const mode = options.mode || input.mode || 'quick';
-
-  // TODO: Replace with backend API call, Hugging Face endpoint, or local model
-  // For now: mock classification
-  const sorted = [...MOCK_MINERALS].sort((a, b) => b.confidence - a.confidence);
-  const topCandidate = sorted[0];
-
-  const lowConfidence = topCandidate.confidence < 80;
-
-  return {
-    task: 'specimen-identification',
-    status: lowConfidence ? 'low_confidence' : 'success',
-    source: 'mock',
-    mode,
-    topCandidate,
-    candidates: sorted,
-    matchReasons: [
-      `Visual structure appears consistent with ${topCandidate.name}.`,
-      `Surface appearance suggests ${topCandidate.properties.luster} luster.`,
-      `Candidate properties align with common ${topCandidate.name} field traits.`
-    ],
-    recommendedTests: [
-      'Run hardness test.',
-      'Check streak color.',
-      'Inspect cleavage/fracture under bright light.',
-      'Add locality context for stronger confidence.'
-    ],
-    cautionFlags: [
-      'Photo-only identification is not final.',
-      'Do not use this result for legal, safety, or high-value decisions without field verification.'
-    ]
-  };
+async function specimenIdentificationPipeline(_input, _options = {}) {
+  // NOT IMPLEMENTED: Use the quickClassifySpecimen or progressiveVerify backend functions instead.
+  throw new Error('specimen-identification pipeline not implemented. Use base44.functions.invoke("quickClassifySpecimen", ...) directly.');
 }
 
 registerPipeline('specimen-identification', specimenIdentificationPipeline);

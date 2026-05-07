@@ -53,7 +53,7 @@ const missions = [
 ];
 
 export default function Hub() {
-  const { companion, todaysSpecimens, refresh } = useCompanion();
+  const { companion, todaysSpecimenCount, refresh } = useCompanion();
   const [fieldCoreOpen, setFieldCoreOpen] = useState(false);
   return (
     <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
@@ -73,7 +73,7 @@ export default function Hub() {
           // Geological Intelligence OS
         </div>
 
-        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimens} />
+        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
 
         <CompanionStatus companion={companion} />
 
@@ -111,7 +111,7 @@ export default function Hub() {
 
       {/* FIELD COMMAND BAR — natural-language goal router */}
       <section className="mb-8">
-        <FieldCommandBar collectionCount={todaysSpecimens?.length ?? 0} />
+        <FieldCommandBar collectionCount={todaysSpecimenCount} />
       </section>
 
       {/* FIELD CORE — portable offline AI command kit */}

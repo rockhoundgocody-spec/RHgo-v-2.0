@@ -80,7 +80,12 @@ export async function queueWrite({ entity, op = 'create', id, data }) {
       const result = op === 'create' ? await e.create(data) : await e.update(id, data);
       return { ok: true, offline: false, result };
     } catch (err) {
-      // fall through to queue
+      // Only queue on network/server errors; propagate client errors (4xx)
+      const status = err?.status ?? err?.response?.status;
+      if (status && status >= 400 && status < 500) {
+        throw err;
+      }
+      // fall through to queue for network failures
     }
   }
 

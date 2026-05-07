@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { saveCache, loadCache } from '@/lib/offlineCache';
 
@@ -20,41 +20,32 @@ export default function useOfflineHotspots() {
   const [cachedAt, setCachedAt] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      // 1. hydrate from cache
-      const cached = await loadCache(CACHE_KEY);
-      if (cached?.data && !cancelled) {
-        setData(cached.data);
-        setCachedAt(cached.updatedAt);
-        setIsLoading(false);
-      }
-
-      // 2. try network
-      try {
-        const fresh = await base44.entities.Hotspot.list();
-        if (cancelled) return;
-        setData(fresh);
-        setIsOffline(false);
-        setCachedAt(Date.now());
-        setError(null);
-        saveCache(CACHE_KEY, fresh);
-      } catch (err) {
-        if (cancelled) return;
-        // No network — fall back to whatever cache we have.
-        setIsOffline(true);
-        if (!cached?.data) setError(err);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    const cached = await loadCache(CACHE_KEY);
+    if (cached?.data) {
+      setData(cached.data);
+      setCachedAt(cached.updatedAt);
+      setIsLoading(false);
+    }
+    try {
+      const fresh = await base44.entities.Hotspot.list();
+      setData(fresh);
+      setIsOffline(false);
+      setCachedAt(Date.now());
+      setError(null);
+      saveCache(CACHE_KEY, fresh);
+    } catch (err) {
+      setIsOffline(true);
+      if (!cached?.data) setError(err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  return { data, isLoading, isOffline, cachedAt, error };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, isLoading, isOffline, cachedAt, error, refetch: fetchData };
 }

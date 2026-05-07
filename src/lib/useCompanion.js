@@ -7,14 +7,14 @@ import { base44 } from '@/api/base44Client';
  */
 export default function useCompanion() {
   const [companion, setCompanion] = useState(null);
-  const [todaysSpecimens, setTodaysSpecimens] = useState(0);
+  const [todaysSpecimenCount, setTodaysSpecimenCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
       const res = await base44.functions.invoke('getCompanionState', {});
       setCompanion(res?.data?.companion || null);
-      setTodaysSpecimens(res?.data?.todays_specimens || 0);
+      setTodaysSpecimenCount(res?.data?.todays_specimens || 0);
     } catch {
       setCompanion(null);
     } finally {
@@ -26,5 +26,5 @@ export default function useCompanion() {
     refresh();
   }, [refresh]);
 
-  return { companion, todaysSpecimens, loading, refresh };
+  return { companion, todaysSpecimenCount, loading, refresh };
 }

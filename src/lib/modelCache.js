@@ -8,6 +8,9 @@ const STORE = 'artifacts';
 const DB_VERSION = 1;
 
 function openDb() {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB not available'));
+  }
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {

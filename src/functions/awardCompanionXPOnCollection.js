@@ -1,5 +1,4 @@
-// deno-lint-ignore-file no-undef
-
+// deno-lint-ignore-file
 /**
  * awardCompanionXPOnCollection
  * Awards Companion XP upon successful specimen identification and collection.

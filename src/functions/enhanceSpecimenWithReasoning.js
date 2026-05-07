@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-undef
+// deno-lint-ignore-file
 /**
  * enhanceSpecimenWithReasoning
  * 
