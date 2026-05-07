@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Bell, Lock, Eye, Zap, HardDrive, MapPin } from 'lucide-react';
+import { Bell, Eye, Zap, HardDrive, MapPin, Trash2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
+import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -9,6 +11,7 @@ export default function Settings() {
     offlineMode: true,
     privacyLevel: 'friends'
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleToggle = (key) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -66,15 +69,10 @@ export default function Settings() {
               <label className="block text-xs text-white/50 uppercase tracking-[0.2em] font-mono mb-2">
                 Location Privacy
               </label>
-              <select
+              <PrivacySelectSheet
                 value={settings.privacyLevel}
-                onChange={(e) => handleChange('privacyLevel', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/15 text-white text-sm focus:outline-none focus:border-amethyst/50"
-              >
-                <option value="private">Private (only me)</option>
-                <option value="friends">Friends only</option>
-                <option value="community">Community visible</option>
-              </select>
+                onChange={(v) => handleChange('privacyLevel', v)}
+              />
             </div>
           </div>
         </GlassPanel>
@@ -145,9 +143,30 @@ export default function Settings() {
       </div>
 
       {/* Save button */}
-      <button className="w-full py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-bold transition">
+      <button className="w-full py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-bold transition select-none">
         Save Settings
       </button>
+
+      {/* Danger zone */}
+      <div className="mt-8 mb-6">
+        <GlassPanel className="p-4 border border-rose-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <Trash2 size={18} className="text-rose-400" />
+            <h3 className="font-bold text-white">Danger Zone</h3>
+          </div>
+          <p className="text-xs text-white/50 ml-9 mb-3">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="ml-9 px-4 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-semibold hover:bg-rose-500/20 transition select-none"
+          >
+            Delete Account
+          </button>
+        </GlassPanel>
+      </div>
+
+      {showDeleteDialog && <DeleteAccountDialog onClose={() => setShowDeleteDialog(false)} />}
     </div>
   );
 }

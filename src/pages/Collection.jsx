@@ -5,6 +5,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
+import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
 const rarityColor = {
   common: 'text-white/60 border-white/15',
@@ -14,9 +15,10 @@ const rarityColor = {
 };
 
 export default function Collection() {
-  const { data: specimens = [], isLoading: loading } = useEntityList('Specimen', '-found_date');
+  const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
 
   return (
+    <PullToRefresh onRefresh={refetch} className="min-h-screen">
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-white tracking-wide">Collection</h1>
@@ -127,5 +129,6 @@ export default function Collection() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

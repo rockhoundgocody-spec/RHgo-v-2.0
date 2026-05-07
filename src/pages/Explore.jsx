@@ -10,6 +10,7 @@ import MapStatusPanel from '@/components/explore/MapStatusPanel.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
 import { Button } from '@/components/ui/button';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
+import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
 export default function Explore() {
   const {
@@ -18,6 +19,7 @@ export default function Explore() {
     error: hotspotsError,
     isOffline,
     cachedAt,
+    refetch,
   } = useOfflineHotspots();
   const [activeId, setActiveId] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -160,16 +162,18 @@ export default function Explore() {
                   <p className="text-white/40 text-xs mt-2">Visit Admin → Seed Data</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 -mr-1">
-                  {hotspots.map((h) => (
-                    <HotspotListItem
-                      key={h.id}
-                      hotspot={h}
-                      active={activeId === h.id}
-                      onClick={() => setActiveId(h.id)}
-                    />
-                  ))}
-                </div>
+                <PullToRefresh onRefresh={refetch} className="max-h-[480px]">
+                  <div className="space-y-2 pr-1">
+                    {hotspots.map((h) => (
+                      <HotspotListItem
+                        key={h.id}
+                        hotspot={h}
+                        active={activeId === h.id}
+                        onClick={() => setActiveId(h.id)}
+                      />
+                    ))}
+                  </div>
+                </PullToRefresh>
               )}
             </HudFrame>
           </GlassPanel>

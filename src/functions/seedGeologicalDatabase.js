@@ -1,10 +1,10 @@
+// deno-lint-ignore-file no-undef
 /**
  * Seed RockHound-GO with geological reference data
  * Sources: USGS MRDS, Mindat.org, USGS Commodity Summaries
  * Run via: base44.functions.invoke('seedGeologicalDatabase', { phase: 1-4 })
  */
 
-// deno-lint-ignore-file no-undef
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Core mineral reference data (10 minerals for MVP)
