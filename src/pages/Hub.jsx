@@ -16,6 +16,7 @@ import useCompanion from '@/lib/useCompanion.js';
 import FieldCommandBar from '@/components/hub/FieldCommandBar.jsx';
 import FieldCoreCard from '@/components/hub/FieldCoreCard.jsx';
 import FieldCorePanel from '@/components/hub/FieldCorePanel.jsx';
+import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 
 const missions = [
   {
@@ -125,6 +126,11 @@ export default function Hub() {
       {/* DAILY SUMMARY — mood + XP gained today, 7-day mini history */}
       <section className="mt-6">
         <DailyCompanionSummary companion={companion} />
+      </section>
+
+      {/* COMPANION PROGRESS — XP trends + achievements */}
+      <section className="mt-6">
+        <CompanionProgressDashboard companion={companion} />
       </section>
 
       {/* INTRO — explains the orb + ring UI */}
