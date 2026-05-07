@@ -189,7 +189,7 @@ Oracle:`;
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
         >
           <AmethystOrb
-            size={120}
+            size={160}
             speaking={speaking || thinking}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
