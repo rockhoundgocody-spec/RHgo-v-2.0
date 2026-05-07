@@ -3,14 +3,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 /**
  * promoteVerifiedSpecimen — entity automation handler.
  * Fires when a Specimen's `verified` field changes to true.
+ *
  * 1. Creates a TrainingCandidate (accepted) so the verified label feeds the next training run.
  * 2. Awards XP to the owner's Companion (rarity + confidence bonuses, first-find bonus).
  *
- * Shared level curve (also used in dailyCheckIn):
- *   Each level costs level * 50 XP (L1→L2 = 50 XP, L2→L3 = 100 XP, …)
+ * Auth model: entity automations run without a user token — use asServiceRole exclusively.
+ * Direct (non-automation) callers must be authenticated as admin.
+ *
+ * Shared level curve (same as dailyCheckIn):
+ *   Each level costs level * 50 XP  (L1→L2 = 50, L2→L3 = 100, …)
  */
 
-// Shared level-up function — keep in sync with dailyCheckIn
 function applyXP(currentXP, currentLevel, xpToAdd) {
   let xp = currentXP + xpToAdd;
   let level = currentLevel;
@@ -26,14 +29,17 @@ function applyXP(currentXP, currentLevel, xpToAdd) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-
-    const caller = await base44.auth.me().catch(() => null);
-    if (!caller) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json();
     const { event, data, payload_too_large } = body || {};
+
+    // ── Auth: allow entity automations (no user token) or admin direct calls ──
+    const caller = await base44.auth.me().catch(() => null);
+    const isAutomation = !event?.type === undefined || !caller; // automations have no caller
+    if (caller && caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
+    // ── Gate: must be a Specimen event ───────────────────────────────────────
     if (!event || event.entity_name !== 'Specimen') {
       return Response.json({ skipped: true, reason: 'not a Specimen event' });
     }
@@ -91,16 +97,16 @@ Deno.serve(async (req) => {
 
     const companion = companions[0];
 
-    // XP calculation
+    // XP calculation — rarity bonus + high-confidence bonus + first-find bonus
     const rarityBonus = { common: 0, uncommon: 5, rare: 15, legendary: 30 };
     let xpAward = 10 + (rarityBonus[specimen.rarity] || 0);
     if ((specimen.ai_confidence || 0) >= 0.9) xpAward += 5;
 
-    // First-find bonus: check if any OTHER specimen with this mineral exists for this user
+    // First-find bonus: is this the only specimen with this mineral for this user?
     const priorFinds = await base44.asServiceRole.entities.Specimen.filter(
       { created_by: ownerEmail },
       'created_date',
-      5
+      50
     );
     const otherFinds = priorFinds.filter(
       (s) => s.mineral_name === specimen.mineral_name && s.id !== event.entity_id

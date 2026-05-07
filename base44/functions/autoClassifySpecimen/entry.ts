@@ -16,13 +16,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
  */
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
+
+    // Auth model: entity automations run without a user token.
+    // Direct callers must be admin. Automation callers (no user) are allowed.
+    const caller = await base44.auth.me().catch(() => null);
+    if (caller && caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { event, data } = body || {};
     if (!event || event.type !== 'create' || event.entity_name !== 'Specimen') {
       return Response.json({ skipped: true, reason: 'not a Specimen create event' });
     }
-
-    const base44 = createClientFromRequest(req);
     let specimen = data;
     if (!specimen) {
       specimen = await base44.asServiceRole.entities.Specimen.get(event.entity_id);
