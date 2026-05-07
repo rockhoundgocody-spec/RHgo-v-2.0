@@ -160,7 +160,7 @@ Oracle:`;
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
         {/* Compass arc — sits inside the well rim */}
-        <CompassRing size={560} />
+        <CompassRing size={140} />
 
         {/* Orbiting specimen ghosts */}
         <SpecimenGhosts active={active} onTap={handleGhostTap} />
@@ -170,7 +170,7 @@ Oracle:`;
 
         {/* Voiceprint waveform around the orb */}
         <VoiceprintRing
-          size={560}
+          size={140}
           active={active}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
@@ -189,7 +189,7 @@ Oracle:`;
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
         >
           <AmethystOrb
-            size={480}
+            size={120}
             speaking={speaking || thinking}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
