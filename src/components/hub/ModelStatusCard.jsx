@@ -13,16 +13,26 @@ export default function ModelStatusCard() {
 
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('getLatestModel', {})
-      .then((res) => {
+    const fetchWithRetry = async () => {
+      const maxRetries = 3;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
         if (cancelled) return;
-        setModel(res?.data?.model || null);
-      })
-      .catch(() => !cancelled && setModel(null));
-    return () => {
-      cancelled = true;
+        try {
+          const res = await base44.functions.invoke('getLatestModel', {});
+          if (!cancelled) setModel(res?.data?.model || null);
+          return;
+        } catch {
+          if (attempt === maxRetries) {
+            if (!cancelled) setModel(null);
+            return;
+          }
+          // Exponential backoff: 1s, 2s, 4s
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+        }
+      }
     };
+    fetchWithRetry();
+    return () => { cancelled = true; };
   }, []);
 
   if (model === undefined) {
