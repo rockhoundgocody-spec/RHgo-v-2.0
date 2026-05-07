@@ -54,7 +54,8 @@ Deno.serve(async (req) => {
     let xp = (companion.xp || 0) + xpGain;
     let level = companion.level || 1;
     let leveled = false;
-    // Simple curve: each level needs level*50 xp
+    // Shared curve (same formula as promoteVerifiedSpecimen):
+    // Each level costs level*50 XP (L1→L2=50, L2→L3=100, …)
     while (xp >= level * 50) {
       xp -= level * 50;
       level += 1;

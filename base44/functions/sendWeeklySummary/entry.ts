@@ -16,6 +16,9 @@ Deno.serve(async (req) => {
     if (!caller) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const users = await base44.asServiceRole.entities.User.list();
