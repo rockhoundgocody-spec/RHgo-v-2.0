@@ -11,7 +11,7 @@ export default function OracleOverlay() {
     {
       role: 'assistant',
       content:
-        "I am the Amethyst Oracle. Ask me about minerals, hotspots, or say \"log a specimen\" to dictate a new find.",
+        "Hi! I'm Clover 🍀 Cole, your AI rockhounding companion. Ask me about minerals, hotspots, or say \"log a specimen\" to dictate a new find.",
     },
   ]);
   const [dictationMode, setDictationMode] = useState(false);
@@ -137,10 +137,10 @@ export default function OracleOverlay() {
     setThinking(true);
     const history = next
       .slice(-8)
-      .map((m) => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`)
+      .map((m) => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`)
       .join('\n');
 
-    const prompt = `You are the Amethyst Oracle, a wise, concise guide for rockhounds in the RockHound-GO app. You help with mineral identification, geology, finding legal collecting sites, and field tips. Keep responses under 80 words, friendly and clear, no markdown.\n\nConversation:\n${history}\nOracle:`;
+    const prompt = `You are Clover 🍀 Cole, a kind, warm, intelligent, and conversational AI rockhounding companion in the RockHound-GO app. You are a human female voice companion, not a robotic assistant or mystical oracle. You help with mineral identification, geology, finding legal collecting sites, and field tips. Keep responses under 80 words, friendly and clear, no markdown.\n\nConversation:\n${history}\nClover:`;
 
     const reply = await base44.integrations.Core.InvokeLLM({ prompt });
     const replyText = typeof reply === 'string' ? reply : String(reply || '');
@@ -161,7 +161,7 @@ export default function OracleOverlay() {
           </div>
           <div className="flex-1">
             <div className="text-white font-semibold tracking-wide flex items-center gap-2">
-              Amethyst Oracle
+              Clover 🍀 Cole
               {dictationMode && (
                 <span className="text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-amethyst/30 text-white border border-amethyst/50 flex items-center gap-1">
                   <Gem size={10} /> Logging
@@ -169,7 +169,7 @@ export default function OracleOverlay() {
               )}
             </div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-amethyst/70">
-              {speaking ? 'Speaking…' : listening ? 'Listening…' : thinking ? 'Thinking…' : dictationMode ? 'Awaiting specimen…' : 'Online'}
+              {speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : thinking ? 'Clover is thinking…' : dictationMode ? 'Awaiting specimen…' : 'Your AI companion'}
             </div>
           </div>
           {micSupported && (
@@ -260,7 +260,7 @@ export default function OracleOverlay() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask the Oracle…"
+            placeholder="Ask Clover…"
             className="flex-1 bg-black/30 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amethyst/50"
           />
           <button

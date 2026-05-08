@@ -48,7 +48,7 @@ const missions = [
     to: '/docs',
     code: 'M-04',
     title: 'Intelligence',
-    desc: 'The Amethyst Oracle: field tips, geology, regulations — on demand.',
+    desc: 'Ask Clover 🍀 Cole: field tips, geology, regulations — on demand.',
     icon: Brain,
     accent: 'from-hud-cyan/30 to-amethyst/30',
   },

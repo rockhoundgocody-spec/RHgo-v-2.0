@@ -23,7 +23,7 @@ export default function CompanionStatus({ companion }) {
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-amethyst/30 text-amethyst-glow">
         <Sparkles size={16} />
         <span className="font-mono uppercase tracking-wider">
-          Lv {companion.level} · {moodLabel}
+          Clover · Lv {companion.level} · {moodLabel}
         </span>
       </div>
 

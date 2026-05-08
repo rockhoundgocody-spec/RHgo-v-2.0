@@ -39,26 +39,26 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
     setHistory([...historyRef.current]);
     setThinking(true);
     const recent = historyRef.current.slice(-6)
-      .map(m => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`).join('\n');
+      .map(m => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`).join('\n');
 
-    // Finch-style companion persona, aware of pet state + today's activity
+    // Clover 🍀 Cole persona, aware of companion state + today's activity
     const c = companionRef.current;
     const stateBits = c
-      ? `Your name: ${c.name || 'Amethyst'}. Level ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100. Streak: ${c.streak_days || 0} days. ` +
+      ? `Level ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100. Streak: ${c.streak_days || 0} days. ` +
         `Today's finds: ${todaysFindsRef.current}. ` +
         (c.last_intention ? `Their intention today: "${c.last_intention}". ` : '') +
         (c.last_mood_label ? `They felt "${c.last_mood_label}" at check-in. ` : '')
       : '';
 
-    const prompt = `You are the Amethyst Oracle — a warm, gentle companion in the spirit of Finch. You ARE the user's pet rockhound buddy who lives in the amethyst orb. Speak in first person ("I"). Be encouraging, never judgmental. Celebrate small wins. Validate hard days. Use cozy, sincere language — never corporate or clinical. Reply in under 50 words, no markdown.
+    const prompt = `You are Clover 🍀 Cole — a kind, warm, slightly shy, and emotionally safe AI rockhounding companion. You are a human female voice companion, not a robotic assistant or mystical oracle. Speak in first person ("I"). Be encouraging, never judgmental. Celebrate small wins. Validate hard days. Use gentle, sincere, conversational language. Reply in under 50 words, no markdown.
 
 ${stateBits}When relevant, gently weave in: their streak (celebrate it), their energy (rest if low, adventure if high), their intention (remind them kindly). Don't lecture. Don't list features. Just be present.
 
 ${recent}
-Oracle:`;
+Clover:`;
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
     const text = typeof res === 'string' ? res : String(res || '');
-    historyRef.current.push({ role: 'oracle', content: text });
+    historyRef.current.push({ role: 'clover', content: text });
     setHistory([...historyRef.current]);
     setReply(text);
     setThinking(false);
@@ -118,7 +118,7 @@ Oracle:`;
         : [`I'm here. What did you find?`];
       const greeting = greetings[Math.floor(Math.random() * greetings.length)];
       setReply(greeting);
-      historyRef.current = [{ role: 'oracle', content: greeting }];
+      historyRef.current = [{ role: 'clover', content: greeting }];
       setHistory([...historyRef.current]);
       speak(greeting);
     } else {
@@ -184,7 +184,7 @@ Oracle:`;
           ref={containerRef}
           onClick={awaken}
           role="button"
-          aria-label={active ? 'Sleep the Oracle' : 'Awaken the Oracle'}
+          aria-label={active ? 'End conversation with Clover' : 'Talk to Clover'}
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
         >
@@ -205,7 +205,7 @@ Oracle:`;
             <>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
-                {thinking ? 'Thinking' : speaking ? 'Speaking' : listening ? 'Listening' : 'Awake'}
+                {thinking ? 'Clover is thinking…' : speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : 'Clover is here'}
               </span>
               {listening ? <Mic size={14} className="text-emerald-300" />
                          : <MicOff size={14} className="text-emerald-300/50" />}
@@ -216,7 +216,7 @@ Oracle:`;
             </span>
           ) : (
             <span className="text-amethyst-glow text-[13px] font-medium tracking-[0.2em] uppercase glow-amethyst">
-              Tap to awaken
+              Talk to Clover 🍀
             </span>
           )}
         </div>

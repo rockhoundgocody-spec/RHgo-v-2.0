@@ -9,13 +9,13 @@ import { Mic, Compass, Gem, Moon, Sparkles } from 'lucide-react';
 const items = [
   {
     icon: Mic,
-    title: 'The Orb',
-    desc: 'Tap to wake your AI field guide. Speak naturally — she listens, replies, and identifies finds.',
+    title: 'Clover 🍀 Cole',
+    desc: 'Tap to talk to Clover, your AI rockhounding companion. Speak naturally — she listens, replies, and identifies finds.',
   },
   {
     icon: Sparkles,
     title: 'Voiceprint Ring',
-    desc: 'The waveform around the orb pulses with her voice when she speaks and your voice when you talk.',
+    desc: "The waveform pulses with Clover's voice when she speaks and your voice when you talk.",
   },
   {
     icon: Compass,
@@ -25,7 +25,7 @@ const items = [
   {
     icon: Gem,
     title: 'Specimen Ghosts',
-    desc: 'Drifting silhouettes are recent finds from your collection. Tap one to ask the orb about it.',
+    desc: 'Drifting silhouettes are recent finds from your collection. Tap one to ask Clover about it.',
   },
   {
     icon: Moon,
@@ -47,8 +47,8 @@ export default function HubIntro() {
       <GlassPanel>
         <div className="p-5">
           <p className="text-white/75 text-sm leading-relaxed mb-5">
-            Welcome to the Hub — your live field console. The orb above is your AI companion;
-            everything orbiting it is a live readout of the world around you.
+            Welcome to the Hub — your live field console. Clover 🍀 Cole is your AI rockhounding companion;
+            everything orbiting her is a live readout of the world around you.
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {items.map(({ icon: Icon, title, desc }) => (

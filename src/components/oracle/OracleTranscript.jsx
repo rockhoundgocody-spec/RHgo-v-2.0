@@ -26,10 +26,10 @@ export default function OracleTranscript({ active, reply, interim, status, onClo
   if (!visible) return null;
 
   const statusLabel =
-    status === 'thinking' ? 'Thinking…' :
-    status === 'speaking' ? 'Speaking' :
-    status === 'listening' ? 'Listening' :
-    'Awake';
+    status === 'thinking' ? 'Clover is thinking…' :
+    status === 'speaking' ? 'Clover is speaking…' :
+    status === 'listening' ? 'Clover is listening…' :
+    'Clover is here';
 
   return (
     <div
@@ -50,7 +50,7 @@ export default function OracleTranscript({ active, reply, interim, status, onClo
           <div className="flex items-center gap-2">
             <Sparkles className="text-amethyst-glow" size={14} />
             <span className="text-[11px] uppercase tracking-[0.3em] text-amethyst-glow font-mono">
-              Oracle
+              Clover 🍀
             </span>
             <span className="ml-1 inline-flex items-center gap-1.5 text-[11px] text-emerald-300/90">
               <span
@@ -65,7 +65,7 @@ export default function OracleTranscript({ active, reply, interim, status, onClo
           <button
             onClick={onClose}
             className="w-8 h-8 -mr-1 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 active:scale-95 transition"
-            aria-label="Close oracle"
+            aria-label="Close Clover"
           >
             <X size={16} />
           </button>
@@ -91,7 +91,7 @@ export default function OracleTranscript({ active, reply, interim, status, onClo
             </p>
           )}
           {!reply && !interim && status === 'listening' && (
-            <p className="text-amethyst/60 text-[13px] italic">Go ahead — I'm listening…</p>
+            <p className="text-amethyst/60 text-[13px] italic">Go ahead, Clover is listening…</p>
           )}
         </div>
       </div>

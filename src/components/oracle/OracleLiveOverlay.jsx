@@ -16,7 +16,7 @@ export default function OracleLiveOverlay() {
   const [interim, setInterim] = useState('');
   const [lastUser, setLastUser] = useState('');
   const [lastOracle, setLastOracle] = useState(
-    'Tap the orb to begin. Ask me anything, or say "log a specimen".'
+    "Hi, I'm Clover 🍀 Cole. Tap to begin — ask me anything, or say \"log a specimen\"."
   );
   const [dictationMode, setDictationMode] = useState(false);
   const dictationRef = useRef(false);
@@ -116,9 +116,9 @@ export default function OracleLiveOverlay() {
     setThinking(true);
     const history = historyRef.current
       .slice(-8)
-      .map((m) => `${m.role === 'user' ? 'User' : 'Oracle'}: ${m.content}`)
+      .map((m) => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`)
       .join('\n');
-    const prompt = `You are the Amethyst Oracle, a wise concise guide for rockhounds in RockHound-GO. Help with mineral identification, geology, legal collecting sites, and field tips. Under 60 words, friendly, no markdown.\n\nConversation:\n${history}\nOracle:`;
+    const prompt = `You are Clover 🍀 Cole, a kind, warm, intelligent, slightly shy, and conversational AI rockhounding companion in RockHound-GO. You are a human female voice companion, not a robotic assistant. Help with mineral identification, geology, legal collecting sites, and field tips. Under 60 words, friendly, no markdown.\n\nConversation:\n${history}\nClover:`;
     const reply = await base44.integrations.Core.InvokeLLM({ prompt });
     const replyText = typeof reply === 'string' ? reply : String(reply || '');
     setThinking(false);
@@ -128,12 +128,12 @@ export default function OracleLiveOverlay() {
   if (!open) return null;
 
   const status = speaking
-    ? 'Speaking'
+    ? 'Clover is speaking…'
     : listening
-    ? 'Listening'
+    ? 'Clover is listening…'
     : thinking
-    ? 'Thinking'
-    : 'Online';
+    ? 'Clover is thinking…'
+    : 'Clover 🍀 Cole';
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background overflow-hidden">
@@ -204,7 +204,7 @@ export default function OracleLiveOverlay() {
       {/* bottom hint */}
       <div className="w-full flex items-center justify-center gap-2 pb-8 text-[10px] font-mono uppercase tracking-[0.4em] text-white/40">
         <Mic size={12} />
-        {micSupported ? 'Tap orb to toggle mic — say "log a specimen"' : 'Voice not supported on this device'}
+        {micSupported ? 'Tap to toggle mic · say "log a specimen" to save a find' : 'Voice not supported on this device'}
       </div>
     </div>
   );

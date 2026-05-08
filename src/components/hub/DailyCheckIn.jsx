@@ -37,7 +37,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
     }
   };
 
-  const name = companion.name || 'Amethyst';
+  const name = companion.name || 'Clover 🍀 Cole';
 
   return (
     <GlassPanel className="mb-10 p-5">
@@ -48,7 +48,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
       </div>
       <p className="text-white/85 text-[15px] leading-relaxed mb-4">
-        {name} has been waiting for you. <span className="text-amethyst-glow">How are you feeling today?</span>
+        Clover has been thinking of you. <span className="text-amethyst-glow">How are you feeling today?</span>
       </p>
 
       <div className="flex gap-2 flex-wrap mb-4">

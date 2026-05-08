@@ -8,7 +8,7 @@
     },
     "name": {
       "type": "string",
-      "default": "Amethyst",
+      "default": "Clover \ud83c\udf40 Cole",
       "description": "Companion's chosen name"
     },
     "level": {
@@ -38,7 +38,7 @@
         "tender"
       ],
       "default": "calm",
-      "description": "Current vibe \u2014 drives orb tone + Oracle voice"
+      "description": "Current vibe \u2014 drives Clover \ud83c\udf40 Cole's mood, visual tone, and voice style"
     },
     "last_check_in_date": {
       "type": "string",
