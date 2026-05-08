@@ -2,30 +2,26 @@ import React from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { Mic, Compass, Gem, Moon, Sparkles } from 'lucide-react';
 
-/**
- * HubIntro — explains every visible element on the Hub so a new user
- * understands what each glowing piece of the orb interface does.
- */
 const items = [
   {
     icon: Mic,
     title: 'Clover 🍀 Cole',
-    desc: 'Tap to talk to Clover, your AI rockhounding companion. Speak naturally — she listens, replies, and identifies finds.',
+    desc: 'Tap the orb to talk to Clover, your AI rockhounding companion. She listens, replies, and remembers your conversations.',
   },
   {
     icon: Sparkles,
     title: 'Voiceprint Ring',
-    desc: "The waveform pulses with Clover's voice when she speaks and your voice when you talk.",
+    desc: "The waveform around the orb pulses with Clover's voice when she speaks and your voice when you talk.",
   },
   {
     icon: Compass,
-    title: 'Compass Glow',
-    desc: 'The soft green halo on the rim points toward the nearest legal hotspot from your location.',
+    title: 'Field Command',
+    desc: 'Type or speak a field goal — "find fluorite near me" — and the AI routes you to the right tool instantly.',
   },
   {
     icon: Gem,
-    title: 'Specimen Ghosts',
-    desc: 'Drifting silhouettes are recent finds from your collection. Tap one to ask Clover about it.',
+    title: 'Daily Check-In',
+    desc: 'Tell Clover how you feel each day. Your mood and intention shape her energy and how she speaks to you.',
   },
   {
     icon: Moon,
@@ -64,7 +60,7 @@ export default function HubIntro() {
             ))}
           </ul>
           <p className="text-amethyst/70 text-xs mt-5 leading-relaxed">
-            Below: the Mission Console launches the four core tools, and Field Telemetry shows your collector stats.
+            Below: the Mission Console launches the four core tools. Field Telemetry shows your collector stats.
           </p>
         </div>
       </GlassPanel>
