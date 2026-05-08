@@ -160,7 +160,7 @@ Clover:`;
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
         {/* Compass arc — sits inside the well rim */}
-        <CompassRing size={140} />
+        <CompassRing size={168} />
 
         {/* Orbiting specimen ghosts */}
         <SpecimenGhosts active={active} onTap={handleGhostTap} />
@@ -170,7 +170,7 @@ Clover:`;
 
         {/* Voiceprint waveform around the orb */}
         <VoiceprintRing
-          size={140}
+          size={168}
           active={active}
           getAmplitude={getAmplitude}
           getSpectrum={getSpectrum}
@@ -189,7 +189,7 @@ Clover:`;
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
         >
           <AmethystOrb
-            size={160}
+            size={192}
             speaking={speaking || thinking}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
