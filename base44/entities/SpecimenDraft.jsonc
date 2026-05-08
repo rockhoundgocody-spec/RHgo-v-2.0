@@ -1,0 +1,269 @@
+{
+  "name": "SpecimenDraft",
+  "type": "object",
+  "description": "Progressive Verification draft \u2014 an evolving, iteratively denoised specimen identification. One draft per scan session; updated in-place as user provides field evidence.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "All photos attached to this draft"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "primary_name": {
+      "type": "string",
+      "description": "Current best ID"
+    },
+    "common_name": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "description": "0-1 calibrated confidence"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "revision": {
+      "type": "integer",
+      "default": 0,
+      "description": "How many denoising cycles have run"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "drafting",
+        "verifying",
+        "finalised",
+        "saved"
+      ],
+      "default": "drafting"
+    },
+    "field_answers": {
+      "type": "array",
+      "description": "Q&A pairs collected from the user",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_key": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "verification_plan": {
+      "type": "array",
+      "description": "Ordered list of field tests still to run",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "test": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "next_question": {
+      "type": "object",
+      "description": "The single next question to ask the user",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "choice",
+            "text",
+            "number",
+            "photo",
+            "skip"
+          ]
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "review_results": {
+      "type": "object",
+      "description": "Latest multi-agent crossover output",
+      "properties": {
+        "mineral_id": {
+          "type": "object"
+        },
+        "lookalike_risk": {
+          "type": "object"
+        },
+        "field_test": {
+          "type": "object"
+        },
+        "locality": {
+          "type": "object"
+        },
+        "safety": {
+          "type": "object"
+        },
+        "value": {
+          "type": "object"
+        }
+      }
+    },
+    "final_result": {
+      "type": "object",
+      "description": "Merged final output after all reviewers converge",
+      "properties": {
+        "primary_name": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "evidence_summary": {
+          "type": "string"
+        },
+        "lookalikes_ruled_out": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "next_test": {
+          "type": "string"
+        },
+        "collection_note": {
+          "type": "string"
+        },
+        "value_range": {
+          "type": "string"
+        },
+        "safety_warning": {
+          "type": "string"
+        }
+      }
+    },
+    "delta_log": {
+      "type": "array",
+      "description": "Append-only log of what changed per revision",
+      "items": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer"
+          },
+          "what_changed": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "confidence_before": {
+            "type": "number"
+          },
+          "confidence_after": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this draft (up to 1000 characters)"
+    }
+  },
+  "required": [
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
