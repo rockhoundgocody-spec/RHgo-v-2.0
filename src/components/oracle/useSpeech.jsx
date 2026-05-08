@@ -172,12 +172,13 @@ export function useSpeechSynthesis() {
 }
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
-  const recRef = useRef(null);
   const [listening, setListening] = useState(false);
   const onResultRef = useRef(onResult);
   const onInterimRef = useRef(onInterim);
   onResultRef.current = onResult;
   onInterimRef.current = onInterim;
+  const activeRef = useRef(false);
+  const silenceTimer = useRef(null);
 
   const SR =
     typeof window !== 'undefined'
@@ -185,14 +186,17 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
       : null;
   const supported = !!SR;
 
-  useEffect(() => {
-    if (!SR) return;
+  const createRec = useCallback(() => {
+    if (!SR) return null;
     const rec = new SR();
-    rec.continuous = true;        // keep mic open across pauses
-    rec.interimResults = true;    // stream partial transcripts for snappy UX
+    // NON-continuous: one utterance at a time — stops picking up ambient noise
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
     rec.lang = 'en-US';
 
     rec.onresult = (e) => {
+      clearTimeout(silenceTimer.current);
       let interim = '';
       let finalText = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -201,27 +205,44 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         else interim += r[0].transcript;
       }
       if (interim && onInterimRef.current) onInterimRef.current(interim);
-      if (finalText && onResultRef.current) onResultRef.current(finalText.trim());
+      if (finalText && onResultRef.current) {
+        const clean = finalText.trim();
+        // Only fire if the result has meaningful content (>2 chars, not pure noise)
+        if (clean.length > 2) onResultRef.current(clean);
+      }
     };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
-    recRef.current = rec;
-    return () => {
-      try { rec.abort(); } catch {}
+
+    rec.onend = () => {
+      setListening(false);
     };
+
+    rec.onerror = (e) => {
+      // 'no-speech' is not a real error — just silence, ignore it
+      if (e.error !== 'no-speech') setListening(false);
+    };
+
+    return rec;
   }, [SR]);
 
   const start = useCallback(() => {
-    if (!recRef.current) return;
+    if (!SR) return;
+    activeRef.current = true;
+    setListening(true);
     try {
-      recRef.current.start();
-      setListening(true);
-    } catch {}
-  }, []);
+      const rec = createRec();
+      rec.start();
+      // Auto-stop after 8s of no final result to prevent runaway listening
+      silenceTimer.current = setTimeout(() => {
+        try { rec.stop(); } catch {}
+      }, 8000);
+    } catch {
+      setListening(false);
+    }
+  }, [SR, createRec]);
 
   const stop = useCallback(() => {
-    if (!recRef.current) return;
-    try { recRef.current.stop(); } catch {}
+    activeRef.current = false;
+    clearTimeout(silenceTimer.current);
     setListening(false);
   }, []);
 

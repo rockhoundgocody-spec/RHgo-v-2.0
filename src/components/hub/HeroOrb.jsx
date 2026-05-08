@@ -68,13 +68,14 @@ Clover:`;
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // Auto-resume listening between turns
+  // Resume listening only after Clover finishes speaking — not during thinking
   useEffect(() => {
-    if (!active) return;
-    if (!speaking && !thinking && !listening) {
+    if (!active || thinking || listening) return;
+    if (!speaking) {
+      // Wait a beat after speech ends before opening mic again
       const t = setTimeout(() => {
         if (activeRef.current && !speaking && !thinking) startListen();
-      }, 500);
+      }, 900);
       return () => clearTimeout(t);
     }
   }, [active, speaking, thinking, listening, startListen]);
@@ -197,6 +198,7 @@ Clover:`;
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => removeRipple(r.id)} />
           ))}
+          {/* Removed: "TALK TO CLOVER" overlay — now shown in status pill only */}
         </div>
 
         {/* Status pill — bigger, higher contrast, real tap target */}
@@ -216,7 +218,7 @@ Clover:`;
             </span>
           ) : (
             <span className="text-amethyst-glow text-[13px] font-medium tracking-[0.2em] uppercase glow-amethyst">
-              Talk to Clover 🍀
+              Tap to speak 🍀
             </span>
           )}
         </div>
