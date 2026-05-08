@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushWhenStable } from '@/lib/offlineQueue.js';
 import { Compass, ScanLine, Gem, Brain } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import MissionCard from '@/components/hub/MissionCard.jsx';
@@ -62,13 +63,16 @@ export default function Hub() {
   });
   const [fieldCoreOpen, setFieldCoreOpen] = useState(false);
 
-  // Auto-clear transient caches on every open (keeps auth + memory log intact)
+  // On open: flush anything waiting to sync, then clear temp junk
   useEffect(() => {
+    // 1. Push pending saves to the server; the queue removes them automatically once done
+    flushWhenStable();
+
+    // 2. Wipe actual temp/cache junk — NOT the sync queue, auth, memory, or voice prefs
+    const JUNK_PREFIXES = ['rh_tile_', 'rh_model_cache_', 'rh_scan_tmp_', 'scan_draft_tmp_'];
     try {
-      // Clear model / tile / scan caches but preserve auth and memory log
-      const keep = new Set(['clover_memory_log', 'clover_voice']);
       Object.keys(localStorage).forEach((k) => {
-        if (!keep.has(k) && (k.startsWith('rh_') || k.startsWith('model_') || k.startsWith('tile_') || k.startsWith('scan_'))) {
+        if (JUNK_PREFIXES.some((p) => k.startsWith(p))) {
           localStorage.removeItem(k);
         }
       });
