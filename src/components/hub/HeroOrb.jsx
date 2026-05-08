@@ -11,6 +11,7 @@ import useHaptic from './useHaptic';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
+import { appendToMemoryLog } from './CloverMemoryLog.jsx';
 
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const [ripples, setRipples] = useState([]);
@@ -126,6 +127,10 @@ Clover:`;
       stopSpeak();
       stopListen();
       mic.stop();
+      // Save conversation to memory log before closing
+      if (historyRef.current.length > 0) {
+        appendToMemoryLog([...historyRef.current]);
+      }
       setActive(false);
       setReply('');
       setInterim('');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Compass, ScanLine, Gem, Brain } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import MissionCard from '@/components/hub/MissionCard.jsx';
@@ -18,6 +18,7 @@ import FieldCoreCard from '@/components/hub/FieldCoreCard.jsx';
 import FieldCorePanel from '@/components/hub/FieldCorePanel.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
+import CloverMemoryLog from '@/components/hub/CloverMemoryLog.jsx';
 
 const missions = [
   {
@@ -60,6 +61,19 @@ export default function Hub() {
     onMilestone: setMilestone,
   });
   const [fieldCoreOpen, setFieldCoreOpen] = useState(false);
+
+  // Auto-clear transient caches on every open (keeps auth + memory log intact)
+  useEffect(() => {
+    try {
+      // Clear model / tile / scan caches but preserve auth and memory log
+      const keep = new Set(['clover_memory_log', 'clover_voice']);
+      Object.keys(localStorage).forEach((k) => {
+        if (!keep.has(k) && (k.startsWith('rh_') || k.startsWith('model_') || k.startsWith('tile_') || k.startsWith('scan_'))) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch {}
+  }, []);
   return (
     <div className="relative min-h-screen px-5 sm:px-8 pt-10 pb-24 max-w-5xl mx-auto">
       {/* ambient backdrop */}
@@ -106,6 +120,8 @@ export default function Hub() {
             <CompanionStatus companion={companion} />
             <CelestialDial />
           </div>
+
+          <CloverMemoryLog />
         </div>
       </section>
 
