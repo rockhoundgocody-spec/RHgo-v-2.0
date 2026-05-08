@@ -201,27 +201,16 @@ Clover:`;
           {/* Removed: "TALK TO CLOVER" overlay — now shown in status pill only */}
         </div>
 
-        {/* Status pill — bigger, higher contrast, real tap target */}
-        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-amethyst/30 min-h-[44px]">
-          {active ? (
-            <>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
-                {thinking ? 'Clover is thinking…' : speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : 'Clover is here'}
-              </span>
-              {listening ? <Mic size={14} className="text-emerald-300" />
-                         : <MicOff size={14} className="text-emerald-300/50" />}
-            </>
-          ) : micWarning ? (
-            <span className="text-rose-300 text-[12px] font-medium tracking-wider uppercase">
-              Mic unavailable — check browser permissions
+        {/* Active status indicator — only shown when Clover is live */}
+        {active && (
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-emerald-400/30 min-h-[44px]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
+              {thinking ? 'Clover is thinking…' : speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : 'Clover is here'}
             </span>
-          ) : (
-            <span className="text-amethyst-glow text-[13px] font-medium tracking-[0.2em] uppercase glow-amethyst">
-              Tap to speak 🍀
-            </span>
-          )}
-        </div>
+            {listening ? <Mic size={14} className="text-emerald-300" /> : <MicOff size={14} className="text-emerald-300/50" />}
+          </div>
+        )}
 
         <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
       </div>
