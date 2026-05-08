@@ -2,25 +2,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import VoiceprintRing from './VoiceprintRing.jsx';
-import SpecimenGhosts from './SpecimenGhosts.jsx';
-import CompassRing from './CompassRing.jsx';
-import MineralOfDay from './MineralOfDay.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
-import { appendToMemoryLog } from './CloverMemoryLog.jsx';
 
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const [ripples, setRipples] = useState([]);
-  const [micWarning, setMicWarning] = useState(false);
   const [active, setActive] = useState(false);
   const [interim, setInterim] = useState('');
-  const [reply, setReply] = useState('');
   const [thinking, setThinking] = useState(false);
-  const [history, setHistory] = useState([]);
   const containerRef = useRef(null);
   const activeRef = useRef(false);
   activeRef.current = active;
@@ -32,149 +25,89 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
 
   const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
   const mic = useMicLevel();
+  const micRef = useRef(mic);
+  micRef.current = mic;
 
   const handleTranscript = useCallback(async (transcript) => {
     if (!transcript?.trim()) return;
     setInterim('');
     historyRef.current.push({ role: 'user', content: transcript });
-    setHistory([...historyRef.current]);
     setThinking(true);
-    const recent = historyRef.current.slice(-6)
-      .map(m => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`).join('\n');
 
-    // Clover 🍀 Cole persona, aware of companion state + today's activity
-    const c = companionRef.current;
-    const stateBits = c
-      ? `Level ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100. Streak: ${c.streak_days || 0} days. ` +
-        `Today's finds: ${todaysFindsRef.current}. ` +
-        (c.last_intention ? `Their intention today: "${c.last_intention}". ` : '') +
-        (c.last_mood_label ? `They felt "${c.last_mood_label}" at check-in. ` : '')
-      : '';
-
-    const prompt = `You are Clover 🍀 Cole — a kind, warm, slightly shy, and emotionally safe AI rockhounding companion. You are a human female voice companion, not a robotic assistant or mystical oracle. Speak in first person ("I"). Be encouraging, never judgmental. Celebrate small wins. Validate hard days. Use gentle, sincere, conversational language. Reply in under 50 words, no markdown.
-
-${stateBits}When relevant, gently weave in: their streak (celebrate it), their energy (rest if low, adventure if high), their intention (remind them kindly). Don't lecture. Don't list features. Just be present.
-
-${recent}
-Clover:`;
-    const res = await base44.integrations.Core.InvokeLLM({ prompt });
-    const text = typeof res === 'string' ? res : String(res || '');
-    historyRef.current.push({ role: 'clover', content: text });
-    setHistory([...historyRef.current]);
-    setReply(text);
-    setThinking(false);
-    speak(text);
+    try {
+      const res = await base44.functions.invoke('cloverChat', {
+        history: historyRef.current.slice(-6),
+        companion: companionRef.current,
+        todays_finds: todaysFindsRef.current,
+      });
+      const text = res?.data?.reply || "I'm here with you.";
+      historyRef.current.push({ role: 'clover', content: text });
+      setThinking(false);
+      speak(text);
+    } catch {
+      setThinking(false);
+      speak("I'm here. Something went quiet — try again.");
+    }
   }, [speak]);
 
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // Resume listening only after Clover finishes speaking — not during thinking
+  // Resume listening after Clover finishes speaking
   useEffect(() => {
-    if (!active || thinking || listening) return;
-    if (!speaking) {
-      // Wait a beat after speech ends before opening mic again
-      const t = setTimeout(() => {
-        if (activeRef.current && !speaking && !thinking) startListen();
-      }, 900);
-      return () => clearTimeout(t);
-    }
+    if (!active || thinking || listening || speaking) return;
+    const t = setTimeout(() => {
+      if (activeRef.current && !speaking && !thinking) startListen();
+    }, 900);
+    return () => clearTimeout(t);
   }, [active, speaking, thinking, listening, startListen]);
 
   // Mic level mirrors listening state
-  const micRef = useRef(mic);
-  micRef.current = mic;
   useEffect(() => {
     if (active && listening) micRef.current.start();
     else micRef.current.stop();
   }, [active, listening]);
 
-  // Haptic feedback while orb is alive
   useHaptic({ active: active && (speaking || listening), getAmplitude });
 
   useEffect(() => () => {
-    stopSpeak(); stopListen();
+    stopSpeak();
+    stopListen();
     try { micRef.current.stop(); } catch {}
   }, [stopSpeak, stopListen]);
 
   const awaken = (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
-    const x = rect ? e.clientX - rect.left : 130;
-    const y = rect ? e.clientY - rect.top : 130;
+    const x = rect ? e.clientX - rect.left : 96;
+    const y = rect ? e.clientY - rect.top : 96;
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
-    if (!micSupported) {
-      setMicWarning(true);
-      setTimeout(() => setMicWarning(false), 4000);
-      return;
-    }
     if (!active) {
       setActive(true);
       const c = companionRef.current;
-      const greetings = c
-        ? c.last_check_in_date === new Date().toISOString().slice(0, 10)
-          ? [`Hey, you're back. I love it when you visit.`, `There you are. I've been resting up.`, `Good to see you again today.`]
-          : c.streak_days >= 3
-          ? [`${c.streak_days} days in a row — I'm so proud of us.`, `Day ${c.streak_days + 1}. Let's go gently.`]
-          : [`I'm here. How are you, really?`, `Hey friend. Tell me what you're feeling.`]
+      const pool = c
+        ? c.streak_days >= 3
+          ? [`${c.streak_days} days in a row — I'm so proud of us.`, `Hey, day ${c.streak_days + 1}. Let's make it count.`]
+          : [`I'm here. How are you, really?`, `Hey friend. Tell me what's on your mind.`, `Good to see you. What did you find today?`]
         : [`I'm here. What did you find?`];
-      const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-      setReply(greeting);
+      const greeting = pool[Math.floor(Math.random() * pool.length)];
       historyRef.current = [{ role: 'clover', content: greeting }];
-      setHistory([...historyRef.current]);
       speak(greeting);
     } else {
       stopSpeak();
       stopListen();
-      mic.stop();
-      // Save conversation to memory log before closing
-      if (historyRef.current.length > 0) {
-        appendToMemoryLog([...historyRef.current]);
-      }
+      micRef.current.stop();
       setActive(false);
-      setReply('');
       setInterim('');
-    }
-  };
-
-  const handleGhostTap = (ghost) => {
-    if (!active) {
-      setActive(true);
       historyRef.current = [];
-      setHistory([]);
     }
-    const q = `Tell me about ${ghost.name} in one short paragraph.`;
-    handleTranscript(q);
   };
 
-  const handleMineralTap = (mineral) => {
-    if (!active) {
-      setActive(true);
-      historyRef.current = [];
-      setHistory([]);
-    }
-    const q = `Today's mineral is ${mineral.name}. Give me a vivid one-line description.`;
-    handleTranscript(q);
-  };
-
-  const removeRipple = (id) =>
-    setRipples((r) => r.filter((rp) => rp.id !== id));
-
-  const isOrbBusy = active || speaking || thinking || listening;
+  const removeRipple = (id) => setRipples((r) => r.filter((rp) => rp.id !== id));
 
   return (
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
-        {/* Compass arc — sits inside the well rim */}
-        <CompassRing size={168} />
-
-        {/* Orbiting specimen ghosts */}
-        <SpecimenGhosts active={active} onTap={handleGhostTap} />
-
-        {/* Mineral of the day companion */}
-        <MineralOfDay active={active} onIdentify={handleMineralTap} />
-
-        {/* Voiceprint waveform around the orb */}
         <VoiceprintRing
           size={168}
           active={active}
@@ -203,17 +136,29 @@ Clover:`;
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => removeRipple(r.id)} />
           ))}
-          {/* Removed: "TALK TO CLOVER" overlay — now shown in status pill only */}
         </div>
 
-        {/* Active status indicator — only shown when Clover is live */}
         {active && (
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-emerald-400/30 min-h-[44px]">
+          <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-emerald-400/30">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
-              {thinking ? 'Clover is thinking…' : speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : 'Clover is here'}
+              {thinking ? 'thinking…' : speaking ? 'speaking…' : listening ? 'listening…' : 'here'}
             </span>
-            {listening ? <Mic size={14} className="text-emerald-300" /> : <MicOff size={14} className="text-emerald-300/50" />}
+            {listening
+              ? <Mic size={14} className="text-emerald-300" />
+              : <MicOff size={14} className="text-emerald-300/50" />}
+          </div>
+        )}
+
+        {interim && (
+          <div className="mt-2 text-white/50 text-xs italic max-w-[240px] text-center truncate">
+            "{interim}"
+          </div>
+        )}
+
+        {!micSupported && !active && (
+          <div className="mt-3 text-white/30 text-[11px] text-center">
+            Voice not supported in this browser
           </div>
         )}
 
