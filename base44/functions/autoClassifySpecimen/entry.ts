@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       ? ` The specimen was found at approximately ${specimen.lat.toFixed(2)}, ${specimen.lng.toFixed(2)}. Use this locality to weigh geological plausibility.`
       : '';
 
-    const r = await base44.integrations.Core.InvokeLLM({
+    const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
         'You are an assisted geological observation system, not an oracle. ' +

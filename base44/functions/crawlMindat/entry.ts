@@ -228,7 +228,7 @@ async function fetchAndParseMineral(base44, candidate) {
 
   let extracted = {};
   try {
-    extracted = await base44.integrations.Core.InvokeLLM({
+    extracted = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: schema,
     });

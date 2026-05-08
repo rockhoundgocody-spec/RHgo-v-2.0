@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url required' }, { status: 400 });
     }
 
-    const r = await base44.integrations.Core.InvokeLLM({
+    const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
         'Quickly identify any visible minerals or rocks in this single live-camera frame. ' +

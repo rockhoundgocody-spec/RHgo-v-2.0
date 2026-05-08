@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
       const localityHint = (lat && lng) ? ` Locality: ${lat.toFixed(3)}, ${lng.toFixed(3)}.` : '';
 
-      const r = await base44.integrations.Core.InvokeLLM({
+      const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           'You are an expert geological field assistant. Produce a NOISY INITIAL DRAFT identification. ' +
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
       const answersText = answers.map(a => `${a.question_key}: ${a.answer}`).join('\n');
 
       // LLM only narrates what changed — score comes from rules
-      const r = await base44.integrations.Core.InvokeLLM({
+      const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           `Specimen draft: "${prevName}" (currently ${(engine.final_score * 100).toFixed(0)}% confidence via rule engine).\n` +
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
       const reviewResults = {};
       await Promise.all(
         REVIEWERS.map(async (reviewer) => {
-          const r = await base44.integrations.Core.InvokeLLM({
+          const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
             model: 'gemini_3_flash',
             prompt: `${reviewPrompts[reviewer]}\n\nContext:\n${context}`,
             file_urls: imageUrls.length ? imageUrls : undefined,
@@ -292,7 +292,7 @@ Deno.serve(async (req) => {
       );
 
       const reviewsText = JSON.stringify(reviewResults, null, 2);
-      const merged = await base44.integrations.Core.InvokeLLM({
+      const merged = await base44.asServiceRole.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           'You are the Final Synthesis Agent. Six specialist reviewers analysed a mineral specimen. ' +

@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
 
 Transcript: """${transcript}"""`;
 
-    const fields = await base44.integrations.Core.InvokeLLM({
+    const fields = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: 'object',
