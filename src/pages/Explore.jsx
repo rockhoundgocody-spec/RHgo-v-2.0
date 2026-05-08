@@ -66,7 +66,7 @@ export default function Explore() {
     }
   }, [statusItems]);
 
-  const handleLocate = () => {
+  const locate = useCallback(() => {
     if (!navigator.geolocation) {
       setLocError('Geolocation not supported');
       return;
@@ -84,7 +84,12 @@ export default function Explore() {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  };
+  }, []);
+
+  // Auto-request GPS on mount
+  useEffect(() => { locate(); }, [locate]);
+
+  const handleLocate = locate;
 
   return (
     <div className="px-4 lg:px-8 pt-6 pb-24 max-w-7xl mx-auto">
