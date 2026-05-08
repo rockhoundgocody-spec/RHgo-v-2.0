@@ -100,11 +100,14 @@ export function useSpeechSynthesis() {
         window.speechSynthesis.resume();
         window.speechSynthesis.cancel();
 
+        const voiceSettings = (() => {
+          try { return JSON.parse(localStorage.getItem('clover_voice') || '{}'); } catch { return {}; }
+        })();
         const utter = new SpeechSynthesisUtterance(String(text));
         utter.lang = 'en-US';
-        utter.rate = 0.92;
-        utter.pitch = 1.18;
-        utter.volume = 0.95;
+        utter.rate = voiceSettings.rate ?? 0.92;
+        utter.pitch = voiceSettings.pitch ?? 1.18;
+        utter.volume = voiceSettings.volume ?? 0.95;
         const v = pickVoice();
         if (v) utter.voice = v;
         utter.onstart = () => {
