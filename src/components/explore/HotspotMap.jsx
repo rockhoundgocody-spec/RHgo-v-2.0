@@ -93,6 +93,7 @@ function makeOverlay(google, urlTemplate, opacity = 0.55, onStatus) {
 
 export default function HotspotMap({
   hotspots = [],
+  specimens = [],
   height = 480,
   activeId = null,
   onMarkerClick,
@@ -111,6 +112,7 @@ export default function HotspotMap({
   const markersRef = useRef([]);
   const clustererRef = useRef(null);
   const userMarkerRef = useRef(null);
+  const specimenMarkersRef = useRef([]);
   const infoRef = useRef(null);
   const blmRef = useRef(null);
   const parcelRef = useRef(null);
@@ -370,6 +372,51 @@ export default function HotspotMap({
     mapRef.current.panTo(pos);
     if (mapRef.current.getZoom() < 9) mapRef.current.setZoom(10);
   }, [userLocation, ready]);
+
+  // Specimen collection pins — cyan diamonds to distinguish from hotspot dots
+  useEffect(() => {
+    if (!ready || !mapRef.current || !window.google?.maps) return;
+    const google = window.google;
+
+    // Clear previous specimen markers
+    specimenMarkersRef.current.forEach((m) => m.setMap(null));
+    specimenMarkersRef.current = [];
+
+    const geoSpecimens = specimens.filter(
+      (s) => typeof s.lat === 'number' && typeof s.lng === 'number'
+    );
+    if (!geoSpecimens.length) return;
+
+    const newMarkers = geoSpecimens.map((s) => {
+      const marker = new google.maps.Marker({
+        position: { lat: s.lat, lng: s.lng },
+        map: mapRef.current,
+        title: s.mineral_name,
+        zIndex: 100,
+        icon: {
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 5,
+          fillColor: '#a78bfa',
+          fillOpacity: 0.95,
+          strokeColor: '#ffffff',
+          strokeWeight: 1.5,
+          rotation: 180,
+        },
+      });
+      marker.addListener('click', () => {
+        infoRef.current.setContent(`
+          <div style="font-family:system-ui;font-size:12px;max-width:200px;color:#0f172a">
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px">🪨 ${s.mineral_name}</div>
+            ${s.found_date ? `<div style="color:#475569">Found: ${s.found_date}</div>` : ''}
+            ${s.rarity ? `<div style="color:#6d28d9;font-weight:500;margin-top:2px">${s.rarity}</div>` : ''}
+          </div>
+        `);
+        infoRef.current.open({ anchor: marker, map: mapRef.current });
+      });
+      return marker;
+    });
+    specimenMarkersRef.current = newMarkers;
+  }, [specimens, ready]);
 
   // Directions to selected hotspot
   const handleNavigate = useCallback(() => {

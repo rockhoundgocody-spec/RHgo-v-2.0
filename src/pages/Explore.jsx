@@ -11,6 +11,8 @@ import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
 import { Button } from '@/components/ui/button';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Explore() {
   const {
@@ -21,6 +23,12 @@ export default function Explore() {
     cachedAt,
     refetch,
   } = useOfflineHotspots();
+  const { data: specimens = [] } = useQuery({
+    queryKey: ['specimens-geo'],
+    queryFn: () => base44.entities.Specimen.list(),
+    initialData: [],
+  });
+
   const [activeId, setActiveId] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locating, setLocating] = useState(false);
@@ -138,6 +146,7 @@ export default function Explore() {
               <>
                 <HotspotMap
                   hotspots={hotspots}
+                  specimens={specimens}
                   height={480}
                   activeId={activeId}
                   onMarkerClick={(h) => setActiveId(h.id)}

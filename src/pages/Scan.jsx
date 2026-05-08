@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
@@ -22,8 +22,19 @@ export default function Scan() {
   const [result, setResult] = useState(null);
   const [savedId, setSavedId] = useState(null);
   const [reasoningResult, setReasoningResult] = useState(null);
+  const [gpsCoords, setGpsCoords] = useState(null);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
+
+  // Auto-capture GPS as soon as the scan page loads
+  React.useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {}, // silently ignore if denied
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   // Fallback if camera unavailable — single-image classic flow.
   const handleUploadFallback = async (file) => {
@@ -169,6 +180,7 @@ export default function Scan() {
       ai_candidates: result.candidates,
       notes: result.description,
       found_date: new Date().toISOString().split('T')[0],
+      ...(gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng } : {}),
     });
     setSavedId(created.id);
     refreshBadges();
