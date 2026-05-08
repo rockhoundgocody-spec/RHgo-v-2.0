@@ -114,13 +114,12 @@ export default function OracleLiveOverlay() {
     }
 
     setThinking(true);
-    const history = historyRef.current
-      .slice(-8)
-      .map((m) => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`)
-      .join('\n');
-    const prompt = `You are Clover 🍀 Cole, a kind, warm, intelligent, slightly shy, and conversational AI rockhounding companion in RockHound-GO. You are a human female voice companion, not a robotic assistant. Help with mineral identification, geology, legal collecting sites, and field tips. Under 60 words, friendly, no markdown.\n\nConversation:\n${history}\nClover:`;
-    const reply = await base44.integrations.Core.InvokeLLM({ prompt });
-    const replyText = typeof reply === 'string' ? reply : String(reply || '');
+    const res = await base44.functions.invoke('cloverChat', {
+      history: historyRef.current.slice(-8),
+      companion: null,
+      todays_finds: 0,
+    });
+    const replyText = res?.data?.reply || "I'm here with you.";
     setThinking(false);
     replyAndSpeak(replyText);
   };

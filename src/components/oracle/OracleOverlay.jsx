@@ -135,15 +135,12 @@ export default function OracleOverlay() {
     }
 
     setThinking(true);
-    const history = next
-      .slice(-8)
-      .map((m) => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`)
-      .join('\n');
-
-    const prompt = `You are Clover 🍀 Cole, a kind, warm, intelligent, and conversational AI rockhounding companion in the RockHound-GO app. You are a human female voice companion, not a robotic assistant or mystical oracle. You help with mineral identification, geology, finding legal collecting sites, and field tips. Keep responses under 80 words, friendly and clear, no markdown.\n\nConversation:\n${history}\nClover:`;
-
-    const reply = await base44.integrations.Core.InvokeLLM({ prompt });
-    const replyText = typeof reply === 'string' ? reply : String(reply || '');
+    const res = await base44.functions.invoke('cloverChat', {
+      history: next.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'clover', content: m.content })),
+      companion: null,
+      todays_finds: 0,
+    });
+    const replyText = res?.data?.reply || "I'm here with you.";
     setMessages((m) => [...m, { role: 'assistant', content: replyText }]);
     setThinking(false);
     if (!muted) speak(replyText);

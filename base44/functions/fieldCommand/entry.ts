@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     : 'User location is unknown.';
   const collectionCtx = collection_count ? `User has ${collection_count} specimens in their collection.` : '';
 
-  const fullResponse = await base44.integrations.Core.InvokeLLM({
+  const fullResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt: `You are the RockHound-GO Field Intelligence System — an expert field geologist and AI companion. You reason like a professional mineralogist with deep knowledge of mineral associations, geological formations, terrain analysis, and field collecting ethics.
 
 ${locationCtx} ${collectionCtx}
