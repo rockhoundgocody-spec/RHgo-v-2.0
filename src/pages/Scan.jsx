@@ -198,8 +198,8 @@ export default function Scan() {
   return (
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-white tracking-wide">Scan</h1>
-        <p className="text-amethyst/60 text-xs uppercase tracking-[0.3em] mt-1">
+        <h1 className="text-2xl font-bold text-white tracking-tight">Scan</h1>
+        <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">
           AI Vision · 3D Reconstruction
         </p>
         <StageStrip stage={stage} />

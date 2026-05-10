@@ -9,9 +9,9 @@ export default function Market() {
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Marketplace</h1>
-        <p className="text-white/50 text-sm mt-2">Field-collected specimens. Verified provenance. Trusted community.</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white tracking-tight">Market</h1>
+        <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Field-collected · Verified provenance</p>
       </div>
 
       {/* Search & filters */}
@@ -53,15 +53,15 @@ export default function Market() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <GlassPanel key={i} className="p-4 flex flex-col">
-            <div className="aspect-square rounded-lg bg-white/5 border border-white/10 mb-3 flex items-center justify-center">
-              <TrendingUp size={24} className="text-amethyst/40" />
+            <div className="aspect-square rounded-xl bg-white/4 border border-white/8 mb-3 flex items-center justify-center">
+              <TrendingUp size={22} className="text-amethyst/30" />
             </div>
-            <div className="text-sm font-bold text-white mb-1">Specimen #{i}</div>
-            <div className="text-xs text-white/50 mb-2">Location · Verified</div>
-            <div className="text-xs text-white/40 flex-1 mb-3">Field-collected mineral specimen in excellent condition.</div>
+            <div className="text-sm font-semibold text-white mb-0.5">Specimen #{i}</div>
+            <div className="text-[11px] text-white/40 mb-2">Location · Verified</div>
+            <div className="text-[11px] text-white/35 flex-1 mb-3 leading-relaxed">Field-collected mineral in excellent condition.</div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-amethyst-glow">$pending</span>
-              <button className="px-3 py-1.5 rounded-lg bg-amethyst-deep/40 border border-amethyst/30 text-amethyst text-xs font-semibold hover:bg-amethyst-deep/60 transition">
+              <span className="text-sm font-bold text-amethyst-glow">—</span>
+              <button className="px-3 py-1.5 rounded-lg bg-amethyst/10 border border-amethyst/25 text-amethyst-glow text-[11px] font-semibold hover:bg-amethyst/20 transition">
                 View
               </button>
             </div>

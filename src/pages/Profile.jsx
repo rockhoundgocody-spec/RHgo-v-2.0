@@ -38,66 +38,63 @@ export default function Profile() {
     <div className="min-h-screen px-4 pt-6 pb-24 max-w-2xl mx-auto">
       {/* Profile header */}
       <div className="mb-8">
-        <GlassPanel className="p-6 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-amethyst/20 border-2 border-amethyst/40 flex items-center justify-center">
-            <User size={28} className="text-amethyst-glow" />
+        <GlassPanel className="p-5 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center flex-shrink-0">
+            <User size={24} className="text-amethyst-glow" />
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white">{user?.full_name || 'User'}</h1>
-            <p className="text-white/50 text-sm">{user?.email}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>
+            <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
           </div>
         </GlassPanel>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
-        <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-amethyst-glow">{stats.findings}</div>
-          <div className="text-xs text-white/50 mt-1">Findings</div>
+        <GlassPanel className="p-5 text-center">
+          <div className="text-3xl font-bold text-amethyst-glow tabular-nums">{stats.findings}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Finds</div>
         </GlassPanel>
-        <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-emerald-400">{stats.badges}</div>
-          <div className="text-xs text-white/50 mt-1">Badges</div>
+        <GlassPanel className="p-5 text-center">
+          <div className="text-3xl font-bold text-emerald-400 tabular-nums">{stats.badges}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Badges</div>
         </GlassPanel>
-        <GlassPanel className="p-4 text-center">
-          <div className="text-xl font-bold text-hud-cyan">{user?.role === 'admin' ? 'ADM' : 'USR'}</div>
-          <div className="text-xs text-white/50 mt-1">Role</div>
+        <GlassPanel className="p-5 text-center">
+          <div className="text-[13px] font-bold text-hud-cyan tracking-widest mt-1">{user?.role === 'admin' ? 'ADMIN' : 'MEMBER'}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Role</div>
         </GlassPanel>
       </div>
 
       {/* Menu */}
-      <div className="space-y-2 mb-8">
+      <GlassPanel className="mb-8 divide-y divide-white/8">
         <button
           onClick={() => navigate('/settings')}
-          className="w-full flex items-center gap-3 p-4 rounded-xl border border-white/10 text-white hover:bg-white/5 transition"
+          className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-t-2xl"
         >
-          <Settings size={18} />
+          <Settings size={16} className="text-white/40 flex-shrink-0" />
           <span>Settings & Preferences</span>
         </button>
-        <button className="w-full flex items-center gap-3 p-4 rounded-xl border border-white/10 text-white hover:bg-white/5 transition">
-          <Heart size={18} />
+        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left">
+          <Heart size={16} className="text-white/40 flex-shrink-0" />
           <span>Saved Sites & Favorites</span>
         </button>
-        <button className="w-full flex items-center gap-3 p-4 rounded-xl border border-white/10 text-white hover:bg-white/5 transition">
-          <TrendingUp size={18} />
+        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left">
+          <TrendingUp size={16} className="text-white/40 flex-shrink-0" />
           <span>Marketplace Activity</span>
         </button>
-        <button className="w-full flex items-center gap-3 p-4 rounded-xl border border-white/10 text-white hover:bg-white/5 transition">
-          <Award size={18} />
+        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-b-2xl">
+          <Award size={16} className="text-white/40 flex-shrink-0" />
           <span>Achievements & Badges</span>
         </button>
-      </div>
-
-      {/* Danger zone */}
-      <GlassPanel className="p-6 border border-rose-500/20">
-        <h3 className="text-sm font-bold text-rose-300 mb-3">Account</h3>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold"
-        >
-          <LogOut size={16} /> Logout
-        </button>
       </GlassPanel>
+
+      {/* Logout */}
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-rose-500/25 text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/8 transition text-sm font-medium"
+      >
+        <LogOut size={15} /> Sign out
+      </button>
     </div>
   );
 }

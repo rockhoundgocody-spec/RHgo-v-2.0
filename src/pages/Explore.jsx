@@ -103,8 +103,8 @@ export default function Explore() {
     <div className="px-4 lg:px-8 pt-6 pb-24 max-w-7xl mx-auto">
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-wide">Explore</h1>
-          <p className="text-amethyst/60 text-xs uppercase tracking-[0.3em] mt-1">
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Explore</h1>
+          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">
             Hotspots near you
           </p>
         </div>

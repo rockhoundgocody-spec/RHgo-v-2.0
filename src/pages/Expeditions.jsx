@@ -48,26 +48,29 @@ export default function Expeditions() {
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-white">Expeditions</h1>
-        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-semibold transition">
-          <Plus size={18} /> New Expedition
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Expeditions</h1>
+          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Field trips & memory capsules</p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amethyst/20 border border-amethyst/30 hover:bg-amethyst/30 text-amethyst-glow text-sm font-semibold transition">
+          <Plus size={15} /> New
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-5">
         {['all', 'family'].map((mode) => (
           <button
             key={mode}
             onClick={() => setFilterMode(mode)}
-            className={`px-4 py-2 rounded-lg border transition capitalize ${
+            className={`px-3.5 py-1.5 rounded-lg border transition text-xs font-medium capitalize ${
               filterMode === mode
-                ? 'border-amethyst bg-amethyst/20 text-amethyst'
-                : 'border-white/10 text-white/60 hover:border-white/30'
+                ? 'border-amethyst/50 bg-amethyst/15 text-amethyst-glow'
+                : 'border-white/10 text-white/40 hover:border-white/25 hover:text-white/60'
             }`}
           >
-            {mode} trips
+            {mode === 'all' ? 'All trips' : 'Family trips'}
           </button>
         ))}
       </div>
@@ -81,13 +84,13 @@ export default function Expeditions() {
         <div className="space-y-3">
           {filteredCapsules.map((capsule, i) => (
             <Link key={capsule.id} to={`/expedition/${capsule.id}`}>
-              <GlassPanel className="p-5 hover:bg-white/5 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{capsule.expedition_name}</h3>
-                    <p className="text-sm text-white/50 mt-1">{capsule.location_name}</p>
+              <GlassPanel className="p-4 hover:bg-white/5 transition">
+                <div className="flex items-start justify-between mb-2.5">
+                  <div className="min-w-0 flex-1 pr-3">
+                    <h3 className="text-base font-bold text-white truncate">{capsule.expedition_name}</h3>
+                    <p className="text-xs text-white/45 mt-0.5 truncate">{capsule.location_name}</p>
                   </div>
-                  <div className="text-2xl">{moodIcons[capsule.mood_snapshot] || '🏔️'}</div>
+                  <div className="text-xl flex-shrink-0">{moodIcons[capsule.mood_snapshot] || '🏔️'}</div>
                 </div>
 
                 {/* Meta info */}

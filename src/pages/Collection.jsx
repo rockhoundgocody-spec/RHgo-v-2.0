@@ -24,8 +24,8 @@ export default function Collection() {
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Collection</h1>
-          <p className="text-amethyst/60 text-xs uppercase tracking-[0.3em] mt-1">Your finds</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Collection</h1>
+          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Your finds</p>
         </div>
         {/* View toggle */}
         <div className="flex gap-1 p-1 rounded-xl glass-panel">
@@ -48,8 +48,8 @@ export default function Collection() {
 
       {specimens.length >= 2 && view === 'grid' && (
         <Link
-          to="/compare"
-          className="mb-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition"
+        to="/compare"
+        className="mb-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/30 bg-amethyst/8 hover:bg-amethyst/15 text-amethyst-glow text-[11px] uppercase tracking-[0.25em] transition"
         >
           <GitCompareArrows size={14} />
           Compare Specimens
@@ -63,23 +63,23 @@ export default function Collection() {
 
       {view === 'grid' && (
         <>
-          <GlassPanel className="mb-6">
-            <div className="grid grid-cols-3 divide-x divide-white/10 text-center py-4">
+          <GlassPanel className="mb-5">
+            <div className="grid grid-cols-3 divide-x divide-white/8 text-center py-5">
               <div>
-                <div className="text-2xl font-bold text-white glow-amethyst">{specimens.length}</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-amethyst/60 mt-1">Total</div>
+                <div className="text-3xl font-bold text-white tabular-nums">{specimens.length}</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Total</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">
+                <div className="text-3xl font-bold text-white tabular-nums">
                   {new Set(specimens.map((s) => s.mineral_name)).size}
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-amethyst/60 mt-1">Unique</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Unique</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-amethyst-glow">
+                <div className="text-3xl font-bold text-amethyst-glow tabular-nums">
                   {specimens.filter((s) => s.rarity === 'rare' || s.rarity === 'legendary').length}
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-amethyst/60 mt-1">Rare+</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Rare+</div>
               </div>
             </div>
           </GlassPanel>
