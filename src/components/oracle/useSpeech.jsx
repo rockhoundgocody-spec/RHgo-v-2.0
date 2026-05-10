@@ -109,7 +109,7 @@ export function useSpeechSynthesis() {
       // 4. Wire through analyser → destination
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.75;
+      analyser.smoothingTimeConstant = 0.55;  // tighter than 0.75 — crisp orb response, no smear
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
@@ -172,18 +172,19 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechRecognition
 //
-// Hard-noise rejection:
-//   • CONFIDENCE_THRESHOLD: 0.55  — only clearly-spoken words pass
-//   • MIN_TRANSCRIPT_CHARS: 6     — rejects single words / phoneme blips
-//   • MIN_WORD_COUNT: 2           — must be at least 2 words (a real command)
-//   • continuous = false          — one utterance per session, no ambient drift
-//   • Silence timeout: 5s         — cuts off runaway listening
+// Hard-noise rejection (strict command-only gate):
+//   • CONFIDENCE_THRESHOLD: 0.75  — only high-confidence, clearly-spoken words
+//   • MIN_TRANSCRIPT_CHARS: 10    — rejects phoneme blips, single-syllable noise
+//   • MIN_WORD_COUNT: 3           — must be a real sentence / direct command
+//   • continuous = false          — single utterance per session, no ambient drift
+//   • interimResults = false      — no partial transcripts; only final, committed text
+//   • Silence timeout: 3s         — cuts off quickly to prevent ambient accumulation
 //   • 'no-speech' / 'aborted' errors are silently ignored
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.55;
-const MIN_TRANSCRIPT_CHARS = 6;
-const MIN_WORD_COUNT = 2;
-const SILENCE_TIMEOUT_MS = 5000;
+const CONFIDENCE_THRESHOLD = 0.75;
+const MIN_TRANSCRIPT_CHARS = 10;
+const MIN_WORD_COUNT = 3;
+const SILENCE_TIMEOUT_MS = 3000;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
@@ -220,7 +221,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
 
     const rec = new SR();
     rec.continuous = false;
-    rec.interimResults = true;
+    rec.interimResults = false;  // final results only — no partial noise triggers
     rec.maxAlternatives = 1;
     rec.lang = 'en-US';
     recRef.current = rec;
@@ -241,6 +242,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         }
       }
 
+      // interimResults=false so interim will always be empty — no-op guard kept for safety
       if (interim && onInterimRef.current) onInterimRef.current(interim);
 
       if (finalText) {
@@ -248,12 +250,13 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         const wordCount = clean.split(/\s+/).filter(Boolean).length;
         const isTooShort = clean.length < MIN_TRANSCRIPT_CHARS;
         const isTooFew = wordCount < MIN_WORD_COUNT;
-        // confidence === 0 means browser didn't report it — let through
+        // confidence === 0 means browser didn't report it (Chrome quirk) — let through
         const isNoise = finalConfidence > 0 && finalConfidence < CONFIDENCE_THRESHOLD;
 
         if (!isTooShort && !isTooFew && !isNoise) {
           onResultRef.current?.(clean);
         }
+        // Always clear interim display after a final result
         onInterimRef.current?.('');
       }
     };

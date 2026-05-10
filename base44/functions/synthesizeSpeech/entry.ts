@@ -2,7 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
  * Google Cloud Text-to-Speech proxy.
- * Returns base64 MP3 audio — high-quality Neural2 voice, 44.1 kHz sample rate.
+ * Returns base64 LINEAR16 (lossless WAV PCM) audio — Neural2 voice at 24 kHz.
+ * LINEAR16 has zero codec artifacts; Web Audio decodes it bit-perfect.
  * Pitch is left at 0.0 (neutral) — Neural2 voices distort above ±2.0 semitones.
  */
 Deno.serve(async (req) => {
@@ -34,11 +35,11 @@ Deno.serve(async (req) => {
       input: { text: text.slice(0, 1500) },
       voice: { languageCode: 'en-US', name: voice },
       audioConfig: {
-        audioEncoding: 'MP3',
+        audioEncoding: 'LINEAR16',  // lossless PCM — zero codec artifacts, bit-perfect
         speakingRate: rate,
         pitch,
-        sampleRateHertz: 44100,   // up from 24 kHz — eliminates the "pixelated" artifact
-        effectsProfileId: [],      // no post-processing filters that add distortion
+        sampleRateHertz: 24000,     // 24 kHz is the native Neural2 sample rate — upsizing adds nothing
+        effectsProfileId: [],       // no post-processing filters that add distortion
       },
     };
 
