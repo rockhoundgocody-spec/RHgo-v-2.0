@@ -27,20 +27,32 @@ export default function CollectionMap({ specimens }) {
   // Fetch the Maps API key
   useEffect(() => {
     base44.functions.invoke('getMapsKey', {})
-      .then((r) => setApiKey(r?.data?.key))
+      .then((r) => setApiKey(r?.data?.apiKey))
       .catch(() => {});
   }, []);
 
-  // Load Google Maps script
+  // Load Google Maps script — reuse the shared loader promise if available
   useEffect(() => {
-    if (!apiKey || window.google?.maps) {
-      if (window.google?.maps) setMapsReady(true);
+    if (!apiKey) return;
+    if (window.google?.maps?.Map) {
+      setMapsReady(true);
       return;
     }
+    // Piggyback on HotspotMap's loader promise if it exists, otherwise load ourselves
+    const existing = document.querySelector('script[data-rockhound-gmaps]');
+    const onLoad = () => setMapsReady(true);
+    if (existing) {
+      // Script already injected — wait for google to be ready
+      const poll = setInterval(() => {
+        if (window.google?.maps?.Map) { clearInterval(poll); setMapsReady(true); }
+      }, 100);
+      return () => clearInterval(poll);
+    }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&libraries=places,geometry`;
     script.async = true;
-    script.onload = () => setMapsReady(true);
+    script.dataset.rockhoundGmaps = '1';
+    script.onload = onLoad;
     document.head.appendChild(script);
   }, [apiKey]);
 
