@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// useSpeechSynthesis
+// Wraps Web Speech Synthesis with Chrome-safe cancellation, voice selection,
+// localStorage-based voice settings, and a per-frame audio-reactive envelope.
+// ─────────────────────────────────────────────────────────────────────────────
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false);
   const [voices, setVoices] = useState([]);
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  // Live audio-reactive spectrum — bass/mid/treble bands + master amplitude.
-  // Driven by boundary events (per-word seeding) and per-frame oscillators
-  // tuned to mimic vocal formants (~200Hz body / ~1.5kHz mid / ~4kHz sibilance).
-  // Read via getAmplitude()/getSpectrum() in animation frames.
   const amplitudeRef = useRef(0);
   const targetAmpRef = useRef(0);
   const bassRef = useRef(0);
@@ -23,34 +24,22 @@ export function useSpeechSynthesis() {
     if (rafRef.current) return;
     const tick = () => {
       const now = performance.now();
-      // SMOOTHED envelope — lower alpha = slower follow, longer decay = silkier
-      // transitions that flow with the orb's liquid-gas animation.
       amplitudeRef.current += (targetAmpRef.current - amplitudeRef.current) * 0.09;
       targetAmpRef.current *= 0.965;
-
-      // per-band envelopes — gentler attack + slower decay across all bands
       bassRef.current += (targetBassRef.current - bassRef.current) * 0.06;
       midRef.current += (targetMidRef.current - midRef.current) * 0.11;
       trebleRef.current += (targetTrebleRef.current - trebleRef.current) * 0.18;
       targetBassRef.current *= 0.975;
       targetMidRef.current *= 0.945;
       targetTrebleRef.current *= 0.88;
-
-      // formant-like oscillators — slower drift, deeper baseline (smoother breathing)
       const bassOsc = 0.22 + 0.12 * Math.sin(now * 0.0035);
       const midOsc = 0.16 + 0.10 * Math.sin(now * 0.011 + 1.3);
       const trebleOsc = 0.10 + 0.07 * Math.sin(now * 0.028 + 2.7);
-      // soft-blend the floor instead of hard clamp — eliminates micro-pops
       bassRef.current = Math.max(bassRef.current, bassRef.current * 0.7 + bassOsc * 0.3);
       midRef.current = Math.max(midRef.current, midRef.current * 0.7 + midOsc * 0.3);
       trebleRef.current = Math.max(trebleRef.current, trebleRef.current * 0.7 + trebleOsc * 0.3);
-
       const baseline = 0.18 + 0.08 * Math.sin(now * 0.0065);
-      amplitudeRef.current = Math.max(
-        amplitudeRef.current,
-        amplitudeRef.current * 0.7 + baseline * 0.3
-      );
-
+      amplitudeRef.current = Math.max(amplitudeRef.current, amplitudeRef.current * 0.7 + baseline * 0.3);
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -71,92 +60,78 @@ export function useSpeechSynthesis() {
     []
   );
 
-  // Load voices (Chrome populates them asynchronously)
+  // Load voices — Chrome populates them asynchronously
   useEffect(() => {
     if (!supported) return;
     const load = () => setVoices(window.speechSynthesis.getVoices());
     load();
     window.speechSynthesis.onvoiceschanged = load;
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
   }, [supported]);
 
-  const pickVoice = useCallback(() => {
-    if (!voices.length) return null;
+  const pickVoice = useCallback((voiceList) => {
+    if (!voiceList.length) return null;
     return (
-      voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira|google us/i.test(v.name)) ||
-      voices.find((v) => /en[-_]US/i.test(v.lang)) ||
-      voices.find((v) => /^en/i.test(v.lang)) ||
-      voices[0]
+      voiceList.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira|google us/i.test(v.name)) ||
+      voiceList.find((v) => /en[-_]US/i.test(v.lang)) ||
+      voiceList.find((v) => /^en/i.test(v.lang)) ||
+      voiceList[0]
     );
-  }, [voices]);
+  }, []);
 
   const speak = useCallback(
     (text) => {
       if (!supported || !text) return;
       try {
-        // Resume in case the engine was paused (common Chrome quirk)
-        window.speechSynthesis.resume();
+        // Hard-cancel any current speech
         window.speechSynthesis.cancel();
 
         const voiceSettings = (() => {
           try { return JSON.parse(localStorage.getItem('clover_voice') || '{}'); } catch { return {}; }
         })();
-        const utter = new SpeechSynthesisUtterance(String(text));
-        utter.lang = 'en-US';
-        utter.rate = voiceSettings.rate ?? 0.92;
-        utter.pitch = voiceSettings.pitch ?? 1.18;
-        utter.volume = voiceSettings.volume ?? 0.95;
-        const v = pickVoice();
-        if (v) utter.voice = v;
-        utter.onstart = () => {
-          setSpeaking(true);
-          startAmpLoop();
-        };
-        utter.onend = () => {
-          setSpeaking(false);
-          stopAmpLoop();
-        };
-        utter.onerror = () => {
-          setSpeaking(false);
-          stopAmpLoop();
-        };
-        // Each word/sentence boundary seeds the spectrum bands.
-        // Web Speech has no analyser node, so we model the voice envelope:
-        //   • word length → bass/mid emphasis (longer words = more body)
-        //   • short words / punctuation → treble flicker (consonants)
-        utter.onboundary = (e) => {
-          const isWord = e.name === 'word';
-          const charLen = e.charLength || 4;
-          const wordWeight = Math.min(1, charLen / 8); // 0..1
-          const energy = isWord ? 0.55 + Math.random() * 0.45 : 0.4 + Math.random() * 0.3;
 
-          // BLEND new target with current target — softens word-to-word jumps
-          // so the spectrum flows like liquid instead of stepping abruptly.
-          const blend = (cur, next) => cur * 0.4 + next * 0.6;
-          targetAmpRef.current = blend(targetAmpRef.current, Math.min(1, energy));
-          targetBassRef.current = blend(
-            targetBassRef.current,
-            Math.min(1, 0.35 + wordWeight * 0.5 + Math.random() * 0.1)
-          );
-          targetMidRef.current = blend(
-            targetMidRef.current,
-            Math.min(1, 0.4 + Math.random() * 0.4)
-          );
-          targetTrebleRef.current = blend(
-            targetTrebleRef.current,
-            Math.min(1, 0.3 + (1 - wordWeight) * 0.45 + Math.random() * 0.2)
-          );
+        const doSpeak = () => {
+          // Re-fetch voices at speak time — guarantees we have the latest list
+          const currentVoices = window.speechSynthesis.getVoices();
+          const utter = new SpeechSynthesisUtterance(String(text));
+          utter.lang = 'en-US';
+          utter.rate = voiceSettings.rate ?? 0.92;
+          utter.pitch = voiceSettings.pitch ?? 1.18;
+          utter.volume = voiceSettings.volume ?? 0.95;
+          const v = pickVoice(currentVoices);
+          if (v) utter.voice = v;
+
+          utter.onstart = () => { setSpeaking(true); startAmpLoop(); };
+          utter.onend = () => { setSpeaking(false); stopAmpLoop(); };
+          utter.onerror = (e) => {
+            // 'interrupted' fires on cancel() — not a real error
+            if (e.error !== 'interrupted') {
+              setSpeaking(false);
+              stopAmpLoop();
+            }
+          };
+          utter.onboundary = (e) => {
+            const isWord = e.name === 'word';
+            const charLen = e.charLength || 4;
+            const wordWeight = Math.min(1, charLen / 8);
+            const energy = isWord ? 0.55 + Math.random() * 0.45 : 0.4 + Math.random() * 0.3;
+            const blend = (cur, next) => cur * 0.4 + next * 0.6;
+            targetAmpRef.current = blend(targetAmpRef.current, Math.min(1, energy));
+            targetBassRef.current = blend(targetBassRef.current, Math.min(1, 0.35 + wordWeight * 0.5 + Math.random() * 0.1));
+            targetMidRef.current = blend(targetMidRef.current, Math.min(1, 0.4 + Math.random() * 0.4));
+            targetTrebleRef.current = blend(targetTrebleRef.current, Math.min(1, 0.3 + (1 - wordWeight) * 0.45 + Math.random() * 0.2));
+          };
+
+          window.speechSynthesis.speak(utter);
         };
 
-        // Tiny delay helps Chrome after a cancel()
-        setTimeout(() => window.speechSynthesis.speak(utter), 60);
+        // Chrome requires a >100ms gap after cancel() before speak() is reliable
+        setTimeout(doSpeak, 120);
       } catch {
         setSpeaking(false);
       }
     },
-    [supported, pickVoice]
+    [supported, pickVoice, startAmpLoop, stopAmpLoop]
   );
 
   const stop = useCallback(() => {
@@ -171,14 +146,33 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported, voices, getAmplitude, getSpectrum };
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// useSpeechRecognition
+//
+// Hard-reset design:
+//   • One SpeechRecognition instance per listen() call (no reuse / no leaks).
+//   • continuous = false — stops after the first utterance, kills ambient bleed.
+//   • confidenceThreshold — results below 0.35 are discarded as noise.
+//   • minLength — results shorter than 3 chars are discarded.
+//   • 6s hard silence timeout (down from 8s) — cuts off runaway listening sooner.
+//   • The rec instance is stored in a ref so stop() can actually abort it.
+//   • onend only resets state — it does NOT auto-restart; HeroOrb controls that.
+// ─────────────────────────────────────────────────────────────────────────────
+const CONFIDENCE_THRESHOLD = 0.35; // below this = ambient noise, discard
+const MIN_TRANSCRIPT_CHARS = 3;    // single-phoneme blips are noise
+const SILENCE_TIMEOUT_MS = 6000;   // hard cutoff per listen session
+
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
   const onResultRef = useRef(onResult);
   const onInterimRef = useRef(onInterim);
   onResultRef.current = onResult;
   onInterimRef.current = onInterim;
-  const activeRef = useRef(false);
+
+  const recRef = useRef(null);       // active SpeechRecognition instance
   const silenceTimer = useRef(null);
+  const deadRef = useRef(false);     // true after stop() — prevents late onend callbacks from re-setting state
 
   const SR =
     typeof window !== 'undefined'
@@ -186,65 +180,106 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
       : null;
   const supported = !!SR;
 
-  const createRec = useCallback(() => {
-    if (!SR) return null;
+  const _clearTimer = () => {
+    clearTimeout(silenceTimer.current);
+    silenceTimer.current = null;
+  };
+
+  const _killRec = useCallback(() => {
+    _clearTimer();
+    if (recRef.current) {
+      try { recRef.current.abort(); } catch {}
+      recRef.current = null;
+    }
+  }, []);
+
+  const start = useCallback(() => {
+    if (!SR) return;
+    // Tear down any stale instance before starting fresh
+    _killRec();
+    deadRef.current = false;
+    setListening(true);
+
     const rec = new SR();
-    // NON-continuous: one utterance at a time — stops picking up ambient noise
-    rec.continuous = false;
-    rec.interimResults = true;
+    rec.continuous = false;       // one utterance → done; no ambient bleed
+    rec.interimResults = true;    // show live transcript while user speaks
     rec.maxAlternatives = 1;
     rec.lang = 'en-US';
+    recRef.current = rec;
 
     rec.onresult = (e) => {
-      clearTimeout(silenceTimer.current);
+      _clearTimer();
       let interim = '';
       let finalText = '';
+      let finalConfidence = 1;
+
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
-        if (r.isFinal) finalText += r[0].transcript;
-        else interim += r[0].transcript;
+        if (r.isFinal) {
+          finalText += r[0].transcript;
+          // Use lowest confidence seen — conservative filter
+          finalConfidence = Math.min(finalConfidence, r[0].confidence ?? 1);
+        } else {
+          interim += r[0].transcript;
+        }
       }
+
       if (interim && onInterimRef.current) onInterimRef.current(interim);
-      if (finalText && onResultRef.current) {
+
+      if (finalText) {
         const clean = finalText.trim();
-        // Only fire if the result has meaningful content (>2 chars, not pure noise)
-        if (clean.length > 2) onResultRef.current(clean);
+        // Discard noise: too short OR confidence too low (0 = browser didn't report = pass through)
+        const isTooShort = clean.length < MIN_TRANSCRIPT_CHARS;
+        const isNoise = finalConfidence > 0 && finalConfidence < CONFIDENCE_THRESHOLD;
+        if (!isTooShort && !isNoise) {
+          onResultRef.current?.(clean);
+        }
+        // Clear interim after final
+        onInterimRef.current?.('');
       }
     };
 
     rec.onend = () => {
-      setListening(false);
+      if (!deadRef.current) setListening(false);
+      _clearTimer();
+      recRef.current = null;
     };
 
     rec.onerror = (e) => {
-      // 'no-speech' is not a real error — just silence, ignore it
-      if (e.error !== 'no-speech') setListening(false);
+      // 'no-speech' = silence timeout from browser — benign, just reset state
+      // 'aborted' = we called abort() ourselves — ignore
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        setListening(false);
+      }
+      _clearTimer();
+      recRef.current = null;
     };
 
-    return rec;
-  }, [SR]);
-
-  const start = useCallback(() => {
-    if (!SR) return;
-    activeRef.current = true;
-    setListening(true);
     try {
-      const rec = createRec();
       rec.start();
-      // Auto-stop after 8s of no final result to prevent runaway listening
+      // Hard cutoff: if no final result in SILENCE_TIMEOUT_MS, abort
       silenceTimer.current = setTimeout(() => {
-        try { rec.stop(); } catch {}
-      }, 8000);
+        if (recRef.current) {
+          try { recRef.current.stop(); } catch {}
+        }
+      }, SILENCE_TIMEOUT_MS);
     } catch {
       setListening(false);
+      recRef.current = null;
     }
-  }, [SR, createRec]);
+  }, [SR, _killRec]);
 
   const stop = useCallback(() => {
-    activeRef.current = false;
-    clearTimeout(silenceTimer.current);
+    deadRef.current = true;
+    _killRec();
     setListening(false);
-  }, []);
+  }, [_killRec]);
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    deadRef.current = true;
+    _killRec();
+  }, [_killRec]);
 
   return { start, stop, listening, supported };
 }

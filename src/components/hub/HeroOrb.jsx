@@ -53,14 +53,26 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // Resume listening after Clover finishes speaking
+  // Resume listening after Clover finishes speaking.
+  // Key: only watching `speaking` — when it flips false after an utterance,
+  // we wait a short breath then start a fresh recognition session.
+  // Guard with activeRef (not `active`) to avoid stale closure captures.
+  const speakingRef = useRef(speaking);
+  speakingRef.current = speaking;
+  const thinkingRef = useRef(thinking);
+  thinkingRef.current = thinking;
+
   useEffect(() => {
-    if (!active || thinking || listening || speaking) return;
+    if (!active || thinking || speaking) return;
+    // Small breath between Clover speaking and mic opening — prevents
+    // the mic from catching the tail-end of speech synthesis audio
     const t = setTimeout(() => {
-      if (activeRef.current && !speaking && !thinking) startListen();
-    }, 900);
+      if (activeRef.current && !speakingRef.current && !thinkingRef.current) {
+        startListen();
+      }
+    }, 700);
     return () => clearTimeout(t);
-  }, [active, speaking, thinking, listening, startListen]);
+  }, [active, speaking, thinking, startListen]);
 
   // Mic level mirrors listening state
   useEffect(() => {
