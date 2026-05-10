@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
- * useMicLevel — opens the device microphone and computes a smoothed
- * 0..1 level via Web Audio Analyser. Cleans up on stop.
- * Used to drive the VoiceprintRing while the orb is listening.
+ * useMicLevel — requests mic permission, opens the device microphone, and
+ * computes a smoothed 0..1 level via Web Audio Analyser.
+ *
+ * Key fixes vs. previous version:
+ *   • Uses a ref for the "already running" guard — not stale closure state.
+ *   • getUserMedia is called eagerly on start() so the browser permission
+ *     dialog is always shown/triggered (no silent bail-outs).
+ *   • Errors are surfaced via the returned `error` string so callers can
+ *     show a helpful message when permission is denied.
  */
 export default function useMicLevel() {
   const [active, setActive] = useState(false);
+  const [error, setError] = useState(null); // 'denied' | 'unavailable' | null
+
+  const runningRef = useRef(false); // ref-based guard — never stale
   const ctxRef = useRef(null);
   const streamRef = useRef(null);
   const analyserRef = useRef(null);
@@ -14,8 +23,8 @@ export default function useMicLevel() {
   const levelRef = useRef(0);
 
   const stop = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
+    runningRef.current = false;
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
@@ -30,11 +39,19 @@ export default function useMicLevel() {
   }, []);
 
   const start = useCallback(async () => {
-    if (active) return;
-    if (!navigator.mediaDevices?.getUserMedia) return;
+    // Ref-based guard — immune to stale closure
+    if (runningRef.current) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('unavailable');
+      return;
+    }
+    setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // This is the call that triggers the browser mic permission prompt
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      runningRef.current = true;
       streamRef.current = stream;
+
       const Ctx = window.AudioContext || window.webkitAudioContext;
       const ctx = new Ctx();
       ctxRef.current = ctx;
@@ -43,8 +60,10 @@ export default function useMicLevel() {
       analyser.fftSize = 512;
       src.connect(analyser);
       analyserRef.current = analyser;
+
       const buf = new Uint8Array(analyser.frequencyBinCount);
       const tick = () => {
+        if (!runningRef.current) return;
         analyser.getByteTimeDomainData(buf);
         let sum = 0;
         for (let i = 0; i < buf.length; i++) {
@@ -52,25 +71,24 @@ export default function useMicLevel() {
           sum += v * v;
         }
         const rms = Math.sqrt(sum / buf.length);
-        // smooth + gain
         levelRef.current += (Math.min(1, rms * 4) - levelRef.current) * 0.2;
         rafRef.current = requestAnimationFrame(tick);
       };
       tick();
       setActive(true);
-    } catch {
+    } catch (err) {
+      const isDenied =
+        err?.name === 'NotAllowedError' ||
+        err?.name === 'PermissionDeniedError' ||
+        err?.message?.toLowerCase().includes('denied');
+      setError(isDenied ? 'denied' : 'unavailable');
       stop();
     }
-  }, [active, stop]);
+  }, [stop]); // no `active` dep — uses runningRef instead
 
   useEffect(() => () => stop(), [stop]);
 
   const getLevel = useCallback(() => levelRef.current, []);
-  // Stable ref — same identity across renders so effect deps don't loop
-  const apiRef = useRef(null);
-  if (!apiRef.current) apiRef.current = { start, stop, getLevel };
-  apiRef.current.start = start;
-  apiRef.current.stop = stop;
-  apiRef.current.getLevel = getLevel;
-  return { ...apiRef.current, active };
+
+  return { start, stop, getLevel, active, error };
 }

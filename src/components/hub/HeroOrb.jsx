@@ -27,6 +27,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const mic = useMicLevel();
   const micRef = useRef(mic);
   micRef.current = mic;
+  const micError = mic.error; // 'denied' | 'unavailable' | null
 
   const handleTranscript = useCallback(async (transcript) => {
     if (!transcript?.trim()) return;
@@ -171,6 +172,17 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
         {!micSupported && !active && (
           <div className="mt-3 text-white/30 text-[11px] text-center">
             Voice not supported in this browser
+          </div>
+        )}
+
+        {micError === 'denied' && (
+          <div className="mt-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-[11px] text-center max-w-[240px]">
+            Mic access denied — enable it in your browser settings, then tap Clover again.
+          </div>
+        )}
+        {micError === 'unavailable' && (
+          <div className="mt-3 text-amber-400/60 text-[11px] text-center">
+            Microphone unavailable on this device
           </div>
         )}
 
