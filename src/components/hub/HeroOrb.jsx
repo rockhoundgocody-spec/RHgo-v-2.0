@@ -89,13 +89,20 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
     try { micRef.current.stop(); } catch {}
   }, [stopSpeak, stopListen]);
 
-  const awaken = (e) => {
+  const awaken = async (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
     const x = rect ? e.clientX - rect.left : 96;
     const y = rect ? e.clientY - rect.top : 96;
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
     if (!active) {
+      // Eagerly request mic permission so the browser prompt fires on tap
+      // (required on mobile where getUserMedia must happen in a user gesture)
+      try {
+        const stream = await navigator.mediaDevices?.getUserMedia({ audio: true, video: false });
+        stream?.getTracks().forEach((t) => t.stop()); // immediately release — useMicLevel will re-open it
+      } catch {}
+
       setActive(true);
       const c = companionRef.current;
       const pool = c
