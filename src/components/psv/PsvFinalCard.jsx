@@ -115,6 +115,8 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
           <button
             onClick={onRescan}
             className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition text-sm"
+            aria-label="Rescan"
+            title="Rescan"
           >
             <RotateCcw size={15} />
           </button>

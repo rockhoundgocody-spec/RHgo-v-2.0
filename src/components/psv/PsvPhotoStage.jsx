@@ -53,7 +53,8 @@ export default function PsvPhotoStage({ onReady }) {
             <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-black/30 border border-white/10">
               <img src={p.preview} alt="" className="w-full h-full object-cover" />
               <button onClick={() => setPreviews((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center">
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center"
+                aria-label="Remove photo">
                 <X size={10} className="text-white" />
               </button>
             </div>
