@@ -113,6 +113,9 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
       const greeting = pool[Math.floor(Math.random() * pool.length)];
       historyRef.current = [{ role: 'clover', content: greeting }];
       speak(greeting);
+      // Start listening directly inside the user gesture so iOS Safari
+      // honours the permission grant — the useEffect restarts it after speech.
+      startListen();
     } else {
       stopSpeak();
       stopListen();
