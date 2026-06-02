@@ -3,6 +3,7 @@ import { flushWhenStable } from '@/lib/offlineQueue.js';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
+import SpecimenTypeChart from '@/components/hub/SpecimenTypeChart.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -44,6 +45,10 @@ export default function Hub() {
           </p>
         </div>
       </section>
+
+      <div className="w-full max-w-md mt-8 pb-24">
+        <SpecimenTypeChart />
+      </div>
 
       <CompanionMilestoneToast notification={milestone} onDismiss={() => setMilestone(null)} />
     </div>
