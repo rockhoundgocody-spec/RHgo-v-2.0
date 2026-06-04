@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import ScanReticle from './ScanReticle.jsx';
 
 const STEPS = [
   'Uploading captures',
@@ -79,12 +80,18 @@ export default function ReconstructionStage({ runner, onDone, onError }) {
     <div className="rounded-2xl overflow-hidden"
       style={{ background: 'hsla(265,40%,4%,0.95)', border: '1px solid hsla(280,60%,40%,0.25)', boxShadow: '0 0 40px hsla(280,80%,30%,0.2)' }}>
 
-      {/* Orb + header */}
-      <div className="flex flex-col items-center pt-8 pb-4 px-6"
+      {/* Orb + reticle header */}
+      <div className="flex flex-col items-center pt-8 pb-4 px-6 relative overflow-hidden"
         style={{ borderBottom: '1px solid hsla(280,40%,25%,0.2)', background: 'hsla(270,50%,5%,0.6)' }}>
-        <AmethystOrb size={100} orbState="thinking" />
-        <div className="mt-4 text-white/80 text-sm font-semibold">Analyzing Specimen…</div>
-        <div className="text-white/35 text-[11px] mt-1">AI mineralogy running</div>
+        {/* Scan reticle behind orb */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40 pointer-events-none">
+          <ScanReticle state="processing" signal={pct / 100} size={200} />
+        </div>
+        <div className="relative z-10">
+          <AmethystOrb size={100} orbState="thinking" />
+        </div>
+        <div className="mt-4 text-white/80 text-sm font-semibold relative z-10">Analyzing Specimen…</div>
+        <div className="text-white/35 text-[11px] mt-1 relative z-10">AI mineralogy running</div>
       </div>
 
       {/* Progress bar */}

@@ -15,7 +15,7 @@ const RARITY_COLORS = {
  *
  * Throttled to one classify call every ~6s to keep cost low.
  */
-export default function LiveLabelsOverlay({ videoRef, active = true, intervalMs = 6000 }) {
+export default function LiveLabelsOverlay({ videoRef, active = true, intervalMs = 6000, onProcessingStart, onProcessingEnd }) {
   const [labels, setLabels] = useState([]);
   const busyRef = useRef(false);
 
@@ -28,6 +28,7 @@ export default function LiveLabelsOverlay({ videoRef, active = true, intervalMs 
       if (!video || video.readyState < 2) return;
 
       busyRef.current = true;
+      onProcessingStart?.();
       try {
         const canvas = document.createElement('canvas');
         const w = 480;
@@ -45,11 +46,13 @@ export default function LiveLabelsOverlay({ videoRef, active = true, intervalMs 
         const cands = res?.data?.candidates || [];
         const filtered = cands.filter((c) => c.confidence > 0.35).slice(0, 3);
         setLabels(filtered);
+        onProcessingEnd?.(filtered[0]?.name || null);
         // Subtle haptic when a new specimen is detected.
         if (filtered.length && typeof navigator !== 'undefined' && navigator.vibrate) {
           try { navigator.vibrate([8, 30, 8]); } catch {}
         }
       } catch {
+        onProcessingEnd?.(null);
         // silent — live labels are best-effort
       } finally {
         busyRef.current = false;
