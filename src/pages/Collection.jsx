@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gem, Calendar, Loader2, GitCompareArrows, Map, LayoutGrid } from 'lucide-react';
+import { Gem, Loader2, GitCompareArrows, Map, LayoutGrid } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
-import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import CollectionMap from '@/components/collection/CollectionMap.jsx';
+import SpecimenCard from '@/components/collection/SpecimenCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
-
-const rarityColor = {
-  common: 'text-white/60 border-white/15',
-  uncommon: 'text-emerald-300 border-emerald-400/30',
-  rare: 'text-sky-300 border-sky-400/30',
-  legendary: 'text-amethyst-glow border-amethyst/40',
-};
 
 export default function Collection() {
   const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
@@ -100,53 +93,8 @@ export default function Collection() {
           </GlassPanel>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {specimens.map((s) => (
-              <GlassPanel key={s.id}>
-                <div className="aspect-square overflow-hidden rounded-t-2xl bg-black/30">
-                  {s.image_url ? (
-                    <img
-                      src={s.image_url}
-                      alt={s.mineral_name}
-                      loading="lazy"
-                      decoding="async"
-                      width="200"
-                      height="200"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-amethyst/30">
-                      <Gem size={32} />
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <div className="text-white text-sm font-semibold truncate">{s.mineral_name}</div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[10px] text-white/50 flex items-center gap-1">
-                      <Calendar size={10} />
-                      {s.found_date || '—'}
-                    </span>
-                    <span
-                      className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
-                        rarityColor[s.rarity || 'common']
-                      }`}
-                    >
-                      {s.rarity || 'common'}
-                    </span>
-                  </div>
-                  {s.ai_confidence && (
-                    <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amethyst"
-                        style={{ width: `${(s.ai_confidence * 100).toFixed(0)}%` }}
-                      />
-                    </div>
-                  )}
-                  <div className="mt-2 flex justify-end">
-                    <ShareSpecimenButton specimen={s} />
-                  </div>
-                </div>
-              </GlassPanel>
+            {specimens.map((s, i) => (
+              <SpecimenCard key={s.id} specimen={s} index={i} />
             ))}
           </div>
         )

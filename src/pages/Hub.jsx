@@ -4,15 +4,19 @@ import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
 import SpecimenTypeChart from '@/components/hub/SpecimenTypeChart.jsx';
+import QuestEngine from '@/components/hub/QuestEngine.jsx';
+import { base44 } from '@/api/base44Client';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
   const { companion, todaysSpecimenCount } = useCompanion({
     onMilestone: setMilestone,
   });
 
   useEffect(() => {
     flushWhenStable();
+    base44.auth.me().then((u) => { if (u?.email) setUserEmail(u.email); }).catch(() => {});
   }, []);
 
   return (
@@ -46,7 +50,8 @@ export default function Hub() {
         </div>
       </section>
 
-      <div className="w-full max-w-md mt-8 pb-24">
+      <div className="w-full max-w-md mt-8 pb-24 space-y-4">
+        {userEmail && <QuestEngine userEmail={userEmail} />}
         <SpecimenTypeChart />
       </div>
 

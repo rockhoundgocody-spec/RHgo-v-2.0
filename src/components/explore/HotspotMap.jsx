@@ -119,8 +119,11 @@ export default function HotspotMap({
   const geoRef = useRef(null);
   const directionsRendererRef = useRef(null);
 
+  const heatmapRef = useRef(null);
+
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
+  const [radarActive, setRadarActive] = useState(false);
   const [layers, setLayers] = useState({
     type: 'hybrid',
     tilt: false,
@@ -171,6 +174,16 @@ export default function HotspotMap({
         }
         report('mapsSdk', 'ok', 'Google Maps SDK', 'Ready');
         if (cancelled || !containerRef.current) return;
+
+        // Load visualization library for heatmap
+        if (!window.google?.maps?.visualization) {
+          await new Promise((res) => {
+            const s = document.createElement('script');
+            s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=visualization&callback=__rhHeatCb`;
+            window.__rhHeatCb = () => { delete window.__rhHeatCb; res(); };
+            document.head.appendChild(s);
+          }).catch(() => {});
+        }
 
         mapRef.current = new google.maps.Map(containerRef.current, {
           center: { lat: 39.5, lng: -98.35 },
@@ -373,6 +386,38 @@ export default function HotspotMap({
     if (mapRef.current.getZoom() < 9) mapRef.current.setZoom(10);
   }, [userLocation, ready]);
 
+  // Hot Rock Radar — heatmap layer driven by hotspot density + trust score
+  useEffect(() => {
+    if (!ready || !mapRef.current || !window.google?.maps?.visualization) return;
+
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(null);
+      heatmapRef.current = null;
+    }
+
+    if (!radarActive || !points.length) return;
+
+    const data = points.map((h) => ({
+      location: new window.google.maps.LatLng(h.lat, h.lng),
+      weight: (h.trust_score || 0.5) * 3,
+    }));
+
+    heatmapRef.current = new window.google.maps.visualization.HeatmapLayer({
+      data,
+      map: mapRef.current,
+      radius: 40,
+      opacity: 0.75,
+      gradient: [
+        'rgba(0,0,0,0)',
+        'rgba(34,211,238,0.3)',
+        'rgba(167,139,250,0.5)',
+        'rgba(192,132,252,0.7)',
+        'rgba(240,171,252,0.9)',
+        'rgba(253,224,71,1)',
+      ],
+    });
+  }, [radarActive, points, ready]);
+
   // Specimen collection pins — cyan diamonds to distinguish from hotspot dots
   useEffect(() => {
     if (!ready || !mapRef.current || !window.google?.maps) return;
@@ -447,13 +492,29 @@ export default function HotspotMap({
         <div ref={containerRef} className="absolute inset-0" />
 
         {ready && (
-          <MapLayerControls
-            layers={layers}
-            onChange={setLayers}
-            canNavigate={!!selected && !!userLocation}
-            onNavigate={handleNavigate}
-            onClearRoute={clearRoute}
-          />
+          <>
+            <MapLayerControls
+              layers={layers}
+              onChange={setLayers}
+              canNavigate={!!selected && !!userLocation}
+              onNavigate={handleNavigate}
+              onClearRoute={clearRoute}
+            />
+            {/* Hot Rock Radar toggle */}
+            <button
+              onClick={() => setRadarActive((v) => !v)}
+              className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] transition-all z-10"
+              style={{
+                background: radarActive ? 'hsla(270,80%,40%,0.85)' : 'hsla(220,40%,8%,0.8)',
+                border: `1px solid ${radarActive ? 'hsla(280,100%,70%,0.6)' : 'hsla(195,100%,60%,0.25)'}`,
+                color: radarActive ? 'hsl(280,100%,85%)' : 'hsl(195,100%,70%)',
+                boxShadow: radarActive ? '0 0 16px hsla(270,80%,50%,0.5)' : 'none',
+              }}
+            >
+              <span className={radarActive ? 'animate-pulse' : ''}>◉</span>
+              Hot Rock Radar
+            </button>
+          </>
         )}
 
         {error && (

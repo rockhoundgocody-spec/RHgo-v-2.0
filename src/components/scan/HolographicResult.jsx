@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
 import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
 import ReasoningSummary from '@/components/reasoning/ReasoningSummary.jsx';
+import RarityFireworks from './RarityFireworks.jsx';
 
 /**
  * HolographicResult — shows the reconstructed specimen image with floating
@@ -26,7 +27,13 @@ export default function HolographicResult({
 }) {
   const tiltRef = useRef(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const navigate = useNavigate();
+
+  // Fire fireworks once on mount
+  useEffect(() => {
+    setFireworksTrigger((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     const el = tiltRef.current;
@@ -58,6 +65,7 @@ export default function HolographicResult({
 
   return (
     <>
+      <RarityFireworks result={result} trigger={fireworksTrigger} />
       <HudFrame label="Specimen Hologram">
         <div className="relative aspect-square w-full rounded-md overflow-hidden hud-grid-bg" style={{ perspective: '1000px' }}>
           <div
