@@ -35,29 +35,32 @@ export default function AmethystOrb({
     typeof navigator !== 'undefined' && !!navigator.gpu && !detectInitialReduce()
   );
   useEffect(() => {
-    if (!getAmplitude && !getSpectrum) return;
-    if (!visible) return; // pause when tab hidden
+    if (!visible) return;
     let raf;
     const tick = () => {
+      const t = performance.now() * 0.001;
       const a = getAmplitude ? getAmplitude() || 0 : 0;
       const spec = getSpectrum ? getSpectrum() : { bass: 0, mid: 0, treble: 0 };
       const bass = spec.bass || 0;
       const treble = spec.treble || 0;
+
+      // Idle breathe — slow organic pulse even when silent
+      const idlePulse = (Math.sin(t * 0.7) * 0.5 + 0.5) * 0.018;
+      const idleAura = (Math.sin(t * 0.4 + 1.2) * 0.5 + 0.5) * 0.12;
+
       if (wrapRef.current) {
-        // body pulse driven by master amp + bass
-        wrapRef.current.style.transform = `scale(${1 + a * 0.05 + bass * 0.04})`;
+        wrapRef.current.style.transform = `scale(${1 + idlePulse + a * 0.06 + bass * 0.04})`;
       }
       if (haloRef.current) {
-        haloRef.current.style.opacity = String(0.55 + a * 0.45);
-        haloRef.current.style.transform = `scale(${1 + a * 0.18 + bass * 0.1})`;
+        haloRef.current.style.opacity = String(0.45 + idleAura + a * 0.45);
+        haloRef.current.style.transform = `scale(${1 + idlePulse * 2 + a * 0.18 + bass * 0.1})`;
       }
       if (auraRef.current) {
-        // outer hovering afterglow — bass swells, treble flickers
-        auraRef.current.style.opacity = String(0.65 + a * 0.5 + treble * 0.2);
-        auraRef.current.style.transform = `scale(${1 + a * 0.08 + bass * 0.06})`;
+        auraRef.current.style.opacity = String(0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2);
+        auraRef.current.style.transform = `scale(${1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06})`;
       }
       if (auraInnerRef.current) {
-        auraInnerRef.current.style.opacity = String(0.55 + a * 0.45);
+        auraInnerRef.current.style.opacity = String(0.45 + idleAura + a * 0.45);
       }
       raf = requestAnimationFrame(tick);
     };

@@ -85,8 +85,8 @@ export function useSpeechSynthesis() {
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text: String(text).slice(0, 800),
         voice: 'en-US-Neural2-F',
-        rate: 0.92,
-        pitch: 1.0,
+        rate: 0.90,
+        pitch: 0.0,
       });
 
       const b64 = res?.data?.audioContent;
@@ -181,10 +181,10 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
 //   • Silence timeout: 3s         — cuts off quickly to prevent ambient accumulation
 //   • 'no-speech' / 'aborted' errors are silently ignored
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.75;
-const MIN_TRANSCRIPT_CHARS = 10;
-const MIN_WORD_COUNT = 3;
-const SILENCE_TIMEOUT_MS = 3000;
+const CONFIDENCE_THRESHOLD = 0.45;  // lowered — Chrome often reports 0 anyway
+const MIN_TRANSCRIPT_CHARS = 2;     // single words like "yes", "hi" are valid
+const MIN_WORD_COUNT = 1;           // allow single-word answers
+const SILENCE_TIMEOUT_MS = 5000;    // more breathing room
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
@@ -221,7 +221,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
 
     const rec = new SR();
     rec.continuous = false;
-    rec.interimResults = false;  // final results only — no partial noise triggers
+    rec.interimResults = true;   // show partial so user knows they're being heard
     rec.maxAlternatives = 1;
     rec.lang = 'en-US';
     recRef.current = rec;

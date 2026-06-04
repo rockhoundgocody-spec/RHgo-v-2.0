@@ -131,16 +131,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   return (
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
-        <VoiceprintRing
-          size={168}
-          active={active}
-          getAmplitude={getAmplitude}
-          getSpectrum={getSpectrum}
-          getMicLevel={mic.getLevel}
-          speaking={speaking || thinking}
-          listening={listening}
-        />
 
+        {/* Orb + ring stacked together — ring is absolutely centered over the orb */}
         <div
           className="relative cursor-pointer select-none active:scale-[0.97] transition-transform"
           ref={containerRef}
@@ -149,12 +141,23 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
           aria-label={active ? 'End conversation with Clover' : 'Talk to Clover'}
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
+          style={{ width: 192, height: 192 }}
         >
           <AmethystOrb
             size={192}
             speaking={speaking || thinking}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
+          />
+          {/* Ring is centered over the orb exactly */}
+          <VoiceprintRing
+            size={256}
+            active={active}
+            getAmplitude={getAmplitude}
+            getSpectrum={getSpectrum}
+            getMicLevel={mic.getLevel}
+            speaking={speaking || thinking}
+            listening={listening}
           />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => removeRipple(r.id)} />

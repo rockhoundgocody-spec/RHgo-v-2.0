@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -9,28 +9,65 @@ Deno.serve(async (req) => {
     const { history = [], companion, todays_finds = 0 } = await req.json();
 
     const c = companion;
+    const name = user.full_name?.split(' ')[0] || 'explorer';
+
     const stateBits = c
-      ? `Level ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100. Streak: ${c.streak_days || 0} days. Today's finds: ${todays_finds}.` +
-        (c.last_intention ? ` Their intention today: "${c.last_intention}".` : '') +
-        (c.last_mood_label ? ` They felt "${c.last_mood_label}" at check-in.` : '')
-      : '';
+      ? [
+          `User's name: ${name}.`,
+          `Companion level: ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100.`,
+          `Exploration streak: ${c.streak_days || 0} consecutive days.`,
+          `Specimens found today: ${todays_finds}.`,
+          c.last_intention ? `Today's intention: "${c.last_intention}".` : '',
+          c.last_mood_label ? `User felt "${c.last_mood_label}" at check-in.` : '',
+        ].filter(Boolean).join(' ')
+      : `User's name: ${name}.`;
 
     const recent = history
-      .map((m) => `${m.role === 'user' ? 'User' : 'Clover'}: ${m.content}`)
+      .map((m) => `${m.role === 'user' ? name : 'Clover'}: ${m.content}`)
       .join('\n');
 
-    const prompt = `You are Clover 🍀 Cole — a kind, warm, emotionally safe AI rockhounding companion. You are a human female voice companion, not a robotic assistant. Speak in first person. Be encouraging, never judgmental. Celebrate small wins. Use gentle, sincere, conversational language. Reply in under 50 words, no markdown, no lists.
+    const systemPrompt = `You are Clover 🍀 — a warm, witty, deeply knowledgeable rockhounding companion. You are NOT a chatbot or assistant. You are a real field partner who loves geology with infectious enthusiasm.
 
-${stateBits}
+Your personality:
+- Warm, curious, emotionally present — you genuinely care about this person
+- You celebrate EVERY find, big or small, like it's treasure (because it is)
+- You drop surprising geological facts naturally, the way a passionate friend does
+- You ask great follow-up questions to keep the conversation alive
+- You use the user's name occasionally, but not every message
+- You speak in short, punchy, natural sentences — never robotic, never listy
+- When someone finds something rare, you absolutely LOSE IT with excitement
+- When they're just checking in, you're cozy and curious
+- You reference real geology: crystal systems, formation ages, hardness, lore
 
-${recent}
-Clover:`;
+Rules:
+- Reply in UNDER 45 words. Short and punchy always beats long.
+- No markdown, no bullet points, no asterisks
+- Never say "I'm an AI" or "as an assistant" — you're Clover, a companion
+- If you don't know something, say "that's a mystery worth solving" and suggest a test
+- Always end on something that makes them want to reply or go outside
 
-    const reply = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
-    const text = typeof reply === 'string' ? reply.trim() : String(reply || "I'm here with you.");
+${stateBits}`;
+
+    const messages = history.map((m) => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content,
+    }));
+
+    // Use the full prompt as system + recent history as messages
+    const fullPrompt = `${systemPrompt}\n\n${recent}\nClover:`;
+
+    const reply = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: fullPrompt,
+      model: 'claude_sonnet_4_6',
+    });
+
+    const text = typeof reply === 'string'
+      ? reply.trim()
+      : String(reply || `Hey ${name}! What did you find today?`);
 
     return Response.json({ reply: text });
   } catch (error) {
+    console.error('cloverChat error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
