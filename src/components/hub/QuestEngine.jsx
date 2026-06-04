@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useEntityList } from '@/lib/useEntityQuery';
+import { useQuery } from '@tanstack/react-query';
 import { Sword, CheckCircle2, Clock, Sparkles, RefreshCw } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -21,9 +21,11 @@ function getExpiryDate(type) {
 }
 
 export default function QuestEngine({ userEmail }) {
-  const { data: quests = [], refetch, isLoading } = useEntityList('Quest', '-created_date', {
+  const { data: quests = [], refetch, isLoading } = useQuery({
+    queryKey: ['quests', userEmail],
     queryFn: () => base44.entities.Quest.filter({ owner_email: userEmail, status: 'active' }),
     enabled: !!userEmail,
+    staleTime: 60_000,
   });
   const [generating, setGenerating] = useState(false);
 
