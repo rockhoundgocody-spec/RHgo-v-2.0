@@ -170,7 +170,7 @@ export default function Scan() {
     setStage('live');
   };
 
-  const saveToCollection = async () => {
+  const saveToCollection = async (claimPath = 'chattel') => {
     if (!result || !primaryUrl) return;
     const created = await base44.entities.Specimen.create({
       mineral_name: result.top_match,

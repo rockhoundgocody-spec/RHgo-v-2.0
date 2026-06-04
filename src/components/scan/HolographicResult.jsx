@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
-import { Sparkles, Layers, RotateCcw, Save, GitCompare, Pencil, Microscope } from 'lucide-react';
+import { Sparkles, Layers, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
 import SpecimenPassportPanel from './SpecimenPassportPanel.jsx';
 import ReasoningSummary from '@/components/reasoning/ReasoningSummary.jsx';
 import RarityFireworks from './RarityFireworks.jsx';
+import ClaimPathModal from './ClaimPathModal.jsx';
 
 /**
  * HolographicResult — shows the reconstructed specimen image with floating
@@ -27,8 +28,16 @@ export default function HolographicResult({
 }) {
   const tiltRef = useRef(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimPath, setClaimPath] = useState(null); // 'chattel' | 'affixed'
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const navigate = useNavigate();
+
+  const handleClaimChoose = (path) => {
+    setClaimPath(path);
+    setClaimOpen(false);
+    onSave(path);
+  };
 
   // Fire fireworks when the specimen is saved (the "I found something!" moment)
   useEffect(() => {
@@ -156,14 +165,19 @@ export default function HolographicResult({
           )}
 
           <div className="flex gap-2">
-            <Button
-              onClick={onSave}
-              disabled={saved}
-              className="flex-1 bg-amethyst-deep hover:bg-amethyst text-white border border-amethyst/40"
-            >
-              <Save size={14} className="mr-1.5" />
-              {saved ? 'Saved ✓' : 'Save'}
-            </Button>
+            {!saved ? (
+              <Button
+                onClick={() => setClaimOpen(true)}
+                className="flex-1 bg-amethyst-deep hover:bg-amethyst text-white border border-amethyst/40"
+              >
+                ⚡ Claim This Find
+              </Button>
+            ) : (
+              <div className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-emerald-400 text-sm font-semibold border border-emerald-500/30 bg-emerald-900/20">
+                <CheckCircle2 size={14} />
+                {claimPath === 'chattel' ? '⛏️ Added to Hoard' : claimPath === 'affixed' ? '🌍 Logged to Atlas' : 'Saved ✓'}
+              </div>
+            )}
             <Button
               onClick={onCompare}
               variant="outline"
@@ -221,6 +235,12 @@ export default function HolographicResult({
         modelVersion={modelVersion}
         imageUrl={primaryImageUrl}
         specimenId={savedId}
+      />
+
+      <ClaimPathModal
+        open={claimOpen}
+        onChoose={handleClaimChoose}
+        onClose={() => setClaimOpen(false)}
       />
     </>
   );
