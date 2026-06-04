@@ -12,15 +12,25 @@ import usePageVisible from '@/lib/usePageVisible';
  *   Layer 1 (main): Black opal core with iridescent liquid-gas fire
  *   Layer 2 (overlay): Low-opacity amethyst gas shell for depth + brand tint
  */
+// orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
+const STATE_CONFIG = {
+  idle:      { haloBase: 'hsla(280,100%,65%,0.45)', auraBase: 'hsla(280,100%,52%,0.5)',  innerBase: 'hsla(280,100%,55%,0.55)', boxShadow: '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 50px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.0, idleAuraScale: 1.0 },
+  listening: { haloBase: 'hsla(160,90%,55%,0.55)',  auraBase: 'hsla(145,100%,50%,0.55)', innerBase: 'hsla(150,100%,58%,0.6)',  boxShadow: '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(160,100%,60%,0.3), inset 0 0 55px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.4, idleAuraScale: 1.6 },
+  thinking:  { haloBase: 'hsla(210,100%,65%,0.5)',  auraBase: 'hsla(220,100%,55%,0.5)',  innerBase: 'hsla(215,100%,58%,0.55)', boxShadow: '0 0 80px hsla(215,100%,60%,0.45), 0 0 35px hsla(200,100%,55%,0.25), inset 0 0 50px hsla(265,90%,8%,0.55)', idlePulseScale: 1.8, idleAuraScale: 2.0 },
+  speaking:  { haloBase: 'hsla(145,90%,55%,0.5)',   auraBase: 'hsla(280,100%,55%,0.55)', innerBase: 'hsla(280,100%,58%,0.6)',  boxShadow: '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 60px hsla(265,90%,8%,0.6)', idlePulseScale: 2.0, idleAuraScale: 2.2 },
+};
+
 export default function AmethystOrb({
   size = 220,
   className = '',
   label,
   sublabel,
-  speaking = false,
+  orbState = 'idle',
+  speaking = false,        // kept for backwards compat — derived from orbState if not set
   getAmplitude,
   getSpectrum,
 }) {
+  const effectiveState = orbState !== 'idle' ? orbState : (speaking ? 'speaking' : 'idle');
   // Drive CSS variables from amplitude + spectrum on each frame — physical pulse,
   // no React re-renders. Spectrum drives the hovering afterglow aura intensity.
   const wrapRef = useRef(null);
@@ -34,6 +44,9 @@ export default function AmethystOrb({
   const [useWebGPU, setUseWebGPU] = useState(
     typeof navigator !== 'undefined' && !!navigator.gpu && !detectInitialReduce()
   );
+  // Smooth state transitions — lerp current config toward target
+  const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
+
   useEffect(() => {
     if (!visible) return;
     let raf;
@@ -44,9 +57,16 @@ export default function AmethystOrb({
       const bass = spec.bass || 0;
       const treble = spec.treble || 0;
 
-      // Idle breathe — slow organic pulse even when silent
-      const idlePulse = (Math.sin(t * 0.7) * 0.5 + 0.5) * 0.018;
-      const idleAura = (Math.sin(t * 0.4 + 1.2) * 0.5 + 0.5) * 0.12;
+      // Lerp toward target state intensity for smooth transitions
+      const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
+      lerpedState.current.pulseScale += (cfg.idlePulseScale - lerpedState.current.pulseScale) * 0.04;
+      lerpedState.current.auraScale  += (cfg.idleAuraScale  - lerpedState.current.auraScale)  * 0.04;
+      const { pulseScale, auraScale } = lerpedState.current;
+
+      // Breathing speed varies by state
+      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.7;
+      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
+      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
 
       if (wrapRef.current) {
         wrapRef.current.style.transform = `scale(${1 + idlePulse + a * 0.06 + bass * 0.04})`;
@@ -66,87 +86,74 @@ export default function AmethystOrb({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [getAmplitude, getSpectrum, visible]);
+  }, [getAmplitude, getSpectrum, visible, effectiveState]);
+
+  const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
 
   return (
     <div
       ref={wrapRef}
       className={cn(
         'relative transition-transform isolate',
-        !getAmplitude && (speaking ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
+        !getAmplitude && (effectiveState === 'speaking' ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
         className
       )}
       style={{ width: size, height: size, willChange: 'transform' }}
     >
-      {/* HOVERING AFTERGLOW — sits outside the orb body, like a floating aura.
-          Two stacked layers (outer wide bloom + inner ring) give it depth.
-          Lowered opacity for darker, neon-UV exposure. */}
+      {/* HOVERING AFTERGLOW — outer wide bloom, color shifts per state */}
       <div
         ref={auraRef}
         aria-hidden
-        className="pointer-events-none absolute rounded-full blur-3xl"
+        className="pointer-events-none absolute rounded-full blur-3xl transition-[background] duration-700"
         style={{
           inset: `-${Math.round(size * 0.55)}px`,
           willChange: 'transform, opacity',
-          background: speaking
-            ? 'radial-gradient(circle, transparent 22%, hsla(280,100%,55%,0.55) 38%, hsla(270,95%,42%,0.45) 54%, hsla(265,85%,35%,0.25) 72%, transparent 92%)'
-            : 'radial-gradient(circle, transparent 24%, hsla(280,100%,52%,0.5) 40%, hsla(270,95%,42%,0.4) 56%, hsla(265,85%,32%,0.22) 74%, transparent 92%)',
+          background: `radial-gradient(circle, transparent 22%, ${cfg.auraBase} 38%, hsla(270,95%,42%,0.35) 54%, hsla(265,85%,32%,0.18) 72%, transparent 92%)`,
         }}
       />
-      {/* Inner aura ring — tighter, slightly outside the orb edge */}
+      {/* Inner aura ring — tighter, color-coded per state */}
       <div
         ref={auraInnerRef}
         aria-hidden
-        className="pointer-events-none absolute rounded-full blur-2xl"
+        className="pointer-events-none absolute rounded-full blur-2xl transition-[background] duration-700"
         style={{
           inset: `-${Math.round(size * 0.22)}px`,
           willChange: 'opacity',
-          background: speaking
-            ? 'radial-gradient(circle, transparent 40%, hsla(280,100%,58%,0.6) 54%, hsla(270,98%,45%,0.45) 68%, transparent 88%)'
-            : 'radial-gradient(circle, transparent 42%, hsla(280,100%,55%,0.55) 56%, hsla(270,98%,42%,0.4) 70%, transparent 88%)',
+          background: `radial-gradient(circle, transparent 40%, ${cfg.innerBase} 54%, hsla(270,98%,45%,0.35) 68%, transparent 88%)`,
         }}
       />
 
-      {/* Outer ambient glow — iridescent halo (existing close-in glow) */}
+      {/* Outer ambient halo — iridescent, state-tinted */}
       <div
         ref={haloRef}
-        className={cn(
-          'absolute inset-0 rounded-full blur-3xl transition-opacity duration-300',
-          speaking ? 'opacity-90' : 'opacity-70'
-        )}
+        className="absolute inset-0 rounded-full blur-3xl transition-[background,opacity] duration-700 opacity-70"
         style={{
           willChange: 'transform, opacity',
-          background: speaking
-            ? 'radial-gradient(circle, hsla(145,90%,55%,0.5) 0%, hsla(280,100%,65%,0.4) 40%, hsla(195,100%,60%,0.25) 65%, transparent 80%)'
-            : 'radial-gradient(circle, hsla(280,100%,65%,0.45) 0%, hsla(195,100%,55%,0.25) 45%, hsla(330,90%,55%,0.18) 65%, transparent 80%)',
+          background: `radial-gradient(circle, ${cfg.haloBase} 0%, hsla(195,100%,55%,0.2) 45%, hsla(330,90%,55%,0.12) 65%, transparent 80%)`,
         }}
       />
 
       <div
-        className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-500"
-        style={{
-          boxShadow: speaking
-            ? '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 60px hsla(265,90%,8%,0.6)'
-            : '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 50px hsla(265,90%,8%,0.55)',
-        }}
+        className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
+        style={{ boxShadow: cfg.boxShadow }}
       >
         {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
             WebGPU + TSL when available; WebGL fallback otherwise. */}
         <div className="absolute inset-0">
           {useWebGPU ? (
             <WebGPUOpalShader
-              intensity={speaking ? 1.85 : 1.5}
-              speed={speaking ? 0.55 : 0.32}
-              hueShift={speaking ? 1.6 : 0}
+              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
+              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
+              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
               getAmplitude={getAmplitude}
               getSpectrum={getSpectrum}
               onUnsupported={() => setUseWebGPU(false)}
             />
           ) : (
             <BlackOpalShader
-              intensity={speaking ? 1.85 : 1.5}
-              speed={speaking ? 0.55 : 0.32}
-              hueShift={speaking ? 1.6 : 0}
+              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
+              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
+              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
               getAmplitude={getAmplitude}
               getSpectrum={getSpectrum}
             />

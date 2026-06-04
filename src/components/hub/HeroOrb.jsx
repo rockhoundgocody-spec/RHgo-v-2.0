@@ -145,7 +145,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
         >
           <AmethystOrb
             size={192}
-            speaking={speaking || thinking}
+            orbState={!active ? 'idle' : thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'idle'}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
           />
