@@ -9,9 +9,12 @@ import LiveStatStrip from '@/components/hub/LiveStatStrip.jsx';
 import DailyStreakCard from '@/components/hub/DailyStreakCard.jsx';
 import TreasureSpawnBanner from '@/components/hub/TreasureSpawnBanner.jsx';
 import RockStarLeaderboard from '@/components/hub/RockStarLeaderboard.jsx';
+import SeasonBanner from '@/components/hub/SeasonBanner.jsx';
+import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
+import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword } from 'lucide-react';
+import { Compass, ScanLine, Gem } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 
 export default function Hub() {
@@ -84,6 +87,15 @@ export default function Hub() {
 
         {/* Specimen type chart */}
         <SpecimenTypeChart />
+
+        {/* Active geological season */}
+        <SeasonBanner />
+
+        {/* Discovery chain / streak */}
+        <DiscoveryChain streak={companion?.streak_days || 0} />
+
+        {/* Geological Atlas — community contribution map */}
+        <GeologicalAtlas userSpecimens={specimens} />
 
         {/* Rock Star leaderboard */}
         <RockStarLeaderboard
