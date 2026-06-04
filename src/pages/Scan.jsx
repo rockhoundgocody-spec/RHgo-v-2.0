@@ -75,12 +75,25 @@ export default function Scan() {
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
-        'You are an assisted geological observation system analyzing multiple photographs of the same specimen from different angles. ' +
-        'Synthesize across views. Return: top_match (best mineral name), calibrated confidence (0-1, conservative), short description, ' +
-        'reasoning (why top_match was chosen — color, luster, habit, fracture), observed_features (discrete {feature,value} pairs you actually see), ' +
-        'lookalikes (minerals that resemble it + a one-line differentiator), verification_tests (hands-on tests with expected outcome), ' +
-        'image_quality_score (0-1), geological_plausibility (0-1), and up to 3 ranked candidates each with confidence and a one-sentence rationale. ' +
-        'Be honest about uncertainty — teach observational geology rather than overclaiming.',
+        'You are an expert field geologist and mineralogist analyzing specimen photos. ' +
+        'Study every visual detail carefully: crystal habit, surface luster (vitreous/metallic/pearly/resinous), ' +
+        'transparency, color zoning, cleavage planes, fracture type, crystal system geometry, surface texture, ' +
+        'any matrix rock present, and weathering patterns. ' +
+        'Cross-reference multiple angles if provided — contradictions between angles are important clues. ' +
+        'Return your best identification with: ' +
+        'top_match (specific mineral name, not just rock type), ' +
+        'rarity (common/uncommon/rare/legendary based on specimen quality and mineral scarcity), ' +
+        'confidence (0-1, calibrated — 0.9+ only if you are near-certain, be conservative), ' +
+        'short engaging description (2 sentences, written for an excited young explorer, mention what makes THIS specimen special), ' +
+        'reasoning (detailed: exactly what visual features led to this ID — be specific, e.g. "The hexagonal cross-section and vitreous luster on the prism faces, combined with the white streak..."), ' +
+        'observed_features (array of discrete {feature, value} pairs you ACTUALLY see — e.g. {feature:"luster", value:"vitreous"}, {feature:"crystal_habit", value:"prismatic hexagonal"}, {feature:"color", value:"pale purple with color zoning"}), ' +
+        'lookalikes (top 2-3 minerals it could be confused with, each with a single decisive differentiator test), ' +
+        'verification_tests (3-5 hands-on field tests ranked by ease, with expected outcome for the top_match), ' +
+        'image_quality_score (0-1), geological_plausibility (0-1), ' +
+        'fun_fact (one surprising geological fact about this mineral — formation age, unusual property, famous deposit, cultural history), ' +
+        'collection_value (brief note on what makes this specimen collectible or valuable — quality, locality, size, perfection), ' +
+        'and up to 3 ranked candidates each with confidence, key distinguishing features, and one-sentence rationale. ' +
+        'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence.',
       file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {
         type: 'object',
@@ -91,6 +104,9 @@ export default function Scan() {
           reasoning: { type: 'string' },
           image_quality_score: { type: 'number' },
           geological_plausibility: { type: 'number' },
+          rarity: { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
+          fun_fact: { type: 'string' },
+          collection_value: { type: 'string' },
           candidates: {
             type: 'array',
             items: {

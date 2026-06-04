@@ -1,39 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useCameraStream from './useCameraStream';
-import HolographicReticle from './HolographicReticle.jsx';
-import SignalMeter from './SignalMeter.jsx';
-import HudCornerBrackets from './hud/HudCornerBrackets.jsx';
-import HudTelemetryStrip from './hud/HudTelemetryStrip.jsx';
-import HudGridOverlay from './hud/HudGridOverlay.jsx';
-import HudSidebar from './hud/HudSidebar.jsx';
-import HudActionBar from './hud/HudActionBar.jsx';
-import WebGLTrackingLayer from './hud/WebGLTrackingLayer.jsx';
-import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
-import { Camera, AlertCircle, Upload, Crosshair } from 'lucide-react';
+import { Camera, Upload, Crosshair, Gem, ScanLine, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**
- * LiveScanStage — Full-bleed sci-fi HUD scanner viewport.
- * Layers (bottom→top):
- *   • Camera <video>
- *   • Vignette + grid overlay
- *   • WebGL tracking layer (placeholder canvas)
- *   • Holographic reticle (SVG)
- *   • HUD chrome (corners, sidebars, telemetry strips, action bar)
+ * LiveScanStage — Redesigned mineral scanner viewport.
+ * Amethyst-purple theme, clean reticle, animated scan sweep.
  */
 export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const { videoRef, ready, error } = useCameraStream({ active: true });
   const [signal, setSignal] = useState(0);
+  const [scanPulse, setScanPulse] = useState(false);
   const fileRef = useRef(null);
 
-  // Simulated lock-on signal — to be replaced by real ML output.
   useEffect(() => {
     if (!ready) return;
     let raf;
     let t = 0;
     const tick = () => {
       t += 0.016;
-      const target = 0.55 + Math.sin(t * 0.6) * 0.25 + Math.sin(t * 1.7) * 0.1;
+      const target = 0.5 + Math.sin(t * 0.55) * 0.28 + Math.sin(t * 1.4) * 0.12;
       setSignal((s) => s + (target - s) * 0.04);
       raf = requestAnimationFrame(tick);
     };
@@ -41,166 +27,221 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
     return () => cancelAnimationFrame(raf);
   }, [ready]);
 
-  const locked = signal > 0.7;
-  const status = !ready ? 'BOOTING' : locked ? 'TARGET·LOCKED' : 'TRACKING';
+  // Pulse the scan ring every 2.5s
+  useEffect(() => {
+    if (!ready) return;
+    const interval = setInterval(() => {
+      setScanPulse(true);
+      setTimeout(() => setScanPulse(false), 800);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [ready]);
+
+  const locked = signal > 0.68;
 
   return (
-    <div
-      className="relative rounded-lg overflow-hidden"
+    <div className="relative rounded-2xl overflow-hidden"
       style={{
-        background: 'hsla(220,70%,4%,0.85)',
-        border: '1px solid hsla(195,100%,60%,0.35)',
-        boxShadow:
-          '0 0 0 1px hsla(195,100%,60%,0.1), 0 0 40px hsla(195,100%,50%,0.18), inset 0 0 60px hsla(220,80%,4%,0.6)',
-      }}
-    >
-      {/* TOP TELEMETRY */}
-      <HudTelemetryStrip status={status} signal={signal} />
+        background: 'hsla(265,40%,4%,0.95)',
+        border: '1px solid hsla(280,60%,50%,0.3)',
+        boxShadow: '0 0 50px hsla(280,80%,40%,0.2), inset 0 0 60px hsla(265,60%,3%,0.5)',
+      }}>
+
+      {/* TOP STATUS BAR */}
+      <div className="flex items-center justify-between px-4 py-2.5"
+        style={{ borderBottom: '1px solid hsla(280,40%,30%,0.25)', background: 'hsla(265,50%,5%,0.8)' }}>
+        <div className="flex items-center gap-2">
+          <span className={`w-1.5 h-1.5 rounded-full ${ready ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+          <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/50">
+            {ready ? (locked ? 'Mineral Detected' : 'Scanning…') : 'Initializing…'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Gem size={11} className="text-amethyst-glow" />
+          <span className="text-[10px] font-mono text-amethyst-glow/60 uppercase tracking-[0.2em]">
+            RockHound·ID
+          </span>
+        </div>
+      </div>
 
       {/* MAIN VIEWPORT */}
-      <div className="relative aspect-square w-full overflow-hidden">
+      <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
         {error ? (
           <ErrorView error={error} fileRef={fileRef} onUploadFallback={onUploadFallback} />
         ) : (
           <>
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+            {/* Camera feed */}
+            <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
 
-            {/* dim wash + cyan tint */}
-            <div
-              className="absolute inset-0 pointer-events-none"
+            {/* Dark vignette */}
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at center, transparent 40%, hsla(265,60%,3%,0.7) 100%)' }} />
+
+            {/* Amethyst color wash on edges */}
+            <div className="absolute inset-0 pointer-events-none mix-blend-overlay"
+              style={{ background: 'radial-gradient(ellipse at 50% 0%, hsla(280,80%,40%,0.15) 0%, transparent 60%), radial-gradient(ellipse at 50% 100%, hsla(265,70%,20%,0.2) 0%, transparent 50%)' }} />
+
+            {/* Subtle scan grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-15"
               style={{
-                background:
-                  'radial-gradient(circle at center, transparent 38%, hsla(220,80%,4%,0.65) 100%), linear-gradient(180deg, hsla(195,100%,40%,0.08) 0%, transparent 30%, transparent 70%, hsla(220,80%,3%,0.4) 100%)',
-              }}
-            />
+                backgroundImage: 'linear-gradient(hsla(280,80%,60%,0.4) 1px, transparent 1px), linear-gradient(90deg, hsla(280,80%,60%,0.4) 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+              }} />
 
-            {/* HUD grid */}
-            <HudGridOverlay />
-
-            {/* WebGL real-time tracking placeholder */}
-            <WebGLTrackingLayer active={ready} />
-
-            {/* Reticle */}
-            <HolographicReticle signal={signal} locked={locked} label="SCANNING" />
-
-            {/* Floating mineral labels — periodic AI classify */}
-            <LiveLabelsOverlay videoRef={videoRef} active={ready} />
-
-            {/* sidebars */}
-            <HudSidebar side="left" label="ALT·M" />
-            <HudSidebar side="right" label="DEPTH·CM" />
-
-            {/* corner brackets */}
-            <HudCornerBrackets />
-
-            {/* readouts */}
-            <div className="absolute top-3 left-9 right-9 flex justify-between text-[9px] font-mono uppercase tracking-[0.3em]">
-              <div className="flex items-center gap-1.5 text-hud-cyan/80 glow-hud">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                LIVE·FEED
-              </div>
-              <div className="text-hud-cyan/60">{ready ? 'CAM·READY' : 'CAM·INIT…'}</div>
+            {/* RETICLE — centered scanning frame */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <ReticleRing signal={signal} locked={locked} pulsing={scanPulse} />
             </div>
 
-            <div className="absolute bottom-3 left-9 right-9 flex justify-between items-end text-[9px] font-mono uppercase tracking-[0.3em]">
-              <div className="text-hud-cyan/60">
-                <div>LAT·N 41°47'·</div>
-                <div>LNG·W 87°35'·</div>
-              </div>
-              <div className="text-right text-hud-cyan/60">
-                <div>SPEC·HSL·1280×720</div>
-                <div className="text-hud-cyan">SCAN·CH·07</div>
-              </div>
+            {/* Corner brackets */}
+            <CornerBrackets color={locked ? '#34d399' : 'hsla(280,100%,75%,0.8)'} />
+
+            {/* Animated scan sweep */}
+            <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute inset-x-0 h-24 animate-hud-scan"
+                style={{ background: 'linear-gradient(180deg, transparent, hsla(280,100%,65%,0.12), transparent)' }} />
             </div>
 
-            {/* signal meter — floats over the right sidebar */}
-            <div className="absolute top-1/2 right-7 -translate-y-1/2">
-              <SignalMeter value={signal} label="LOCK" />
+            {/* Bottom data strip */}
+            <div className="absolute bottom-0 inset-x-0 px-4 pb-3 pt-8 pointer-events-none"
+              style={{ background: 'linear-gradient(0deg, hsla(265,60%,4%,0.9) 0%, transparent 100%)' }}>
+              <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.25em] text-white/35">
+                <span>{locked ? '⬟ Specimen in frame' : '⬞ Align specimen'}</span>
+                <span>{(signal * 100).toFixed(0)}% lock</span>
+              </div>
             </div>
-
-            {/* scan-line sweep */}
-            <div
-              aria-hidden
-              className="absolute inset-x-9 h-16 animate-hud-scan pointer-events-none"
-              style={{
-                background:
-                  'linear-gradient(180deg, transparent, hsla(195,100%,60%,0.18), transparent)',
-              }}
-            />
           </>
         )}
       </div>
 
-      {/* BOTTOM ACTION BAR */}
+      {/* BOTTOM ACTIONS */}
       {!error && (
-        <HudActionBar>
+        <div className="p-4 space-y-2" style={{ borderTop: '1px solid hsla(280,40%,25%,0.3)', background: 'hsla(265,50%,4%,0.8)' }}>
+          <Button
+            onClick={onBeginCapture}
+            disabled={!ready}
+            className="w-full h-14 rounded-xl text-sm font-bold uppercase tracking-[0.2em] text-white disabled:opacity-40"
+            style={{
+              background: ready
+                ? 'linear-gradient(135deg, hsla(270,80%,40%,0.9) 0%, hsla(280,100%,55%,0.7) 100%)'
+                : 'hsla(270,40%,20%,0.4)',
+              border: '1px solid hsla(280,80%,60%,0.4)',
+              boxShadow: ready ? '0 0 30px hsla(280,80%,50%,0.3), inset 0 1px 0 hsla(280,100%,90%,0.1)' : 'none',
+            }}
+          >
+            <ScanLine size={18} className="mr-2" />
+            {ready ? 'Scan Mineral' : 'Starting Camera…'}
+          </Button>
+
           <div className="flex gap-2">
-            <Button
-              onClick={onBeginCapture}
-              disabled={!ready}
-              className="flex-1 h-12 rounded-md bg-transparent hover:bg-hud-cyan/10 text-hud-cyan font-mono uppercase tracking-[0.3em] text-xs"
-              style={{
-                border: '1px solid hsla(195,100%,60%,0.6)',
-                boxShadow:
-                  '0 0 18px hsla(195,100%,55%,0.35), inset 0 0 18px hsla(195,100%,55%,0.12)',
-                textShadow: '0 0 8px hsla(195,100%,70%,0.7)',
-              }}
-            >
-              <Crosshair className="mr-2" size={16} />
-              Engage · Detailed Scan
-            </Button>
-            <Button
+            <button
               onClick={() => fileRef.current?.click()}
-              variant="ghost"
-              className="h-12 px-3 text-hud-cyan/70 hover:bg-hud-cyan/5 border border-hud-cyan/20 rounded-md"
-              title="Upload image"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/40 hover:text-white/70 transition"
+              style={{ border: '1px solid hsla(280,30%,30%,0.3)' }}
             >
-              <Upload size={16} />
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => onUploadFallback?.(e.target.files?.[0])}
-            />
+              <Upload size={13} />
+              Upload Photo
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
           </div>
-        </HudActionBar>
+        </div>
       )}
     </div>
   );
 }
 
+/* ── Sub-components ── */
+
+function ReticleRing({ signal, locked, pulsing }) {
+  const size = 180;
+  const r = 80;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * Math.min(signal, 1);
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Outer pulse ring on scan */}
+      {pulsing && (
+        <div className="absolute rounded-full pointer-events-none"
+          style={{
+            width: size + 40, height: size + 40,
+            border: `2px solid ${locked ? 'hsla(145,80%,55%,0.6)' : 'hsla(280,100%,70%,0.5)'}`,
+            animation: 'ping 0.8s ease-out forwards',
+            opacity: 0,
+          }} />
+      )}
+
+      {/* Progress arc */}
+      <svg width={size} height={size} className="absolute" style={{ transform: 'rotate(-90deg)' }}>
+        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke="hsla(280,50%,30%,0.3)" strokeWidth={2} />
+        {/* Progress */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={locked ? '#34d399' : 'hsl(280,100%,75%)'}
+          strokeWidth={2.5}
+          strokeDasharray={`${dash} ${circ}`}
+          strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 6px ${locked ? '#34d399' : 'hsl(280,100%,65%)'})`, transition: 'stroke 0.4s' }}
+        />
+      </svg>
+
+      {/* Corner tick marks */}
+      {[0, 90, 180, 270].map((deg) => (
+        <div key={deg} className="absolute" style={{
+          width: 12, height: 12,
+          border: `2px solid ${locked ? '#34d399' : 'hsla(280,100%,75%,0.8)'}`,
+          borderRight: 'none', borderBottom: 'none',
+          transform: `rotate(${deg}deg) translate(${-r + 4}px, ${-r + 4}px)`,
+          transformOrigin: `${size / 2}px ${size / 2}px`,
+          top: size / 2 - 6, left: size / 2 - 6,
+          filter: locked ? 'drop-shadow(0 0 4px #34d399)' : 'drop-shadow(0 0 4px hsla(280,100%,70%,0.8))',
+        }} />
+      ))}
+
+      {/* Center gem icon */}
+      <div className="relative z-10 flex flex-col items-center gap-1">
+        <Gem size={22} style={{ color: locked ? '#34d399' : 'hsl(280,100%,80%)', filter: `drop-shadow(0 0 8px ${locked ? '#34d399' : 'hsl(280,100%,65%)'})` }} />
+        <span className="text-[8px] font-mono uppercase tracking-[0.35em]"
+          style={{ color: locked ? '#34d399' : 'hsla(280,100%,80%,0.7)' }}>
+          {locked ? 'LOCKED' : 'SCAN'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CornerBrackets({ color }) {
+  const style = { border: `2px solid ${color}`, filter: `drop-shadow(0 0 5px ${color})` };
+  const s = 20;
+  return (
+    <>
+      <div className="absolute top-4 left-4 pointer-events-none" style={{ ...style, width: s, height: s, borderRight: 'none', borderBottom: 'none', borderRadius: '2px 0 0 0' }} />
+      <div className="absolute top-4 right-4 pointer-events-none" style={{ ...style, width: s, height: s, borderLeft: 'none', borderBottom: 'none', borderRadius: '0 2px 0 0' }} />
+      <div className="absolute bottom-16 left-4 pointer-events-none" style={{ ...style, width: s, height: s, borderRight: 'none', borderTop: 'none', borderRadius: '0 0 0 2px' }} />
+      <div className="absolute bottom-16 right-4 pointer-events-none" style={{ ...style, width: s, height: s, borderLeft: 'none', borderTop: 'none', borderRadius: '0 0 2px 0' }} />
+    </>
+  );
+}
+
 function ErrorView({ error, fileRef, onUploadFallback }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 hud-grid-bg">
-      <AlertCircle className="text-hud-cyan mb-3 glow-hud" size={32} />
-      <div className="text-hud-cyan/90 text-xs font-mono uppercase tracking-[0.3em] mb-2">
-        Camera·Offline
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+      style={{ background: 'hsla(265,50%,3%,0.95)' }}>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style={{ background: 'hsla(280,60%,20%,0.5)', border: '1px solid hsla(280,60%,40%,0.3)' }}>
+        <Camera size={28} className="text-amethyst-glow" />
       </div>
-      <div className="text-white/50 text-xs mb-5 max-w-[260px]">{error}</div>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => onUploadFallback?.(e.target.files?.[0])}
-      />
-      <Button
-        onClick={() => fileRef.current?.click()}
-        className="bg-transparent text-hud-cyan font-mono uppercase tracking-[0.3em] text-xs"
-        style={{
-          border: '1px solid hsla(195,100%,60%,0.6)',
-          boxShadow: '0 0 16px hsla(195,100%,55%,0.3)',
-        }}
-      >
-        <Camera size={14} className="mr-2" />
-        Upload·Image
+      <div className="text-white/70 text-sm font-semibold mb-1">Camera Unavailable</div>
+      <div className="text-white/35 text-xs mb-6 max-w-[240px]">{error}</div>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden"
+        onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
+      <Button onClick={() => fileRef.current?.click()}
+        className="rounded-xl text-white font-semibold"
+        style={{ background: 'linear-gradient(135deg, hsla(270,80%,40%,0.9), hsla(280,100%,55%,0.7))', border: '1px solid hsla(280,80%,60%,0.4)' }}>
+        <Upload size={14} className="mr-2" />
+        Upload a Photo Instead
       </Button>
     </div>
   );
