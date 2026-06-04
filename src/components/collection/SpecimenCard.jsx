@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Star, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
 
@@ -44,8 +45,9 @@ export default function SpecimenCard({ specimen, index }) {
     : '—';
 
   return (
-    <div
-      className={`relative rounded-2xl overflow-hidden border ${rarity.border} ${rarity.bg} transition-all duration-200`}
+    <Link
+      to={`/specimen/${specimen.id}`}
+      className={`relative rounded-2xl overflow-hidden border ${rarity.border} ${rarity.bg} transition-all duration-200 active:scale-[0.97] block`}
       style={{ boxShadow: `0 0 24px -8px ${rarity.glow}` }}
     >
       {/* Card header strip */}
@@ -150,7 +152,7 @@ export default function SpecimenCard({ specimen, index }) {
           </div>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
 

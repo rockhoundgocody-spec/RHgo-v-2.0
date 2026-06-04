@@ -26,6 +26,8 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries'));
 
+const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
+
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));
@@ -69,6 +71,7 @@ const AuthenticatedApp = () => {
           <Route path="/expeditions" element={<Expeditions />} />
           <Route path="/expedition/:expeditionId" element={<ExpeditionDetail />} />
           <Route path="/market" element={<Market />} />
+          <Route path="/specimen/:id" element={<SpecimenDetail />} />
 
           {/* SECONDARY / ADMIN ROUTES */}
           <Route path="/admin" element={<Admin />} />
