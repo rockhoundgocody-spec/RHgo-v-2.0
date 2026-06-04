@@ -30,10 +30,10 @@ export default function HolographicResult({
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const navigate = useNavigate();
 
-  // Fire fireworks once on mount
+  // Fire fireworks when the specimen is saved (the "I found something!" moment)
   useEffect(() => {
-    setFireworksTrigger((n) => n + 1);
-  }, []);
+    if (saved) setFireworksTrigger((n) => n + 1);
+  }, [saved]);
 
   useEffect(() => {
     const el = tiltRef.current;
