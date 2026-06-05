@@ -52,8 +52,12 @@ export default function PsvPhotoStage({ onReady }) {
           {previews.map((p, i) => (
             <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-black/30 border border-white/10">
               <img src={p.preview} alt="" className="w-full h-full object-cover" />
-              <button onClick={() => setPreviews((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center">
+              <button
+                onClick={() => setPreviews((prev) => prev.filter((_, idx) => idx !== i))}
+                aria-label={`Remove photo ${i + 1}`}
+                title="Remove photo"
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none transition-colors"
+              >
                 <X size={10} className="text-white" />
               </button>
             </div>
