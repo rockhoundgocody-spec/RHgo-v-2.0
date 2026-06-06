@@ -20,8 +20,8 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
   const [intention, setIntention] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
-  if (!companion || companion.last_check_in_date === today) return null;
+  const localDayKey = new Intl.DateTimeFormat('en-CA').format(new Date());
+  if (!companion || companion.last_check_in_date === localDayKey) return null;
 
   const submit = async () => {
     if (!picked) return;
@@ -30,6 +30,8 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
       await base44.functions.invoke('dailyCheckIn', {
         mood_label: picked,
         intention: intention.trim() || undefined,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        local_day_key: localDayKey,
       });
       onCheckedIn?.({ mood_label: picked, intention: intention.trim() });
     } finally {
