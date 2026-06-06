@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Sword, CheckCircle2, Clock, Sparkles, RefreshCw } from 'lucide-react';
+import { Sword, CheckCircle2, Clock, Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const QUEST_TEMPLATES = [
@@ -21,6 +22,7 @@ function getExpiryDate(type) {
 }
 
 export default function QuestEngine({ userEmail }) {
+  const navigate = useNavigate();
   const { data: quests = [], refetch, isLoading } = useQuery({
     queryKey: ['quests', userEmail],
     queryFn: () => base44.entities.Quest.filter({ owner_email: userEmail, status: 'active' }),
@@ -58,14 +60,20 @@ export default function QuestEngine({ userEmail }) {
           <Sword size={14} className="text-amethyst-glow" />
           <span className="text-white/80 text-xs font-semibold uppercase tracking-[0.2em]">Active Quests</span>
         </div>
-        <button
-          onClick={generateQuests}
-          disabled={generating}
-          className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-amethyst/60 hover:text-amethyst-glow transition"
-        >
-          <RefreshCw size={9} className={generating ? 'animate-spin' : ''} />
-          {quests.length === 0 ? 'Ask Clover' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={generateQuests}
+            disabled={generating}
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-amethyst/60 hover:text-amethyst-glow transition"
+          >
+            <RefreshCw size={9} className={generating ? 'animate-spin' : ''} />
+            {quests.length === 0 ? 'Ask Clover' : 'Refresh'}
+          </button>
+          <button onClick={() => navigate('/quests')}
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-hud-cyan/60 hover:text-hud-cyan transition">
+            All <ArrowRight size={9} />
+          </button>
+        </div>
       </div>
 
       {quests.length === 0 ? (

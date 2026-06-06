@@ -27,6 +27,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries'));
 
 const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
+const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
           <Route path="/expedition/:expeditionId" element={<ExpeditionDetail />} />
           <Route path="/market" element={<Market />} />
           <Route path="/specimen/:id" element={<SpecimenDetail />} />
+          <Route path="/quests" element={<QuestDashboard />} />
 
           {/* SECONDARY / ADMIN ROUTES */}
           <Route path="/admin" element={<Admin />} />
