@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import SkillsSection from '@/components/profile/SkillsSection.jsx';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -87,6 +88,8 @@ export default function Profile() {
           <span>Achievements & Badges</span>
         </button>
       </GlassPanel>
+
+      <SkillsSection />
 
       {/* Logout */}
       <button
