@@ -1,39 +1,76 @@
-**Welcome to your Base44 project** 
+# ROCKHOUND-GO V2.5 — ONE-LOCATION OWN-SERVER DEPLOY
 
-**About**
+RockHound-GO is being consolidated into one controlled deploy target: **one repo, one build, one URL, one server path**.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+This repository is the active deployment target for the RockHound-GO PWA / web app build.
 
-This project contains everything you need to run your app locally.
+## Product direction
 
-**Edit the code in your local development environment**
+RockHound-GO is a field intelligence and geological adventure platform for modern rockhounds. The core app should remain shippable around:
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+- **Explore** — map-based discovery, site context, hazards, land/access notes, saved/offline regions.
+- **Scan** — camera-first specimen identification, quick result, deep analysis, confidence, test prompts.
+- **GeoDex / Collection** — personal geological archive with photos, provenance, notes, tests, rarity, XP, and discovery chains.
+- **Safety / Legal / Offline** — ethical collecting prompts, geo privacy, offline queue, cached field mode.
 
-**Prerequisites:** 
+Roadmap/demo layers can include Community, Market, Clover AI, Land Access, Learning, Quests, and AR glasses support, but future-facing modules must not be represented as fully production-ready unless actually implemented.
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
+## Applied file package
 
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
+The uploaded RHGO project files have been consolidated into:
 
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
+```text
+/docs/APPLY_THE_FILES_TO_RHGO.md
 ```
 
-Run the app: `npm run dev`
+That document is the build directive for the next implementation pass.
 
-**Publish your changes**
+## Own-server PWA deployment
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+### 1. Build
 
-**Docs & Support**
+```bash
+npm install
+npm run build
+```
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+### 2. Deploy with Docker + Caddy
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+```bash
+docker compose up -d --build
+```
+
+Caddy serves the built app from `./dist` and can provide HTTPS automatically when the domain is configured.
+
+## Custom domain
+
+1. Point your domain A-record to the server IP.
+2. Edit `Caddyfile` and replace `:80` or `localhost` with your real domain, for example:
+
+```text
+app.rockhoundgo.com {
+  root * /srv
+  encode gzip zstd
+  try_files {path} /index.html
+  file_server
+}
+```
+
+3. Restart:
+
+```bash
+docker compose restart
+```
+
+## Update later
+
+```bash
+git pull
+npm install
+npm run build
+docker compose up -d --build
+```
+
+## Build doctrine
+
+RockHound-GO is not a basic rock ID app. It is a serious field platform that turns real-world exploration into a structured, ethical, science-forward discovery loop.
