@@ -18,11 +18,12 @@ import { Compass, ScanLine, Gem } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
+import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
-  const { chaos, toggle: toggleChaos } = useChaosMode();
+  const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
   const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: setMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
 
@@ -52,7 +53,7 @@ export default function Hub() {
       <section className="flex flex-col items-center text-center px-5 pt-6 w-full max-w-md">
         {/* Chaos / Scholar mode toggle — top right */}
         <div className="w-full flex justify-end mb-2">
-          <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} />
+          <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} locked={chaosLocked} />
         </div>
         <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
 
@@ -88,6 +89,9 @@ export default function Hub() {
 
         {/* Daily Rock Roulette — Chaos mode only */}
         {chaos && <DailyRoulette />}
+
+        {/* AR Rock Battle — Chaos mode only */}
+        {chaos && <ARRockBattle />}
 
         {/* Quests */}
         {userEmail && <QuestEngine userEmail={userEmail} />}

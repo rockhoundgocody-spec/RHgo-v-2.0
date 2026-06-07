@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Sword } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -28,6 +28,19 @@ const secondaryRoutes = [
 // Per-tab navigation stack preservation
 const tabStacks = {};
 
+// Quest notification dot — new quests available if last-seen date < today
+function useQuestDot() {
+  const [hasDot, setHasDot] = useState(() => {
+    const seen = localStorage.getItem('rhgo_quests_seen_date');
+    return seen !== new Date().toDateString();
+  });
+  const clearDot = () => {
+    localStorage.setItem('rhgo_quests_seen_date', new Date().toDateString());
+    setHasDot(false);
+  };
+  return { hasDot, clearDot };
+}
+
 const pageVariants = {
   initial: { opacity: 0, x: 18 },
   animate: { opacity: 1, x: 0 },
@@ -40,6 +53,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const prevTabRef = useRef(null);
+  const { hasDot: questDot, clearDot: clearQuestDot } = useQuestDot();
 
   const isAdminOrDocs = ['/admin', '/docs', '/dev'].some((p) =>
     location.pathname.startsWith(p)
@@ -63,12 +77,11 @@ export default function Layout() {
   }, [location.pathname, activeTab]);
 
   const handleTabClick = (to, isActive) => {
+    if (to === '/quests') clearQuestDot();
     if (isActive) {
-      // Re-selecting active tab resets its stack to root
       tabStacks[to] = [to];
       navigate(to, { replace: true });
     } else {
-      // Restore last known position in that tab's stack, or go to root
       const stack = tabStacks[to];
       const dest = stack?.length > 0 ? stack[stack.length - 1] : to;
       navigate(dest);
@@ -161,19 +174,25 @@ export default function Layout() {
               const isActive = to === '/'
                 ? location.pathname === '/'
                 : location.pathname.startsWith(to);
+              const showDot = to === '/quests' && questDot && !isActive;
               return (
                 <button
                   key={to}
                   onClick={() => handleTabClick(to, isActive)}
                   className={cn(
-                    'flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition min-w-[56px] min-h-[44px] justify-center select-none',
+                    'relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition min-w-[56px] min-h-[44px] justify-center select-none',
                     isActive
                       ? 'bg-amethyst/30 text-white shadow-[inset_0_0_18px_hsla(280,100%,70%,0.4)]'
                       : 'text-amethyst/60 hover:text-amethyst'
                   )}
                   aria-label={label}
                 >
-                  <Icon size={18} />
+                  <div className="relative">
+                    <Icon size={18} />
+                    {showDot && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse" />
+                    )}
+                  </div>
                   <span className="text-[11px] font-medium tracking-wide">{label}</span>
                 </button>
               );
