@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft } from 'lucide-react';
+import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Sword } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/scan', label: 'Scan', icon: ScanLine },
   { to: '/collection', label: 'Collect', icon: Gem },
+  { to: '/quests', label: 'Quests', icon: Sword },
 ];
 
 const secondaryRoutes = [

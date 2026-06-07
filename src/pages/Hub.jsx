@@ -16,10 +16,13 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
+import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
+import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
+  const { chaos, toggle: toggleChaos } = useChaosMode();
   const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: setMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
 
@@ -47,6 +50,10 @@ export default function Hub() {
 
       {/* ── HERO CENTERPIECE ── */}
       <section className="flex flex-col items-center text-center px-5 pt-6 w-full max-w-md">
+        {/* Chaos / Scholar mode toggle — top right */}
+        <div className="w-full flex justify-end mb-2">
+          <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} />
+        </div>
         <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
 
         <div className="mt-5 select-none">
@@ -78,6 +85,9 @@ export default function Hub() {
 
         {/* Live stats wired to real data */}
         <LiveStatStrip />
+
+        {/* Daily Rock Roulette — Chaos mode only */}
+        {chaos && <DailyRoulette />}
 
         {/* Quests */}
         {userEmail && <QuestEngine userEmail={userEmail} />}
