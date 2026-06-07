@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  rockhound-go:
+    build: .
+    container_name: rockhound-go-final
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./dist:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:
