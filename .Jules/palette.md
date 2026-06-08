@@ -1,0 +1,1 @@
+## 2026-06-08 - Add aria-label to remove photo button\n**Learning:** The photo removal button in the Progressive Verification Workflow was lacking an accessible name.\n**Action:** Added `aria-label="Remove photo"` to the icon-only button to improve screen reader accessibility.
