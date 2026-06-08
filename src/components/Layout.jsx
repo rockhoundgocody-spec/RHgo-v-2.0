@@ -63,7 +63,7 @@ export default function Layout() {
 
   return (
     <OracleProvider>
-      <div className="min-h-screen text-foreground">
+      <div className="w-full min-h-screen text-foreground flex flex-col overflow-x-hidden">
 
         {/* Admin/Docs top bar */}
         {isAdminOrDocs && (
