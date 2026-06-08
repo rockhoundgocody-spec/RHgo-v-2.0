@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * Returns (and lazily creates) the user's Companion pet state.
@@ -35,11 +35,8 @@ Deno.serve(async (req) => {
 
     // Recompute streak: walk backward from today, day by day, while there's
     // either a check-in or a new specimen on that date.
-    const recentSpecimens = await base44.entities.Specimen.filter(
-      { created_by: user.email },
-      '-created_date',
-      60
-    );
+    // RLS already scopes to the current user — just list the most recent 60
+    const recentSpecimens = await base44.entities.Specimen.list('-created_date', 60);
     const findDates = new Set(
       recentSpecimens
         .map((s) => (s.found_date || s.created_date || '').slice(0, 10))
