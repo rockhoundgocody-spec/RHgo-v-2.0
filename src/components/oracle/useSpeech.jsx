@@ -128,9 +128,9 @@ export function useSpeechSynthesis() {
       source.start(0);
     } catch (err) {
       // Fallback to browser TTS if backend fails
-      console.warn('Google TTS failed, falling back to browser:', err);
+      console.warn('TTS backend failed, falling back to browser:', err);
       stopAmpLoop();
-      setSpeaking(false);
+      // setSpeaking stays true — _browserFallback will manage it via onstart/onend
       _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop);
     }
   }, [startAmpLoop, stopAmpLoop]);
@@ -150,22 +150,44 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported: true, voices: [], getAmplitude, getSpectrum };
 }
 
-// Browser synthesis fallback (used only if Google TTS is unreachable)
+// Browser synthesis fallback (used only if backend TTS is unreachable)
 function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
-  if (!window.speechSynthesis) return;
-  const utter = new SpeechSynthesisUtterance(String(text));
-  utter.lang = 'en-US';
-  utter.rate = 0.88;
-  utter.pitch = 1.1;
-  utter.volume = 1.0;
+  if (!window.speechSynthesis) { setSpeaking(false); return; }
+
+  const _speak = () => {
+    const utter = new SpeechSynthesisUtterance(String(text));
+    utter.lang = 'en-US';
+    utter.rate = 0.88;
+    utter.pitch = 1.1;
+    utter.volume = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const best = voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira/i.test(v.name))
+      || voices.find((v) => /en[-_]US/i.test(v.lang)) || voices[0];
+    if (best) utter.voice = best;
+    utter.onstart = () => setSpeaking(true);
+    utter.onend = () => { setSpeaking(false); stopAmpLoop(); };
+    utter.onerror = (e) => {
+      if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); }
+    };
+    window.speechSynthesis.cancel(); // clear any pending queue
+    window.speechSynthesis.speak(utter);
+  };
+
   const voices = window.speechSynthesis.getVoices();
-  const best = voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira/i.test(v.name))
-    || voices.find((v) => /en[-_]US/i.test(v.lang)) || voices[0];
-  if (best) utter.voice = best;
-  utter.onstart = () => setSpeaking(true);
-  utter.onend = () => { setSpeaking(false); stopAmpLoop(); };
-  utter.onerror = (e) => { if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
-  window.speechSynthesis.speak(utter);
+  if (voices.length > 0) {
+    _speak();
+  } else {
+    // Voices not loaded yet — wait for them (common on mobile)
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      _speak();
+    };
+    // Safety: if onvoiceschanged never fires (some browsers), speak after 500ms anyway
+    setTimeout(() => {
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+      _speak();
+    }, 500);
+  }
 }
 
 

@@ -1,10 +1,9 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
- * Google Cloud Text-to-Speech proxy.
- * Returns base64 LINEAR16 (lossless WAV PCM) audio — Neural2 voice at 24 kHz.
- * LINEAR16 has zero codec artifacts; Web Audio decodes it bit-perfect.
- * Pitch is left at 0.0 (neutral) — Neural2 voices distort above ±2.0 semitones.
+ * Text-to-Speech proxy using Base44's built-in GenerateSpeech integration.
+ * Returns base64 MP3 audio content as { audioContent: string }.
+ * No external API key restrictions — works from any server context.
  */
 Deno.serve(async (req) => {
   try {
@@ -14,49 +13,49 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const {
-      text,
-      voice = 'en-US-Neural2-F',
-      rate = 0.92,
-      pitch = 0.0,          // semitones: 0 = no pitch shift (cleanest)
-    } = await req.json();
+    const { text, voice = 'honey', rate = 0.92 } = await req.json();
 
     if (!text || typeof text !== 'string') {
       return Response.json({ error: 'Missing text' }, { status: 400 });
     }
 
-    const apiKey = Deno.env.get('GOOGLE_TTS_API_KEY');
-    if (!apiKey) {
-      return Response.json({ error: 'GOOGLE_TTS_API_KEY not set' }, { status: 500 });
-    }
-
-    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-    const body = {
-      input: { text: text.slice(0, 1500) },
-      voice: { languageCode: 'en-US', name: voice },
-      audioConfig: {
-        audioEncoding: 'LINEAR16',  // lossless PCM — zero codec artifacts, bit-perfect
-        speakingRate: rate,
-        pitch,
-        sampleRateHertz: 24000,     // 24 kHz is the native Neural2 sample rate — upsizing adds nothing
-        effectsProfileId: [],       // no post-processing filters that add distortion
-      },
+    // Map legacy Google voice names to Base44 voice names
+    const voiceMap = {
+      'en-US-Neural2-F': 'honey',
+      'en-US-Neural2-J': 'storm',
+      'honey': 'honey',
+      'river': 'river',
+      'sunny': 'sunny',
+      'storm': 'storm',
+      'spark': 'spark',
     };
+    const resolvedVoice = voiceMap[voice] || 'honey';
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    const result = await base44.asServiceRole.integrations.Core.GenerateSpeech({
+      text: text.slice(0, 800),
+      voice: resolvedVoice,
+      language_code: 'en',
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('TTS error:', res.status, errText);
-      return Response.json({ error: `TTS failed: ${res.status}`, detail: errText }, { status: 500 });
+    if (!result?.url) {
+      return Response.json({ error: 'No audio URL returned' }, { status: 500 });
     }
 
-    const data = await res.json();
-    return Response.json({ audioContent: data.audioContent });
+    // Fetch the MP3 and convert to base64 so the frontend can decode it the same way
+    const audioRes = await fetch(result.url);
+    if (!audioRes.ok) {
+      return Response.json({ error: 'Failed to fetch audio' }, { status: 500 });
+    }
+
+    const buffer = await audioRes.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const b64 = btoa(binary);
+
+    return Response.json({ audioContent: b64 });
   } catch (error) {
     console.error('synthesizeSpeech exception:', error);
     return Response.json({ error: error.message }, { status: 500 });
