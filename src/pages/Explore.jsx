@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+// Note: SlidersHorizontal removed — layer controls moved into map component
 import { Mountain, Loader2, Locate, ChevronUp, ChevronDown, SlidersHorizontal, Zap, Search, X } from 'lucide-react';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
@@ -122,12 +123,7 @@ export default function Explore() {
   const [locating, setLocating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mapStatus, setMapStatus] = useState({});
   const scrollRef = useRef(null);
-
-  const handleMapStatus = useCallback((key, item) => {
-    setMapStatus(prev => ({ ...prev, [key]: item }));
-  }, []);
 
   const locate = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -183,7 +179,6 @@ export default function Explore() {
             activeId={activeId}
             onMarkerClick={h => { setActiveId(h.id); setSheetOpen(true); }}
             userLocation={userLocation}
-            onStatus={handleMapStatus}
           />
         )}
       </div>
