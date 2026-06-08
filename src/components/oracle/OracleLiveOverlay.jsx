@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Mic, Gem } from 'lucide-react';
+import VoiceStateHUD from './VoiceStateHUD.jsx';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
@@ -126,13 +127,8 @@ export default function OracleLiveOverlay() {
 
   if (!open) return null;
 
-  const status = speaking
-    ? 'Clover is speaking…'
-    : listening
-    ? 'Clover is listening…'
-    : thinking
-    ? 'Clover is thinking…'
-    : 'Clover 🍀 Cole';
+  // status string kept for aria-label only
+  const statusLabel = speaking ? 'Speaking' : listening ? 'Listening' : thinking ? 'Processing' : 'Ready';
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background overflow-hidden">
@@ -183,15 +179,25 @@ export default function OracleLiveOverlay() {
           />
         </button>
 
-        <div className="mt-8 text-[10px] font-mono uppercase tracking-[0.5em] text-amethyst/80">
-          {status}
+        {/* HUD state indicator */}
+        <div className="mt-6" aria-label={statusLabel}>
+          <VoiceStateHUD
+            listening={listening}
+            thinking={thinking}
+            speaking={speaking}
+            interim={interim}
+          />
+          {/* idle state label */}
+          {!listening && !thinking && !speaking && (
+            <div className="text-[10px] font-mono uppercase tracking-[0.5em] text-amethyst/60 text-center mt-1">
+              Clover 🍀 Cole
+            </div>
+          )}
         </div>
 
-        {/* user line / interim */}
-        <div className="mt-6 min-h-[2.5rem] max-w-md text-center text-white/85 text-base leading-snug">
-          {interim
-            ? <span className="text-amethyst-glow">{interim}</span>
-            : lastUser && <span className="text-white/70">"{lastUser}"</span>}
+        {/* last user utterance (no interim — that lives in VoiceStateHUD) */}
+        <div className="mt-4 min-h-[2.5rem] max-w-md text-center text-white/85 text-base leading-snug">
+          {!interim && lastUser && <span className="text-white/60">"{lastUser}"</span>}
         </div>
 
         {/* oracle reply */}

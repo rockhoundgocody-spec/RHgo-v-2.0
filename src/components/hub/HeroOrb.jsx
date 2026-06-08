@@ -8,6 +8,7 @@ import useHaptic from './useHaptic';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Mic, MicOff } from 'lucide-react';
+import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
 
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const [ripples, setRipples] = useState([]);
@@ -165,18 +166,13 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
         </div>
 
         {active && (
-          <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-emerald-400/30">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-emerald-200 text-[13px] font-medium tracking-wider uppercase">
-              {thinking ? 'thinking…' : speaking ? 'speaking…' : listening ? 'listening…' : 'here'}
-            </span>
-            {listening
-              ? <Mic size={14} className="text-emerald-300" />
-              : <MicOff size={14} className="text-emerald-300/50" />}
+          <div className="mt-4">
+            <VoiceStateHUD listening={listening} thinking={thinking} speaking={speaking} interim={interim} />
           </div>
         )}
 
-        {interim && (
+        {/* interim shown inside VoiceStateHUD — keep this only as fallback when not active */}
+        {!active && interim && (
           <div className="mt-2 text-white/50 text-xs italic max-w-[240px] text-center truncate">
             "{interim}"
           </div>

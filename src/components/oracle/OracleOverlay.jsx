@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
+import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
@@ -165,33 +166,15 @@ export default function OracleOverlay() {
                 </span>
               )}
             </div>
-            {/* Status — prominent, color-coded, never ambiguous */}
-            {listening ? (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-400" />
-                </span>
-                <span className="text-[11px] font-semibold text-rose-300">Listening — speak now</span>
-              </div>
-            ) : speaking ? (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amethyst-glow opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amethyst-glow" />
-                </span>
-                <span className="text-[11px] font-semibold text-amethyst-glow">Speaking…</span>
-              </div>
-            ) : thinking ? (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Loader2 size={10} className="text-hud-cyan animate-spin" />
-                <span className="text-[11px] font-semibold text-hud-cyan">Thinking…</span>
-              </div>
-            ) : (
-              <div className="text-[10px] uppercase tracking-[0.25em] text-white/35 mt-0.5">
-                {dictationMode ? 'Describe your specimen' : 'Your AI companion'}
-              </div>
-            )}
+            {/* Status — HUD-style, via shared VoiceStateHUD */}
+            <div className="mt-1">
+              <VoiceStateHUD listening={listening} thinking={thinking} speaking={speaking} size="sm" />
+              {!listening && !thinking && !speaking && (
+                <div className="text-[10px] uppercase tracking-[0.25em] text-white/35">
+                  {dictationMode ? 'Describe your specimen' : 'Your AI companion'}
+                </div>
+              )}
+            </div>
           </div>
           {micSupported && (
             <button
