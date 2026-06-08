@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Users, Map, Sparkles } from 'lucide-react';
+import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Map, Sparkles, ShoppingBag } from 'lucide-react';
+import FloatingGrokOrb from '@/components/hub/FloatingGrokOrb.jsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
@@ -13,11 +14,11 @@ import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
 const navItems = [
-  { to: '/', label: 'Discover', icon: Home },
+  { to: '/', label: 'Home', icon: Home },
   { to: '/explore', label: 'Map', icon: Map },
   { to: '/scan', label: 'Scan', icon: ScanLine, hero: true },
   { to: '/collection', label: 'Geo-DEX', icon: Gem },
-  { to: '/quests', label: 'Quests', icon: Sparkles },
+  { to: '/market', label: 'Market', icon: ShoppingBag },
 ];
 
 const secondaryRoutes = [
@@ -77,7 +78,6 @@ export default function Layout() {
   }, [location.pathname, activeTab]);
 
   const handleTabClick = (to, isActive) => {
-    if (to === '/quests') clearQuestDot();
     if (isActive) {
       tabStacks[to] = [to];
       navigate(to, { replace: true });
@@ -174,7 +174,7 @@ export default function Layout() {
               const isActive = to === '/'
                 ? location.pathname === '/'
                 : location.pathname.startsWith(to);
-              const showDot = to === '/quests' && questDot && !isActive;
+              const showDot = false;
 
               if (hero) {
                 return (
@@ -231,6 +231,7 @@ export default function Layout() {
 
         <HotspotProximityWatcher />
         <OracleOverlays />
+        <FloatingGrokOrb />
       </div>
     </OracleProvider>
   );

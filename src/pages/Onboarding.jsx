@@ -1,9 +1,125 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, ScanLine, Gem, Sparkles, Map, ChevronRight, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ScanLine, Gem, Sparkles, Map, ChevronRight, Zap } from 'lucide-react';
 
+// ── AGATE AGE GATE ────────────────────────────────────────────────────────────
+// A secret behavioral test disguised as a fun quiz. Kids and pros answer
+// differently — the result sets kid/pro mode for the session.
+const AGE_GATE_QUESTIONS = [
+  {
+    q: "You find a shiny purple rock. What do you do first?",
+    answers: [
+      { text: "🤩 Take a picture immediately!", kid: true },
+      { text: "🔍 Check hardness & streak test", kid: false },
+      { text: "📖 Look it up in a field guide", kid: false },
+      { text: "😱 Show everyone around me!", kid: true },
+    ]
+  },
+  {
+    q: "What's your rockhounding style?",
+    answers: [
+      { text: "🧪 Scientific — I love geology data", kid: false },
+      { text: "🎮 Explorer — it's an adventure!", kid: true },
+      { text: "💰 Collector — value & rarity matter", kid: false },
+      { text: "🌈 I just think rocks are SO cool", kid: true },
+    ]
+  }
+];
+
+function AgateAgeGate({ onComplete }) {
+  const [qIdx, setQIdx] = useState(0);
+  const [kidPoints, setKidPoints] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [shaking, setShaking] = useState(false);
+
+  const current = AGE_GATE_QUESTIONS[qIdx];
+
+  const pick = (answer, idx) => {
+    if (selected !== null) return;
+    setSelected(idx);
+    if (answer.kid) {
+      setShaking(true);
+      setTimeout(() => setShaking(false), 500);
+    }
+    setTimeout(() => {
+      const newKidPts = kidPoints + (answer.kid ? 1 : 0);
+      if (qIdx < AGE_GATE_QUESTIONS.length - 1) {
+        setQIdx(q => q + 1);
+        setSelected(null);
+        setKidPoints(newKidPts);
+      } else {
+        // Behaviorally: 2+ kid answers = kid mode
+        const isKidMode = newKidPts >= 2;
+        localStorage.setItem('rhgo_mode', isKidMode ? 'kid' : 'pro');
+        onComplete(isKidMode);
+      }
+    }, 420);
+  };
+
+  return (
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-6"
+      style={{ background: 'radial-gradient(ellipse at 60% 30%, hsla(280,80%,15%,0.9) 0%, hsla(240,30%,4%,1) 70%)' }}>
+
+      {/* Crystal decoration */}
+      <div className="absolute top-16 left-8 text-4xl opacity-30 rotate-12">💎</div>
+      <div className="absolute top-24 right-10 text-3xl opacity-20 -rotate-6">🔮</div>
+      <div className="absolute bottom-32 left-12 text-2xl opacity-25 rotate-45">✨</div>
+
+      {/* Progress */}
+      <div className="flex gap-2 mb-8">
+        {AGE_GATE_QUESTIONS.map((_, i) => (
+          <div key={i} className="h-1.5 w-12 rounded-full transition-all duration-300"
+            style={{ background: i <= qIdx ? 'hsl(280,80%,65%)' : 'hsla(0,0%,100%,0.12)' }} />
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={qIdx}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.28 }}
+          className="w-full max-w-sm"
+        >
+          {/* Secret header — looks like a fun quiz, not an age gate */}
+          <div className="text-center mb-8">
+            <div className="text-5xl mb-4">🪨</div>
+            <p className="text-white/40 text-[11px] uppercase tracking-[0.3em] mb-2">Quick crystal quiz</p>
+            <h2 className="text-xl font-black text-white leading-snug">{current.q}</h2>
+          </div>
+
+          <div className="space-y-3">
+            {current.answers.map((a, i) => (
+              <motion.button
+                key={i}
+                onClick={() => pick(a, i)}
+                whileTap={{ scale: 0.97 }}
+                animate={selected === i ? { scale: [1, 1.04, 1] } : {}}
+                className="w-full text-left px-4 py-3.5 rounded-2xl text-sm font-semibold text-white/90 transition-all"
+                style={{
+                  background: selected === i
+                    ? 'linear-gradient(135deg, hsla(280,80%,35%,0.8), hsla(265,70%,25%,0.9))'
+                    : 'hsla(255,30%,14%,0.7)',
+                  border: selected === i
+                    ? '1px solid hsla(280,80%,65%,0.6)'
+                    : '1px solid hsla(255,30%,30%,0.25)',
+                  boxShadow: selected === i ? '0 0 20px hsla(280,80%,55%,0.25)' : 'none',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                {a.text}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── TOUR STEPS ────────────────────────────────────────────────────────────────
 const STEPS = [
   {
     id: 'welcome',
@@ -13,19 +129,15 @@ const STEPS = [
     body: "Hi! I'm Clover — your geology guide, field buddy, and rock identification expert. Together we'll discover amazing minerals hiding all around you.",
     color: '#a78bfa',
     glow: 'hsla(270,80%,65%,0.6)',
-    bg: 'from-purple-900/60 to-indigo-900/40',
-    icon: null,
   },
   {
     id: 'scan',
     emoji: '📷',
     title: 'Snap & Identify',
     subtitle: 'AI-Powered Rock ID in seconds',
-    body: 'Point your camera at any rock or mineral. Our AI analyzes color, texture, crystal structure, and more to identify your find with confidence scores.',
+    body: 'Point your camera at any rock or mineral. Our AI analyzes color, texture, and crystal structure to ID your find with confidence scores instantly.',
     color: '#38bdf8',
     glow: 'hsla(195,100%,60%,0.6)',
-    bg: 'from-sky-900/60 to-cyan-900/40',
-    icon: ScanLine,
     demo: 'scan',
   },
   {
@@ -36,8 +148,6 @@ const STEPS = [
     body: 'Explore our curated map of rockhounding sites — BLM land, state parks, river beds, and more. Each hotspot shows what minerals you might find.',
     color: '#34d399',
     glow: 'hsla(160,70%,50%,0.6)',
-    bg: 'from-emerald-900/60 to-teal-900/40',
-    icon: Map,
     demo: 'map',
   },
   {
@@ -45,11 +155,9 @@ const STEPS = [
     emoji: '💎',
     title: 'Build Your Geo-DEX',
     subtitle: 'Log, catalog, and track every find',
-    body: 'Every identified specimen goes into your personal Geo-DEX. Track rarity, location, weather conditions, and lunar phase of each discovery.',
+    body: 'Every identified specimen enters your personal Geo-DEX. Track rarity, location, weather, and lunar phase of each epic discovery.',
     color: '#f0abfc',
     glow: 'hsla(290,85%,75%,0.6)',
-    bg: 'from-fuchsia-900/60 to-purple-900/40',
-    icon: Gem,
     demo: 'collect',
   },
   {
@@ -57,11 +165,9 @@ const STEPS = [
     emoji: '⚡',
     title: 'Complete Quests',
     subtitle: 'Daily challenges & XP rewards',
-    body: "Earn XP by completing daily quests — find specific minerals, visit hotspots, and grow Clover's energy. Level up your rockhound rank!",
+    body: "Earn XP completing daily quests — find specific minerals, visit hotspots, and grow Clover's energy. Level up your rockhound rank!",
     color: '#fbbf24',
     glow: 'hsla(45,90%,60%,0.6)',
-    bg: 'from-amber-900/60 to-yellow-900/40',
-    icon: Zap,
     demo: 'quests',
   },
   {
@@ -72,12 +178,10 @@ const STEPS = [
     body: "The ground beneath your feet is full of incredible specimens waiting to be discovered. Clover's ready — are you?",
     color: '#a78bfa',
     glow: 'hsla(270,80%,65%,0.7)',
-    bg: 'from-violet-900/60 to-purple-900/40',
-    icon: null,
   },
 ];
 
-// Animated demo previews per step
+// ── DEMO COMPONENTS ───────────────────────────────────────────────────────────
 function ScanDemo() {
   const [pulse, setPulse] = useState(0);
   useEffect(() => {
@@ -87,14 +191,12 @@ function ScanDemo() {
   return (
     <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-sky-400/40 bg-black/40">
       <div className="absolute inset-0 flex items-center justify-center text-4xl">🪨</div>
-      {/* Scan line */}
       <motion.div
         animate={{ y: ['0%', '100%', '0%'] }}
         transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
         className="absolute inset-x-0 h-0.5 bg-sky-400 shadow-[0_0_8px_2px_rgba(56,189,248,0.7)]"
         style={{ top: 0 }}
       />
-      {/* Corner brackets */}
       {[['top-1 left-1', 'border-t-2 border-l-2'], ['top-1 right-1', 'border-t-2 border-r-2'],
         ['bottom-1 left-1', 'border-b-2 border-l-2'], ['bottom-1 right-1', 'border-b-2 border-r-2']].map(([pos, border], i) => (
         <div key={i} className={`absolute ${pos} w-4 h-4 ${border} border-sky-400 rounded-sm`} />
@@ -109,39 +211,31 @@ function ScanDemo() {
 function MapDemo() {
   return (
     <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-emerald-400/40 bg-slate-900/60">
-      {/* Grid */}
       <div className="absolute inset-0 opacity-20"
         style={{ backgroundImage: 'linear-gradient(hsla(160,60%,50%,0.3) 1px,transparent 1px),linear-gradient(90deg,hsla(160,60%,50%,0.3) 1px,transparent 1px)', backgroundSize: '16px 16px' }} />
-      {/* Hotspot dots */}
       {[{ x: '40%', y: '35%', size: 10 }, { x: '65%', y: '55%', size: 7 }, { x: '28%', y: '62%', size: 8 }].map((dot, i) => (
-        <motion.div
-          key={i}
+        <motion.div key={i}
           animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
           transition={{ duration: 1.5 + i * 0.3, repeat: Infinity, delay: i * 0.4 }}
           className="absolute rounded-full bg-emerald-400"
           style={{ left: dot.x, top: dot.y, width: dot.size, height: dot.size, transform: 'translate(-50%,-50%)', boxShadow: '0 0 8px 2px rgba(52,211,153,0.5)' }}
         />
       ))}
-      {/* You are here */}
       <div className="absolute text-lg" style={{ left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}>📍</div>
     </div>
   );
 }
 
 function CollectDemo() {
-  const gems = ['💎', '🪨', '✨', '🟣'];
   return (
     <div className="grid grid-cols-2 gap-2 w-32">
-      {gems.map((g, i) => (
-        <motion.div
-          key={i}
+      {['💎', '🪨', '✨', '🟣'].map((g, i) => (
+        <motion.div key={i}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: i * 0.15, type: 'spring', stiffness: 300 }}
           className="h-14 rounded-xl flex items-center justify-center text-2xl border border-fuchsia-400/30 bg-fuchsia-900/20"
-        >
-          {g}
-        </motion.div>
+        >{g}</motion.div>
       ))}
     </div>
   );
@@ -173,12 +267,21 @@ function QuestDemo() {
 
 const DEMOS = { scan: ScanDemo, map: MapDemo, collect: CollectDemo, quests: QuestDemo };
 
+// ── MAIN ONBOARDING ───────────────────────────────────────────────────────────
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [phase, setPhase] = useState('gate'); // 'gate' | 'tour'
   const [step, setStep] = useState(0);
+  const [kidMode, setKidMode] = useState(false);
+
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
-  const Demo = current.demo ? DEMOS[current.demo] : null;
+  const Demo = current?.demo ? DEMOS[current.demo] : null;
+
+  const handleGateComplete = (isKid) => {
+    setKidMode(isKid);
+    setPhase('tour');
+  };
 
   const handleNext = () => {
     if (isLast) {
@@ -194,13 +297,25 @@ export default function Onboarding() {
     navigate('/');
   };
 
+  if (phase === 'gate') {
+    return <AgateAgeGate onComplete={handleGateComplete} />;
+  }
+
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-between overflow-hidden"
       style={{ background: 'radial-gradient(ellipse at top, hsl(265 60% 12%) 0%, hsl(240 30% 5%) 45%, hsl(240 20% 3%) 100%)' }}>
 
+      {/* Mode badge */}
+      {kidMode && (
+        <div className="absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] z-10"
+          style={{ background: 'hsla(45,90%,50%,0.2)', border: '1px solid hsla(45,90%,60%,0.4)', color: '#fbbf24' }}>
+          🌟 Explorer Mode
+        </div>
+      )}
+
       {/* Skip */}
       {!isLast && (
-        <button onClick={handleSkip} className="absolute top-6 right-6 text-white/40 text-sm hover:text-white/70 transition z-10">
+        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/40 text-sm hover:text-white/70 transition z-10">
           Skip
         </button>
       )}
@@ -208,8 +323,7 @@ export default function Onboarding() {
       {/* Step dots */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {STEPS.map((_, i) => (
-          <motion.div
-            key={i}
+          <motion.div key={i}
             animate={{ width: i === step ? 24 : 6, opacity: i === step ? 1 : 0.3 }}
             transition={{ duration: 0.3 }}
             className="h-1.5 rounded-full"
@@ -229,37 +343,28 @@ export default function Onboarding() {
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex flex-col items-center text-center w-full max-w-sm"
           >
-            {/* Orb / emoji */}
+            {/* Orb */}
             <motion.div
               animate={{ scale: [1, 1.06, 1], filter: [`drop-shadow(0 0 20px ${current.color}80)`, `drop-shadow(0 0 40px ${current.color})`, `drop-shadow(0 0 20px ${current.color}80)`] }}
               transition={{ duration: 2.5, repeat: Infinity }}
               className="mb-6"
             >
-              <div
-                className="w-28 h-28 rounded-full flex items-center justify-center text-6xl"
+              <div className="w-28 h-28 rounded-full flex items-center justify-center text-6xl"
                 style={{
                   background: `radial-gradient(circle at 35% 35%, ${current.color}40, ${current.color}15)`,
                   border: `2px solid ${current.color}40`,
                   boxShadow: `0 0 50px ${current.color}40, inset 0 1px 0 ${current.color}50`,
-                }}
-              >
+                }}>
                 {current.emoji}
               </div>
             </motion.div>
 
-            {/* Demo visual */}
             {Demo && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="mb-6"
-              >
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
                 <Demo />
               </motion.div>
             )}
 
-            {/* Text */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="text-[11px] uppercase tracking-[0.3em] mb-2 font-semibold" style={{ color: current.color }}>
                 {current.subtitle}
@@ -267,15 +372,13 @@ export default function Onboarding() {
               <h1 className="text-3xl font-black text-white mb-4" style={{ textShadow: `0 0 30px ${current.glow}` }}>
                 {current.title}
               </h1>
-              <p className="text-white/65 text-[15px] leading-relaxed">
-                {current.body}
-              </p>
+              <p className="text-white/65 text-[15px] leading-relaxed">{current.body}</p>
             </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Bottom CTA */}
+      {/* CTA */}
       <div className="w-full px-8 pb-12">
         <motion.button
           whileTap={{ scale: 0.96 }}
@@ -287,23 +390,10 @@ export default function Onboarding() {
             border: `1px solid ${current.color}40`,
           }}
         >
-          {isLast ? (
-            <>
-              <Sparkles size={18} />
-              Start Rockhounding!
-            </>
-          ) : (
-            <>
-              Next
-              <ChevronRight size={18} />
-            </>
-          )}
+          {isLast ? <><Sparkles size={18} /> Start Rockhounding!</> : <>Next <ChevronRight size={18} /></>}
         </motion.button>
-
         {!isLast && (
-          <p className="text-center text-white/30 text-xs mt-4">
-            {step + 1} of {STEPS.length}
-          </p>
+          <p className="text-center text-white/30 text-xs mt-4">{step + 1} of {STEPS.length}</p>
         )}
       </div>
     </div>
