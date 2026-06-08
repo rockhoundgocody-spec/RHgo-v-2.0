@@ -15,15 +15,21 @@ const landColors = {
 };
 
 const darkStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#0b1020' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#7aa2c8' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1020' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#1a2540' }] },
+  { elementType: 'geometry', stylers: [{ color: '#080d1c' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#6a8db0' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#080d1c' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#121e38' }] },
+  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#1e3a5f' }] },
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#16213a' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#0f1d34' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#142640' }] },
   { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#050a18' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0d1530' }] },
+  { featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'simplified', color: '#3a5278' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#03060f' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#1a3a6e' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#090e20' }] },
+  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#0a1225' }] },
 ];
 
 let loaderPromise = null;
@@ -278,27 +284,28 @@ export default function HotspotMap({
     const bounds = new google.maps.LatLngBounds();
     const newMarkers = points.map((h) => {
       const color = landColors[h.land_type] || landColors.unknown;
+      const isActive = h.id === activeId;
       const marker = new google.maps.Marker({
         position: { lat: h.lat, lng: h.lng },
         title: h.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: isActive ? 12 : 9,
           fillColor: color,
-          fillOpacity: 0.85,
+          fillOpacity: 0.92,
           strokeColor: '#ffffff',
-          strokeWeight: 1.5,
+          strokeWeight: isActive ? 2.5 : 1.5,
         },
       });
       marker.addListener('click', () => {
-        const minerals = (h.minerals || []).slice(0, 4).join(', ');
+        const minerals = (h.minerals || []).slice(0, 4).join(' · ');
         const trust = ((h.trust_score || 0) * 100).toFixed(0);
         infoRef.current.setContent(`
-          <div style="font-family:system-ui;font-size:12px;max-width:240px;color:#0f172a">
-            <div style="font-weight:600;font-size:13px;margin-bottom:4px">${h.name}</div>
-            <div style="color:#475569">${h.state || h.country || ''} · ${(h.land_type || '').replace('_', ' ')}</div>
-            ${minerals ? `<div style="margin-top:4px;color:#334155">${minerals}</div>` : ''}
-            <div style="margin-top:4px;color:#64748b">Trust ${trust}% · ${h.difficulty || ''}</div>
+          <div style="font-family:-apple-system,system-ui,sans-serif;font-size:12px;max-width:220px;background:#0d1428;border-radius:12px;padding:12px;color:#e2e8f0">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#f1f5f9">${h.name}</div>
+            <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${h.state || h.country || ''} · ${(h.land_type || '').replace(/_/g, ' ')}</div>
+            ${minerals ? `<div style="font-size:11px;color:#a78bfa;margin-bottom:4px">${minerals}</div>` : ''}
+            <div style="font-size:10px;color:#475569">Trust ${trust}% · ${h.difficulty || ''}</div>
           </div>
         `);
         infoRef.current.open({ anchor: marker, map: mapRef.current });
@@ -483,11 +490,16 @@ export default function HotspotMap({
     if (directionsRendererRef.current) directionsRendererRef.current.set('directions', null);
   }, []);
 
+  const isFullHeight = height === '100%';
+
   return (
-    <div className="space-y-3">
+    <div className={isFullHeight ? 'relative w-full h-full' : 'space-y-3'}>
       <div
-        className="relative w-full overflow-hidden rounded-lg border border-hud-cyan/30 bg-[#0b1020]"
-        style={{ height }}
+        className="relative w-full overflow-hidden bg-[#080d1c]"
+        style={isFullHeight
+          ? { height: '100%' }
+          : { height, borderRadius: '1rem', border: '1px solid hsla(195,100%,60%,0.2)' }
+        }
       >
         <div ref={containerRef} className="absolute inset-0" />
 
