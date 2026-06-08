@@ -62,8 +62,8 @@ export default function TreasureSpawnBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-          className="fixed top-3 left-1/2 z-50 w-[calc(100%-24px)] max-w-sm"
-          style={{ transform: 'translateX(-50%)' }}
+          className="fixed left-1/2 z-50 w-[calc(100%-24px)] max-w-sm"
+          style={{ transform: 'translateX(-50%)', top: 'calc(12px + env(safe-area-inset-top, 0px))' }}
         >
           <div
             className={`rounded-2xl border bg-gradient-to-br ${style.bg} ${style.border} p-3 shadow-2xl`}
