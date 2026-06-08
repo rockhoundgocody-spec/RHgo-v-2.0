@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Zap, Trophy, RefreshCw, X, Shield, Flame } from 'lucide-react';
+import { Swords, Zap, Trophy, RefreshCw, X, Shield, Flame, Camera, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import BattleLeaderboard from './BattleLeaderboard.jsx';
 
 // Rock fighters with stats derived from real mineral properties
 const ROCK_FIGHTERS = [
-  { id: 'quartz',    name: 'Quartz',    emoji: '🔷', hp: 85,  atk: 70, def: 65, spd: 75, ability: 'Crystal Strike',  color: '#38bdf8', rarity: 'common'   },
-  { id: 'obsidian',  name: 'Obsidian',  emoji: '⚫', hp: 75,  atk: 90, def: 55, spd: 80, ability: 'Volcanic Slash',  color: '#6b7280', rarity: 'uncommon' },
-  { id: 'amethyst',  name: 'Amethyst',  emoji: '💜', hp: 90,  atk: 65, def: 80, spd: 60, ability: 'Mystic Shield',   color: '#a78bfa', rarity: 'uncommon' },
-  { id: 'pyrite',    name: 'Pyrite',    emoji: '✨', hp: 70,  atk: 85, def: 60, spd: 70, ability: "Fool's Gold Rush", color: '#fbbf24', rarity: 'common'   },
-  { id: 'malachite', name: 'Malachite', emoji: '🟢', hp: 80,  atk: 75, def: 75, spd: 65, ability: 'Toxic Swirl',     color: '#34d399', rarity: 'rare'     },
-  { id: 'ruby',      name: 'Ruby',      emoji: '🔴', hp: 95,  atk: 95, def: 70, spd: 85, ability: 'Inferno Blast',   color: '#f87171', rarity: 'rare'     },
-  { id: 'diamond',   name: 'Diamond',   emoji: '💎', hp: 100, atk: 80, def: 100,spd: 90, ability: 'Unbreakable',     color: '#e2e8f0', rarity: 'legendary'},
-  { id: 'lava',      name: 'Lava Rock', emoji: '🌋', hp: 88,  atk: 88, def: 50, spd: 95, ability: 'Magma Surge',     color: '#f97316', rarity: 'uncommon' },
+  { id: 'quartz',    name: 'Quartz',    emoji: '🔷', hp: 85,  atk: 70, def: 65, spd: 75, ability: 'Crystal Strike',   color: '#38bdf8', rarity: 'common'   },
+  { id: 'obsidian',  name: 'Obsidian',  emoji: '⚫', hp: 75,  atk: 90, def: 55, spd: 80, ability: 'Volcanic Slash',   color: '#6b7280', rarity: 'uncommon' },
+  { id: 'amethyst',  name: 'Amethyst',  emoji: '💜', hp: 90,  atk: 65, def: 80, spd: 60, ability: 'Mystic Shield',    color: '#a78bfa', rarity: 'uncommon' },
+  { id: 'pyrite',    name: 'Pyrite',    emoji: '✨', hp: 70,  atk: 85, def: 60, spd: 70, ability: "Fool's Gold Rush",  color: '#fbbf24', rarity: 'common'   },
+  { id: 'malachite', name: 'Malachite', emoji: '🟢', hp: 80,  atk: 75, def: 75, spd: 65, ability: 'Toxic Swirl',      color: '#34d399', rarity: 'rare'     },
+  { id: 'ruby',      name: 'Ruby',      emoji: '🔴', hp: 95,  atk: 95, def: 70, spd: 85, ability: 'Inferno Blast',    color: '#f87171', rarity: 'rare'     },
+  { id: 'diamond',   name: 'Diamond',   emoji: '💎', hp: 100, atk: 80, def: 100,spd: 90, ability: 'Unbreakable',      color: '#e2e8f0', rarity: 'legendary'},
+  { id: 'lava',      name: 'Lava Rock', emoji: '🌋', hp: 88,  atk: 88, def: 50, spd: 95, ability: 'Magma Surge',      color: '#f97316', rarity: 'uncommon' },
 ];
 
 const RARITY_GLOW = {
@@ -98,18 +100,114 @@ function FighterCard({ rock, hp, maxHp, isAttacking, isHurt, side }) {
   );
 }
 
+// ── Avatar upload pill ──────────────────────────────────────────────────────
+function AvatarUpload({ avatarUrl, onUpload }) {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef(null);
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    onUpload(file_url);
+    setUploading(false);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amethyst/40 hover:border-amethyst/70 transition flex-shrink-0"
+        style={{ background: 'hsla(265,60%,15%,0.8)' }}
+        title="Upload avatar"
+      >
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+        ) : uploading ? (
+          <Loader2 size={14} className="absolute inset-0 m-auto text-amethyst animate-spin" />
+        ) : (
+          <Camera size={14} className="absolute inset-0 m-auto text-amethyst/60" />
+        )}
+      </button>
+      <span className="text-[9px] text-white/35">
+        {avatarUrl ? 'Tap to change avatar' : 'Add avatar'}
+      </span>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
+
+// ── Main component ──────────────────────────────────────────────────────────
 export default function ARRockBattle() {
   const [fighters, setFighters] = useState(() => getRandomFighters());
   const [hp, setHp] = useState([fighters[0].hp, fighters[1].hp]);
   const [log, setLog] = useState([]);
-  const [phase, setPhase] = useState('idle'); // idle | battling | win
+  const [phase, setPhase] = useState('idle');
   const [winner, setWinner] = useState(null);
   const [attackingIdx, setAttackingIdx] = useState(null);
   const [hurtIdx, setHurtIdx] = useState(null);
   const [quip, setQuip] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  // Persistent state
+  const [scores, setScores] = useState([]);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+
   const turnRef = useRef(0);
   const intervalRef = useRef(null);
+
+  // Load user email + scores + avatar from Companion on mount
+  useEffect(() => {
+    base44.auth.me().then(async (me) => {
+      if (!me) return;
+      setUserEmail(me.email);
+
+      // Load scores from localStorage (keyed by email for multi-user safety)
+      const stored = localStorage.getItem(`battle_scores_${me.email}`);
+      if (stored) setScores(JSON.parse(stored));
+
+      // Load avatar from Companion entity
+      const companions = await base44.entities.Companion.filter({ owner_email: me.email }, '-created_date', 1);
+      if (companions[0]?.description) {
+        try {
+          const data = JSON.parse(companions[0].description);
+          if (data.battleAvatarUrl) setAvatarUrl(data.battleAvatarUrl);
+        } catch { /* description is plain text, ignore */ }
+      }
+    }).catch(() => {});
+  }, []);
+
+  const saveAvatar = async (url) => {
+    setAvatarUrl(url);
+    if (!userEmail) return;
+    try {
+      const companions = await base44.entities.Companion.filter({ owner_email: userEmail }, '-created_date', 1);
+      if (companions[0]) {
+        let data = {};
+        try { data = JSON.parse(companions[0].description || '{}'); } catch { data = {}; }
+        data.battleAvatarUrl = url;
+        await base44.entities.Companion.update(companions[0].id, { description: JSON.stringify(data) });
+      }
+    } catch { /* non-critical */ }
+  };
+
+  const persistScore = (winnerRock, xp) => {
+    const entry = {
+      mineral: winnerRock.name,
+      emoji: winnerRock.emoji,
+      xp,
+      avatarUrl,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    };
+    const updated = [entry, ...scores].slice(0, 20);
+    setScores(updated);
+    if (userEmail) {
+      localStorage.setItem(`battle_scores_${userEmail}`, JSON.stringify(updated));
+    }
+  };
 
   const reset = () => {
     const newFighters = getRandomFighters();
@@ -139,7 +237,6 @@ export default function ARRockBattle() {
       const f = fighters[attacker];
       const d = fighters[defender];
 
-      // Damage formula: atk - def/3 ± 10% variance, min 5
       const base = Math.max(5, f.atk - Math.floor(d.def / 3));
       const dmg = Math.floor(base * (0.9 + Math.random() * 0.2));
 
@@ -162,11 +259,18 @@ export default function ARRockBattle() {
         clearInterval(intervalRef.current);
         setPhase('win');
         setWinner(fighters[attacker]);
+        // Award XP based on rarity of winner
+        const rarityXp = { common: 100, uncommon: 150, rare: 200, legendary: 350 };
+        const xp = rarityXp[fighters[attacker].rarity] || 150;
+        persistScore(fighters[attacker], xp);
       }
     }, 900);
   };
 
   useEffect(() => () => clearInterval(intervalRef.current), []);
+
+  const totalWins = scores.length;
+  const totalXp = scores.reduce((acc, s) => acc + (s.xp || 0), 0);
 
   return (
     <>
@@ -194,9 +298,15 @@ export default function ARRockBattle() {
           <div className="flex gap-1 text-3xl">{fighters[0].emoji}<span className="text-white/30 text-xl self-center">VS</span>{fighters[1].emoji}</div>
           <div className="flex-1">
             <div className="text-white font-bold text-sm">{fighters[0].name} vs {fighters[1].name}</div>
-            <div className="text-white/40 text-[10px] mt-0.5">Tap to battle! Stats from real geology 🔬</div>
+            <div className="text-white/40 text-[10px] mt-0.5">
+              {totalWins > 0 ? `${totalWins} wins · ${totalXp} XP earned` : 'Tap to battle! Stats from real geology 🔬'}
+            </div>
           </div>
-          <Swords size={20} className="text-red-400/60" />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" className="w-9 h-9 rounded-full object-cover border border-red-400/40" />
+          ) : (
+            <Swords size={20} className="text-red-400/60" />
+          )}
         </div>
       </motion.div>
 
@@ -215,11 +325,16 @@ export default function ARRockBattle() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="w-full max-w-sm rounded-t-3xl overflow-hidden"
-              style={{ background: 'linear-gradient(180deg, hsla(240,30%,7%,0.98) 0%, hsla(240,30%,4%,0.98) 100%)', border: '1px solid hsla(280,80%,55%,0.15)', paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
+              className="w-full max-w-sm rounded-t-3xl overflow-y-auto"
+              style={{
+                background: 'linear-gradient(180deg, hsla(240,30%,7%,0.98) 0%, hsla(240,30%,4%,0.98) 100%)',
+                border: '1px solid hsla(280,80%,55%,0.15)',
+                paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+                maxHeight: '92vh',
+              }}
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <div className="flex items-center justify-between px-5 pt-5 pb-2">
                 <div className="flex items-center gap-2">
                   <Swords size={16} className="text-red-400" />
                   <span className="text-white font-black text-sm uppercase tracking-[0.2em]">AR Rock Battle</span>
@@ -229,9 +344,25 @@ export default function ARRockBattle() {
                 </button>
               </div>
 
+              {/* Avatar + stats row */}
+              <div className="px-5 pb-3 flex items-center justify-between">
+                <AvatarUpload avatarUrl={avatarUrl} onUpload={saveAvatar} />
+                {totalWins > 0 && (
+                  <div className="flex gap-3">
+                    <div className="text-center">
+                      <div className="text-sm font-black text-yellow-400">{totalWins}</div>
+                      <div className="text-[7px] text-white/30 uppercase tracking-wider">Wins</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-black text-amethyst-glow">{totalXp}</div>
+                      <div className="text-[7px] text-white/30 uppercase tracking-wider">XP</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* VS Arena */}
               <div className="px-4 mb-3">
-                {/* Quip */}
                 <AnimatePresence>
                   {quip && (
                     <motion.div
@@ -247,12 +378,10 @@ export default function ARRockBattle() {
 
                 <div className="flex gap-3 items-stretch">
                   <FighterCard rock={fighters[0]} hp={hp[0]} maxHp={fighters[0].hp} isAttacking={attackingIdx === 0} isHurt={hurtIdx === 0} side="left" />
-
                   <div className="flex flex-col items-center justify-center shrink-0 gap-1">
                     <Swords size={18} className="text-red-400" />
                     <span className="text-white/20 text-[8px] font-bold uppercase">VS</span>
                   </div>
-
                   <FighterCard rock={fighters[1]} hp={hp[1]} maxHp={fighters[1].hp} isAttacking={attackingIdx === 1} isHurt={hurtIdx === 1} side="right" />
                 </div>
               </div>
@@ -286,11 +415,16 @@ export default function ARRockBattle() {
                     <div className="text-white font-black text-base">{winner.name} WINS!</div>
                     <div className="flex items-center justify-center gap-1 mt-1">
                       <Trophy size={11} className="text-yellow-400" />
-                      <span className="text-yellow-400 text-xs font-bold">+150 XP</span>
+                      <span className="text-yellow-400 text-xs font-bold">
+                        +{({ common: 100, uncommon: 150, rare: 200, legendary: 350 }[winner.rarity] || 150)} XP
+                      </span>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Leaderboard */}
+              <BattleLeaderboard scores={scores} />
 
               {/* Action buttons */}
               <div className="flex gap-3 px-4 pb-5">
