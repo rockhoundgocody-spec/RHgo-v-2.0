@@ -26,9 +26,9 @@ function SectionHeader({ icon: IconComp, label, color = '#22d3ee' }) {
 function StatBadge({ value, label, color }) {
   return (
     <div className="rounded-xl px-3 py-2.5 text-center"
-      style={{ background: 'hsla(220,40%,8%,0.7)', border: `1px solid ${color}25` }}>
+      style={{ background: 'hsla(220,40%,22%,0.85)', border: `1px solid ${color}55` }}>
       <div className="font-black text-xl leading-none" style={{ color }}>{value}</div>
-      <div className="text-[8px] uppercase tracking-[0.2em] text-white/30 mt-1">{label}</div>
+      <div className="text-[8px] uppercase tracking-[0.2em] text-white/70 mt-1">{label}</div>
     </div>
   );
 }
@@ -94,7 +94,7 @@ export default function CollectionDashboard({ specimens = [] }) {
     return (
       <GlassPanel variant="hud" className="p-8 text-center">
         <Gem size={32} className="mx-auto text-hud-cyan/30 mb-3" />
-        <p className="text-white/40 text-sm">No data yet — scan your first specimen to unlock your dashboard.</p>
+        <p className="text-white/80 text-sm">No data yet — scan your first specimen to unlock your dashboard.</p>
       </GlassPanel>
     );
   }
@@ -130,14 +130,14 @@ export default function CollectionDashboard({ specimens = [] }) {
             {rarityData.map((d) => (
               <div key={d.key} className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                <span className="text-[10px] text-white/60 flex-1">{d.name}</span>
+                <span className="text-[10px] text-white/85 flex-1">{d.name}</span>
                 <span className="text-[10px] font-bold tabular-nums" style={{ color: d.color }}>{d.value}</span>
               </div>
             ))}
             {avgConf > 0 && (
               <div className="pt-1 border-t border-white/5 flex items-center gap-2">
                 <Zap size={9} className="text-yellow-400/70" />
-                <span className="text-[9px] text-white/35">Avg AI confidence</span>
+                <span className="text-[9px] text-white/65">Avg AI confidence</span>
                 <span className="text-[9px] font-bold text-yellow-400/80 ml-auto">{(avgConf * 100).toFixed(0)}%</span>
               </div>
             )}
@@ -151,8 +151,8 @@ export default function CollectionDashboard({ specimens = [] }) {
           <SectionHeader icon={Gem} label="Top Minerals" />
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={topMinerals} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.75)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.55)', fontSize: 9 }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{ background: 'hsla(240,30%,8%,0.95)', border: '1px solid hsla(195,100%,60%,0.3)', borderRadius: 8, fontSize: 11 }}
                 itemStyle={{ color: '#22d3ee' }}
@@ -169,7 +169,7 @@ export default function CollectionDashboard({ specimens = [] }) {
         <SectionHeader icon={TrendingUp} label="Finds Over Time" color="#a78bfa" />
         <ResponsiveContainer width="100%" height={90}>
           <LineChart data={weeklyFinds} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
-            <XAxis dataKey="label" tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fill: 'rgba(255,255,255,0.70)', fontSize: 9 }} axisLine={false} tickLine={false} />
             <YAxis tick={false} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{ background: 'hsla(240,30%,8%,0.95)', border: '1px solid hsla(280,80%,60%,0.3)', borderRadius: 8, fontSize: 11 }}
@@ -187,7 +187,7 @@ export default function CollectionDashboard({ specimens = [] }) {
           <div className="space-y-2">
             {rarestFinds.map((s) => (
               <div key={s.id} className="flex items-center gap-3 rounded-xl p-2.5"
-                style={{ background: s.rarity === 'legendary' ? 'hsla(265,60%,10%,0.6)' : 'hsla(200,60%,8%,0.6)', border: `1px solid ${RARITY_COLORS[s.rarity]?.color || '#fff'}22` }}>
+                style={{ background: s.rarity === 'legendary' ? 'hsla(265,60%,24%,0.75)' : 'hsla(200,60%,22%,0.75)', border: `1px solid ${RARITY_COLORS[s.rarity]?.color || '#fff'}55` }}>
                 {s.image_url
                   ? <img src={s.image_url} alt={s.mineral_name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                   : <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'hsla(265,40%,15%,0.7)' }}>
@@ -223,10 +223,10 @@ export default function CollectionDashboard({ specimens = [] }) {
               return (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-[10px] text-white/60 truncate max-w-[70%]">{loc}</span>
+                    <span className="text-[10px] text-white/85 truncate max-w-[70%]">{loc}</span>
                     <span className="text-[10px] font-bold text-emerald-400 tabular-nums">{count} finds</span>
                   </div>
-                  <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-1 rounded-full bg-white/15 overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#34d399' }} />
                   </div>
                 </div>

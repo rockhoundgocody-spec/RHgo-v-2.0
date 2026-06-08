@@ -66,7 +66,7 @@ export default function Leaderboard() {
           <span className="text-[10px] font-mono uppercase tracking-[0.5em] text-yellow-400/80">Global Command</span>
         </div>
         <h1 className="text-3xl font-black text-white tracking-tight">Rock Stars</h1>
-        <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Top mineral collectors worldwide</p>
+        <p className="text-white/60 text-[11px] uppercase tracking-[0.25em] mt-1">Top mineral collectors worldwide</p>
       </div>
 
       {/* Your rank callout */}
@@ -76,9 +76,9 @@ export default function Leaderboard() {
         transition={{ delay: 0.1 }}
         className="relative rounded-2xl overflow-hidden mb-5 p-4"
         style={{
-          background: 'linear-gradient(135deg, hsla(265,80%,12%,0.9), hsla(280,60%,8%,0.9))',
-          border: '1px solid hsla(280,80%,60%,0.3)',
-          boxShadow: '0 0 40px -10px hsla(280,80%,60%,0.4)',
+          background: 'linear-gradient(135deg, hsla(265,70%,26%,0.92), hsla(280,55%,20%,0.92))',
+          border: '1px solid hsla(280,80%,70%,0.45)',
+          boxShadow: '0 0 40px -10px hsla(280,80%,65%,0.5)',
         }}
       >
         <ScanLine />
@@ -88,9 +88,9 @@ export default function Leaderboard() {
             {userRank.emoji}
           </div>
           <div className="flex-1">
-            <div className="text-[9px] uppercase tracking-[0.35em] text-amethyst-glow/70 mb-0.5">Your rank</div>
+            <div className="text-[9px] uppercase tracking-[0.35em] text-amethyst-glow mb-0.5">Your rank</div>
             <div className="text-white font-black text-lg leading-none">{userRank.label}</div>
-            <div className="text-white/40 text-[10px] mt-0.5">{userFinds} finds · #{yourPos} globally</div>
+            <div className="text-white/70 text-[10px] mt-0.5">{userFinds} finds · #{yourPos} globally</div>
           </div>
           <div className="text-right">
             <div className="text-amethyst-glow font-black text-2xl">{userFinds}</div>
@@ -151,19 +151,19 @@ export default function Leaderboard() {
 
                 {/* Name + badge */}
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-bold truncate ${isYou ? 'text-amethyst-glow' : isTop3 ? 'text-white' : 'text-white/75'}`}>
+                  <div className={`text-sm font-bold truncate ${isYou ? 'text-amethyst-glow' : isTop3 ? 'text-white' : 'text-white/90'}`}>
                     {entry.name}
-                    {isYou && <span className="ml-1.5 text-[8px] px-1.5 py-0.5 rounded-full bg-amethyst/20 text-amethyst/80 border border-amethyst/30">YOU</span>}
+                    {isYou && <span className="ml-1.5 text-[8px] px-1.5 py-0.5 rounded-full bg-amethyst/30 text-amethyst-glow border border-amethyst/40">YOU</span>}
                   </div>
-                  <div className="text-[9px] text-white/30 truncate">{entry.badge}</div>
+                  <div className="text-[9px] text-white/60 truncate">{entry.badge}</div>
                 </div>
 
                 {/* Finds count */}
                 <div className="text-right shrink-0">
-                  <div className={`font-black tabular-nums text-sm ${isYou ? 'text-amethyst-glow' : isTop3 ? 'text-yellow-300' : 'text-white/60'}`}>
+                  <div className={`font-black tabular-nums text-sm ${isYou ? 'text-amethyst-glow' : isTop3 ? 'text-yellow-300' : 'text-white/85'}`}>
                     {entry.finds}
                   </div>
-                  <div className="text-[8px] text-white/20 uppercase tracking-wider">finds</div>
+                  <div className="text-[8px] text-white/50 uppercase tracking-wider">finds</div>
                 </div>
               </motion.div>
             );
@@ -171,7 +171,7 @@ export default function Leaderboard() {
         </div>
 
         <div className="px-4 py-3 border-t border-white/5">
-          <p className="text-[9px] text-white/20 text-center font-mono">
+          <p className="text-[9px] text-white/50 text-center font-mono">
             Leaderboard resets monthly · keep scanning to climb the ranks
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function Leaderboard() {
 
       {/* Rank tiers legend */}
       <div className="mt-4">
-        <div className="text-[9px] font-mono uppercase tracking-[0.35em] text-white/25 mb-2 px-1">Rank Tiers</div>
+        <div className="text-[9px] font-mono uppercase tracking-[0.35em] text-white/60 mb-2 px-1">Rank Tiers</div>
         <div className="grid grid-cols-2 gap-2">
           {[
             { min: 0,   label: 'Pebble Pup',         emoji: '🐾', color: '#94a3b8' },
@@ -191,11 +191,11 @@ export default function Leaderboard() {
           ].map((tier) => (
             <div key={tier.min}
               className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ background: 'hsla(220,30%,8%,0.6)', border: `1px solid ${tier.color}22` }}>
+              style={{ background: 'hsla(220,30%,22%,0.75)', border: `1px solid ${tier.color}55` }}>
               <span className="text-sm">{tier.emoji}</span>
               <div>
                 <div className="text-[10px] font-semibold" style={{ color: tier.color }}>{tier.label}</div>
-                <div className="text-[8px] text-white/25">{tier.min}+ finds</div>
+                <div className="text-[8px] text-white/60">{tier.min}+ finds</div>
               </div>
             </div>
           ))}
