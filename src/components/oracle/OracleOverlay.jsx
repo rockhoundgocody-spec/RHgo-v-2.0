@@ -156,7 +156,7 @@ export default function OracleOverlay() {
           <div className="w-10 h-10 shrink-0">
             <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="text-white font-semibold tracking-wide flex items-center gap-2">
               Clover 🍀 Cole
               {dictationMode && (
@@ -165,9 +165,33 @@ export default function OracleOverlay() {
                 </span>
               )}
             </div>
-            <div className="text-[10px] uppercase tracking-[0.3em] text-amethyst/70">
-              {speaking ? 'Clover is speaking…' : listening ? 'Clover is listening…' : thinking ? 'Clover is thinking…' : dictationMode ? 'Awaiting specimen…' : 'Your AI companion'}
-            </div>
+            {/* Status — prominent, color-coded, never ambiguous */}
+            {listening ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-400" />
+                </span>
+                <span className="text-[11px] font-semibold text-rose-300">Listening — speak now</span>
+              </div>
+            ) : speaking ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amethyst-glow opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amethyst-glow" />
+                </span>
+                <span className="text-[11px] font-semibold text-amethyst-glow">Speaking…</span>
+              </div>
+            ) : thinking ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Loader2 size={10} className="text-hud-cyan animate-spin" />
+                <span className="text-[11px] font-semibold text-hud-cyan">Thinking…</span>
+              </div>
+            ) : (
+              <div className="text-[10px] uppercase tracking-[0.25em] text-white/35 mt-0.5">
+                {dictationMode ? 'Describe your specimen' : 'Your AI companion'}
+              </div>
+            )}
           </div>
           {micSupported && (
             <button
@@ -245,12 +269,19 @@ export default function OracleOverlay() {
               disabled={thinking}
               className={`p-2.5 rounded-full border transition ${
                 listening
-                  ? 'bg-rose-400/20 border-rose-400/50 text-rose-200 animate-pulse'
+                  ? 'bg-rose-400/20 border-rose-400/50 text-rose-300'
                   : 'bg-white/5 border-white/15 text-amethyst/80 hover:text-white'
               }`}
-              aria-label={listening ? 'Stop listening' : 'Start voice input'}
+              aria-label={listening ? 'Tap to stop listening' : 'Tap to speak'}
+              title={listening ? 'Tap to stop' : 'Tap to speak'}
             >
-              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+              {/* Always show Mic — with a stop-ring overlay when active */}
+              <span className="relative flex items-center justify-center">
+                <Mic size={16} />
+                {listening && (
+                  <span className="absolute -inset-1 rounded-full border-2 border-rose-400 animate-ping opacity-60" />
+                )}
+              </span>
             </button>
           )}
           <input
