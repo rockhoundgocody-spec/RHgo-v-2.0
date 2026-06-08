@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 255 28% 18%;
+    --background: 255 30% 26%;
     --foreground: 0 0% 100%;
-    --amethyst: 270 70% 74%;
-    --amethyst-deep: 265 80% 52%;
-    --amethyst-glow: 280 100% 88%;
-    --hud-cyan: 195 100% 75%;
-    --hud-blue: 215 90% 72%;
-    --hud-grid: 210 40% 38%;
-    --glass-edge: 270 30% 88%;
-    --card: 255 22% 24%;
+    --amethyst: 270 70% 82%;
+    --amethyst-deep: 265 80% 60%;
+    --amethyst-glow: 280 100% 93%;
+    --hud-cyan: 195 100% 82%;
+    --hud-blue: 215 90% 80%;
+    --hud-grid: 210 40% 50%;
+    --glass-edge: 270 30% 92%;
+    --card: 255 25% 34%;
     --card-foreground: 0 0% 100%;
-    --popover: 255 22% 24%;
+    --popover: 255 25% 34%;
     --popover-foreground: 0 0% 100%;
-    --primary: 270 60% 78%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 255 18% 30%;
+    --primary: 270 65% 84%;
+    --primary-foreground: 255 30% 15%;
+    --secondary: 255 20% 40%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 255 18% 30%;
-    --muted-foreground: 270 15% 82%;
-    --accent: 255 18% 30%;
+    --muted: 255 20% 38%;
+    --muted-foreground: 270 20% 92%;
+    --accent: 255 20% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -116,7 +116,7 @@
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
     background:
-      radial-gradient(ellipse at top, hsl(265 55% 28%) 0%, hsl(250 28% 18%) 45%, hsl(245 22% 14%) 100%);
+      radial-gradient(ellipse at top, hsl(265 55% 38%) 0%, hsl(250 30% 28%) 45%, hsl(245 25% 22%) 100%);
     background-attachment: fixed;
     /* Lock to screen edges on all phones */
     margin: 0;
@@ -142,25 +142,25 @@
 
 @layer utilities {
   .glass-panel {
-    background: linear-gradient(135deg, hsla(270, 38%, 36%, 0.72) 0%, hsla(250, 32%, 26%, 0.82) 100%);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid hsla(270, 55%, 78%, 0.38);
+    background: linear-gradient(135deg, hsla(270, 42%, 46%, 0.82) 0%, hsla(250, 36%, 36%, 0.88) 100%);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid hsla(270, 60%, 88%, 0.50);
     box-shadow:
-      inset 0 1px 0 hsla(270, 80%, 95%, 0.28),
-      inset 0 -1px 0 hsla(240, 30%, 0%, 0.18),
-      0 8px 32px hsla(265, 60%, 30%, 0.28),
-      0 0 0 1px hsla(270, 40%, 70%, 0.15);
+      inset 0 1px 0 hsla(270, 80%, 98%, 0.35),
+      inset 0 -1px 0 hsla(240, 30%, 0%, 0.12),
+      0 8px 32px hsla(265, 60%, 20%, 0.22),
+      0 0 0 1px hsla(270, 40%, 75%, 0.20);
   }
   .hud-panel {
-    background: linear-gradient(180deg, hsla(215, 70%, 28%, 0.82) 0%, hsla(220, 60%, 20%, 0.88) 100%);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid hsla(195, 100%, 68%, 0.45);
+    background: linear-gradient(180deg, hsla(215, 70%, 38%, 0.88) 0%, hsla(220, 62%, 30%, 0.92) 100%);
+    backdrop-filter: blur(20px) saturate(165%);
+    -webkit-backdrop-filter: blur(20px) saturate(165%);
+    border: 1px solid hsla(195, 100%, 78%, 0.55);
     box-shadow:
-      inset 0 1px 0 hsla(195, 100%, 85%, 0.28),
-      0 0 24px hsla(195, 100%, 55%, 0.22),
-      0 4px 24px hsla(220, 60%, 10%, 0.3);
+      inset 0 1px 0 hsla(195, 100%, 90%, 0.35),
+      0 0 24px hsla(195, 100%, 60%, 0.28),
+      0 4px 24px hsla(220, 60%, 10%, 0.22);
   }
   .hud-grid-bg {
     background-image:
