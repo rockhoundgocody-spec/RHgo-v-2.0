@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Upload, Trophy, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
 
 const LEVEL_TITLES = [
   'Pebble Scout',
@@ -106,7 +107,12 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
             ? [...prev.badges, { title: newTitle, earnedAt: new Date().toISOString() }]
             : prev.badges,
         };
-        if (leveledUp) setLevelUpTitle(newTitle);
+        // Analytics: track XP gain and level-up events
+        base44.analytics.track({ eventName: 'player_xp_gained', properties: { amount, total_xp: newXP, level: newLevel } });
+        if (leveledUp) {
+          base44.analytics.track({ eventName: 'player_level_up', properties: { old_level: oldLevel, new_level: newLevel, title: newTitle, total_xp: newXP } });
+          setLevelUpTitle(newTitle);
+        }
         if (onXPUpdate) onXPUpdate(newXP, leveledUp, newTitle);
         return updated;
       });

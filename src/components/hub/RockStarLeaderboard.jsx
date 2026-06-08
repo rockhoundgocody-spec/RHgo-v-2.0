@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import { Trophy, Crown } from 'lucide-react';
+import { Trophy, Crown, ChevronRight } from 'lucide-react';
 import { getRank } from './LiveStatStrip.jsx';
 
 // Static leaderboard to inspire competition — seeded with aspirational data
@@ -34,7 +35,9 @@ export default function RockStarLeaderboard({ userFinds = 0, userEmail = '' }) {
           <span className="text-[10px] uppercase tracking-[0.25em] text-yellow-300 font-bold">
             Rock Stars Under 18
           </span>
-          <span className="ml-auto text-[9px] text-white/25 uppercase tracking-wider">Global</span>
+          <Link to="/leaderboard" className="ml-auto flex items-center gap-0.5 text-[9px] text-hud-cyan/60 hover:text-hud-cyan uppercase tracking-wider transition">
+            Full Board <ChevronRight size={10} />
+          </Link>
         </div>
 
         <div className="space-y-1.5">

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, MapPin, X } from 'lucide-react';
 import useHotspotProximity from '@/lib/useHotspotProximity';
 import { cn } from '@/lib/utils';
+import { base44 } from '@/api/base44Client';
 
 /**
  * Mounted globally inside Layout. Watches user position, fires a browser
@@ -23,6 +24,18 @@ export default function HotspotProximityWatcher() {
     }
     setAskedOnce(true);
   }, [askedOnce]);
+
+  // Track when a hotspot proximity alert fires
+  const trackedHotspotRef = useRef(null);
+  useEffect(() => {
+    if (nearby && nearby.hotspot.id !== trackedHotspotRef.current) {
+      trackedHotspotRef.current = nearby.hotspot.id;
+      base44.analytics.track({
+        eventName: 'hotspot_proximity_alert',
+        properties: { hotspot_name: nearby.hotspot.name, distance_m: nearby.distance_m, land_type: nearby.hotspot.land_type || 'unknown' },
+      });
+    }
+  }, [nearby]);
 
   if (!nearby || dismissedId === nearby.hotspot.id) return null;
 

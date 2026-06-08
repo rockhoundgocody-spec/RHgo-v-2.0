@@ -127,13 +127,16 @@ export default function SpecimenCard({ specimen, index }) {
           )}
         </div>
 
-        {/* Expand toggle */}
-        <button
-          onClick={() => setExpanded((e) => !e)}
-          className="w-full flex items-center justify-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-0.5"
-        >
-          {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore + Tests</>}
-        </button>
+        {/* Share + Expand row — always visible */}
+        <div className="flex items-center gap-2">
+          <ShareSpecimenButton specimen={specimen} className="flex-1" />
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8"
+          >
+            {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
+          </button>
+        </div>
 
         {expanded && (
           <div className="space-y-2 border-t border-white/5 pt-2">
@@ -146,9 +149,6 @@ export default function SpecimenCard({ specimen, index }) {
                 <p className="text-[10px] text-white/60 leading-relaxed">{specimen.notes}</p>
               </div>
             )}
-            <div className="flex justify-between items-center pt-1">
-              <ShareSpecimenButton specimen={specimen} />
-            </div>
           </div>
         )}
       </div>

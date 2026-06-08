@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Share2, Check } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 /**
  * Share a specimen via the native Web Share API on mobile, falling back to
@@ -18,8 +19,15 @@ export default function ShareSpecimenButton({ specimen, className = '' }) {
       ? ` (${specimen.rarity.toUpperCase()})`
       : '';
     const where = specimen.found_at ? ` near ${specimen.found_at}` : '';
-    const text = `Found ${specimen.mineral_name}${rarityTag}${where} — logged with RockHound-GO 💎`;
-    const shareData = { title: 'My RockHound find', text, url: window.location.origin };
+    const date = specimen.found_date ? ` on ${specimen.found_date}` : '';
+    const text = `Just found ${specimen.mineral_name}${rarityTag}${where}${date} 🪨 Logged with RockHound-GO — the AI mineral companion app! 💎`;
+    const shareData = {
+      title: `RockHound find: ${specimen.mineral_name}`,
+      text,
+      url: specimen.image_url || window.location.origin,
+    };
+
+    base44.analytics.track({ eventName: 'specimen_shared', properties: { mineral: specimen.mineral_name, rarity: specimen.rarity || 'common' } });
 
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
