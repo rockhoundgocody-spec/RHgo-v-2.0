@@ -19,6 +19,7 @@ import { useEntityList } from '@/lib/useEntityQuery.js';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
+import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -83,6 +84,9 @@ export default function Hub() {
 
       {/* ── DASHBOARD FEED ── */}
       <div className="w-full max-w-md mt-6 px-4 space-y-4">
+
+        {/* Player Legend — persistent XP, level, avatar */}
+        {userEmail && <PlayerLegend userEmail={userEmail} />}
 
         {/* Live stats wired to real data */}
         <LiveStatStrip />

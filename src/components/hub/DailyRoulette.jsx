@@ -151,6 +151,9 @@ export default function DailyRoulette() {
       }
     } catch (_) {}
 
+    // Award XP to PlayerLegend
+    if (window.__rhgo_addXP) window.__rhgo_addXP(challenge.xp);
+
     // Show meme share card after a beat
     setTimeout(() => setShowMeme(true), 400);
   };
