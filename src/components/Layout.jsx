@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Sword } from 'lucide-react';
+import { Compass, ScanLine, Gem, Home, Shield, FileCode2, ChevronLeft, Users, Map, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
@@ -13,11 +13,11 @@ import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
 const navItems = [
-  { to: '/', label: 'Hub', icon: Home },
-  { to: '/explore', label: 'Explore', icon: Compass },
-  { to: '/scan', label: 'Scan', icon: ScanLine },
-  { to: '/collection', label: 'Collect', icon: Gem },
-  { to: '/quests', label: 'Quests', icon: Sword },
+  { to: '/', label: 'Discover', icon: Home },
+  { to: '/explore', label: 'Map', icon: Map },
+  { to: '/scan', label: 'Scan', icon: ScanLine, hero: true },
+  { to: '/collection', label: 'Geo-DEX', icon: Gem },
+  { to: '/quests', label: 'Quests', icon: Sparkles },
 ];
 
 const secondaryRoutes = [
@@ -170,17 +170,46 @@ export default function Layout() {
             className="fixed left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-2 py-2 flex items-center gap-1"
             style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
           >
-            {navItems.map(({ to, label, icon: Icon }) => {
+            {navItems.map(({ to, label, icon: Icon, hero }) => {
               const isActive = to === '/'
                 ? location.pathname === '/'
                 : location.pathname.startsWith(to);
               const showDot = to === '/quests' && questDot && !isActive;
+
+              if (hero) {
+                return (
+                  <button
+                    key={to}
+                    onClick={() => handleTabClick(to, isActive)}
+                    className="relative flex flex-col items-center gap-0.5 -mt-5 px-2 select-none"
+                    aria-label={label}
+                  >
+                    {/* Hero crystal scan button */}
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90"
+                      style={{
+                        background: isActive
+                          ? 'linear-gradient(135deg, hsl(280,80%,55%), hsl(265,90%,40%))'
+                          : 'linear-gradient(135deg, hsl(280,70%,45%), hsl(265,80%,30%))',
+                        boxShadow: isActive
+                          ? '0 0 28px hsla(280,100%,70%,0.7), 0 0 60px hsla(265,80%,50%,0.35), inset 0 1px 0 hsla(280,100%,90%,0.25)'
+                          : '0 0 18px hsla(280,100%,70%,0.4), inset 0 1px 0 hsla(280,100%,90%,0.15)',
+                        border: '2px solid hsla(280,100%,75%,0.5)',
+                      }}
+                    >
+                      <Icon size={22} className="text-white" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amethyst-glow mt-0.5">{label}</span>
+                  </button>
+                );
+              }
+
               return (
                 <button
                   key={to}
                   onClick={() => handleTabClick(to, isActive)}
                   className={cn(
-                    'relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition min-w-[56px] min-h-[44px] justify-center select-none',
+                    'relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-full transition min-w-[52px] min-h-[44px] justify-center select-none',
                     isActive
                       ? 'bg-amethyst/30 text-white shadow-[inset_0_0_18px_hsla(280,100%,70%,0.4)]'
                       : 'text-amethyst/60 hover:text-amethyst'
@@ -193,7 +222,7 @@ export default function Layout() {
                       <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse" />
                     )}
                   </div>
-                  <span className="text-[11px] font-medium tracking-wide">{label}</span>
+                  <span className="text-[10px] font-medium tracking-wide">{label}</span>
                 </button>
               );
             })}
