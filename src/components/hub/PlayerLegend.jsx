@@ -129,86 +129,119 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
   return (
     <>
       <div
-        className="rounded-3xl p-4 border"
+        className="rounded-3xl overflow-hidden border"
         style={{
-          background: 'hsla(240,30%,8%,0.85)',
-          borderColor: 'hsla(195,100%,60%,0.2)',
-          boxShadow: '0 0 40px -10px hsla(260,80%,60%,0.18)',
+          background: 'linear-gradient(160deg, hsla(265,40%,10%,0.95) 0%, hsla(240,30%,7%,0.95) 100%)',
+          borderColor: 'hsla(280,60%,50%,0.22)',
+          boxShadow: '0 0 40px -10px hsla(265,80%,55%,0.22)',
         }}
       >
-        {/* Top row: avatar + stats + upload */}
-        <div className="flex items-center gap-4 mb-4">
-          {/* Avatar */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 flex-shrink-0 transition active:scale-95"
-            style={{
-              borderColor: level > 2 ? 'hsla(280,90%,65%,0.6)' : 'hsla(255,30%,40%,0.4)',
-              background: 'hsla(260,40%,12%,0.8)',
-              boxShadow: level > 2 ? '0 0 18px hsla(280,90%,65%,0.3)' : 'none',
-            }}
-            title="Upload avatar"
-          >
-            {player.avatarUrl ? (
-              <img src={player.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-            ) : (
-              <User size={28} className="absolute inset-0 m-auto text-white/25" />
-            )}
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center"
-                style={{ background: 'hsla(240,30%,5%,0.7)' }}>
-                <div className="w-4 h-4 border-2 border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
-              </div>
-            )}
-            {/* Camera badge */}
-            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-tl-lg flex items-center justify-center"
-              style={{ background: 'hsla(240,30%,15%,0.9)' }}>
-              <Upload size={9} className="text-white/50" />
-            </div>
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        {/* Header label */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b"
+          style={{ borderColor: 'hsla(280,40%,40%,0.15)' }}>
+          <div className="flex items-center gap-2">
+            <Trophy size={13} className="text-amethyst-glow" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-amethyst-glow/70">Your Legend</span>
+          </div>
+          <span className="text-[9px] uppercase tracking-[0.2em] text-white/25 px-2 py-0.5 rounded-full border border-white/10">
+            Level {level}
+          </span>
+        </div>
 
-          {/* Level + XP */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">LVL {level}</span>
-              <span className="text-[9px] px-2 py-px rounded-full font-semibold"
-                style={{ background: 'hsla(280,60%,20%,0.5)', color: 'hsl(280,80%,75%)', border: '1px solid hsla(280,60%,50%,0.25)' }}>
+        <div className="p-4">
+          {/* Avatar + stats row */}
+          <div className="flex items-center gap-4 mb-4">
+            {/* Avatar — clear tap-to-set CTA */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 flex-shrink-0 transition active:scale-95 group"
+              style={{
+                borderColor: level > 2 ? 'hsla(280,90%,65%,0.6)' : 'hsla(255,30%,50%,0.35)',
+                background: 'hsla(260,40%,12%,0.9)',
+                boxShadow: level > 2 ? '0 0 20px hsla(280,90%,65%,0.28)' : 'none',
+              }}
+            >
+              {player.avatarUrl ? (
+                <img src={player.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                  <User size={22} className="text-white/30" />
+                  <span className="text-[7px] text-white/30 uppercase tracking-wider">Tap</span>
+                </div>
+              )}
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center"
+                  style={{ background: 'hsla(240,30%,5%,0.75)' }}>
+                  <div className="w-4 h-4 border-2 border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
+                </div>
+              )}
+              {/* Upload overlay on hover/focus */}
+              {!uploading && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'hsla(265,60%,10%,0.7)' }}>
+                  <Upload size={16} className="text-amethyst-glow" />
+                </div>
+              )}
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+
+            {/* Rank + XP */}
+            <div className="flex-1 min-w-0">
+              <div className="text-white font-black text-lg leading-none tracking-tight mb-1">
                 {title}
-              </span>
-            </div>
-            <div className="text-xl font-black text-white tracking-tight leading-none">
-              {player.totalXP.toLocaleString()} <span className="text-sm text-amethyst-glow font-bold">XP</span>
-            </div>
-            {remaining > 0 && (
-              <div className="text-[9px] text-white/30 mt-0.5">{remaining} XP → {nextTitle}</div>
-            )}
-          </div>
-        </div>
-
-        {/* XP Progress bar */}
-        <div className="h-2 rounded-full bg-white/8 overflow-hidden mb-1">
-          <motion.div
-            className="h-full rounded-full"
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            style={{ background: 'linear-gradient(90deg, hsl(265,80%,55%), hsl(280,100%,75%))' }}
-          />
-        </div>
-        <div className="text-[8px] text-right text-white/25 mb-3">{Math.floor(progress)}% to next rank</div>
-
-        {/* Recent badges */}
-        {player.badges.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {player.badges.slice(-4).map((b, i) => (
-              <div key={i} className="flex items-center gap-1 text-[8px] px-2 py-0.5 rounded-full"
-                style={{ background: 'hsla(45,80%,15%,0.4)', border: '1px solid hsla(45,80%,45%,0.25)', color: '#fbbf24' }}>
-                <Trophy size={8} /> {b.title}
               </div>
-            ))}
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <span className="text-2xl font-black text-amethyst-glow leading-none">
+                  {player.totalXP.toLocaleString()}
+                </span>
+                <span className="text-xs text-white/40 font-semibold">XP</span>
+              </div>
+              {remaining > 0 ? (
+                <div className="text-[9px] text-white/35">
+                  {remaining.toLocaleString()} XP to unlock <span className="text-amethyst-glow/70">{nextTitle}</span>
+                </div>
+              ) : (
+                <div className="text-[9px] text-yellow-400/70">Max rank achieved 🏆</div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* XP Progress bar */}
+          <div className="mb-1">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[8px] text-white/30 uppercase tracking-wider">Rank Progress</span>
+              <span className="text-[8px] text-white/30">{Math.floor(progress)}%</span>
+            </div>
+            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'hsla(265,40%,20%,0.4)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                animate={{ width: `${Math.max(progress, player.totalXP > 0 ? 2 : 0)}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                style={{ background: 'linear-gradient(90deg, hsl(265,80%,55%), hsl(280,100%,75%))' }}
+              />
+            </div>
+          </div>
+
+          {/* Empty state nudge */}
+          {player.totalXP === 0 && (
+            <p className="text-[9px] text-white/25 text-center mt-3">
+              Claim a Daily Challenge or win a Rock Battle to earn your first XP ⚡
+            </p>
+          )}
+
+          {/* Recent rank badges */}
+          {player.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {player.badges.slice(-4).map((b, i) => (
+                <div key={i} className="flex items-center gap-1 text-[8px] px-2.5 py-1 rounded-full"
+                  style={{ background: 'hsla(45,80%,12%,0.5)', border: '1px solid hsla(45,80%,45%,0.3)', color: '#fbbf24' }}>
+                  <Trophy size={8} /> {b.title}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Level-up modal */}
