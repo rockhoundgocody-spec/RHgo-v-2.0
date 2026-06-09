@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 // Note: SlidersHorizontal removed — layer controls moved into map component
-import { Mountain, Loader2, Locate, ChevronUp, ChevronDown, SlidersHorizontal, Zap, Search, X, MapPin } from 'lucide-react';
+import { Mountain, Loader2, Locate, ChevronUp, ChevronDown, SlidersHorizontal, Zap, Search, X, MapPin, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
@@ -140,16 +140,10 @@ export default function Explore() {
   const [locating, setLocating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState(null);
-  const [mineralFilter, setMineralFilter] = useState(null);
+  const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [mineralFilter, setMineralFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const scrollRef = useRef(null);
-
-  // Derive unique mineral list from all hotspots (top 8 most common)
-  const allMinerals = useMemo(() => {
-    const counts = {};
-    hotspots.forEach(h => h.minerals?.forEach(m => { counts[m] = (counts[m] || 0) + 1; }));
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([m]) => m);
-  }, [hotspots]);
 
   const locate = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -166,15 +160,21 @@ export default function Explore() {
 
   useEffect(() => { locate(); }, [locate]);
 
+  // Collect unique minerals across all hotspots for the filter dropdown
+  const allMinerals = useMemo(() => {
+    const set = new Set();
+    hotspots.forEach(h => h.minerals?.forEach(m => set.add(m)));
+    return [...set].sort();
+  }, [hotspots]);
+
   const filteredHotspots = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return hotspots.filter(h => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const textMatch = h.name?.toLowerCase().includes(q) ||
-          h.state?.toLowerCase().includes(q) ||
-          h.minerals?.some(m => m.toLowerCase().includes(q));
-        if (!textMatch) return false;
-      }
+      if (q && !(
+        h.name?.toLowerCase().includes(q) ||
+        h.state?.toLowerCase().includes(q) ||
+        h.minerals?.some(m => m.toLowerCase().includes(q))
+      )) return false;
       if (difficultyFilter && h.difficulty !== difficultyFilter) return false;
       if (mineralFilter && !h.minerals?.includes(mineralFilter)) return false;
       return true;
@@ -262,6 +262,74 @@ export default function Explore() {
           </button>
         </div>
 
+        {/* Filter row */}
+        <div className="mt-2 flex gap-2 pointer-events-auto flex-wrap">
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all"
+            style={{
+              background: showFilters ? 'hsla(265,70%,40%,0.5)' : 'hsla(240,30%,8%,0.88)',
+              border: `1px solid ${showFilters ? 'hsla(280,80%,65%,0.5)' : 'hsla(270,30%,40%,0.3)'}`,
+              color: showFilters ? 'hsl(280,100%,88%)' : 'rgba(255,255,255,0.6)',
+              backdropFilter: 'blur(20px)',
+            }}
+            aria-label="Toggle filters"
+          >
+            <Filter size={12} />
+            Filters
+            {(difficultyFilter || mineralFilter) && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amethyst-glow ml-0.5" />
+            )}
+          </button>
+
+          {showFilters && (
+            <>
+              <select
+                value={difficultyFilter}
+                onChange={e => setDifficultyFilter(e.target.value)}
+                aria-label="Filter by difficulty"
+                className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none"
+                style={{
+                  background: 'hsla(240,30%,8%,0.88)',
+                  border: `1px solid ${difficultyFilter ? 'hsla(35,90%,60%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
+                  backdropFilter: 'blur(20px)',
+                }}
+              >
+                <option value="">All Difficulties</option>
+                <option value="easy">Easy</option>
+                <option value="moderate">Moderate</option>
+                <option value="hard">Hard</option>
+                <option value="expert">Expert</option>
+              </select>
+
+              <select
+                value={mineralFilter}
+                onChange={e => setMineralFilter(e.target.value)}
+                aria-label="Filter by mineral"
+                className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none max-w-[140px]"
+                style={{
+                  background: 'hsla(240,30%,8%,0.88)',
+                  border: `1px solid ${mineralFilter ? 'hsla(265,80%,65%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
+                  backdropFilter: 'blur(20px)',
+                }}
+              >
+                <option value="">All Minerals</option>
+                {allMinerals.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+
+              {(difficultyFilter || mineralFilter) && (
+                <button
+                  onClick={() => { setDifficultyFilter(''); setMineralFilter(''); }}
+                  className="px-3 py-2 rounded-xl text-xs text-rose-400/80 transition-all"
+                  style={{ background: 'hsla(0,60%,20%,0.5)', border: '1px solid hsla(0,60%,40%,0.3)', backdropFilter: 'blur(20px)' }}
+                >
+                  Clear
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
         {/* Offline banner */}
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">
@@ -296,14 +364,10 @@ export default function Explore() {
                 <div className="w-full flex items-center justify-between mb-3">
                   <div>
                     <h2 className="text-white font-bold text-base">
-                      {(searchQuery || difficultyFilter || mineralFilter)
-                        ? `${filteredHotspots.length} of ${hotspots.length} sites`
-                        : 'Nearby Sites'}
+                      {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Sites'}
                     </h2>
                     <p className="text-white/35 text-[11px] uppercase tracking-[0.2em]">
-                      {(difficultyFilter || mineralFilter)
-                        ? <button onClick={() => { setDifficultyFilter(null); setMineralFilter(null); }} className="text-amethyst-glow/70 hover:text-amethyst-glow underline underline-offset-2">clear filters ×</button>
-                        : `${hotspots.length} total · ${publicCount} open to collect`}
+                      {hotspots.length} total · {publicCount} open to collect
                     </p>
                   </div>
                   <button onClick={() => setSheetOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -314,61 +378,10 @@ export default function Explore() {
 
                 {/* Stats strip */}
                 <div className="flex gap-2 w-full justify-center mb-3">
-                  <StatPill value={filteredHotspots.length} label="Sites" color="amethyst" />
+                  <StatPill value={hotspots.length} label="Sites" color="amethyst" />
                   <StatPill value={publicCount} label="Open" color="green" />
                   <StatPill value={specimens.filter(s => s.lat && s.lng).length} label="My Finds" color="cyan" />
                 </div>
-
-                {/* ── Difficulty filter chips ── */}
-                <div className="w-full mb-2">
-                  <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1.5">Difficulty</div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {['easy', 'moderate', 'hard', 'expert'].map(d => {
-                      const active = difficultyFilter === d;
-                      const cls = DIFFICULTY_COLORS[d] || '';
-                      return (
-                        <button
-                          key={d}
-                          onClick={() => setDifficultyFilter(active ? null : d)}
-                          className={cn(
-                            'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all',
-                            active ? cls : 'border-white/10 text-white/40 bg-white/5 hover:border-white/20',
-                          )}
-                          aria-pressed={active}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ── Mineral filter chips ── */}
-                {allMinerals.length > 0 && (
-                  <div className="w-full mb-1">
-                    <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1.5">Minerals</div>
-                    <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                      {allMinerals.map(m => {
-                        const active = mineralFilter === m;
-                        return (
-                          <button
-                            key={m}
-                            onClick={() => setMineralFilter(active ? null : m)}
-                            className={cn(
-                              'flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full border transition-all',
-                              active
-                                ? 'bg-amethyst/25 border-amethyst/60 text-amethyst-glow font-bold'
-                                : 'border-white/10 text-white/40 bg-white/5 hover:border-amethyst/30 hover:text-white/70',
-                            )}
-                            aria-pressed={active}
-                          >
-                            {m}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Scrollable body */}
