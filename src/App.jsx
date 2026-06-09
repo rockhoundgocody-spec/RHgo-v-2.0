@@ -40,6 +40,7 @@ const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
 const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
 const Badges = lazy(() => import('@/pages/Badges'));
+const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
@@ -110,6 +111,7 @@ const AuthenticatedApp = () => {
           <Route path="/QuestDashboard" element={<Navigate to="/quests" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
+          <Route path="/companion" element={<CompanionDashboard />} />
 
           {/* SECONDARY / ADMIN ROUTES */}
           <Route path="/admin" element={<Admin />} />
