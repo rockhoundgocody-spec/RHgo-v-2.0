@@ -35,8 +35,8 @@ export default function RockStarLeaderboard({ userFinds = 0, userEmail = '' }) {
           <span className="text-[10px] uppercase tracking-[0.25em] text-yellow-300 font-bold">
             Rock Stars Under 18
           </span>
-          <Link to="/leaderboard" className="ml-auto flex items-center gap-0.5 text-[9px] text-hud-cyan/60 hover:text-hud-cyan uppercase tracking-wider transition">
-            Full Board <ChevronRight size={10} />
+          <Link to="/leaderboard" className="ml-auto flex items-center gap-1 text-[10px] font-bold text-hud-cyan hover:text-white uppercase tracking-wider transition px-2 py-1 rounded-lg active:scale-95" style={{ background: 'hsla(195,100%,60%,0.1)', border: '1px solid hsla(195,100%,60%,0.2)' }}>
+            Full Board <ChevronRight size={11} />
           </Link>
         </div>
 
