@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
@@ -83,10 +83,10 @@ export default function Profile() {
           <TrendingUp size={16} className="text-white/40 flex-shrink-0" />
           <span>Marketplace Activity</span>
         </button>
-        <button onClick={() => navigate('/badges')} className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-b-2xl">
+        <Link to="/badges" className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-b-2xl">
           <Award size={16} className="text-white/40 flex-shrink-0" />
           <span>Achievements & Badges</span>
-        </button>
+        </Link>
       </GlassPanel>
 
       <SkillsSection />
