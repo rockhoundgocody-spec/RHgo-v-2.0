@@ -271,14 +271,17 @@ function ErrorView({ error, fileRef, onUploadFallback }) {
         <Camera size={28} className="text-amethyst-glow" />
       </div>
       <div className="text-white/70 text-sm font-semibold mb-1">Camera Unavailable</div>
-      <div className="text-white/30 text-xs mb-6 max-w-[240px]">{error}</div>
+      <div className="text-white/30 text-xs mb-4 max-w-[240px]">{error}</div>
+      <p className="text-white/50 text-xs mb-6 max-w-[240px]">
+        You can still identify minerals by uploading a photo from your gallery.
+      </p>
       <input ref={fileRef} type="file" accept="image/*" className="hidden"
         onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
       <Button onClick={() => fileRef.current?.click()}
-        className="rounded-xl text-white font-semibold"
+        className="rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm"
         style={{ background: 'linear-gradient(135deg, hsla(270,80%,38%,0.9), hsla(280,100%,52%,0.7))', border: '1px solid hsla(280,80%,55%,0.4)' }}>
         <Upload size={14} className="mr-2" />
-        Upload a Photo Instead
+        Upload a Photo to Identify
       </Button>
     </div>
   );

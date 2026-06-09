@@ -42,6 +42,7 @@ function xpToLevel(xp) {
 
 // ── Quest Card ───────────────────────────────────────────────────────────────
 function QuestCard({ q }) {
+  const [expanded, setExpanded] = useState(false);
   const pct  = Math.min((q.progress / q.target_count) * 100, 100);
   const done = q.status === 'completed' || pct >= 100;
   const color  = TYPE_COLOR[q.quest_type]  || '#94a3b8';
@@ -57,9 +58,11 @@ function QuestCard({ q }) {
     : null;
 
   return (
-    <div className="rounded-2xl p-4 transition-all"
-      style={{ background: bg, border: `1px solid ${border}`, opacity: done ? 0.7 : 1 }}>
-
+    <div
+      className="rounded-2xl p-4 transition-all cursor-pointer select-none"
+      style={{ background: bg, border: `1px solid ${border}`, opacity: done ? 0.7 : 1 }}
+      onClick={() => setExpanded(e => !e)}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
@@ -78,11 +81,14 @@ function QuestCard({ q }) {
           <div className="text-white/45 text-[11px] mt-0.5 leading-relaxed">{q.description}</div>
         </div>
 
-        {/* XP badge */}
-        <div className="flex flex-col items-center shrink-0 px-3 py-2 rounded-xl"
-          style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
-          <span className="text-base font-black leading-none" style={{ color }}>+{q.xp_reward}</span>
-          <span className="text-[8px] uppercase tracking-widest text-white/30">XP</span>
+        {/* XP badge + chevron */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center shrink-0 px-3 py-2 rounded-xl"
+            style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
+            <span className="text-base font-black leading-none" style={{ color }}>+{q.xp_reward}</span>
+            <span className="text-[8px] uppercase tracking-widest text-white/30">XP</span>
+          </div>
+          <span className="text-white/25 text-[10px]" style={{ transform: expanded ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
         </div>
       </div>
 
@@ -101,11 +107,26 @@ function QuestCard({ q }) {
         )}
       </div>
 
-      {q.clover_message && (
-        <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-xl"
-          style={{ background: `${color}08`, borderLeft: `2px solid ${color}40` }}>
-          <span className="text-base leading-none">🍀</span>
-          <p className="text-[10px] italic text-white/40 leading-relaxed">"{q.clover_message}"</p>
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+          {q.clover_message && (
+            <div className="flex items-start gap-2 px-3 py-2 rounded-xl"
+              style={{ background: `${color}08`, borderLeft: `2px solid ${color}40` }}>
+              <span className="text-base leading-none">🍀</span>
+              <p className="text-[10px] italic text-white/40 leading-relaxed">"{q.clover_message}"</p>
+            </div>
+          )}
+          <div className="px-3 py-2 rounded-xl" style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}>
+            <div className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1">Reward</div>
+            <div className="text-sm font-bold" style={{ color }}>+{q.xp_reward} XP</div>
+          </div>
+          {q.target_rarity && (
+            <div className="px-3 py-2 rounded-xl" style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}>
+              <div className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1">Target Rarity</div>
+              <div className="text-sm font-bold text-amber-300 capitalize">{q.target_rarity}</div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -201,9 +222,12 @@ export default function QuestDashboard() {
   const xpToNext = nextLevelXp - currentLevelXp;
   const xpProgress = totalXP - currentLevelXp;
 
-  const filtered = filter === 'all' ? quests : quests.filter(q => q.quest_type === filter);
-  const daily   = quests.filter(q => q.quest_type === 'daily');
-  const weekly  = quests.filter(q => q.quest_type === 'weekly');
+  // Filter out expired quests from the active view
+  const now = Date.now();
+  const activeQuests = quests.filter(q => !q.expires_at || new Date(q.expires_at).getTime() > now);
+  const filtered = filter === 'all' ? activeQuests : activeQuests.filter(q => q.quest_type === filter);
+  const daily   = activeQuests.filter(q => q.quest_type === 'daily');
+  const weekly  = activeQuests.filter(q => q.quest_type === 'weekly');
 
   return (
     <div className="min-h-screen px-4 pt-4 pb-28 max-w-2xl mx-auto">
@@ -219,7 +243,7 @@ export default function QuestDashboard() {
           <h1 className="text-xl font-black text-white leading-tight">Quest Dashboard</h1>
           <p className="text-white/35 text-[11px]">Challenges · XP · Streak</p>
         </div>
-        <button onClick={generateQuests} disabled={generating || quests.length > 0}
+        <button onClick={generateQuests} disabled={generating || activeQuests.length > 0}
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition disabled:opacity-40"
           style={{ background: 'hsla(280,80%,35%,0.5)', border: '1px solid hsla(280,80%,55%,0.3)', color: 'hsl(280,80%,80%)' }}>
           <RefreshCw size={10} className={generating ? 'animate-spin' : ''} />
@@ -305,12 +329,12 @@ export default function QuestDashboard() {
         <GlassPanel className="p-8 text-center">
           <Sparkles size={28} className="mx-auto text-amethyst/30 mb-3" />
           <p className="text-white/50 text-sm font-semibold mb-1">
-            {quests.length === 0 ? 'No active quests' : `No ${filter} quests active`}
+            {activeQuests.length === 0 ? 'No active quests' : `No ${filter} quests active`}
           </p>
           <p className="text-white/25 text-xs mb-4">
-            {quests.length === 0 ? 'Ask Clover to assign challenges' : 'Switch tabs or generate new quests'}
+            {activeQuests.length === 0 ? 'Ask Clover to assign challenges' : 'Switch tabs or generate new quests'}
           </p>
-          {quests.length === 0 && (
+          {activeQuests.length === 0 && (
             <button onClick={generateQuests} disabled={generating}
               className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40"
               style={{ background: 'hsla(280,80%,30%,0.4)', border: '1px solid hsla(280,80%,55%,0.3)' }}>
@@ -326,7 +350,7 @@ export default function QuestDashboard() {
       )}
 
       {/* ── PROGRESS SUMMARY ── */}
-      {quests.length > 0 && (
+      {activeQuests.length > 0 && (
         <GlassPanel className="mt-6 p-4">
           <div className="flex items-center gap-2 mb-3">
             <Target size={13} className="text-hud-cyan" />
@@ -354,7 +378,7 @@ export default function QuestDashboard() {
 
           {/* Pending XP */}
           {(() => {
-            const pending = quests.reduce((s, q) => s + (q.xp_reward || 0), 0);
+            const pending = activeQuests.reduce((s, q) => s + (q.xp_reward || 0), 0);
             return (
               <div className="mt-3 flex items-center justify-between px-3 py-2.5 rounded-xl"
                 style={{ background: 'hsla(280,80%,15%,0.25)', border: '1px solid hsla(280,60%,50%,0.2)' }}>
