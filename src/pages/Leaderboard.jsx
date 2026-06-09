@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Trophy, Zap, Shield, Flame, Star, Users } from 'lucide-react';
+import { Crown, Trophy, Zap, Shield, Flame, Star, Users, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useEntityList } from '@/lib/useEntityQuery';
 import { getRank } from '@/components/hub/LiveStatStrip.jsx';
@@ -36,6 +36,7 @@ function ScanLine() {
 
 export default function Leaderboard() {
   const [userEmail, setUserEmail] = useState('');
+  const [search, setSearch] = useState('');
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
   const userFinds = specimens.length;
   const userHandle = userEmail?.split('@')[0]?.slice(0, 14) || 'You';
@@ -55,6 +56,9 @@ export default function Leaderboard() {
   ];
 
   const yourPos = board.findIndex((e) => e.isYou) + 1;
+  const filteredBoard = search.trim()
+    ? board.filter((e) => e.name.toLowerCase().includes(search.toLowerCase()) || e.badge.toLowerCase().includes(search.toLowerCase()))
+    : board;
 
   return (
     <div className="min-h-screen pb-28 px-4 pt-6 max-w-md mx-auto">
@@ -111,11 +115,29 @@ export default function Leaderboard() {
           </div>
         </div>
 
+        {/* Search / Filter */}
+        <div className="px-4 py-2 border-b border-white/5">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'hsla(220,30%,12%,0.7)', border: '1px solid hsla(220,30%,35%,0.3)' }}>
+            <Search size={12} className="text-white/30 shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or rank..."
+              className="flex-1 bg-transparent text-white/80 text-xs placeholder:text-white/25 outline-none"
+            />
+          </div>
+        </div>
+
         <div className="divide-y divide-white/[0.04]">
-          {board.map((entry, i) => {
-            const isTop3 = i < 3;
+          {filteredBoard.length === 0 ? (
+            <div className="py-8 text-center text-white/30 text-sm">No results for "{search}"</div>
+          ) : null}
+          {filteredBoard.map((entry, i) => {
+            const originalIdx = board.indexOf(entry);
+            const isTop3 = originalIdx < 3;
             const isYou = entry.isYou;
-            const medal = isTop3 ? MEDAL[i] : `#${i + 1}`;
+            const medal = isTop3 ? MEDAL[originalIdx] : `#${originalIdx + 1}`;
 
             return (
               <motion.div
@@ -128,7 +150,7 @@ export default function Leaderboard() {
                   background: 'hsla(265,60%,15%,0.5)',
                   borderLeft: '2px solid hsla(280,90%,65%,0.7)',
                 } : isTop3 ? {
-                  background: `${ROW_GLOW[i]}`,
+                  background: `${ROW_GLOW[originalIdx]}`,
                 } : {}}
               >
                 {/* Medal / rank */}
