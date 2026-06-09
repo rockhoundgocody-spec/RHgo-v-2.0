@@ -99,8 +99,8 @@ export default function Hub() {
         {/* Daily Rock Roulette — Chaos mode only */}
         {chaos && <DailyRoulette />}
 
-        {/* AR Rock Battle — Chaos mode only */}
-        {chaos && <ARRockBattle />}
+        {/* AR Rock Battle — always visible */}
+        <ARRockBattle />
 
         {/* Quests */}
         {userEmail && <QuestEngine userEmail={userEmail} />}
