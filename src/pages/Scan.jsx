@@ -85,6 +85,13 @@ export default function Scan() {
         'Cross-reference multiple angles if provided — contradictions between angles are important clues. ' +
         'Return your best identification with: ' +
         'top_match (specific mineral name, not just rock type), ' +
+        'scientific_name (full mineralogical name, e.g. Silicon Dioxide), ' +
+        'chemical_formula (e.g. SiO₂), ' +
+        'hardness_mohs (Mohs scale number or range), ' +
+        'crystal_system (cubic/hexagonal/tetragonal/orthorhombic/monoclinic/triclinic/amorphous), ' +
+        'formation (how this mineral forms geologically, 1-2 sentences), ' +
+        'where_to_find (top 3 US states or global regions famous for this mineral), ' +
+        'value_estimate (rough specimen value range, e.g. "$5-20 for typical specimens"), ' +
         'rarity (common/uncommon/rare/legendary based on specimen quality and mineral scarcity), ' +
         'confidence (0-1, calibrated — 0.9+ only if you are near-certain, be conservative), ' +
         'short engaging description (2 sentences, written for an excited young explorer, mention what makes THIS specimen special), ' +
