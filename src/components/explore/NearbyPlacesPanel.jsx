@@ -1,45 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { Fuel, Tent, Utensils, ShoppingBag, Hospital } from 'lucide-react';
+import React, { useState } from 'react';
+import { Fuel, Tent, Utensils, ShoppingBag, Hospital, ExternalLink } from 'lucide-react';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const CATEGORIES = [
-  { type: 'gas_station', label: 'Gas', icon: Fuel },
-  { type: 'campground', label: 'Camp', icon: Tent },
-  { type: 'restaurant', label: 'Food', icon: Utensils },
-  { type: 'store', label: 'Supply', icon: ShoppingBag },
-  { type: 'hospital', label: 'Medical', icon: Hospital },
+  { type: 'gas_station', label: 'Gas',     icon: Fuel,        query: 'gas station' },
+  { type: 'campground',  label: 'Camp',    icon: Tent,        query: 'campground' },
+  { type: 'restaurant',  label: 'Food',    icon: Utensils,    query: 'restaurant' },
+  { type: 'store',       label: 'Supply',  icon: ShoppingBag, query: 'hardware store' },
+  { type: 'hospital',    label: 'Medical', icon: Hospital,    query: 'hospital urgent care' },
 ];
 
-export default function NearbyPlacesPanel({ lat, lng, map }) {
+export default function NearbyPlacesPanel({ lat, lng }) {
   const [active, setActive] = useState('gas_station');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!window.google?.maps?.places || !map) return;
-    setLoading(true);
-    setResults([]);
-    const svc = new window.google.maps.places.PlacesService(map);
-    svc.nearbySearch(
-      {
-        location: { lat, lng },
-        radius: 25000,
-        type: active,
-      },
-      (res, status) => {
-        setLoading(false);
-        if (status === 'OK' && Array.isArray(res)) {
-          setResults(res.slice(0, 8));
-        }
-      }
-    );
-  }, [lat, lng, active, map]);
+  const cat = CATEGORIES.find(c => c.type === active);
+
+  // Build a Google Maps search URL — opens in browser, no API key needed
+  const searchUrl = lat && lng
+    ? `https://www.google.com/maps/search/${encodeURIComponent(cat.query)}/@${lat},${lng},13z`
+    : `https://www.google.com/maps/search/${encodeURIComponent(cat.query)}`;
 
   return (
     <GlassPanel variant="hud">
       <HudFrame label="Nearby Resources">
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {CATEGORIES.map((c) => {
             const Icon = c.icon;
             const isActive = c.type === active;
@@ -60,33 +45,21 @@ export default function NearbyPlacesPanel({ lat, lng, map }) {
           })}
         </div>
 
-        <div className="h-52 overflow-y-auto pr-1 -mr-1 space-y-1.5">
-          {loading && (
-            <div className="text-hud-cyan/60 text-xs uppercase tracking-[0.3em] text-center py-8">
-              Searching…
-            </div>
-          )}
-          {!loading && results.length === 0 && (
-            <div className="text-white/50 text-xs text-center py-8">No results within 25km.</div>
-          )}
-          {results.map((r) => (
-            <a
-              key={r.place_id}
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                r.name
-              )}&query_place_id=${r.place_id}`}
-              target="_blank"
-              rel="noreferrer"
-              className="block px-3 py-2 rounded-md bg-black/30 border border-white/5 hover:border-hud-cyan/40 transition"
-            >
-              <div className="text-white text-sm font-medium truncate">{r.name}</div>
-              <div className="text-white/50 text-[11px] truncate">
-                {r.vicinity}
-                {r.rating ? ` · ★ ${r.rating}` : ''}
-              </div>
-            </a>
-          ))}
-        </div>
+        <a
+          href={searchUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-hud-cyan/40 bg-hud-cyan/10 text-hud-cyan text-xs uppercase tracking-[0.25em] hover:bg-hud-cyan/20 transition"
+        >
+          <ExternalLink size={13} />
+          Search {cat.label} on Maps
+        </a>
+
+        {!lat && (
+          <p className="text-white/40 text-[10px] text-center mt-2">
+            Enable location for better results
+          </p>
+        )}
       </HudFrame>
     </GlassPanel>
   );

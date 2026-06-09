@@ -13,7 +13,7 @@ export default function GlassPanel({
     <div
       className={cn(
         base,
-        'relative rounded-2xl overflow-hidden',
+        'relative rounded-2xl',
         glow && variant === 'amethyst' && 'shadow-[0_0_60px_-15px_hsla(280,80%,55%,0.4)]',
         glow && variant === 'hud' && 'shadow-[0_0_50px_-15px_hsla(195,100%,55%,0.45)]',
         className

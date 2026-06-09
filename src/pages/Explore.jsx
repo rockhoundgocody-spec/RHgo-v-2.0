@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 // Note: SlidersHorizontal removed — layer controls moved into map component
-import { Mountain, Loader2, Locate, ChevronUp, ChevronDown, SlidersHorizontal, Zap, Search, X } from 'lucide-react';
+import { Mountain, Loader2, Locate, ChevronUp, ChevronDown, SlidersHorizontal, Zap, Search, X, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import HotspotListItem from '@/components/explore/HotspotListItem.jsx';
 import PredictiveFindsPanel from '@/components/explore/PredictiveFindsPanel.jsx';
@@ -315,7 +316,7 @@ export default function Explore() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mx-4 mb-3 overflow-hidden"
+                    className="mx-4 mb-3"
                   >
                     <div className="rounded-2xl p-4"
                       style={{ background: 'hsla(215,50%,12%,0.8)', border: '1px solid hsla(195,100%,60%,0.2)' }}>
@@ -334,6 +335,19 @@ export default function Explore() {
                           📋 {activeHotspot.rules}
                         </div>
                       )}
+                      <Link
+                        to="/scan"
+                        className="mt-3 w-full flex items-center justify-center gap-2 min-h-[44px] rounded-xl text-sm font-bold tracking-wide transition-all active:scale-95"
+                        style={{
+                          background: 'linear-gradient(135deg, hsla(265,70%,50%,0.9), hsla(280,80%,60%,0.9))',
+                          border: '1px solid hsla(280,80%,70%,0.5)',
+                          boxShadow: '0 0 20px hsla(265,80%,55%,0.3)',
+                          color: '#fff',
+                        }}
+                      >
+                        <MapPin size={15} />
+                        Log a Specimen Find
+                      </Link>
                     </div>
                     <PredictiveFindsPanel userLocation={userLocation} hotspots={[activeHotspot]} />
                   </motion.div>
