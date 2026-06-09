@@ -45,6 +45,12 @@ export default function useOfflineHotspots() {
 
   useEffect(() => {
     fetchData();
+    // Also refetch when page becomes visible (tab/app switch)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) fetchData();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchData]);
 
   return { data, isLoading, isOffline, cachedAt, error, refetch: fetchData };
