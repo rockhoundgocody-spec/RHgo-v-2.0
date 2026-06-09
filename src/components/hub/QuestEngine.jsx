@@ -63,8 +63,8 @@ export default function QuestEngine({ userEmail }) {
         <div className="flex items-center gap-3">
           <button
             onClick={generateQuests}
-            disabled={generating}
-            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-amethyst/60 hover:text-amethyst-glow transition"
+            disabled={generating || !userEmail || quests.length > 0}
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-amethyst/60 hover:text-amethyst-glow transition disabled:opacity-40 disabled:pointer-events-none"
           >
             <RefreshCw size={9} className={generating ? 'animate-spin' : ''} />
             {quests.length === 0 ? 'Ask Clover' : 'Refresh'}
@@ -89,7 +89,8 @@ export default function QuestEngine({ userEmail }) {
             const color = questTypeColor[q.quest_type] || '#94a3b8';
             const bg    = questTypeBg[q.quest_type] || 'bg-white/5 border-white/10';
             return (
-              <div key={q.id} className={`rounded-xl border p-3 ${bg}`}>
+              <div key={q.id} className={`rounded-xl border p-3 ${bg} cursor-pointer active:scale-[0.98] transition-transform`}
+                onClick={() => navigate('/quests')}>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
                     <div className="flex items-center gap-1.5 mb-0.5">

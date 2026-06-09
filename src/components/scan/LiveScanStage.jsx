@@ -18,7 +18,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
-  const fileRef = useRef(null);
   const signalRef = useRef(0);
   const scanStateRef = useRef('idle');
 
@@ -199,9 +198,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         )}
       </div>
 
-      {/* Hidden file input — always mounted so fileRef is valid even on error */}
-      <input ref={fileRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
+
 
       {/* ── BOTTOM ACTIONS ── */}
       {!error && (
@@ -222,12 +219,14 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
             {ready ? (scanState === 'locked' ? 'Deep Scan Specimen' : 'Scan Mineral') : 'Initializing…'}
           </Button>
 
-          <button onClick={() => fileRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors"
+          <label htmlFor="gallery-upload-input"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors cursor-pointer"
             style={{ border: '1px solid hsla(280,30%,25%,0.3)' }}>
             <Upload size={13} />
             Upload from Gallery
-          </button>
+          </label>
+          <input id="gallery-upload-input" type="file" accept="image/*" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadFallback?.(f); }} />
         </div>
       )}
     </div>
