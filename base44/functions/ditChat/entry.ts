@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get('All_in_1_KEY');
     if (!apiKey) {
-      return Response.json({ error: 'All_in_1_KEY not set' }, { status: 500 });
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
     }
 
     const {

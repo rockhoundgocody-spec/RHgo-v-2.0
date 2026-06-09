@@ -1,5 +1,10 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+/**
+ * Maps utility endpoint — auth-gated.
+ * The Google Maps API key is used server-side only (reverse geocoding in parseSpecimenDictation).
+ * This endpoint no longer exposes the key to clients.
+ */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -7,11 +12,9 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    if (!apiKey) {
-      return Response.json({ error: 'GOOGLE_MAPS_API_KEY not set' }, { status: 500 });
-    }
-    return Response.json({ apiKey });
+    // Key is used server-side only — not returned to clients
+    const hasKey = !!Deno.env.get('GOOGLE_MAPS_API_KEY');
+    return Response.json({ ok: hasKey });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
