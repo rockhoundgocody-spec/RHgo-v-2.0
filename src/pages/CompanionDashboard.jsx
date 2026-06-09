@@ -5,11 +5,13 @@ import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 
 export default function CompanionDashboard() {
   const [companion, setCompanion] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     base44.functions.invoke('getCompanionState', {})
       .then((res) => setCompanion(res?.data?.companion || null))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -17,8 +19,16 @@ export default function CompanionDashboard() {
       <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70 mb-2">
         Companion
       </div>
-      <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion(updated)} />
-      <CompanionProgressDashboard companion={companion} />
+      {loading ? (
+        <div className="flex justify-center pt-16">
+          <div className="w-8 h-8 border-4 border-amethyst/20 border-t-amethyst-glow rounded-full animate-spin" />
+        </div>
+      ) : (
+        <>
+          <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion(updated)} />
+          <CompanionProgressDashboard companion={companion} />
+        </>
+      )}
     </div>
   );
 }

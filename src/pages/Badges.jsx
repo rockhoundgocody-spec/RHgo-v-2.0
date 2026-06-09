@@ -144,7 +144,7 @@ export default function Badges() {
   });
 
   return (
-    <div className="px-4 pt-6 max-w-md mx-auto min-h-screen overflow-y-auto" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="px-4 pt-6 max-w-md mx-auto min-h-screen" style={{ paddingBottom: 'calc(140px + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <div className="mb-5 text-center">
         <h1 className="text-2xl font-bold text-white tracking-wide">Badges</h1>

@@ -37,7 +37,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
     }
   };
 
-  const name = companion.name || 'Clover 🍀 Cole';
+  const name = companion?.name || 'Clover 🍀 Cole';
 
   return (
     <GlassPanel className="mb-10 p-5">
