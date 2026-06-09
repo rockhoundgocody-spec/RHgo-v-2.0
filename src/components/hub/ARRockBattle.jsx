@@ -159,24 +159,26 @@ export default function ARRockBattle() {
   const turnRef = useRef(0);
   const intervalRef = useRef(null);
 
-  // Load user email + scores + avatar from Companion on mount
+  // Load user + profile (avatar + battle history) from backend on mount
   useEffect(() => {
     base44.auth.me().then(async (me) => {
       if (!me) return;
       setUserEmail(me.email);
 
-      // Load scores from localStorage (keyed by email for multi-user safety)
-      const stored = localStorage.getItem(`battle_scores_${me.email}`);
-      if (stored) setScores(JSON.parse(stored));
+      // Load PlayerProfile for avatar
+      const res = await base44.functions.invoke('getPlayerProfile', {}).catch(() => null);
+      if (res?.data?.avatar_url) setAvatarUrl(res.data.avatar_url);
 
-      // Load avatar from Companion entity
-      const companions = await base44.entities.Companion.filter({ owner_email: me.email }, '-created_date', 1);
-      if (companions[0]?.description) {
-        try {
-          const data = JSON.parse(companions[0].description);
-          if (data.battleAvatarUrl) setAvatarUrl(data.battleAvatarUrl);
-        } catch { /* description is plain text, ignore */ }
-      }
+      // Load battle history from BattleResult entity
+      const battles = await base44.entities.BattleResult.filter({ owner_email: me.email }, '-created_date', 20).catch(() => []);
+      const mapped = battles.map(b => ({
+        mineral: b.winner_mineral,
+        emoji: ROCK_FIGHTERS.find(r => r.name === b.winner_mineral)?.emoji || '🪨',
+        xp: b.xp_awarded,
+        avatarUrl: b.avatar_url_at_time,
+        date: b.battle_date ? new Date(b.battle_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+      }));
+      if (mapped.length > 0) setScores(mapped);
     }).catch(() => {});
   }, []);
 
@@ -184,17 +186,12 @@ export default function ARRockBattle() {
     setAvatarUrl(url);
     if (!userEmail) return;
     try {
-      const companions = await base44.entities.Companion.filter({ owner_email: userEmail }, '-created_date', 1);
-      if (companions[0]) {
-        let data = {};
-        try { data = JSON.parse(companions[0].description || '{}'); } catch { data = {}; }
-        data.battleAvatarUrl = url;
-        await base44.entities.Companion.update(companions[0].id, { description: JSON.stringify(data) });
-      }
+      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: userEmail }, '-created_date', 1);
+      if (profiles[0]) await base44.entities.PlayerProfile.update(profiles[0].id, { avatar_url: url });
     } catch { /* non-critical */ }
   };
 
-  const persistScore = (winnerRock, xp) => {
+  const persistScore = async (winnerRock, xp) => {
     const entry = {
       mineral: winnerRock.name,
       emoji: winnerRock.emoji,
@@ -202,11 +199,19 @@ export default function ARRockBattle() {
       avatarUrl,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     };
-    const updated = [entry, ...scores].slice(0, 20);
-    setScores(updated);
-    if (userEmail) {
-      localStorage.setItem(`battle_scores_${userEmail}`, JSON.stringify(updated));
-    }
+    setScores(prev => [entry, ...prev].slice(0, 20));
+
+    // Save to backend and award XP
+    try {
+      await base44.functions.invoke('saveBattleResult', {
+        winner_mineral: winnerRock.name,
+        opponent_mineral: fighters.find(f => f.id !== winnerRock.id)?.name || 'Unknown',
+        xp_awarded: xp,
+        avatar_url: avatarUrl,
+      });
+      // Sync XP to PlayerLegend widget if present
+      if (window.__rhgo_addXP) await window.__rhgo_addXP(0, 'sync'); // trigger re-render only
+    } catch { /* non-critical */ }
   };
 
   const reset = () => {
@@ -263,6 +268,7 @@ export default function ARRockBattle() {
         const rarityXp = { common: 100, uncommon: 150, rare: 200, legendary: 350 };
         const xp = rarityXp[fighters[attacker].rarity] || 150;
         persistScore(fighters[attacker], xp);
+        if (window.__rhgo_addXP) window.__rhgo_addXP(xp, `AR Battle win vs ${fighters[defender].name}`);
       }
     }, 900);
   };

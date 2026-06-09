@@ -66,26 +66,25 @@ function LevelUpModal({ title, onClose }) {
 }
 
 export default function PlayerLegend({ userEmail, onXPUpdate }) {
-  const storageKey = `rhgo_player_${userEmail || 'anon'}`;
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [levelUpTitle, setLevelUpTitle] = useState(null);
   const [shared, setShared] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [player, setPlayer] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : { totalXP: 0, avatarUrl: null, badges: [] };
-    } catch {
-      return { totalXP: 0, avatarUrl: null, badges: [] };
-    }
-  });
+  const [player, setPlayer] = useState({ totalXP: 0, avatarUrl: null, badges: [] });
 
-  // Persist to localStorage on every change
+  // Load profile from backend on mount
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(player));
-  }, [player, storageKey]);
+    base44.functions.invoke('getPlayerProfile', {})
+      .then(res => {
+        const p = res.data;
+        if (p) setPlayer({ totalXP: p.total_xp || 0, avatarUrl: p.avatar_url || null, badges: p.badges || [] });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [userEmail]);
 
   const level = getLevel(player.totalXP);
   const title = getTitle(level);
@@ -95,32 +94,25 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
 
   // Expose addXP globally so DailyRoulette + ARRockBattle can call it
   useEffect(() => {
-    window.__rhgo_addXP = (amount) => {
-      setPlayer(prev => {
-        const oldLevel = getLevel(prev.totalXP);
-        const newXP = prev.totalXP + amount;
-        const newLevel = getLevel(newXP);
-        const leveledUp = newLevel > oldLevel;
-        const newTitle = getTitle(newLevel);
-        const updated = {
-          ...prev,
-          totalXP: newXP,
-          badges: leveledUp
-            ? [...prev.badges, { title: newTitle, earnedAt: new Date().toISOString() }]
-            : prev.badges,
-        };
-        // Analytics: track XP gain and level-up events
-        base44.analytics.track({ eventName: 'player_xp_gained', properties: { amount, total_xp: newXP, level: newLevel } });
-        if (leveledUp) {
-          base44.analytics.track({ eventName: 'player_level_up', properties: { old_level: oldLevel, new_level: newLevel, title: newTitle, total_xp: newXP } });
-          setLevelUpTitle(newTitle);
+    window.__rhgo_addXP = async (amount, reason = 'XP awarded') => {
+      try {
+        const res = await base44.functions.invoke('awardXP', { amount, reason });
+        const result = res.data;
+        if (result) {
+          const oldLevel = getLevel(player.totalXP);
+          setPlayer(prev => ({ ...prev, totalXP: result.newXP, badges: result.badges || prev.badges }));
+          base44.analytics.track({ eventName: 'player_xp_gained', properties: { amount, total_xp: result.newXP, level: result.newLevel } });
+          if (result.leveledUp) {
+            const newTitle = getTitle(result.newLevel);
+            base44.analytics.track({ eventName: 'player_level_up', properties: { old_level: oldLevel, new_level: result.newLevel, title: newTitle } });
+            setLevelUpTitle(newTitle);
+          }
+          if (onXPUpdate) onXPUpdate(result.newXP, result.leveledUp, getTitle(result.newLevel));
         }
-        if (onXPUpdate) onXPUpdate(newXP, leveledUp, newTitle);
-        return updated;
-      });
+      } catch { /* non-critical */ }
     };
     return () => { window.__rhgo_addXP = undefined; };
-  }, [onXPUpdate]);
+  }, [player.totalXP, onXPUpdate]);
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -129,6 +121,9 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setPlayer(prev => ({ ...prev, avatarUrl: file_url }));
+      // Persist avatar to PlayerProfile
+      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: userEmail }, '-created_date', 1);
+      if (profiles[0]) await base44.entities.PlayerProfile.update(profiles[0].id, { avatar_url: file_url });
     } finally {
       setUploading(false);
     }
