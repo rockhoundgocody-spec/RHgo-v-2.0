@@ -113,6 +113,7 @@ const AuthenticatedApp = () => {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
           <Route path="/companion" element={<CompanionDashboard />} />
+          <Route path="/CompanionDashboard" element={<Navigate to="/companion" replace />} />
 
           {/* SECONDARY / ADMIN ROUTES */}
           <Route path="/admin" element={<Admin />} />

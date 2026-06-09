@@ -15,7 +15,7 @@ export default function CompanionDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen px-4 pt-6 pb-24 max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen px-4 pt-6 max-w-2xl mx-auto space-y-6" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
       <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/70 mb-2">
         Companion
       </div>

@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const ROUTE_TIPS = {
   '/':         ["Tap me to chat! 🍀", "How's your collection growing?", "Any new finds today?", "I sense crystals nearby…", "Every rock has a story waiting."],
@@ -29,6 +29,7 @@ const HIDDEN_ROUTES = ['/scan', '/onboarding', '/login', '/register', '/forgot-p
 
 export default function FloatingGrokOrb() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [tip, setTip] = useState('');
   const [showTip, setShowTip] = useState(false);
   const [mood, setMood] = useState('idle');
@@ -81,8 +82,7 @@ export default function FloatingGrokOrb() {
   }, [location.pathname, shouldHide]);
 
   const handleTap = () => {
-    const t = pickTip(location.pathname);
-    flashTip(t, 'excited');
+    navigate('/companion');
   };
 
   if (shouldHide) return null;
