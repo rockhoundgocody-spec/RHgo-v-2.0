@@ -262,7 +262,7 @@ function CornerBrackets({ color }) {
 }
 
 /* ── Error fallback ── */
-function ErrorView({ error, fileRef, onUploadFallback }) {
+function ErrorView({ error, onUpload }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
       style={{ background: 'hsla(265,50%,3%,0.97)' }}>
@@ -275,9 +275,7 @@ function ErrorView({ error, fileRef, onUploadFallback }) {
       <p className="text-white/50 text-xs mb-6 max-w-[240px]">
         You can still identify minerals by uploading a photo from your gallery.
       </p>
-      <input ref={fileRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
-      <Button onClick={() => fileRef.current?.click()}
+      <Button onClick={onUpload}
         className="rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm"
         style={{ background: 'linear-gradient(135deg, hsla(270,80%,38%,0.9), hsla(280,100%,52%,0.7))', border: '1px solid hsla(280,80%,55%,0.4)' }}>
         <Upload size={14} className="mr-2" />
