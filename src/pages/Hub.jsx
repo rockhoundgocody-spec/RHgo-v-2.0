@@ -81,7 +81,7 @@ export default function Hub() {
           <QuickAction to="/explore" icon={Compass} label="Explore" color="cyan" />
           <QuickAction to="/collection" icon={Gem} label="Collect" color="purple" />
           <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
-          <QuickAction to="/leaderboard" icon={Trophy} label="Leaderboard" color="orange" />
+          <QuickAction to="/leaderboard" icon={Trophy} label="Leaderboard" color="amber" />
           <QuickAction to="/companion" icon={Heart} label="Companion" color="rose" />
         </div>
       </section>
@@ -142,7 +142,7 @@ function QuickAction({ to, icon: Icon, label, color }) {
     purple:   { border: 'border-purple-400/30', bg: 'bg-purple-900/20 hover:bg-purple-900/30', text: 'text-purple-300', glow: 'hsla(270,80%,65%,0.3)' },
     gold:     { border: 'border-yellow-400/30', bg: 'bg-yellow-900/20 hover:bg-yellow-900/30', text: 'text-yellow-300', glow: 'hsla(45,100%,60%,0.3)' },
     rose:     { border: 'border-rose-400/30',   bg: 'bg-rose-900/20 hover:bg-rose-900/30',     text: 'text-rose-300',   glow: 'hsla(350,90%,60%,0.3)' },
-    orange:   { border: 'border-orange-400/30', bg: 'bg-orange-900/20 hover:bg-orange-900/30', text: 'text-orange-300', glow: 'hsla(30,100%,60%,0.3)' },
+    amber:    { border: 'border-amber-400/30',  bg: 'bg-amber-900/20 hover:bg-amber-900/30',    text: 'text-amber-300',  glow: 'hsla(45,100%,60%,0.3)' },
   };
   const s = styles[color];
   return (
