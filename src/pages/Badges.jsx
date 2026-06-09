@@ -3,7 +3,7 @@
  * 2-column grid, rarity filter tabs, detail modal, unlock animation.
  */
 import React, { useState } from 'react';
-import { Award, Lock, CheckCircle2, X, Gem } from 'lucide-react';
+import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
@@ -194,8 +194,16 @@ export default function Badges() {
   const [selected,     setSelected]     = useState(null);
   const [replayBadge,  setReplayBadge]  = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
+  const [pageCopied,   setPageCopied]   = useState(false);
 
   const earnedCount = allBadges.filter((b) => earnedCodes.has(b.code)).length;
+
+  const handleShareProgress = () => {
+    const pct = Math.round((earnedCount / allBadges.length) * 100);
+    const text = `🏆 I've earned ${earnedCount}/${allBadges.length} badges (${pct}%) on RockHound-GO! Can you beat my collection?`;
+    if (navigator.share) { navigator.share({ title: 'RockHound-GO Badges', text }); }
+    else { navigator.clipboard.writeText(text); setPageCopied(true); setTimeout(() => setPageCopied(false), 2000); }
+  };
 
   const filtered = rarityFilter === 'all'
     ? allBadges
@@ -261,6 +269,21 @@ export default function Badges() {
               {Math.round((earnedCount / allBadges.length) * 100)}%
             </span>
           </div>
+        </div>
+
+        {/* Share progress button */}
+        <div className="px-5 pb-4">
+          <button
+            onClick={handleShareProgress}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+            style={{
+              background: 'hsla(265,60%,14%,0.55)',
+              border: '1px solid hsla(280,60%,55%,0.3)',
+              color: 'hsl(280,100%,85%)',
+            }}
+          >
+            {pageCopied ? <><Check size={13} /> Copied to clipboard!</> : <><Share2 size={13} /> Share My Badge Progress</>}
+          </button>
         </div>
       </GlassPanel>
 
