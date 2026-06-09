@@ -230,7 +230,7 @@ export default function QuestDashboard() {
   const weekly  = activeQuests.filter(q => q.quest_type === 'weekly');
 
   return (
-    <div className="min-h-screen overflow-y-auto px-4 pt-4 pb-28 max-w-2xl mx-auto">
+    <div className="min-h-screen overflow-y-auto px-4 pt-4 max-w-2xl mx-auto" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
