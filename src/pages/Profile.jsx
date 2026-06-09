@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { User, Settings, LogOut, Heart, TrendingUp, Award } from 'lucide-react';
+import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
 
@@ -10,18 +10,40 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ findings: 0, badges: 0 });
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
-      const [specimens, badges] = await Promise.all([
+      const [specimens, badges, profiles] = await Promise.all([
         base44.entities.Specimen.filter({ created_by: u.email }),
         base44.entities.Badge.filter({ owner_email: u.email }),
+        base44.entities.PlayerProfile.filter({ owner_email: u.email }, '-created_date', 1),
       ]);
       setStats({ findings: specimens.length, badges: badges.length });
+      if (profiles[0]?.avatar_url) setAvatarUrl(profiles[0].avatar_url);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setAvatarUrl(file_url);
+      const me = await base44.auth.me();
+      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: me.email }, '-created_date', 1);
+      if (profiles[0]) {
+        await base44.entities.PlayerProfile.update(profiles[0].id, { avatar_url: file_url });
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await base44.auth.logout('/');
@@ -40,12 +62,36 @@ export default function Profile() {
       {/* Profile header */}
       <div className="mb-8">
         <GlassPanel className="p-5 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center flex-shrink-0">
-            <User size={24} className="text-amethyst-glow" />
+          {/* Avatar with upload */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group"
+              aria-label="Upload avatar"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User size={24} className="text-amethyst-glow" />
+              )}
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                {uploading
+                  ? <Loader2 size={16} className="animate-spin text-white" />
+                  : <Camera size={16} className="text-white" />}
+              </div>
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} aria-label="Avatar file input" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>
             <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition"
+            >
+              {uploading ? 'Uploading…' : 'Change avatar'}
+            </button>
           </div>
         </GlassPanel>
       </div>
