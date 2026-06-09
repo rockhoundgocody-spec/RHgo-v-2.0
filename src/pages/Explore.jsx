@@ -142,7 +142,6 @@ export default function Explore() {
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');
   const [mineralFilter, setMineralFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const scrollRef = useRef(null);
 
   const locate = useCallback(() => {
@@ -262,71 +261,58 @@ export default function Explore() {
           </button>
         </div>
 
-        {/* Filter row */}
-        <div className="mt-2 flex gap-2 pointer-events-auto flex-wrap">
-          <button
-            onClick={() => setShowFilters(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all"
+        {/* Filter row — always visible */}
+        <div className="mt-2 flex gap-2 pointer-events-auto flex-wrap items-center">
+          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-[10px] text-white/50"
+            style={{ background: 'hsla(240,30%,8%,0.7)', border: '1px solid hsla(270,30%,40%,0.2)', backdropFilter: 'blur(20px)' }}>
+            <Filter size={10} />
+            <span className="uppercase tracking-wider">Filter</span>
+          </div>
+
+          <select
+            value={difficultyFilter}
+            onChange={e => setDifficultyFilter(e.target.value)}
+            aria-label="Filter by difficulty"
+            className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none"
             style={{
-              background: showFilters ? 'hsla(265,70%,40%,0.5)' : 'hsla(240,30%,8%,0.88)',
-              border: `1px solid ${showFilters ? 'hsla(280,80%,65%,0.5)' : 'hsla(270,30%,40%,0.3)'}`,
-              color: showFilters ? 'hsl(280,100%,88%)' : 'rgba(255,255,255,0.6)',
+              background: 'hsla(240,30%,8%,0.88)',
+              border: `1px solid ${difficultyFilter ? 'hsla(35,90%,60%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
               backdropFilter: 'blur(20px)',
+              color: difficultyFilter ? 'hsl(35,90%,65%)' : 'rgba(255,255,255,0.8)',
             }}
-            aria-label="Toggle filters"
           >
-            <Filter size={12} />
-            Filters
-            {(difficultyFilter || mineralFilter) && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amethyst-glow ml-0.5" />
-            )}
-          </button>
+            <option value="">Difficulty</option>
+            <option value="easy">Easy</option>
+            <option value="moderate">Moderate</option>
+            <option value="hard">Hard</option>
+            <option value="expert">Expert</option>
+          </select>
 
-          {showFilters && (
-            <>
-              <select
-                value={difficultyFilter}
-                onChange={e => setDifficultyFilter(e.target.value)}
-                aria-label="Filter by difficulty"
-                className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none"
-                style={{
-                  background: 'hsla(240,30%,8%,0.88)',
-                  border: `1px solid ${difficultyFilter ? 'hsla(35,90%,60%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
-                  backdropFilter: 'blur(20px)',
-                }}
-              >
-                <option value="">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="moderate">Moderate</option>
-                <option value="hard">Hard</option>
-                <option value="expert">Expert</option>
-              </select>
+          <select
+            value={mineralFilter}
+            onChange={e => setMineralFilter(e.target.value)}
+            aria-label="Filter by mineral"
+            className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none max-w-[140px]"
+            style={{
+              background: 'hsla(240,30%,8%,0.88)',
+              border: `1px solid ${mineralFilter ? 'hsla(265,80%,65%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
+              backdropFilter: 'blur(20px)',
+              color: mineralFilter ? 'hsl(265,80%,80%)' : 'rgba(255,255,255,0.8)',
+            }}
+          >
+            <option value="">Mineral</option>
+            {allMinerals.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
 
-              <select
-                value={mineralFilter}
-                onChange={e => setMineralFilter(e.target.value)}
-                aria-label="Filter by mineral"
-                className="px-3 py-2 rounded-xl text-xs text-white/80 outline-none max-w-[140px]"
-                style={{
-                  background: 'hsla(240,30%,8%,0.88)',
-                  border: `1px solid ${mineralFilter ? 'hsla(265,80%,65%,0.6)' : 'hsla(270,30%,40%,0.3)'}`,
-                  backdropFilter: 'blur(20px)',
-                }}
-              >
-                <option value="">All Minerals</option>
-                {allMinerals.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-
-              {(difficultyFilter || mineralFilter) && (
-                <button
-                  onClick={() => { setDifficultyFilter(''); setMineralFilter(''); }}
-                  className="px-3 py-2 rounded-xl text-xs text-rose-400/80 transition-all"
-                  style={{ background: 'hsla(0,60%,20%,0.5)', border: '1px solid hsla(0,60%,40%,0.3)', backdropFilter: 'blur(20px)' }}
-                >
-                  Clear
-                </button>
-              )}
-            </>
+          {(difficultyFilter || mineralFilter) && (
+            <button
+              onClick={() => { setDifficultyFilter(''); setMineralFilter(''); }}
+              className="px-2.5 py-1.5 rounded-xl text-[10px] text-rose-400/80 transition-all"
+              style={{ background: 'hsla(0,60%,20%,0.5)', border: '1px solid hsla(0,60%,40%,0.3)', backdropFilter: 'blur(20px)' }}
+              aria-label="Clear filters"
+            >
+              ✕ Clear
+            </button>
           )}
         </div>
 

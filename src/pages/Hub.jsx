@@ -14,7 +14,7 @@ import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
 import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem } from 'lucide-react';
+import { Compass, ScanLine, Gem, Sword } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
@@ -75,10 +75,11 @@ export default function Hub() {
         </div>
 
         {/* Quick action buttons */}
-        <div className="mt-6 grid grid-cols-3 gap-2 w-full">
-          <QuickAction to="/scan" icon={ScanLine} label="Scan Rock" color="amethyst" />
+        <div className="mt-6 grid grid-cols-4 gap-2 w-full">
+          <QuickAction to="/scan" icon={ScanLine} label="Scan" color="amethyst" />
           <QuickAction to="/explore" icon={Compass} label="Explore" color="cyan" />
           <QuickAction to="/collection" icon={Gem} label="Collection" color="purple" />
+          <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
         </div>
       </section>
 
@@ -133,6 +134,7 @@ function QuickAction({ to, icon: Icon, label, color }) {
     amethyst: { border: 'border-amethyst/30', bg: 'bg-amethyst/10 hover:bg-amethyst/20', text: 'text-amethyst-glow', glow: 'hsla(280,100%,70%,0.3)' },
     cyan:     { border: 'border-hud-cyan/30',  bg: 'bg-hud-cyan/10 hover:bg-hud-cyan/20',  text: 'text-hud-cyan',    glow: 'hsla(195,100%,60%,0.3)' },
     purple:   { border: 'border-purple-400/30', bg: 'bg-purple-900/20 hover:bg-purple-900/30', text: 'text-purple-300', glow: 'hsla(270,80%,65%,0.3)' },
+    gold:     { border: 'border-yellow-400/30', bg: 'bg-yellow-900/20 hover:bg-yellow-900/30', text: 'text-yellow-300', glow: 'hsla(45,100%,60%,0.3)' },
   };
   const s = styles[color];
   return (

@@ -92,6 +92,7 @@ const AuthenticatedApp = () => {
           <Route path="/market" element={<Market />} />
           <Route path="/specimen/:id" element={<SpecimenDetail />} />
           <Route path="/quests" element={<QuestDashboard />} />
+          <Route path="/QuestDashboard" element={<Navigate to="/quests" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
 
