@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import Hub from '@/pages/Hub';
+const Landing = lazy(() => import('@/pages/Landing'));
 
 // Auth pages — not lazy, need to be fast
 import Login from '@/pages/Login';
@@ -65,8 +66,19 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
+      // Don't hard-redirect — show public routes instead
+      return (
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="*" element={<Landing />} />
+          </Routes>
+        </Suspense>
+      );
     }
   }
 
