@@ -462,9 +462,13 @@ export default function Explore() {
                 display: 'flex',
               }}
             >
-              <Zap size={14} className="text-amethyst-glow" />
+              {loading ? (
+                <Loader2 size={14} className="text-amethyst-glow animate-spin" />
+              ) : (
+                <Zap size={14} className="text-amethyst-glow" />
+              )}
               <span className="text-white/80 text-sm font-semibold">
-                {hotspots.length} hotspots nearby
+                {loading ? 'Loading hotspots…' : `${hotspots.length} hotspots nearby`}
               </span>
               <ChevronUp size={14} className="text-white/40" />
             </motion.button>
