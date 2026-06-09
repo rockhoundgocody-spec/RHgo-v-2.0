@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Gem, MapPin, Star, TrendingUp, Zap } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import ProfileBadgeStrip from '@/components/badges/ProfileBadgeStrip.jsx';
 
 const RARITY_COLORS = {
   common:    { color: '#94a3b8', label: 'Common'    },
@@ -107,6 +108,9 @@ export default function CollectionDashboard({ specimens = [] }) {
 
   return (
     <div className="space-y-4">
+      {/* ── Badge strip ── */}
+      <ProfileBadgeStrip />
+
       {/* ── Summary stat row ── */}
       <div className="grid grid-cols-4 gap-2">
         <StatBadge value={specimens.length} label="Total"   color="#22d3ee" />

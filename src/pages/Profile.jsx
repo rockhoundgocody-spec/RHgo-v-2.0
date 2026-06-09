@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
+import ProfileBadgeStrip from '@/components/badges/ProfileBadgeStrip.jsx';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -137,6 +138,11 @@ export default function Profile() {
           <span>Achievements & Badges</span>
         </Link>
       </GlassPanel>
+
+      {/* Liquid Mineral Badges strip */}
+      <div className="mb-8">
+        <ProfileBadgeStrip />
+      </div>
 
       <SkillsSection />
 
