@@ -197,6 +197,10 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         )}
       </div>
 
+      {/* Hidden file input — always mounted so fileRef is valid even on error */}
+      <input ref={fileRef} type="file" accept="image/*" className="hidden"
+        onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
+
       {/* ── BOTTOM ACTIONS ── */}
       {!error && (
         <div className="p-4 space-y-2.5"
@@ -222,9 +226,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
             <Upload size={13} />
             Upload from Gallery
           </button>
-
-          <input ref={fileRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => onUploadFallback?.(e.target.files?.[0])} />
         </div>
       )}
     </div>
