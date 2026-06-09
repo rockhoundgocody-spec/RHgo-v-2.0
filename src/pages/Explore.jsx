@@ -249,13 +249,12 @@ export default function Explore() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="pointer-events-auto rounded-t-3xl overflow-hidden"
+              className="pointer-events-auto rounded-t-3xl flex flex-col"
               style={{
                 background: 'linear-gradient(180deg, hsla(245,30%,9%,0.97) 0%, hsla(240,25%,6%,0.99) 100%)',
                 backdropFilter: 'blur(32px)',
                 border: '1px solid hsla(270,30%,40%,0.2)',
                 borderBottom: 'none',
-                paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
                 maxHeight: '75vh',
               }}
             >
@@ -285,6 +284,9 @@ export default function Explore() {
                   <StatPill value={specimens.filter(s => s.lat && s.lng).length} label="My Finds" color="cyan" />
                 </div>
               </div>
+
+              {/* Scrollable body */}
+              <div className="overflow-y-auto flex-1" style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
 
               {/* Horizontal scroll list */}
               <div ref={scrollRef} className="flex gap-3 px-4 pb-4 overflow-x-auto" style={{ scrollSnapType: 'x mandatory' }}>
@@ -337,6 +339,8 @@ export default function Explore() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              </div>{/* end scrollable body */}
             </motion.div>
           ) : (
             /* Collapsed pill — tap to open */
