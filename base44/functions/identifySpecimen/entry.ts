@@ -18,14 +18,15 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { image_url, lat, lng, save = false, share_to_map = false } = body;
+    const { image_url, lat, lng, save = false, share_to_map = false, prefilled_result = null } = body;
 
     if (!image_url) {
       return Response.json({ error: 'image_url is required' }, { status: 400 });
     }
 
-    // ── VISION IDENTIFICATION ──────────────────────────────────────────────
-    const identification = await base44.integrations.Core.InvokeLLM({
+    // ── VISION IDENTIFICATION (skip if result already provided by client) ──
+    let identification = prefilled_result;
+    if (!identification) identification = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
         'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
@@ -98,23 +99,45 @@ Deno.serve(async (req) => {
         },
       },
     });
+    // End of conditional Vision call block
+    if (!identification) {
+      return Response.json({ error: 'Identification failed' }, { status: 500 });
+    }
 
     // ── OPTIONAL SAVE TO COLLECTION ────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
+      // Build rich notes that include all scientific metadata
+      const richNotes = [
+        identification.description,
+        identification.scientific_name ? `Scientific name: ${identification.scientific_name}` : null,
+        identification.chemical_formula ? `Formula: ${identification.chemical_formula}` : null,
+        identification.crystal_system ? `Crystal system: ${identification.crystal_system}` : null,
+        identification.hardness_mohs != null ? `Hardness: ${identification.hardness_mohs} Mohs` : null,
+        identification.formation ? `Formation: ${identification.formation}` : null,
+        identification.value_estimate ? `Value: ${identification.value_estimate}` : null,
+        identification.fun_fact ? `Fun fact: ${identification.fun_fact}` : null,
+        identification.where_to_find?.length ? `Found in: ${identification.where_to_find.join(', ')}` : null,
+      ].filter(Boolean).join('\n\n');
+
       savedSpecimen = await base44.entities.Specimen.create({
         mineral_name:  identification.top_match,
-        common_name:   identification.top_match,
+        common_name:   identification.scientific_name || identification.top_match,
         image_url,
         ai_confidence: identification.confidence,
         ai_candidates: identification.candidates,
-        notes:         identification.description,
+        notes:         richNotes,
         rarity:        identification.rarity,
         found_date:    new Date().toISOString().split('T')[0],
         verified:      false,
         ...(lat != null ? { lat } : {}),
         ...(lng != null ? { lng } : {}),
       });
+
+      // Award XP for saving a specimen
+      const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
+      const xpGain = xpMap[identification.rarity] || 10;
+      base44.asServiceRole.functions.invoke('awardXP', { xp: xpGain }).catch(() => {});
     }
 
     // ── OPTIONAL SHARE TO MAP (creates/updates hotspot record) ────────────

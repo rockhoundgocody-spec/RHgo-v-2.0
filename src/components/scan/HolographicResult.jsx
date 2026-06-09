@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
@@ -83,6 +83,7 @@ export default function HolographicResult({
 
   const TABS = [
     { id: 'id',       icon: Sparkles,    label: 'ID' },
+    { id: 'science',  icon: Atom,        label: 'Science' },
     { id: 'tests',    icon: FlaskConical, label: 'Tests' },
     { id: 'features', icon: Zap,         label: 'Features' },
     { id: 'lore',     icon: BookOpen,    label: 'Lore' },
@@ -249,6 +250,54 @@ export default function HolographicResult({
                   <Star size={9} /> Collector's Note
                 </div>
                 <p className="text-white/70 text-xs">{result.collection_value}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SCIENCE TAB */}
+        {activeTab === 'science' && (
+          <div className="p-4 space-y-3">
+            {/* Scientific classification grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Scientific Name', value: result?.scientific_name },
+                { label: 'Formula',         value: result?.chemical_formula },
+                { label: 'Hardness (Mohs)', value: result?.hardness_mohs != null ? `${result.hardness_mohs}` : null },
+                { label: 'Crystal System',  value: result?.crystal_system },
+                { label: 'Value Estimate',  value: result?.value_estimate },
+                { label: 'Image Quality',   value: result?.image_quality_score != null ? `${Math.round(result.image_quality_score * 100)}%` : null },
+              ].filter(row => row.value).map((row, i) => (
+                <div key={i} className="px-3 py-2.5 rounded-xl" style={{ background: 'hsla(220,40%,7%,0.7)', border: '1px solid hsla(270,20%,20%,0.3)' }}>
+                  <div className="text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1">{row.label}</div>
+                  <div className="text-sm font-semibold text-white/90">{row.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Formation story */}
+            {result?.formation && (
+              <div className="px-4 py-3 rounded-xl" style={{ background: 'hsla(220,40%,7%,0.7)', border: '1px solid hsla(270,20%,20%,0.3)' }}>
+                <div className="text-[9px] uppercase tracking-[0.2em] text-white/30 mb-2 flex items-center gap-1.5">
+                  <Atom size={9} /> Formation Story
+                </div>
+                <p className="text-white/80 text-sm leading-relaxed">{result.formation}</p>
+              </div>
+            )}
+
+            {/* Where to find */}
+            {result?.where_to_find?.length > 0 && (
+              <div className="px-4 py-3 rounded-xl" style={{ background: 'hsla(220,40%,7%,0.7)', border: '1px solid hsla(270,20%,20%,0.3)' }}>
+                <div className="text-[9px] uppercase tracking-[0.2em] text-white/30 mb-2 flex items-center gap-1.5">
+                  <MapPin size={9} /> Where To Find
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.where_to_find.map((loc, i) => (
+                    <span key={i} className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'hsla(195,80%,15%,0.6)', color: '#67e8f9', border: '1px solid hsla(195,80%,50%,0.25)' }}>
+                      {loc}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>

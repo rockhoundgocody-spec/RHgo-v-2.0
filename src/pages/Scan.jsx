@@ -101,15 +101,22 @@ export default function Scan() {
       response_json_schema: {
         type: 'object',
         properties: {
-          top_match: { type: 'string' },
-          confidence: { type: 'number' },
-          description: { type: 'string' },
-          reasoning: { type: 'string' },
+          top_match:           { type: 'string' },
+          scientific_name:     { type: 'string' },
+          chemical_formula:    { type: 'string' },
+          hardness_mohs:       { type: 'number' },
+          crystal_system:      { type: 'string' },
+          formation:           { type: 'string' },
+          where_to_find:       { type: 'array', items: { type: 'string' } },
+          value_estimate:      { type: 'string' },
+          confidence:          { type: 'number' },
+          description:         { type: 'string' },
+          reasoning:           { type: 'string' },
           image_quality_score: { type: 'number' },
           geological_plausibility: { type: 'number' },
-          rarity: { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
-          fun_fact: { type: 'string' },
-          collection_value: { type: 'string' },
+          rarity:              { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
+          fun_fact:            { type: 'string' },
+          collection_value:    { type: 'string' },
           candidates: {
             type: 'array',
             items: {
@@ -189,23 +196,53 @@ export default function Scan() {
     setStage('live');
   };
 
-  const saveToCollection = async (claimPath = 'chattel') => {
+  const saveToCollection = async () => {
     if (!result || !primaryUrl) return;
-    const created = await base44.entities.Specimen.create({
-      mineral_name: result.top_match,
-      common_name: result.top_match,
+    // Route through the backend identifySpecimen function with save=true
+    // so all rich metadata (scientific name, formula, hardness, formation, value) gets persisted
+    const res = await base44.functions.invoke('identifySpecimen', {
       image_url: primaryUrl,
-      ai_confidence: result.confidence,
-      ai_candidates: result.candidates,
-      notes: result.description,
-      rarity: result.rarity,
-      found_date: new Date().toISOString().split('T')[0],
-      ...(gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng } : {}),
+      lat: gpsCoords?.lat ?? null,
+      lng: gpsCoords?.lng ?? null,
+      save: true,
+      share_to_map: false,
+      // Pass through the already-computed result to avoid a second Vision call
+      prefilled_result: result,
     });
-    setSavedId(created.id);
-    setSavedSpecimen(created);
+    // Backend may return saved_specimen_id; fall back to direct creation if needed
+    let specimenId = res?.data?.saved_specimen_id;
+    let specimenObj = null;
+    if (!specimenId) {
+      // Fallback: save directly with full metadata from result
+      const richNotes = [
+        result.description,
+        result.scientific_name ? `Scientific name: ${result.scientific_name}` : null,
+        result.chemical_formula ? `Formula: ${result.chemical_formula}` : null,
+        result.crystal_system ? `Crystal system: ${result.crystal_system}` : null,
+        result.hardness_mohs != null ? `Hardness: ${result.hardness_mohs} Mohs` : null,
+        result.formation ? `Formation: ${result.formation}` : null,
+        result.value_estimate ? `Value: ${result.value_estimate}` : null,
+        result.fun_fact ? `Fun fact: ${result.fun_fact}` : null,
+      ].filter(Boolean).join('\n\n');
+      const created = await base44.entities.Specimen.create({
+        mineral_name:  result.top_match,
+        common_name:   result.scientific_name || result.top_match,
+        image_url:     primaryUrl,
+        ai_confidence: result.confidence,
+        ai_candidates: result.candidates,
+        notes:         richNotes,
+        rarity:        result.rarity,
+        found_date:    new Date().toISOString().split('T')[0],
+        ...(gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng } : {}),
+      });
+      specimenId = created.id;
+      specimenObj = created;
+    } else {
+      specimenObj = { id: specimenId, mineral_name: result.top_match, image_url: primaryUrl, ...result };
+    }
+    setSavedId(specimenId);
+    setSavedSpecimen(specimenObj);
     refreshBadges();
-    // Prompt to share to global map after short delay
     setTimeout(() => setShareMapOpen(true), 800);
   };
 
