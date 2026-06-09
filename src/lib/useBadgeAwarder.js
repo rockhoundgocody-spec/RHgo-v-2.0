@@ -25,7 +25,7 @@ export function useBadgeAwarder() {
       if (!me?.email) return;
 
       const [specimens, ownedRecords] = await Promise.all([
-        base44.entities.Specimen.filter({ created_by: me.email }),
+        base44.entities.Specimen.list(),
         base44.entities.Badge.filter({ owner_email: me.email }),
       ]);
 
