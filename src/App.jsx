@@ -20,7 +20,7 @@ import ResetPassword from '@/pages/ResetPassword';
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 
 // Primary workflow pages — code-split for performance
-const Explore = lazy(() => import('@/pages/Explore'));
+const Explore = lazy(() => import('@/pages/Explore.jsx'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
 const Collections = lazy(() => import('@/pages/Collections'));
@@ -39,7 +39,7 @@ const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries
 const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
 const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
-const Badges = lazy(() => import('@/pages/Badges'));
+const Badges = lazy(() => import('@/pages/Badges.jsx'));
 const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
