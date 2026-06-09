@@ -112,7 +112,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
       <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
 
         {error ? (
-          <ErrorView error={error} onUpload={() => fileRef.current?.click()} />
+          <>
+            <ErrorView error={error} onUpload={(file) => onUploadFallback?.(file)} />
+          </>
         ) : (
           <>
             <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
@@ -276,12 +278,25 @@ function ErrorView({ error, onUpload }) {
       <p className="text-white/50 text-xs mb-6 max-w-[240px]">
         You can still identify minerals by uploading a photo from your gallery.
       </p>
-      <Button onClick={onUpload}
-        className="rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm"
-        style={{ background: 'linear-gradient(135deg, hsla(270,80%,38%,0.9), hsla(280,100%,52%,0.7))', border: '1px solid hsla(280,80%,55%,0.4)' }}>
+      {/* Use a label wrapping the input for reliable file picking without JS .click() */}
+      <label
+        htmlFor="error-upload-input"
+        className="cursor-pointer rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, hsla(270,80%,38%,0.9), hsla(280,100%,52%,0.7))', border: '1px solid hsla(280,80%,55%,0.4)' }}
+      >
         <Upload size={14} className="mr-2" />
         Upload a Photo to Identify
-      </Button>
+      </label>
+      <input
+        id="error-upload-input"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onUpload(file);
+        }}
+      />
     </div>
   );
 }
