@@ -214,7 +214,7 @@ export default function Explore() {
       </div>
 
       {/* ── TOP HUD BAR ── */}
-      <div className="absolute top-0 inset-x-0 z-20 px-4 pt-4 pointer-events-none">
+      <div className="absolute top-0 inset-x-0 z-[1000] px-4 pt-4 pointer-events-none">
         <div className="flex items-start gap-3">
 
           {/* Search */}
@@ -262,7 +262,12 @@ export default function Explore() {
         </div>
 
         {/* Filter row — always visible */}
-        <div className="mt-2 flex gap-2 pointer-events-auto flex-wrap items-center">
+        <div
+          className="mt-2 flex gap-2 pointer-events-auto flex-wrap items-center"
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+        >
           <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-[10px] text-white/50"
             style={{ background: 'hsla(240,30%,8%,0.7)', border: '1px solid hsla(270,30%,40%,0.2)', backdropFilter: 'blur(20px)' }}>
             <Filter size={10} />
@@ -325,7 +330,7 @@ export default function Explore() {
       </div>
 
       {/* ── BOTTOM SHEET ── */}
-      <div className="absolute bottom-0 inset-x-0 z-20 pointer-events-none">
+      <div className="absolute bottom-0 inset-x-0 z-[1000] pointer-events-none">
         <AnimatePresence mode="wait">
           {sheetOpen ? (
             <motion.div

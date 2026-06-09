@@ -2,7 +2,7 @@
  * HotspotMap — powered by react-leaflet (no API key required)
  * Replaces Google Maps which was failing due to key authorization issues.
  */
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -28,23 +28,27 @@ const LAND_COLORS = {
 const DARK_TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const DARK_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
-// Pan/zoom to active hotspot
+// Pan/zoom to active hotspot — capped at zoom 10 so other markers stay visible
 function ActivePanner({ hotspots, activeId }) {
   const map = useMap();
   useEffect(() => {
     if (!activeId) return;
     const h = hotspots.find(x => x.id === activeId);
-    if (h?.lat && h?.lng) map.flyTo([h.lat, h.lng], Math.max(map.getZoom(), 10), { duration: 0.7 });
+    if (h?.lat && h?.lng) map.flyTo([h.lat, h.lng], 9, { duration: 0.7 });
   }, [activeId, hotspots, map]);
   return null;
 }
 
-// Pan to user location
+// Pan to user location — capped at zoom 9 so filters stay visible
 function UserPanner({ userLocation }) {
   const map = useMap();
+  const initialFly = useRef(false);
   useEffect(() => {
     if (!userLocation) return;
-    map.flyTo([userLocation.lat, userLocation.lng], Math.max(map.getZoom(), 10), { duration: 0.8 });
+    // Only auto-fly on first location fix; after that the user controls the map
+    if (initialFly.current) return;
+    initialFly.current = true;
+    map.flyTo([userLocation.lat, userLocation.lng], 8, { duration: 0.8 });
   }, [userLocation, map]);
   return null;
 }

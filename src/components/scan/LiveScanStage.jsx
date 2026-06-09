@@ -112,7 +112,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
       <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
 
         {error ? (
-          <ErrorView error={error} fileRef={fileRef} onUploadFallback={onUploadFallback} />
+          <ErrorView error={error} onUpload={() => fileRef.current?.click()} />
         ) : (
           <>
             <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
