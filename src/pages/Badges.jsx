@@ -220,7 +220,7 @@ export default function Badges() {
   return (
     <div
       className="px-4 pt-6 max-w-md mx-auto w-full"
-      style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom, 0px))' }}
+      style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* ── Header ── */}
       <div className="mb-5 text-center">
