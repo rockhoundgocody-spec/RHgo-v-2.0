@@ -56,8 +56,8 @@ export default function Layout() {
       tabStacks[to] = [to];
       navigate(to, { replace: true });
     } else {
-      const stack = tabStacks[to];
-      navigate(stack?.length > 0 ? stack[stack.length - 1] : to);
+      // Always navigate to root of tab — avoids stale stack issues on sub-routes
+      navigate(to);
     }
   };
 

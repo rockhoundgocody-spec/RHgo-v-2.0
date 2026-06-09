@@ -95,6 +95,9 @@ const AuthenticatedApp = () => {
         <Route element={<Layout />}>
           {/* PRIMARY WORKFLOW ROUTES */}
           <Route path="/" element={<Hub />} />
+          {/* Legacy / redirect routes */}
+          <Route path="/Hub" element={<Navigate to="/" replace />} />
+          <Route path="/Landing" element={<Navigate to="/" replace />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />

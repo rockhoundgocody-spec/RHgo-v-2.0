@@ -20,6 +20,7 @@ import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
+import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -91,6 +92,9 @@ export default function Hub() {
 
         {/* Live stats wired to real data */}
         <LiveStatStrip />
+
+        {/* Companion Progress Dashboard */}
+        <CompanionProgressDashboard companion={companion} />
 
         {/* Daily Rock Roulette — Chaos mode only */}
         {chaos && <DailyRoulette />}
