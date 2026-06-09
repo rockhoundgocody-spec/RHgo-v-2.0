@@ -9,6 +9,17 @@ const uniqueMinerals = (specimens) =>
 const uniqueLocations = (specimens) =>
   new Set(specimens.map((s) => (s.found_at || '').toLowerCase().trim()).filter(Boolean)).size;
 
+// Returns the max count of specimens found at any single location
+const maxFindsAtOneHotspot = (specimens) => {
+  const counts = {};
+  for (const s of specimens) {
+    const loc = (s.found_at || '').toLowerCase().trim();
+    if (!loc) continue;
+    counts[loc] = (counts[loc] || 0) + 1;
+  }
+  return Math.max(0, ...Object.values(counts));
+};
+
 export const BADGES = [
   {
     code: 'first_find',
@@ -78,6 +89,24 @@ export const BADGES = [
     icon: 'MapPin',
     check: (s) => uniqueLocations(s) >= 5,
     progress: (s) => ({ current: Math.min(uniqueLocations(s), 5), target: 5 }),
+  },
+  {
+    code: 'hotspot_regular',
+    title: 'Hotspot Regular',
+    description: 'Log 5 finds from the same location.',
+    rarity: 'uncommon',
+    icon: 'MapPin',
+    check: (s) => maxFindsAtOneHotspot(s) >= 5,
+    progress: (s) => ({ current: Math.min(maxFindsAtOneHotspot(s), 5), target: 5 }),
+  },
+  {
+    code: 'hotspot_master',
+    title: 'Hotspot Master',
+    description: 'Log 10 finds from the same location.',
+    rarity: 'epic',
+    icon: 'Mountain',
+    check: (s) => maxFindsAtOneHotspot(s) >= 10,
+    progress: (s) => ({ current: Math.min(maxFindsAtOneHotspot(s), 10), target: 10 }),
   },
   {
     code: 'verified_eye',
