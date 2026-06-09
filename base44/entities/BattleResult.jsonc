@@ -1,0 +1,72 @@
+{
+  "name": "BattleResult",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "winner_mineral": {
+      "type": "string"
+    },
+    "opponent_mineral": {
+      "type": "string"
+    },
+    "xp_awarded": {
+      "type": "integer",
+      "default": 0
+    },
+    "battle_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "avatar_url_at_time": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
