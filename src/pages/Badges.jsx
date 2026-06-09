@@ -39,9 +39,11 @@ function ProgressBar({ current, target, rarity }) {
   );
 }
 
-function ShareBadgeButtons({ badge }) {
+function ShareBadgeButtons({ badge, earned }) {
   const [copied, setCopied] = useState(false);
-  const text = `🏆 I earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
+  const text = earned
+    ? `🏆 I earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`
+    : `🎯 I'm working toward the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
   const handleShare = (e) => {
     e.stopPropagation();
     if (navigator.share) { navigator.share({ title: 'RockHound-GO Badge', text }); }
@@ -49,14 +51,14 @@ function ShareBadgeButtons({ badge }) {
   };
   const handleCopy = (e) => { e.stopPropagation(); navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
-    <div className="flex gap-2 w-full mt-3">
-      <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+    <div className="flex gap-2 w-full mt-3" aria-label="Badge sharing options">
+      <button onClick={handleShare} aria-label="Share badge" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
         style={{ background: 'hsla(195,80%,20%,0.5)', border: '1px solid hsla(195,80%,55%,0.35)', color: 'hsl(195,100%,82%)' }}>
         <Share2 size={12} /> Share
       </button>
-      <button onClick={handleCopy} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+      <button onClick={handleCopy} aria-label="Copy badge link" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
         style={{ background: 'hsla(265,60%,20%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)', color: 'hsl(280,100%,90%)' }}>
-        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Link</>}
       </button>
     </div>
   );
@@ -67,8 +69,7 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center px-4"
-      style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
-      style={{ background: 'hsla(260,80%,5%,0.75)', backdropFilter: 'blur(6px)' }}
+      style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))', background: 'hsla(260,80%,5%,0.75)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
       <div
@@ -105,17 +106,16 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
             )}
           </div>
 
+          <ShareBadgeButtons badge={badge} earned={earned} />
+
           {earned && (
-            <>
-              <ShareBadgeButtons badge={badge} />
-              <button
-                onClick={(e) => { e.stopPropagation(); onReplay(); }}
-                className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
-                style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
-              >
-                Replay Unlock ✨
-              </button>
-            </>
+            <button
+              onClick={(e) => { e.stopPropagation(); onReplay(); }}
+              className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
+              style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
+            >
+              Replay Unlock ✨
+            </button>
           )}
         </div>
       </div>
