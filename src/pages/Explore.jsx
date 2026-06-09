@@ -200,28 +200,28 @@ export default function Explore() {
   return (
     <div className="relative w-full" style={{ height: 'calc(100vh - 0px)' }}>
 
-      {/* ── FULLSCREEN MAP ── */}
+      {/* ── FULLSCREEN MAP ── always mounted so hotspots render as soon as data arrives */}
       <div className="absolute inset-0">
-        {loading ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-            style={{ background: 'radial-gradient(ellipse at center,hsla(220,40%,8%,1) 0%,hsla(240,30%,4%,1) 100%)' }}>
+        <HotspotMap
+          hotspots={filteredHotspots}
+          specimens={specimens}
+          height="100%"
+          activeId={activeId}
+          onMarkerClick={handleMarkerClick}
+          userLocation={userLocation}
+          activeLayer={activeLayer}
+          collectionGapIds={collectionGapIds}
+          expeditionRoute={expeditionRoute}
+          earnedBadgeCodes={earnedCodes}
+          userMinerals={[...collectedMinerals]}
+        />
+        {/* Overlay spinner while first load is in flight (no cached data yet) */}
+        {loading && filteredHotspots.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at center,hsla(220,40%,8%,0.85) 0%,hsla(240,30%,4%,0.75) 100%)' }}>
             <div className="w-12 h-12 rounded-full border-2 border-amethyst/20 border-t-amethyst-glow animate-spin" />
             <p className="text-amethyst/60 text-xs uppercase tracking-[.3em]">Scanning region…</p>
           </div>
-        ) : (
-          <HotspotMap
-            hotspots={filteredHotspots}
-            specimens={specimens}
-            height="100%"
-            activeId={activeId}
-            onMarkerClick={handleMarkerClick}
-            userLocation={userLocation}
-            activeLayer={activeLayer}
-            collectionGapIds={collectionGapIds}
-            expeditionRoute={expeditionRoute}
-            earnedBadgeCodes={earnedCodes}
-            userMinerals={[...collectedMinerals]}
-          />
         )}
       </div>
 
@@ -353,7 +353,7 @@ export default function Explore() {
                 </div>
               </motion.div>
             ) : (
-              <motion.button key="closed"
+              <motion.button key="pill"
                 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}
                 onClick={() => setSheetOpen(true)}
                 className="pointer-events-auto mx-auto mb-28 flex items-center gap-2.5 px-5 py-3 rounded-full"
