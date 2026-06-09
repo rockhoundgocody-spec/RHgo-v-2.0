@@ -210,7 +210,7 @@ export default function QuestDashboard() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)}
+        <button onClick={() => navigate('/')}
           className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.1)' }}>
           <ChevronLeft size={16} />

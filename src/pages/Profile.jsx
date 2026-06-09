@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2 } from 'lucide-react';
+import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
 
@@ -12,6 +12,7 @@ export default function Profile() {
   const [stats, setStats] = useState({ findings: 0, badges: 0 });
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [battleHistory, setBattleHistory] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -24,6 +25,8 @@ export default function Profile() {
       ]);
       setStats({ findings: specimens.length, badges: badges.length });
       if (profiles[0]?.avatar_url) setAvatarUrl(profiles[0].avatar_url);
+      const battles = await base44.entities.BattleResult.filter({ owner_email: u.email }, '-created_date', 10).catch(() => []);
+      setBattleHistory(battles);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -136,6 +139,39 @@ export default function Profile() {
       </GlassPanel>
 
       <SkillsSection />
+
+      {/* Battle History */}
+      <GlassPanel className="mb-8">
+        <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-white/8">
+          <Swords size={15} className="text-red-400 flex-shrink-0" />
+          <span className="font-bold text-white text-sm">Battle History</span>
+          <span className="ml-auto text-[10px] text-white/30">{battleHistory.length} battles</span>
+        </div>
+        {battleHistory.length === 0 ? (
+          <div className="px-5 py-5 text-center text-white/30 text-xs">
+            No battles yet — enable Chaos Mode on the Hub to fight!
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {battleHistory.map((b) => (
+              <div key={b.id} className="flex items-center gap-3 px-5 py-3">
+                <div className="w-8 h-8 rounded-full bg-red-900/30 border border-red-400/20 flex items-center justify-center flex-shrink-0">
+                  <Trophy size={13} className="text-yellow-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-xs font-semibold truncate">
+                    {b.winner_mineral} <span className="text-white/30">beat</span> {b.opponent_mineral}
+                  </div>
+                  <div className="text-white/30 text-[10px] mt-0.5">
+                    {b.battle_date ? new Date(b.battle_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                  </div>
+                </div>
+                <div className="text-yellow-400 text-xs font-bold">+{b.xp_awarded} XP</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </GlassPanel>
 
       {/* Logout */}
       <button
