@@ -42,11 +42,12 @@ function ProgressBar({ current, target, rarity }) {
 function ShareBadgeButtons({ badge }) {
   const [copied, setCopied] = useState(false);
   const text = `🏆 I earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
-  const handleShare = () => {
+  const handleShare = (e) => {
+    e.stopPropagation();
     if (navigator.share) { navigator.share({ title: 'RockHound-GO Badge', text }); }
     else { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
-  const handleCopy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const handleCopy = (e) => { e.stopPropagation(); navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
     <div className="flex gap-2 w-full mt-3">
       <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
@@ -108,7 +109,7 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
             <>
               <ShareBadgeButtons badge={badge} />
               <button
-                onClick={onReplay}
+                onClick={(e) => { e.stopPropagation(); onReplay(); }}
                 className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
                 style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
               >

@@ -13,7 +13,7 @@ const SEED_BOARD = [
   { name: 'QuartzQueen99',   finds: 142, emoji: '🌋', badge: 'Volcano Vanquisher'  },
   { name: 'BasaltBoy2025',   finds: 98,  emoji: '👑', badge: 'Gemstone Warlord'    },
   { name: 'FlintFinder_TX',  finds: 67,  emoji: '👑', badge: 'Gemstone Warlord'    },
-  { name: 'GeodeDiva_IL',    finds: 44,  emoji: '💎', badge: 'Crystal Scout'       },
+  { name: 'GeodeDiva_IL',    finds: 44,  emoji: '⚡', badge: 'Quartz Commander'   },
   { name: 'RockPup_MT',      finds: 28,  emoji: '⚡', badge: 'Quartz Commander'    },
   { name: 'MicaMike_AZ',     finds: 11,  emoji: '💎', badge: 'Crystal Scout'       },
 ];
@@ -210,6 +210,7 @@ export default function Leaderboard() {
             { min: 25,  label: 'Quartz Commander',    emoji: '⚡', color: '#a78bfa' },
             { min: 50,  label: 'Gemstone Warlord',    emoji: '👑', color: '#fbbf24' },
             { min: 100, label: 'Volcano Vanquisher',  emoji: '🌋', color: '#f97316' },
+            { min: 200, label: 'Geo Legend',          emoji: '🏆', color: '#e879f9' },
           ].map((tier) => (
             <div key={tier.min}
               className="flex items-center gap-2 px-3 py-2 rounded-xl"
