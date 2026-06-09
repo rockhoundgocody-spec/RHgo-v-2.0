@@ -10,12 +10,12 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 const SEED_BOARD = [
   { name: 'Crystal_Kid_CO',  finds: 247, emoji: '🏆', badge: 'Geo Legend'          },
   { name: 'PebblePupPro',    finds: 183, emoji: '🌋', badge: 'Volcano Vanquisher'  },
-  { name: 'QuartzQueen99',   finds: 142, emoji: '👑', badge: 'Gemstone Warlord'    },
+  { name: 'QuartzQueen99',   finds: 142, emoji: '🌋', badge: 'Volcano Vanquisher'  },
   { name: 'BasaltBoy2025',   finds: 98,  emoji: '👑', badge: 'Gemstone Warlord'    },
-  { name: 'FlintFinder_TX',  finds: 67,  emoji: '⚡', badge: 'Quartz Commander'    },
+  { name: 'FlintFinder_TX',  finds: 67,  emoji: '👑', badge: 'Gemstone Warlord'    },
   { name: 'GeodeDiva_IL',    finds: 44,  emoji: '💎', badge: 'Crystal Scout'       },
-  { name: 'RockPup_MT',      finds: 28,  emoji: '🪨', badge: 'Flint Finder'        },
-  { name: 'MicaMike_AZ',     finds: 11,  emoji: '🐾', badge: 'Flint Finder'        },
+  { name: 'RockPup_MT',      finds: 28,  emoji: '⚡', badge: 'Quartz Commander'    },
+  { name: 'MicaMike_AZ',     finds: 11,  emoji: '💎', badge: 'Crystal Scout'       },
 ];
 
 const MEDAL = ['🥇', '🥈', '🥉'];
