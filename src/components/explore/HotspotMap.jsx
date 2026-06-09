@@ -1,65 +1,139 @@
 /**
- * HotspotMap — powered by react-leaflet (no API key required)
- * Replaces Google Maps which was failing due to key authorization issues.
+ * HotspotMap — Enhanced interactive map with:
+ * - Custom SVG div icons per land type + rarity
+ * - Layer filtering (all, rare, gaps, public, expedition)
+ * - Badge-glow pulse on hotspots linked to earned badges
+ * - Expedition route polyline
  */
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix default leaflet icon paths broken by bundlers
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const LAND_COLORS = {
-  public: '#34d399',
-  blm: '#fbbf24',
+// ── Color maps ────────────────────────────────────────────────────────────────
+export const LAND_COLORS = {
+  public:         '#34d399',
+  blm:            '#fbbf24',
   forest_service: '#a3e635',
-  state_park: '#38bdf8',
-  private: '#fb7185',
-  unknown: '#94a3b8',
+  state_park:     '#38bdf8',
+  private:        '#fb7185',
+  unknown:        '#94a3b8',
 };
 
-// Dark tile layer — no key needed
-const DARK_TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const DARK_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
+const RARITY_GLOW = {
+  common:    null,
+  uncommon:  '#34d399',
+  rare:      '#38bdf8',
+  legendary: '#f59e0b',
+};
 
-// Pan/zoom to active hotspot — capped at zoom 10 so other markers stay visible
+const DIFF_BADGE = {
+  easy:     '●',
+  moderate: '◆',
+  hard:     '▲',
+  expert:   '★',
+};
+
+// ── Custom div icon factory ───────────────────────────────────────────────────
+function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty }) {
+  const size   = isActive ? 36 : 28;
+  const glow   = isActive  ? `0 0 18px ${color}, 0 0 36px ${color}55`
+               : isGlowing ? `0 0 12px ${color}cc`
+               : 'none';
+  const badge  = DIFF_BADGE[difficulty] || '●';
+  const ring   = hasGap ? `<circle cx="18" cy="18" r="16" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.8"/>` : '';
+  const pulse  = isGlowing ? `
+    <circle cx="18" cy="18" r="17" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.4">
+      <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+    </circle>` : '';
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 44 44">
+      ${pulse}
+      ${ring}
+      <circle cx="22" cy="22" r="${isActive ? 14 : 10}" fill="${color}" opacity="0.92"
+        style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${color})"/>
+      <circle cx="22" cy="22" r="${isActive ? 14 : 10}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="${isActive ? 2 : 1.5}"/>
+      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 12 : 9}" fill="white" font-weight="bold">${badge}</text>
+    </svg>`;
+
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize:   [size + 8, size + 8],
+    iconAnchor: [(size + 8) / 2, (size + 8) / 2],
+  });
+}
+
+function makeSpecimenIcon(rarity) {
+  const glow = RARITY_GLOW[rarity];
+  const color = rarity === 'legendary' ? '#f59e0b' : rarity === 'rare' ? '#a78bfa' : '#c084fc';
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="${color}" opacity="0.9"
+        style="filter:drop-shadow(0 0 ${glow ? 5 : 2}px ${color})"/>
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize: [18, 18], iconAnchor: [9, 9] });
+}
+
+function makeUserIcon() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <circle cx="14" cy="14" r="12" fill="#22d3ee" opacity="0.2">
+        <animate attributeName="r" values="10;16;10" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="14" cy="14" r="7" fill="#22d3ee" opacity="0.95"
+        style="filter:drop-shadow(0 0 6px #22d3ee)"/>
+      <circle cx="14" cy="14" r="7" fill="none" stroke="white" stroke-width="2"/>
+      <circle cx="14" cy="14" r="2.5" fill="white"/>
+    </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
+}
+
+// ── Inner map effect components ───────────────────────────────────────────────
 function ActivePanner({ hotspots, activeId }) {
   const map = useMap();
   useEffect(() => {
     if (!activeId) return;
     const h = hotspots.find(x => x.id === activeId);
-    if (h?.lat && h?.lng) map.flyTo([h.lat, h.lng], 9, { duration: 0.7 });
+    if (h?.lat && h?.lng) map.flyTo([h.lat, h.lng], 10, { duration: 0.7 });
   }, [activeId, hotspots, map]);
   return null;
 }
 
-// Pan to user location — capped at zoom 9 so filters stay visible
 function UserPanner({ userLocation }) {
-  const map = useMap();
-  const initialFly = useRef(false);
+  const map  = useMap();
+  const flew = useRef(false);
   useEffect(() => {
-    if (!userLocation) return;
-    // Only auto-fly on first location fix; after that the user controls the map
-    if (initialFly.current) return;
-    initialFly.current = true;
-    map.flyTo([userLocation.lat, userLocation.lng], 8, { duration: 0.8 });
+    if (!userLocation || flew.current) return;
+    flew.current = true;
+    map.flyTo([userLocation.lat, userLocation.lng], 9, { duration: 1.0 });
   }, [userLocation, map]);
   return null;
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 export default function HotspotMap({
-  hotspots = [],
-  specimens = [],
-  height = 480,
-  activeId = null,
+  hotspots      = [],
+  specimens     = [],
+  height        = 480,
+  activeId      = null,
   onMarkerClick,
-  userLocation = null,
+  userLocation  = null,
+  activeLayer   = 'all',      // 'all' | 'rare' | 'gaps' | 'public' | 'expedition'
+  collectionGapIds = new Set(), // set of hotspot IDs that have gap minerals
+  expeditionRoute  = [],       // array of {lat,lng} waypoints
+  earnedBadgeCodes = new Set(),
 }) {
   const isFullHeight = height === '100%';
 
@@ -68,10 +142,31 @@ export default function HotspotMap({
     [hotspots]
   );
 
+  const visiblePoints = useMemo(() => {
+    switch (activeLayer) {
+      case 'rare':
+        return points.filter(h =>
+          h.minerals?.some(m => m.toLowerCase().includes('quartz') ||
+            m.toLowerCase().includes('garnet') ||
+            m.toLowerCase().includes('tourmaline') ||
+            m.toLowerCase().includes('topaz') ||
+            m.toLowerCase().includes('sapphire'))
+        );
+      case 'gaps':
+        return points.filter(h => collectionGapIds.has(h.id));
+      case 'public':
+        return points.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
+      default:
+        return points;
+    }
+  }, [points, activeLayer, collectionGapIds]);
+
   const geoSpecimens = useMemo(
     () => specimens.filter(s => typeof s.lat === 'number' && typeof s.lng === 'number'),
     [specimens]
   );
+
+  const userIcon = useMemo(() => makeUserIcon(), []);
 
   return (
     <div
@@ -88,85 +183,73 @@ export default function HotspotMap({
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer url={DARK_TILE} attribution={DARK_ATTR} />
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OSM &copy; CARTO'
+        />
 
         <ActivePanner hotspots={hotspots} activeId={activeId} />
         <UserPanner userLocation={userLocation} />
 
+        {/* Expedition route polyline */}
+        {expeditionRoute.length >= 2 && (
+          <Polyline
+            positions={expeditionRoute.map(p => [p.lat, p.lng])}
+            pathOptions={{
+              color: '#c084fc',
+              weight: 3,
+              opacity: 0.8,
+              dashArray: '8 6',
+            }}
+          />
+        )}
+
         {/* Hotspot markers */}
-        {points.map(h => {
-          const color = LAND_COLORS[h.land_type] || LAND_COLORS.unknown;
+        {visiblePoints.map(h => {
+          const color    = LAND_COLORS[h.land_type] || LAND_COLORS.unknown;
           const isActive = h.id === activeId;
+          const hasGap   = collectionGapIds.has(h.id);
+          // Glow if hotspot has a rare mineral or any earned badge references it
+          const isGlowing = isActive || hasGap ||
+            (h.minerals || []).some(m => m.toLowerCase().includes('tourmaline') ||
+              m.toLowerCase().includes('topaz') || m.toLowerCase().includes('sapphire'));
+
+          const icon = makeHotspotIcon({
+            color, isActive, isGlowing, hasGap, difficulty: h.difficulty,
+          });
+
           return (
-            <CircleMarker
+            <Marker
               key={h.id}
-              center={[h.lat, h.lng]}
-              radius={isActive ? 11 : 8}
-              pathOptions={{
-                fillColor: color,
-                fillOpacity: 0.92,
-                color: '#ffffff',
-                weight: isActive ? 2.5 : 1.5,
-              }}
+              position={[h.lat, h.lng]}
+              icon={icon}
+              zIndexOffset={isActive ? 1000 : hasGap ? 500 : 0}
               eventHandlers={{ click: () => onMarkerClick && onMarkerClick(h) }}
-            >
-              <Popup>
-                <div style={{ fontFamily: 'system-ui', fontSize: 12, minWidth: 160 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{h.name}</div>
-                  <div style={{ color: '#64748b', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
-                    {h.state || h.country || ''} · {(h.land_type || '').replace(/_/g, ' ')}
-                  </div>
-                  {h.minerals?.length > 0 && (
-                    <div style={{ fontSize: 11, color: '#a78bfa', marginBottom: 4 }}>
-                      {h.minerals.slice(0, 4).join(' · ')}
-                    </div>
-                  )}
-                  <div style={{ fontSize: 10, color: '#475569' }}>
-                    Trust {((h.trust_score || 0) * 100).toFixed(0)}% · {h.difficulty || ''}
-                  </div>
-                </div>
-              </Popup>
-            </CircleMarker>
+            />
           );
         })}
 
-        {/* Specimen pins */}
-        {geoSpecimens.map(s => (
-          <CircleMarker
-            key={s.id}
-            center={[s.lat, s.lng]}
-            radius={6}
-            pathOptions={{
-              fillColor: '#a78bfa',
-              fillOpacity: 0.95,
-              color: '#ffffff',
-              weight: 1.5,
-            }}
-          >
-            <Popup>
-              <div style={{ fontFamily: 'system-ui', fontSize: 12 }}>
-                <div style={{ fontWeight: 600 }}>🪨 {s.mineral_name}</div>
-                {s.found_date && <div style={{ color: '#475569', marginTop: 2 }}>Found: {s.found_date}</div>}
-                {s.rarity && <div style={{ color: '#6d28d9', fontWeight: 500, marginTop: 2 }}>{s.rarity}</div>}
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
+        {/* Specimen finds (personal) — shown on all + gaps layers */}
+        {(activeLayer === 'all' || activeLayer === 'gaps') && geoSpecimens.map(s => {
+          const icon = makeSpecimenIcon(s.rarity);
+          return (
+            <Marker key={s.id} position={[s.lat, s.lng]} icon={icon}>
+              <Popup>
+                <div style={{ fontFamily: 'system-ui', fontSize: 12, minWidth: 120 }}>
+                  <div style={{ fontWeight: 600 }}>🪨 {s.mineral_name}</div>
+                  {s.found_date && <div style={{ color: '#64748b', marginTop: 2 }}>Found: {s.found_date}</div>}
+                  {s.rarity && <div style={{ color: '#a78bfa', fontWeight: 500, marginTop: 2 }}>{s.rarity}</div>}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
-        {/* User location dot */}
+        {/* User location */}
         {userLocation && (
-          <CircleMarker
-            center={[userLocation.lat, userLocation.lng]}
-            radius={9}
-            pathOptions={{
-              fillColor: '#22d3ee',
-              fillOpacity: 1,
-              color: '#ffffff',
-              weight: 2,
-            }}
-          >
-            <Popup>You are here</Popup>
-          </CircleMarker>
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+            <Popup>You are here 📍</Popup>
+          </Marker>
         )}
       </MapContainer>
     </div>

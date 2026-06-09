@@ -20,7 +20,7 @@ import ResetPassword from '@/pages/ResetPassword';
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 
 // Primary workflow pages — code-split for performance
-const Explore = lazy(() => import('@/pages/Explore'));
+const Explore = lazy(() => import('@/pages/Explore.jsx'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
 const Collections = lazy(() => import('@/pages/Collections'));

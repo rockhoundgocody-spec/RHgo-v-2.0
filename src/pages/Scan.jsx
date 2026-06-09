@@ -6,6 +6,7 @@ import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
 import HolographicResult from '@/components/scan/HolographicResult.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
+import ShareToMapModal from '@/components/scan/ShareToMapModal.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,8 +22,10 @@ export default function Scan() {
   const [primaryUrl, setPrimaryUrl] = useState(null);
   const [result, setResult] = useState(null);
   const [savedId, setSavedId] = useState(null);
+  const [savedSpecimen, setSavedSpecimen] = useState(null);
   const [reasoningResult, setReasoningResult] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [shareMapOpen, setShareMapOpen] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
 
@@ -195,11 +198,15 @@ export default function Scan() {
       ai_confidence: result.confidence,
       ai_candidates: result.candidates,
       notes: result.description,
+      rarity: result.rarity,
       found_date: new Date().toISOString().split('T')[0],
       ...(gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng } : {}),
     });
     setSavedId(created.id);
+    setSavedSpecimen(created);
     refreshBadges();
+    // Prompt to share to global map after short delay
+    setTimeout(() => setShareMapOpen(true), 800);
   };
 
   const reset = () => {
@@ -208,7 +215,9 @@ export default function Scan() {
     setPrimaryUrl(null);
     setResult(null);
     setSavedId(null);
+    setSavedSpecimen(null);
     setReasoningResult(null);
+    setShareMapOpen(false);
   };
 
   return (
@@ -264,6 +273,14 @@ export default function Scan() {
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
       )}
+
+      <ShareToMapModal
+        open={shareMapOpen}
+        specimen={savedSpecimen}
+        result={result}
+        onClose={() => setShareMapOpen(false)}
+        onShared={() => setShareMapOpen(false)}
+      />
     </div>
   );
 }
