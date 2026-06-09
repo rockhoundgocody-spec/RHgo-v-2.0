@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, X, Lock, CheckCircle2 } from 'lucide-react';
+import { Award, X, Lock, CheckCircle2, Share2, Copy, Check } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidCrystalBadge from '@/components/badges/LiquidCrystalBadge.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
@@ -35,6 +35,28 @@ function ProgressBar({ current, target, rarity }) {
           style={{ width: `${pct}%`, background: colors[rarity] || '#ffffff60' }}
         />
       </div>
+    </div>
+  );
+}
+
+function ShareBadgeButtons({ badge }) {
+  const [copied, setCopied] = useState(false);
+  const text = `🏆 I earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
+  const handleShare = () => {
+    if (navigator.share) { navigator.share({ title: 'RockHound-GO Badge', text }); }
+    else { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+  };
+  const handleCopy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  return (
+    <div className="flex gap-2 w-full mt-3">
+      <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+        style={{ background: 'hsla(195,80%,20%,0.5)', border: '1px solid hsla(195,80%,55%,0.35)', color: 'hsl(195,100%,82%)' }}>
+        <Share2 size={12} /> Share
+      </button>
+      <button onClick={handleCopy} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+        style={{ background: 'hsla(265,60%,20%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)', color: 'hsl(280,100%,90%)' }}>
+        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+      </button>
     </div>
   );
 }
@@ -82,13 +104,16 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
           </div>
 
           {earned && (
-            <button
-              onClick={onReplay}
-              className="mt-5 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
-              style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
-            >
-              Replay Unlock ✨
-            </button>
+            <>
+              <ShareBadgeButtons badge={badge} />
+              <button
+                onClick={onReplay}
+                className="mt-3 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
+                style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
+              >
+                Replay Unlock ✨
+              </button>
+            </>
           )}
         </div>
       </div>

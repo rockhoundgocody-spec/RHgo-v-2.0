@@ -1,7 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LiquidCrystalBadge from './LiquidCrystalBadge.jsx';
-import { X } from 'lucide-react';
+import { X, Share2, Copy, Check } from 'lucide-react';
+
+function ShareBadgeButtons({ badge }) {
+  const [copied, setCopied] = useState(false);
+  const text = `🏆 I just earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: 'RockHound-GO Badge', text });
+    } else {
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex gap-2 mt-4">
+      <button
+        onClick={handleShare}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition active:scale-95"
+        style={{ background: 'hsla(195,80%,20%,0.5)', border: '1px solid hsla(195,80%,55%,0.35)', color: 'hsl(195,100%,82%)' }}
+      >
+        <Share2 size={12} /> Share
+      </button>
+      <button
+        onClick={handleCopy}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition active:scale-95"
+        style={{ background: 'hsla(265,60%,20%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)', color: 'hsl(280,100%,90%)' }}
+      >
+        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+      </button>
+    </div>
+  );
+}
 
 // 5-phase unlock sequence: charge → crack → burst → reveal → settle
 const PHASES = ['charge', 'crack', 'burst', 'reveal', 'settle'];
@@ -172,15 +212,20 @@ export default function BadgeUnlockOverlay({ badge, onClose }) {
                 </div>
               </motion.div>
               {settled && (
-                <motion.button
-                  onClick={onClose}
+                <motion.div
+                  className="flex flex-col items-center gap-2 mt-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  className="mt-8 px-8 py-2.5 rounded-full bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white text-sm tracking-wide"
                 >
-                  Continue
-                </motion.button>
+                  <ShareBadgeButtons badge={badge} />
+                  <button
+                    onClick={onClose}
+                    className="mt-2 px-8 py-2.5 rounded-full bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white text-sm tracking-wide"
+                  >
+                    Continue
+                  </button>
+                </motion.div>
               )}
             </motion.div>
           )}
