@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { Gem, Mail, Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -23,7 +23,11 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords don't match — try again");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
     setLoading(true);
@@ -31,7 +35,7 @@ export default function Register() {
       await base44.auth.register({ email, password });
       setShowOtp(true);
     } catch (err) {
-      setError(err.message || "Registration failed");
+      setError(err.message || "Registration failed. Try again.");
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,7 @@ export default function Register() {
       }
       window.location.href = "/onboarding";
     } catch (err) {
-      setError(err.message || "Invalid verification code");
+      setError(err.message || "Invalid code — check your email and try again");
     } finally {
       setLoading(false);
     }
@@ -57,10 +61,7 @@ export default function Register() {
     setError("");
     try {
       await base44.auth.resendOtp(email);
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
+      toast({ title: "Code resent", description: "Check your inbox (and spam folder)." });
     } catch (err) {
       setError(err.message || "Failed to resend code");
     }
@@ -74,22 +75,23 @@ export default function Register() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
+        title="Check your email"
+        subtitle={`We sent a 6-digit code to ${email}`}
+        footer={
+          <>
+            Already have an account?{" "}
+            <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">Log in</Link>
+          </>
+        }
       >
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
             {error}
           </div>
         )}
-        <div className="flex justify-center mb-6">
-          <InputOTP
-            maxLength={6}
-            value={otpCode}
-            onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
-          >
+        <p className="text-white/40 text-xs text-center mb-4">Enter the code below to activate your account</p>
+        <div className="flex justify-center mb-5">
+          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -101,23 +103,20 @@ export default function Register() {
           </InputOTP>
         </div>
         <Button
-          className="w-full h-12 font-medium"
+          className="w-full h-11 font-bold rounded-xl"
+          style={{
+            background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))',
+            boxShadow: '0 4px 20px -4px hsla(270,80%,60%,0.5)',
+          }}
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
         >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            "Verify"
-          )}
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</> : "Activate Account →"}
         </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
+        <p className="text-center text-sm text-white/30 mt-4">
+          Didn't get it?{" "}
+          <button onClick={handleResend} className="text-amethyst-glow hover:underline font-medium">
+            Resend code
           </button>
         </p>
       </AuthLayout>
@@ -126,47 +125,53 @@ export default function Register() {
 
   return (
     <AuthLayout
-      icon={UserPlus}
-      title="Create your account"
-      subtitle="Sign up to get started"
+      icon={Gem}
+      title="Start your journey"
+      subtitle="Free forever — no credit card needed"
       footer={
         <>
-          Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
-            Log in
+          Already a Rockhound?{" "}
+          <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">
+            Log in →
           </Link>
         </>
       }
     >
+      {/* Social proof nudge */}
+      <div className="flex items-center justify-center gap-1.5 mb-5 text-xs text-white/30">
+        <span>🪨</span>
+        <span>Join thousands of rockhounds already exploring</span>
+      </div>
+
       <Button
         variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="w-full h-11 text-sm font-semibold mb-5 border-white/15 bg-white/5 hover:bg-white/10 text-white"
         onClick={handleGoogle}
       >
-        <GoogleIcon className="w-5 h-5 mr-2" />
-        Continue with Google
+        <GoogleIcon className="w-4 h-4 mr-2" />
+        Sign up with Google
       </Button>
 
-      <div className="relative mb-6">
+      <div className="relative mb-5">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="px-3 text-white/30">or with email</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-white/60 text-xs uppercase tracking-wider">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <Input
               id="email"
               type="email"
@@ -175,31 +180,31 @@ export default function Register() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
               required
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-white/60 text-xs uppercase tracking-wider">Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="••••••••"
+              placeholder="Min. 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
               required
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm Password</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="confirm" className="text-white/60 text-xs uppercase tracking-wider">Confirm Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <Input
               id="confirm"
               type="password"
@@ -207,22 +212,31 @@ export default function Register() {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button
+          type="submit"
+          className="w-full h-11 font-bold text-sm rounded-xl !mt-4"
+          style={{
+            background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))',
+            boxShadow: '0 4px 20px -4px hsla(270,80%,60%,0.5)',
+          }}
+          disabled={loading}
+        >
           {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
-            </>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</>
           ) : (
-            "Create account"
+            "Create Free Account →"
           )}
         </Button>
       </form>
+
+      <p className="text-center text-[10px] text-white/20 mt-4">
+        By signing up you agree to our Terms & Privacy Policy
+      </p>
     </AuthLayout>
   );
 }
