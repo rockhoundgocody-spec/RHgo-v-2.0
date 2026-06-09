@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     const { history = [], companion, todays_finds = 0 } = await req.json();
 
     const c = companion;
-    const name = user.full_name?.split(' ')[0] || 'explorer';
+    const name = (user.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
 
     const stateBits = c
       ? [
@@ -17,14 +17,10 @@ Deno.serve(async (req) => {
           `Companion level: ${c.level || 1}. Mood: ${c.mood || 'calm'}. Energy: ${c.energy ?? 80}/100.`,
           `Exploration streak: ${c.streak_days || 0} consecutive days.`,
           `Specimens found today: ${todays_finds}.`,
-          c.last_intention ? `Today's intention: "${c.last_intention}".` : '',
-          c.last_mood_label ? `User felt "${c.last_mood_label}" at check-in.` : '',
+          c.last_intention ? `Today's intention: "${String(c.last_intention).slice(0, 100)}".` : '',
+          c.last_mood_label ? `User felt "${String(c.last_mood_label).slice(0, 40)}" at check-in.` : '',
         ].filter(Boolean).join(' ')
       : `User's name: ${name}.`;
-
-    const recent = history
-      .map((m) => `${m.role === 'user' ? name : 'Clover'}: ${m.content}`)
-      .join('\n');
 
     const systemPrompt = `You are Clover 🍀 — a warm, witty, deeply knowledgeable rockhounding companion. You are NOT a chatbot or assistant. You are a real field partner who loves geology with infectious enthusiasm.
 
@@ -48,10 +44,16 @@ Rules:
 
 ${stateBits}`;
 
-    const messages = history.map((m) => ({
+    // Keep only the last 10 messages and cap each at 300 chars to prevent oversized payloads
+    const trimmedHistory = history.slice(-10).map((m) => ({
       role: m.role === 'user' ? 'user' : 'assistant',
-      content: m.content,
+      label: m.role === 'user' ? name : 'Clover',
+      content: String(m.content || '').slice(0, 300),
     }));
+
+    const recent = trimmedHistory
+      .map((m) => `${m.label}: ${m.content}`)
+      .join('\n');
 
     // Use the full prompt as system + recent history as messages
     const fullPrompt = `${systemPrompt}\n\n${recent}\nClover:`;
