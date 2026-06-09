@@ -1,218 +1,323 @@
 /**
- * HotspotDetailSheet — bottom-sheet detail panel for a tapped hotspot.
- * Shows rock type, difficulty, recent finds, badge rewards, and a Log Find CTA.
+ * HotspotDetailSheet — Full bottom sheet when a hotspot pin is tapped.
+ * Shows: rock types, difficulty, recent finds, collectible badge rewards,
+ * collection gap indicator, and Log a Find CTA.
+ *
+ * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, MapPin, Shield, Star, Gem, ChevronRight, Award } from 'lucide-react';
+import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { BADGES } from '@/lib/badgeDefinitions.js';
+import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 
-const DIFFICULTY_COLORS = {
-  easy:     { text: 'text-emerald-400', border: 'border-emerald-400/30', bg: 'bg-emerald-400/10' },
-  moderate: { text: 'text-amber-400',   border: 'border-amber-400/30',   bg: 'bg-amber-400/10'   },
-  hard:     { text: 'text-orange-400',  border: 'border-orange-400/30',  bg: 'bg-orange-400/10'  },
-  expert:   { text: 'text-rose-400',    border: 'border-rose-400/30',    bg: 'bg-rose-400/10'    },
+const LAND_LABEL = {
+  public:         { label: 'Public Land',      color: '#34d399' },
+  blm:            { label: 'BLM Land',         color: '#fbbf24' },
+  forest_service: { label: 'National Forest',  color: '#a3e635' },
+  state_park:     { label: 'State Park',       color: '#38bdf8' },
+  private:        { label: 'Private Land',     color: '#fb7185' },
+  unknown:        { label: 'Unknown',          color: '#94a3b8' },
 };
 
-const LAND_COLORS = {
-  public:         'text-emerald-300',
-  blm:            'text-amber-300',
-  forest_service: 'text-lime-300',
-  state_park:     'text-sky-300',
-  private:        'text-rose-300',
-  unknown:        'text-white/40',
+const DIFF_CONFIG = {
+  easy:     { color: '#34d399', label: 'Easy',     stars: 1 },
+  moderate: { color: '#fbbf24', label: 'Moderate', stars: 2 },
+  hard:     { color: '#f97316', label: 'Hard',     stars: 3 },
+  expert:   { color: '#fb7185', label: 'Expert',   stars: 4 },
 };
 
-const RARITY_COLORS = {
-  common:    '#94a3b8',
-  uncommon:  '#34d399',
-  rare:      '#38bdf8',
-  legendary: '#a78bfa',
+const MINERAL_RARITY = {
+  tourmaline: 'rare', topaz: 'rare', sapphire: 'legendary', emerald: 'legendary',
+  ruby: 'legendary', amethyst: 'uncommon', quartz: 'common', feldspar: 'common',
+  mica: 'common', garnet: 'uncommon', obsidian: 'uncommon', jasper: 'common',
 };
 
-export default function HotspotDetailSheet({ hotspot, recentFinds = [], onClose }) {
-  // All hooks called unconditionally at top level
-  const { earnedCodes, allBadges } = useBadgeAwarder();
+function MineralPill({ mineral }) {
+  const rarity = MINERAL_RARITY[mineral.toLowerCase()] || 'common';
+  const colors = {
+    common:    { bg: 'hsla(220,30%,20%,0.7)',  text: '#94a3b8', border: 'hsla(220,30%,40%,0.3)' },
+    uncommon:  { bg: 'hsla(160,40%,14%,0.7)',  text: '#34d399', border: 'hsla(160,60%,40%,0.3)' },
+    rare:      { bg: 'hsla(210,60%,14%,0.7)',  text: '#38bdf8', border: 'hsla(210,80%,50%,0.35)' },
+    legendary: { bg: 'hsla(45,60%,14%,0.7)',   text: '#f59e0b', border: 'hsla(45,90%,50%,0.4)'  },
+  };
+  const c = colors[rarity];
+  return (
+    <span
+      className="flex-shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full"
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+    >
+      {mineral}
+      {rarity !== 'common' && <span className="ml-1 opacity-60">· {rarity}</span>}
+    </span>
+  );
+}
 
-  const badgeRewards = useMemo(() => {
+function DifficultyStars({ difficulty }) {
+  const cfg = DIFF_CONFIG[difficulty] || DIFF_CONFIG.moderate;
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4].map(i => (
+          <Star
+            key={i}
+            size={10}
+            fill={i <= cfg.stars ? cfg.color : 'transparent'}
+            color={i <= cfg.stars ? cfg.color : 'rgba(255,255,255,0.2)'}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] font-semibold" style={{ color: cfg.color }}>
+        {cfg.label}
+      </span>
+    </div>
+  );
+}
+
+export default function HotspotDetailSheet({
+  hotspot,
+  specimens = [],
+  earnedCodes = new Set(),
+  collectionGapMinerals = [],
+  onClose,
+}) {
+  // ── ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURN ──────────────────────
+
+  const land = LAND_LABEL[hotspot?.land_type] || LAND_LABEL.unknown;
+  const isPublic = ['public','blm','forest_service','state_park'].includes(hotspot?.land_type);
+
+  // Badge relevance — computed unconditionally
+  const { earnable, earned } = useMemo(() => {
+    const relevant = BADGES.filter(b =>
+      ['trailblazer', 'pathfinder', 'perfect_strike', 'hotspot_regular',
+       'hotspot_master', 'vein_tracker', 'rare_seeker', 'legendary_strike',
+       'first_find', 'archivist_25', 'earth_chosen'].includes(b.code)
+    );
+    const earned   = relevant.filter(b => earnedCodes.has(b.code));
+    const earnable = relevant.filter(b => !earnedCodes.has(b.code)).slice(0, 3);
+    return { earnable, earned };
+  }, [earnedCodes]);
+
+  // Recent finds at this hotspot — computed unconditionally
+  const recentFinds = useMemo(() => {
     if (!hotspot) return [];
-    return allBadges.filter((b) => {
-      const minerals = hotspot.minerals || [];
-      // Surface badges related to minerals found at this hotspot
-      return minerals.some((m) =>
-        b.title?.toLowerCase().includes(m.toLowerCase()) ||
-        b.description?.toLowerCase().includes(m.toLowerCase())
-      );
-    }).slice(0, 3);
-  }, [hotspot, allBadges]);
+    return specimens
+      .filter(s => {
+        const loc  = (s.found_at || '').toLowerCase();
+        const name = (hotspot.name || '').toLowerCase();
+        return loc.includes(name.slice(0, 6)) ||
+          (hotspot.minerals || []).some(m =>
+            (s.mineral_name || '').toLowerCase() === m.toLowerCase()
+          );
+      })
+      .slice(-5)
+      .reverse();
+  }, [specimens, hotspot]);
 
-  const diffCls = DIFFICULTY_COLORS[hotspot?.difficulty] || DIFFICULTY_COLORS.moderate;
-  const landCls = LAND_COLORS[hotspot?.land_type] || LAND_COLORS.unknown;
-  const trustPct = Math.round((hotspot?.trust_score || 0) * 100);
-
+  // ── EARLY RETURN after all hooks ──────────────────────────────────────────
   if (!hotspot) return null;
 
   return (
     <AnimatePresence>
       <motion.div
         key="detail"
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        className="rounded-t-3xl overflow-hidden"
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+        className="absolute bottom-0 inset-x-0 z-[2000] rounded-t-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, hsla(245,30%,9%,0.97) 0%, hsla(240,25%,6%,0.99) 100%)',
-          backdropFilter: 'blur(32px)',
-          border: '1px solid hsla(270,30%,40%,0.2)',
+          maxHeight: '80vh',
+          background: 'linear-gradient(180deg, hsla(245,32%,10%,0.99) 0%, hsla(240,26%,6%,1) 100%)',
+          backdropFilter: 'blur(40px)',
+          border: '1px solid hsla(270,30%,40%,0.25)',
           borderBottom: 'none',
         }}
       >
-        {/* Drag handle */}
+        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-white/15" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-start justify-between px-4 pb-3">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-white font-bold text-base truncate pr-2">{hotspot.name}</h2>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${landCls}`}>
-                {(hotspot.land_type || 'unknown').replace(/_/g, ' ')}
-              </span>
-              {hotspot.state && <span className="text-white/30 text-[10px]">· {hotspot.state}</span>}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {hotspot.difficulty && (
-              <span className={`text-[9px] font-bold uppercase tracking-wider border rounded-lg px-2 py-1 ${diffCls.text} ${diffCls.border} ${diffCls.bg}`}>
-                {hotspot.difficulty}
-              </span>
-            )}
-            <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center text-white/30 hover:text-white/70"
-              style={{ background: 'hsla(255,30%,20%,0.5)', border: '1px solid hsla(255,30%,40%,0.2)' }}>
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* Trust score + description */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{
-                background: `hsl(${trustPct}, 80%, 55%)`,
-                boxShadow: `0 0 6px hsl(${trustPct}, 80%, 55%)`,
-              }} />
-              <span className="text-[10px] font-mono text-white/45">{trustPct}% trust</span>
-            </div>
-            {hotspot.source && (
-              <span className="text-[9px] text-white/25 uppercase tracking-wider">· {hotspot.source}</span>
-            )}
-          </div>
-          {hotspot.description && (
-            <p className="text-white/50 text-xs leading-relaxed line-clamp-2">{hotspot.description}</p>
-          )}
-        </div>
-
-        {/* Minerals list */}
-        {hotspot.minerals?.length > 0 && (
-          <div className="px-4 pb-3">
-            <div className="text-[9px] uppercase tracking-[0.25em] text-white/25 mb-2 flex items-center gap-1.5">
-              <Gem size={9} /> Minerals Found Here
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {hotspot.minerals.map((m) => (
-                <span key={m} className="text-[10px] px-2.5 py-1 rounded-full border"
-                  style={{ background: 'hsla(265,40%,15%,0.5)', borderColor: 'hsla(280,60%,55%,0.25)', color: 'hsl(280,80%,80%)' }}>
-                  {m}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Recent finds */}
-        {recentFinds.length > 0 && (
-          <div className="px-4 pb-3">
-            <div className="text-[9px] uppercase tracking-[0.25em] text-white/25 mb-2 flex items-center gap-1.5">
-              <Star size={9} /> Recent Finds
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {recentFinds.slice(0, 6).map((s) => {
-                const rc = RARITY_COLORS[s.rarity] || RARITY_COLORS.common;
-                return (
-                  <div key={s.id} className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl"
-                    style={{ background: 'hsla(220,30%,10%,0.6)', border: `1px solid ${rc}30`, minWidth: 64 }}>
-                    {s.image_url ? (
-                      <img src={s.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ background: 'hsla(265,40%,15%,0.7)' }}>
-                        <Gem size={14} style={{ color: rc }} />
-                      </div>
-                    )}
-                    <span className="text-[9px] text-white/60 text-center truncate w-full">{s.mineral_name}</span>
-                    <span className="text-[8px] font-bold capitalize" style={{ color: rc }}>{s.rarity}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Badge rewards */}
-        {badgeRewards.length > 0 && (
-          <div className="px-4 pb-3">
-            <div className="text-[9px] uppercase tracking-[0.25em] text-white/25 mb-2 flex items-center gap-1.5">
-              <Award size={9} /> Badge Opportunities
-            </div>
-            <div className="flex gap-2">
-              {badgeRewards.map((b) => {
-                const earned = earnedCodes.has(b.code);
-                return (
-                  <div key={b.code} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border"
-                    style={{
-                      background: earned ? 'hsla(145,50%,15%,0.4)' : 'hsla(265,40%,12%,0.5)',
-                      borderColor: earned ? 'hsla(145,80%,50%,0.3)' : 'hsla(280,60%,45%,0.25)',
-                    }}>
-                    <span className="text-sm">{earned ? '✅' : '🏅'}</span>
-                    <span className="text-[9px] font-semibold" style={{ color: earned ? '#34d399' : '#c084fc' }}>
-                      {b.title}
+        <div
+          className="overflow-y-auto"
+          style={{
+            maxHeight: 'calc(80vh - 20px)',
+            paddingBottom: 'calc(110px + env(safe-area-inset-bottom,0px))',
+          }}
+        >
+          {/* ── Header ── */}
+          <div className="px-5 pt-2 pb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-white font-bold text-lg leading-tight truncate">{hotspot.name}</h2>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span
+                    className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                    style={{ color: land.color, borderColor: `${land.color}55`, background: `${land.color}12` }}
+                  >
+                    {land.label}
+                  </span>
+                  {hotspot.state && (
+                    <span className="text-[10px] text-white/35 uppercase tracking-wider">
+                      {hotspot.state}
                     </span>
-                  </div>
-                );
-              })}
+                  )}
+                  {!isPublic && (
+                    <div className="flex items-center gap-1 text-amber-400/80">
+                      <AlertTriangle size={10} />
+                      <span className="text-[9px]">Permission required</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'hsla(255,30%,20%,0.5)', border: '1px solid hsla(255,30%,40%,0.2)' }}
+              >
+                <X size={14} className="text-white/60" />
+              </button>
+            </div>
+
+            {/* Difficulty + Trust */}
+            <div className="flex items-center gap-4 mt-3">
+              {hotspot.difficulty && <DifficultyStars difficulty={hotspot.difficulty} />}
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    background: `hsl(${Math.round((hotspot.trust_score || 0.5) * 120)},80%,55%)`,
+                    boxShadow: `0 0 6px hsl(${Math.round((hotspot.trust_score || 0.5) * 120)},80%,55%,0.6)`,
+                  }}
+                />
+                <span className="text-[10px] text-white/40 font-mono">
+                  {((hotspot.trust_score || 0) * 100).toFixed(0)}% trust
+                </span>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Rules */}
-        {hotspot.rules && (
-          <div className="mx-4 mb-3 px-3 py-2 rounded-xl text-[11px] text-amber-300/80"
-            style={{ background: 'hsla(45,80%,30%,0.15)', border: '1px solid hsla(45,80%,50%,0.2)' }}>
-            📋 {hotspot.rules}
+          {/* ── Minerals ── */}
+          {hotspot.minerals?.length > 0 && (
+            <div className="px-5 mb-4">
+              <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-2">Rock Types</div>
+              <div className="flex flex-wrap gap-1.5">
+                {hotspot.minerals.map(m => <MineralPill key={m} mineral={m} />)}
+              </div>
+            </div>
+          )}
+
+          {/* ── Collection gap alert ── */}
+          {collectionGapMinerals.length > 0 && (
+            <div className="mx-5 mb-4 px-4 py-3 rounded-2xl"
+              style={{ background: 'hsla(280,60%,16%,0.8)', border: '1px solid hsla(280,70%,50%,0.35)' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amethyst-glow animate-pulse" />
+                <span className="text-[10px] font-bold text-amethyst-glow uppercase tracking-wider">
+                  Collection Gap Detected
+                </span>
+              </div>
+              <p className="text-white/60 text-xs leading-relaxed">
+                You're missing:{' '}
+                <span className="text-amethyst-glow font-semibold">
+                  {collectionGapMinerals.slice(0, 3).join(', ')}
+                </span>
+                {collectionGapMinerals.length > 3 && ` + ${collectionGapMinerals.length - 3} more`}
+              </p>
+            </div>
+          )}
+
+          {/* ── Description & Rules ── */}
+          {hotspot.description && (
+            <div className="px-5 mb-4">
+              <p className="text-white/45 text-xs leading-relaxed">{hotspot.description}</p>
+            </div>
+          )}
+          {hotspot.rules && (
+            <div className="mx-5 mb-4 px-3 py-2.5 rounded-xl"
+              style={{ background: 'hsla(45,70%,18%,0.5)', border: '1px solid hsla(45,80%,45%,0.25)' }}>
+              <div className="flex items-start gap-2">
+                <Shield size={11} className="text-amber-400/80 mt-0.5 flex-shrink-0" />
+                <p className="text-amber-300/70 text-[11px] leading-relaxed">{hotspot.rules}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Recent finds ── */}
+          {recentFinds.length > 0 && (
+            <div className="px-5 mb-4">
+              <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-2">
+                Recent Finds ({recentFinds.length})
+              </div>
+              <div className="space-y-1.5">
+                {recentFinds.map(s => (
+                  <div key={s.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                    style={{ background: 'hsla(255,25%,14%,0.7)', border: '1px solid hsla(255,30%,30%,0.2)' }}>
+                    {s.image_url
+                      ? <img src={s.image_url} alt={s.mineral_name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                      : <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm"
+                          style={{ background: 'hsla(265,40%,18%,0.8)' }}>🪨</div>
+                    }
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-xs font-semibold truncate">{s.mineral_name}</div>
+                      {s.found_date && <div className="text-white/30 text-[9px]">{s.found_date}</div>}
+                    </div>
+                    {s.rarity && s.rarity !== 'common' && (
+                      <span className="text-[9px] font-bold text-amethyst-glow">{s.rarity}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Badge rewards ── */}
+          {(earnable.length > 0 || earned.length > 0) && (
+            <div className="px-5 mb-4">
+              <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-2 flex items-center gap-2">
+                <Award size={10} />
+                Badge Rewards
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                {earned.map(b => (
+                  <div key={b.code} className="flex flex-col items-center gap-1">
+                    <div className="relative">
+                      <LiquidMineralBadge badge={b} size={48} locked={false} />
+                      <CheckCircle2 size={14} className="absolute -bottom-1 -right-1 text-emerald-400 bg-background rounded-full" />
+                    </div>
+                    <span className="text-[8px] text-emerald-400/80 text-center w-12 leading-tight">{b.title}</span>
+                  </div>
+                ))}
+                {earnable.map(b => (
+                  <div key={b.code} className="flex flex-col items-center gap-1 opacity-55">
+                    <LiquidMineralBadge badge={b} size={48} locked={true} />
+                    <span className="text-[8px] text-white/40 text-center w-12 leading-tight">{b.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── CTA ── */}
+          <div className="px-5 mb-2">
+            <Link
+              to="/scan"
+              className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-98"
+              style={{
+                background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
+                border: '1px solid hsla(280,80%,70%,0.5)',
+                boxShadow: '0 0 24px hsla(265,80%,55%,0.4)',
+                color: '#fff',
+              }}
+            >
+              <MapPin size={16} />
+              Log a Find Here
+              <ChevronRight size={14} className="ml-auto opacity-60" />
+            </Link>
           </div>
-        )}
-
-        {/* CTA */}
-        <div className="px-4 pb-6" style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}>
-          <Link
-            to="/scan"
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-95"
-            style={{
-              background: 'linear-gradient(135deg, hsla(265,70%,50%,0.9), hsla(280,80%,60%,0.9))',
-              border: '1px solid hsla(280,80%,70%,0.5)',
-              boxShadow: '0 0 20px hsla(265,80%,55%,0.3)',
-              color: '#fff',
-            }}
-          >
-            <MapPin size={15} />
-            Log a Find Here
-            <ChevronRight size={14} className="ml-auto opacity-60" />
-          </Link>
         </div>
       </motion.div>
     </AnimatePresence>
