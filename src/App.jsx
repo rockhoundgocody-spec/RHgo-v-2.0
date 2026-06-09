@@ -98,6 +98,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Hub />} />
           {/* Legacy / redirect routes */}
           <Route path="/Hub" element={<Navigate to="/" replace />} />
+          <Route path="/hub" element={<Navigate to="/" replace />} />
           <Route path="/Landing" element={<Navigate to="/" replace />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />

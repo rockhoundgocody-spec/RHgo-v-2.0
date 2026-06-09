@@ -103,17 +103,16 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
             )}
           </div>
 
+          <ShareBadgeButtons badge={badge} />
+
           {earned && (
-            <>
-              <ShareBadgeButtons badge={badge} />
-              <button
-                onClick={onReplay}
-                className="mt-3 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
-                style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
-              >
-                Replay Unlock ✨
-              </button>
-            </>
+            <button
+              onClick={onReplay}
+              className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
+              style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
+            >
+              Replay Unlock ✨
+            </button>
           )}
         </div>
       </div>
