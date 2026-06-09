@@ -65,7 +65,8 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
   const style = RARITY_STYLE[badge.rarity] || RARITY_STYLE.common;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center pb-6 px-4"
+      className="fixed inset-0 z-50 flex items-end justify-center px-4"
+      style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       style={{ background: 'hsla(260,80%,5%,0.75)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
@@ -103,16 +104,17 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
             )}
           </div>
 
-          <ShareBadgeButtons badge={badge} />
-
           {earned && (
-            <button
-              onClick={onReplay}
-              className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
-              style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
-            >
-              Replay Unlock ✨
-            </button>
+            <>
+              <ShareBadgeButtons badge={badge} />
+              <button
+                onClick={onReplay}
+                className="mt-2 w-full py-3 rounded-xl text-sm font-bold transition active:scale-95"
+                style={{ background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))', color: 'white' }}
+              >
+                Replay Unlock ✨
+              </button>
+            </>
           )}
         </div>
       </div>
