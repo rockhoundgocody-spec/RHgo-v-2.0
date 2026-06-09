@@ -84,6 +84,22 @@ function HotspotCard({ hotspot, active, onClick }) {
             <span className="text-[10px] font-mono text-white/45">{((hotspot.trust_score || 0) * 100).toFixed(0)}%</span>
           </div>
         </div>
+
+        {/* Log a Find button — always visible on every card */}
+        <Link
+          to="/scan"
+          onClick={e => e.stopPropagation()}
+          className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-bold tracking-wide transition-all active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, hsla(265,70%,45%,0.85), hsla(280,80%,55%,0.85))',
+            border: '1px solid hsla(280,80%,65%,0.4)',
+            color: '#fff',
+          }}
+          aria-label={`Log a Find at ${hotspot.name}`}
+        >
+          <MapPin size={11} />
+          Log a Find
+        </Link>
       </div>
     </motion.div>
   );
@@ -302,7 +318,7 @@ export default function Explore() {
                       <HotspotCard
                         hotspot={h}
                         active={activeId === h.id}
-                        onClick={() => setActiveId(h.id)}
+                        onClick={() => setActiveId(prev => prev === h.id ? prev : h.id)}
                       />
                     </div>
                   ))
