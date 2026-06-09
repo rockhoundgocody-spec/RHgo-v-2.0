@@ -56,7 +56,7 @@ export default function Profile() {
           <div className="text-3xl font-bold text-amethyst-glow tabular-nums">{stats.findings}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Finds</div>
         </GlassPanel>
-        <GlassPanel className="p-5 text-center">
+        <GlassPanel className="p-5 text-center cursor-pointer hover:bg-white/5 transition" onClick={() => navigate('/badges')}>
           <div className="text-3xl font-bold text-emerald-400 tabular-nums">{stats.badges}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Badges</div>
         </GlassPanel>
@@ -83,7 +83,7 @@ export default function Profile() {
           <TrendingUp size={16} className="text-white/40 flex-shrink-0" />
           <span>Marketplace Activity</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-b-2xl">
+        <button onClick={() => navigate('/badges')} className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left rounded-b-2xl">
           <Award size={16} className="text-white/40 flex-shrink-0" />
           <span>Achievements & Badges</span>
         </button>

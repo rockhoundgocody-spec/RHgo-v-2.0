@@ -140,7 +140,16 @@ export default function Explore() {
   const [locating, setLocating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState(null);
+  const [mineralFilter, setMineralFilter] = useState(null);
   const scrollRef = useRef(null);
+
+  // Derive unique mineral list from all hotspots (top 8 most common)
+  const allMinerals = useMemo(() => {
+    const counts = {};
+    hotspots.forEach(h => h.minerals?.forEach(m => { counts[m] = (counts[m] || 0) + 1; }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([m]) => m);
+  }, [hotspots]);
 
   const locate = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -158,14 +167,19 @@ export default function Explore() {
   useEffect(() => { locate(); }, [locate]);
 
   const filteredHotspots = useMemo(() => {
-    if (!searchQuery) return hotspots;
-    const q = searchQuery.toLowerCase();
-    return hotspots.filter(h =>
-      h.name?.toLowerCase().includes(q) ||
-      h.state?.toLowerCase().includes(q) ||
-      h.minerals?.some(m => m.toLowerCase().includes(q))
-    );
-  }, [hotspots, searchQuery]);
+    return hotspots.filter(h => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const textMatch = h.name?.toLowerCase().includes(q) ||
+          h.state?.toLowerCase().includes(q) ||
+          h.minerals?.some(m => m.toLowerCase().includes(q));
+        if (!textMatch) return false;
+      }
+      if (difficultyFilter && h.difficulty !== difficultyFilter) return false;
+      if (mineralFilter && !h.minerals?.includes(mineralFilter)) return false;
+      return true;
+    });
+  }, [hotspots, searchQuery, difficultyFilter, mineralFilter]);
 
   const activeHotspot = hotspots.find(h => h.id === activeId);
 
@@ -282,10 +296,14 @@ export default function Explore() {
                 <div className="w-full flex items-center justify-between mb-3">
                   <div>
                     <h2 className="text-white font-bold text-base">
-                      {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Sites'}
+                      {(searchQuery || difficultyFilter || mineralFilter)
+                        ? `${filteredHotspots.length} of ${hotspots.length} sites`
+                        : 'Nearby Sites'}
                     </h2>
                     <p className="text-white/35 text-[11px] uppercase tracking-[0.2em]">
-                      {hotspots.length} total · {publicCount} open to collect
+                      {(difficultyFilter || mineralFilter)
+                        ? <button onClick={() => { setDifficultyFilter(null); setMineralFilter(null); }} className="text-amethyst-glow/70 hover:text-amethyst-glow underline underline-offset-2">clear filters ×</button>
+                        : `${hotspots.length} total · ${publicCount} open to collect`}
                     </p>
                   </div>
                   <button onClick={() => setSheetOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -296,10 +314,61 @@ export default function Explore() {
 
                 {/* Stats strip */}
                 <div className="flex gap-2 w-full justify-center mb-3">
-                  <StatPill value={hotspots.length} label="Sites" color="amethyst" />
+                  <StatPill value={filteredHotspots.length} label="Sites" color="amethyst" />
                   <StatPill value={publicCount} label="Open" color="green" />
                   <StatPill value={specimens.filter(s => s.lat && s.lng).length} label="My Finds" color="cyan" />
                 </div>
+
+                {/* ── Difficulty filter chips ── */}
+                <div className="w-full mb-2">
+                  <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1.5">Difficulty</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {['easy', 'moderate', 'hard', 'expert'].map(d => {
+                      const active = difficultyFilter === d;
+                      const cls = DIFFICULTY_COLORS[d] || '';
+                      return (
+                        <button
+                          key={d}
+                          onClick={() => setDifficultyFilter(active ? null : d)}
+                          className={cn(
+                            'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all',
+                            active ? cls : 'border-white/10 text-white/40 bg-white/5 hover:border-white/20',
+                          )}
+                          aria-pressed={active}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ── Mineral filter chips ── */}
+                {allMinerals.length > 0 && (
+                  <div className="w-full mb-1">
+                    <div className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1.5">Minerals</div>
+                    <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                      {allMinerals.map(m => {
+                        const active = mineralFilter === m;
+                        return (
+                          <button
+                            key={m}
+                            onClick={() => setMineralFilter(active ? null : m)}
+                            className={cn(
+                              'flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full border transition-all',
+                              active
+                                ? 'bg-amethyst/25 border-amethyst/60 text-amethyst-glow font-bold'
+                                : 'border-white/10 text-white/40 bg-white/5 hover:border-amethyst/30 hover:text-white/70',
+                            )}
+                            aria-pressed={active}
+                          >
+                            {m}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Scrollable body */}
