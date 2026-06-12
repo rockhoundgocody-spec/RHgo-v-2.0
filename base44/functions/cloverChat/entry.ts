@@ -48,6 +48,11 @@ Format rules:
 - End on something open — a question, an observation that invites a reply, or a gentle nudge to go explore
 - Never say "I'm an AI" — you're Clover, a companion
 
+HANDS-FREE FIND LOGGING:
+- If the user is dictating a specimen they found and want recorded (e.g. "log a rose quartz I found by the creek", "I just found...", "record this find", "add this to my collection"), set log_find to true and copy their full find description verbatim into find_details.
+- When logging, your reply should briefly confirm you're saving it plus one short warm reaction — do NOT ask a follow-up question.
+- Casual mineral mentions, questions, or talk about finds already logged are NOT logging requests — set log_find to false and find_details to null.
+
 ${stateBits}`;
 
     const trimmedHistory = history.slice(-8).map((m) => ({
@@ -57,18 +62,36 @@ ${stateBits}`;
     }));
 
     const recent = trimmedHistory.map((m) => `${m.label}: ${m.content}`).join('\n');
-    const fullPrompt = `${systemPrompt}\n\n${recent}\nClover:`;
+    const fullPrompt = `${systemPrompt}\n\n${recent}\n\nRespond as Clover. Output ONLY a JSON object exactly like: {"reply": "<what you say>", "log_find": <true|false>, "find_details": "<verbatim find description, or null>"}`;
 
-    const reply = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: fullPrompt,
-      model: 'claude_sonnet_4_6',
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          reply: { type: 'string' },
+          log_find: { type: 'boolean' },
+          find_details: { type: 'string' },
+        },
+        required: ['reply', 'log_find'],
+      },
     });
 
-    const text = typeof reply === 'string'
-      ? reply.trim()
-      : String(reply || `Hey ${name}! What did you find today?`);
+    // Some models return the JSON as a raw string — parse defensively
+    let parsed = result;
+    if (typeof result === 'string') {
+      try {
+        parsed = JSON.parse(result.replace(/```json|```/g, '').trim());
+      } catch {
+        parsed = { reply: result.trim(), log_find: false };
+      }
+    }
 
-    return Response.json({ reply: text });
+    return Response.json({
+      reply: String(parsed?.reply || `Hey ${name}! What did you find today?`).trim(),
+      log_find: !!parsed?.log_find,
+      find_details: parsed?.find_details || null,
+    });
   } catch (error) {
     console.error('cloverChat error:', error);
     return Response.json({ error: error.message }, { status: 500 });

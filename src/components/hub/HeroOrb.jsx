@@ -8,6 +8,7 @@ import useHaptic from './useHaptic';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
 import { base44 } from '@/api/base44Client';
+import { Gem } from 'lucide-react';
 import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
 
 const GREETINGS = (c, name) => {
@@ -55,6 +56,9 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const [thinking,      setThinking]      = useState(false);
   const [lastReply,     setLastReply]     = useState('');
   const [interrupted,   setInterrupted]   = useState(false);
+  const [loggedFind,    setLoggedFind]    = useState(null);
+
+  const gpsPosRef = useRef(null);
 
   const containerRef  = useRef(null);
   const activeRef     = useRef(false);
@@ -89,7 +93,28 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
         companion:    companionRef.current,
         todays_finds: todaysFindsRef.current,
       });
-      const text = res?.data?.reply || "I'm here with you.";
+      const data = res?.data || {};
+      let text = data.reply || "I'm here with you.";
+
+      // Hands-free find logging — parse the dictation and save the specimen
+      if (data.log_find && data.find_details) {
+        try {
+          const logRes = await base44.functions.invoke('parseSpecimenDictation', {
+            transcript: data.find_details,
+            create: true,
+            lat: gpsPosRef.current?.lat,
+            lng: gpsPosRef.current?.lng,
+          });
+          const created = logRes?.data?.created;
+          if (created?.mineral_name) {
+            text += ` ${created.mineral_name} is in your GeoDex.`;
+            setLoggedFind(created.mineral_name);
+          }
+        } catch {
+          text += " I couldn't save that one — try logging it again in a moment.";
+        }
+      }
+
       historyRef.current.push({ role: 'clover', content: text });
       setLastReply(text);
       setThinking(false);
@@ -152,6 +177,14 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
 
       setActive(true);
       setLastReply('');
+      setLoggedFind(null);
+
+      // Capture GPS so dictated finds get geotagged
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => { gpsPosRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
 
       const c    = companionRef.current;
       const name = 'explorer';
@@ -177,6 +210,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
       setActive(false);
       setInterim('');
       setLastReply('');
+      setLoggedFind(null);
       historyRef.current = [];
     }
   };
@@ -233,6 +267,18 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
               interim={interim}
               lastReply={lastReply}
             />
+            {loggedFind && (
+              <div
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+                style={{
+                  background: 'hsla(150,70%,40%,0.15)',
+                  border: '1px solid hsla(150,70%,50%,0.4)',
+                  color: 'hsl(150,75%,65%)',
+                }}
+              >
+                <Gem size={11} /> Logged: {loggedFind}
+              </div>
+            )}
           </div>
         )}
 
