@@ -106,7 +106,7 @@ export default function AmethystOrb({
         aria-hidden
         className="pointer-events-none absolute rounded-full blur-3xl transition-[background] duration-700"
         style={{
-          inset: `-${Math.round(size * 0.55)}px`,
+          inset: `-${Math.round(size * 0.30)}px`,
           willChange: 'transform, opacity',
           background: `radial-gradient(circle, transparent 22%, ${cfg.auraBase} 38%, hsla(270,95%,42%,0.35) 54%, hsla(265,85%,32%,0.18) 72%, transparent 92%)`,
         }}
@@ -117,7 +117,7 @@ export default function AmethystOrb({
         aria-hidden
         className="pointer-events-none absolute rounded-full blur-2xl transition-[background] duration-700"
         style={{
-          inset: `-${Math.round(size * 0.22)}px`,
+          inset: `-${Math.round(size * 0.12)}px`,
           willChange: 'opacity',
           background: `radial-gradient(circle, transparent 40%, ${cfg.innerBase} 54%, hsla(270,98%,45%,0.35) 68%, transparent 88%)`,
         }}

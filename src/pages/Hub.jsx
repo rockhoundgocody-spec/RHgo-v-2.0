@@ -52,7 +52,7 @@ export default function Hub() {
       />
 
       {/* ── HERO CENTERPIECE ── */}
-      <section className="flex flex-col items-center text-center px-5 pt-6 w-full max-w-md">
+      <section className="flex flex-col items-center text-center px-5 pt-4 w-full max-w-md overflow-hidden">
         {/* Chaos / Scholar mode toggle — top right */}
         <div className="w-full flex justify-end mb-2">
           <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} locked={chaosLocked} />
