@@ -117,7 +117,6 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
     background:
       radial-gradient(ellipse at top, hsl(265 55% 38%) 0%, hsl(250 30% 28%) 45%, hsl(245 25% 22%) 100%);
-    background-attachment: fixed;
     /* Lock to screen edges on all phones */
     margin: 0;
     padding: 0;
@@ -137,6 +136,14 @@
   button, [role="button"], a, label, nav {
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  /* Never let canvases (WebGL orbs) or charts swallow vertical swipe gestures —
+     touch-dragging over them must still scroll the page */
+  canvas,
+  .recharts-wrapper,
+  .recharts-surface {
+    touch-action: pan-y pinch-zoom;
   }
 }
 

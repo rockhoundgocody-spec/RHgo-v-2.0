@@ -135,24 +135,20 @@ export default function Hub() {
   );
 }
 
-function QuickAction({ to, icon: Icon, label, color }) {
-  const styles = {
-    amethyst: { border: 'border-amethyst/30', bg: 'bg-amethyst/10 hover:bg-amethyst/20', text: 'text-amethyst-glow', glow: 'hsla(280,100%,70%,0.3)' },
-    cyan:     { border: 'border-hud-cyan/30',  bg: 'bg-hud-cyan/10 hover:bg-hud-cyan/20',  text: 'text-hud-cyan',    glow: 'hsla(195,100%,60%,0.3)' },
-    purple:   { border: 'border-purple-400/30', bg: 'bg-purple-900/20 hover:bg-purple-900/30', text: 'text-purple-300', glow: 'hsla(270,80%,65%,0.3)' },
-    gold:     { border: 'border-yellow-400/30', bg: 'bg-yellow-900/20 hover:bg-yellow-900/30', text: 'text-yellow-300', glow: 'hsla(45,100%,60%,0.3)' },
-    rose:     { border: 'border-rose-400/30',   bg: 'bg-rose-900/20 hover:bg-rose-900/30',     text: 'text-rose-300',   glow: 'hsla(350,90%,60%,0.3)' },
-    amber:    { border: 'border-amber-400/30',  bg: 'bg-amber-900/20 hover:bg-amber-900/30',    text: 'text-amber-300',  glow: 'hsla(45,100%,60%,0.3)' },
-  };
-  const s = styles[color];
+function QuickAction({ to, icon: Icon, label }) {
   return (
     <Link
       to={to}
-      className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border ${s.border} ${s.bg} transition-all active:scale-95`}
-      style={{ boxShadow: `0 0 16px -6px ${s.glow}` }}
+      className="group flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-[0.96]"
+      style={{
+        background: 'linear-gradient(180deg, hsla(255,30%,16%,0.55) 0%, hsla(250,28%,10%,0.7) 100%)',
+        border: '1px solid hsla(260,30%,55%,0.18)',
+        boxShadow: 'inset 0 1px 0 hsla(270,60%,90%,0.07), 0 4px 16px -8px hsla(260,60%,10%,0.6)',
+        backdropFilter: 'blur(12px)',
+      }}
     >
-      <Icon size={20} className={s.text} />
-      <span className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${s.text}`}>
+      <Icon size={19} strokeWidth={1.5} className="text-white/75 transition-colors group-hover:text-amethyst-glow" />
+      <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/40 transition-colors group-hover:text-white/65">
         {label}
       </span>
     </Link>
