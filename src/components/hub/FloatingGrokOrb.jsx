@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Sparkles, Zap, Compass, Moon } from 'lucide-react';
 
 const ROUTE_TIPS = {
   '/':         ["Tap me to chat! 🍀", "How's your collection growing?", "Any new finds today?", "I sense crystals nearby…", "Every rock has a story waiting."],
@@ -17,12 +18,12 @@ const ROUTE_TIPS = {
 
 const DEFAULT_TIPS = ["🍀 Tap me — I'm Clover, your geo guide!", "The earth is hiding something beautiful nearby.", "Rockhounds unite! Let's find something epic."];
 
-// Emotions: idle, excited, wise, sleepy
+// Emotions: idle, excited, wise, sleepy — obsidian disc, accent-tinted icon
 const MOOD_STYLES = {
-  idle:    { bg: 'radial-gradient(circle at 35% 30%, hsla(280,90%,65%,0.9), hsla(265,80%,35%,0.95))', glow: 'hsla(280,100%,65%,0.55)', border: 'hsla(280,100%,75%,0.45)', emoji: '🍀' },
-  excited: { bg: 'radial-gradient(circle at 35% 30%, hsla(310,100%,70%,0.95), hsla(280,90%,45%,0.98))', glow: 'hsla(310,100%,65%,0.75)', border: 'hsla(310,100%,80%,0.6)', emoji: '✨' },
-  wise:    { bg: 'radial-gradient(circle at 35% 30%, hsla(195,100%,60%,0.9), hsla(220,90%,35%,0.95))', glow: 'hsla(195,100%,60%,0.55)', border: 'hsla(195,100%,75%,0.45)', emoji: '🔮' },
-  sleepy:  { bg: 'radial-gradient(circle at 35% 30%, hsla(240,60%,50%,0.7), hsla(250,50%,25%,0.85))', glow: 'hsla(240,70%,55%,0.35)', border: 'hsla(240,60%,65%,0.3)', emoji: '💤' },
+  idle:    { bg: 'linear-gradient(160deg, hsl(250 18% 14%) 0%, hsl(248 22% 7%) 100%)', glow: 'hsla(280,80%,55%,0.3)', border: 'hsla(280,70%,65%,0.4)', Icon: Sparkles, iconColor: 'hsl(280,80%,82%)' },
+  excited: { bg: 'linear-gradient(160deg, hsl(250 18% 14%) 0%, hsl(248 22% 7%) 100%)', glow: 'hsla(310,90%,60%,0.45)', border: 'hsla(310,80%,70%,0.55)', Icon: Zap, iconColor: 'hsl(310,90%,80%)' },
+  wise:    { bg: 'linear-gradient(160deg, hsl(250 18% 14%) 0%, hsl(248 22% 7%) 100%)', glow: 'hsla(195,90%,55%,0.4)', border: 'hsla(195,80%,65%,0.5)', Icon: Compass, iconColor: 'hsl(195,90%,78%)' },
+  sleepy:  { bg: 'linear-gradient(160deg, hsl(250 18% 14%) 0%, hsl(248 22% 7%) 100%)', glow: 'hsla(240,50%,50%,0.25)', border: 'hsla(240,40%,60%,0.3)', Icon: Moon, iconColor: 'hsla(240,50%,80%,0.8)' },
 };
 
 const HIDDEN_ROUTES = ['/scan', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password'];
@@ -160,7 +161,7 @@ export default function FloatingGrokOrb() {
             borderRadius: '50%',
           }}
         />
-        <span className="relative z-10">{style.emoji}</span>
+        <style.Icon size={18} strokeWidth={1.75} className="relative z-10" style={{ color: style.iconColor }} />
       </motion.button>
     </div>
   );
