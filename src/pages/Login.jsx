@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import FacebookIcon from "@/components/FacebookIcon";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -53,6 +54,15 @@ export default function Login() {
       >
         <GoogleIcon className="w-4 h-4 mr-2" />
         Continue with Google
+      </Button>
+
+      <Button
+        variant="outline"
+        className="w-full h-11 text-sm font-semibold mb-5 -mt-2 border-white/15 bg-white/5 hover:bg-white/10 text-white"
+        onClick={() => base44.auth.loginWithProvider("facebook", "/")}
+      >
+        <FacebookIcon className="w-4 h-4 mr-2" />
+        Continue with Facebook
       </Button>
 
       <div className="relative mb-5">

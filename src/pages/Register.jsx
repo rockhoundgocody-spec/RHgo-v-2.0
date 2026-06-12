@@ -8,6 +8,7 @@ import { Gem, Mail, Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import FacebookIcon from "@/components/FacebookIcon";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Register() {
@@ -150,6 +151,15 @@ export default function Register() {
       >
         <GoogleIcon className="w-4 h-4 mr-2" />
         Sign up with Google
+      </Button>
+
+      <Button
+        variant="outline"
+        className="w-full h-11 text-sm font-semibold mb-5 -mt-2 border-white/15 bg-white/5 hover:bg-white/10 text-white"
+        onClick={() => base44.auth.loginWithProvider("facebook", "/")}
+      >
+        <FacebookIcon className="w-4 h-4 mr-2" />
+        Sign up with Facebook
       </Button>
 
       <div className="relative mb-5">
