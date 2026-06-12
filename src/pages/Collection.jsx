@@ -18,8 +18,8 @@ export default function Collection() {
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Collection</h1>
-          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Your finds</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">GeoDex</h1>
+          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Your discovery index</p>
         </div>
         {/* View toggle */}
         <div className="flex gap-1 p-1 rounded-xl glass-panel">

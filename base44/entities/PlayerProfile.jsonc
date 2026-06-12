@@ -13,6 +13,32 @@
       "type": "integer",
       "default": 1
     },
+    "xp_categories": {
+      "type": "object",
+      "description": "Category XP \u2014 Collector, Steward, Scientist, Explorer, Mentor",
+      "properties": {
+        "collector": {
+          "type": "integer",
+          "default": 0
+        },
+        "steward": {
+          "type": "integer",
+          "default": 0
+        },
+        "scientist": {
+          "type": "integer",
+          "default": 0
+        },
+        "explorer": {
+          "type": "integer",
+          "default": 0
+        },
+        "mentor": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
     "badges": {
       "type": "array",
       "items": {

@@ -8,6 +8,7 @@ import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
 import HolographicResult from '@/components/scan/HolographicResult.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
 import ShareToMapModal from '@/components/scan/ShareToMapModal.jsx';
+import DiscoveryChoiceModal from '@/components/scan/DiscoveryChoiceModal.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,6 +28,7 @@ export default function Scan() {
   const [reasoningResult, setReasoningResult] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [shareMapOpen, setShareMapOpen] = useState(false);
+  const [choiceOpen, setChoiceOpen] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
 
@@ -214,14 +216,26 @@ export default function Scan() {
     setStage('live');
   };
 
-  const saveToCollection = async () => {
+  const saveWithChoice = async (choice) => {
+    setChoiceOpen(false);
     if (!result || !primaryUrl) return;
+    // Geo privacy controls — exact, approximate (~1km), or private (no coords)
+    let lat = gpsCoords?.lat ?? null;
+    let lng = gpsCoords?.lng ?? null;
+    if (choice.geoPrivacy === 'private') { lat = null; lng = null; }
+    else if (choice.geoPrivacy === 'approximate' && lat != null) {
+      lat = Math.round(lat * 100) / 100;
+      lng = Math.round(lng * 100) / 100;
+    }
+    const rarityWeight = { common: 1, uncommon: 2, rare: 3, legendary: 5 }[result.rarity] || 1;
+    const rqs = Math.round(rarityWeight * (result.confidence || 0.5) * 20);
+    const xp = choice.disposition === 'left_in_place' ? 40 : 25;
     // Route through the backend identifySpecimen function with save=true
     // so all rich metadata (scientific name, formula, hardness, formation, value) gets persisted
     const res = await base44.functions.invoke('identifySpecimen', {
       image_url: primaryUrl,
-      lat: gpsCoords?.lat ?? null,
-      lng: gpsCoords?.lng ?? null,
+      lat,
+      lng,
       save: true,
       share_to_map: false,
       // Pass through the already-computed result to avoid a second Vision call
@@ -251,17 +265,50 @@ export default function Scan() {
         notes:         richNotes,
         rarity:        result.rarity,
         found_date:    new Date().toISOString().split('T')[0],
-        ...(gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng } : {}),
+        ...(lat != null ? { lat, lng } : {}),
       });
       specimenId = created.id;
       specimenObj = created;
     } else {
       specimenObj = { id: specimenId, mineral_name: result.top_match, image_url: primaryUrl, ...result };
     }
+    // Persist discovery-choice fields on the specimen
+    await base44.entities.Specimen.update(specimenId, {
+      disposition: choice.disposition,
+      collected: choice.disposition === 'collected',
+      left_in_place: choice.disposition === 'left_in_place',
+      legal_status: 'user_confirmed',
+      ethics_prompt_shown: true,
+      user_confirmed_legal_access: true,
+      geo_privacy: choice.geoPrivacy,
+      rarity_quality_score: rqs,
+      xp_awarded: xp,
+    });
+
+    // Award category XP — Collector for collecting, Steward for leaving in place
+    const me = await base44.auth.me();
+    const cat = choice.disposition === 'left_in_place' ? 'steward' : 'collector';
+    const emptyCats = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
+    const profs = await base44.entities.PlayerProfile.filter({ owner_email: me.email });
+    if (profs[0]) {
+      const cats = { ...emptyCats, ...(profs[0].xp_categories || {}) };
+      cats[cat] += xp;
+      await base44.entities.PlayerProfile.update(profs[0].id, {
+        xp_categories: cats,
+        total_xp: (profs[0].total_xp || 0) + xp,
+      });
+    } else {
+      await base44.entities.PlayerProfile.create({
+        owner_email: me.email,
+        total_xp: xp,
+        xp_categories: { ...emptyCats, [cat]: xp },
+      });
+    }
+
     setSavedId(specimenId);
     setSavedSpecimen(specimenObj);
     refreshBadges();
-    setTimeout(() => setShareMapOpen(true), 800);
+    if (choice.geoPrivacy !== 'private') setTimeout(() => setShareMapOpen(true), 800);
   };
 
   const reset = () => {
@@ -273,6 +320,7 @@ export default function Scan() {
     setSavedSpecimen(null);
     setReasoningResult(null);
     setShareMapOpen(false);
+    setChoiceOpen(false);
   };
 
   return (
@@ -315,7 +363,7 @@ export default function Scan() {
           saved={!!savedId}
           savedId={savedId}
           modelVersion="gemini-flash"
-          onSave={saveToCollection}
+          onSave={() => setChoiceOpen(true)}
           onReset={reset}
           onCompare={() =>
             navigate('/compare-live', {
@@ -328,6 +376,13 @@ export default function Scan() {
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
       )}
+
+      <DiscoveryChoiceModal
+        open={choiceOpen}
+        mineralName={result?.top_match}
+        onClose={() => setChoiceOpen(false)}
+        onConfirm={saveWithChoice}
+      />
 
       <ShareToMapModal
         open={shareMapOpen}

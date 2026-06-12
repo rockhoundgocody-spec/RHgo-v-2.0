@@ -50,6 +50,58 @@
       "type": "boolean",
       "default": false
     },
+    "disposition": {
+      "type": "string",
+      "enum": [
+        "collected",
+        "left_in_place"
+      ],
+      "description": "Chattel (collected) vs affixed/legacy (marked in place) path"
+    },
+    "collected": {
+      "type": "boolean",
+      "default": false
+    },
+    "left_in_place": {
+      "type": "boolean",
+      "default": false
+    },
+    "legal_status": {
+      "type": "string",
+      "description": "e.g. 'user_confirmed' \u2014 legal access status at time of find"
+    },
+    "ethics_prompt_shown": {
+      "type": "boolean",
+      "default": false
+    },
+    "user_confirmed_legal_access": {
+      "type": "boolean",
+      "default": false
+    },
+    "geo_privacy": {
+      "type": "string",
+      "enum": [
+        "exact",
+        "approximate",
+        "private"
+      ],
+      "description": "How precisely this find's location is stored/shared"
+    },
+    "rarity_quality_score": {
+      "type": "number",
+      "description": "RQS \u2014 rarity x quality composite score"
+    },
+    "xp_awarded": {
+      "type": "integer",
+      "default": 0
+    },
+    "chain_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Discovery chain ids this find contributes to"
+    },
     "weather": {
       "type": "object",
       "description": "Weather snapshot at time/place of finding",
