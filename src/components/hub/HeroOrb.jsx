@@ -5,7 +5,8 @@ import VoiceprintRing from './VoiceprintRing.jsx';
 import IdleWhispers from './IdleWhispers.jsx';
 import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
-import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
+import useVoiceInput from '@/components/oracle/useVoiceInput';
 import { base44 } from '@/api/base44Client';
 import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
 
@@ -102,12 +103,12 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   }, [speak]);
 
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
+    useVoiceInput({ onResult: handleTranscript, onInterim: setInterim });
 
   // Re-open mic after Clover finishes speaking
   // Shorter gap when user interrupted (they're ready to talk immediately)
   useEffect(() => {
-    if (!active || thinking || speaking) return;
+    if (!active || thinking || speaking || listening) return;
     if (interrupted) {
       setInterrupted(false);
       // Very short gap — user already spoke intent by tapping
@@ -120,7 +121,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
       if (activeRef.current && !speakingRef.current && !thinkingRef.current) startListen();
     }, 450);
     return () => clearTimeout(t);
-  }, [active, speaking, thinking, startListen, interrupted]);
+  }, [active, speaking, thinking, listening, startListen, interrupted]);
 
   // Mirror mic level to listening state
   useEffect(() => {

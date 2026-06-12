@@ -197,6 +197,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const silenceTimer = useRef(null);
   const deadRef      = useRef(false);
   const gotFinalRef  = useRef(false);
+  const blockedRef   = useRef(false); // fatal error (mic denied) — stop restart loops
 
   const SR = typeof window !== 'undefined'
     ? (window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -221,7 +222,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   }, []);
 
   const start = useCallback(() => {
-    if (!SR) return;
+    if (!SR || blockedRef.current) return;
     _killRec();
     deadRef.current     = false;
     gotFinalRef.current = false;
@@ -279,6 +280,9 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
     rec.onerror = (e) => {
       _clearTimer();
       recRef.current = null;
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
+        blockedRef.current = true; // permission/device failure — don't auto-restart
+      }
       if (e.error !== 'no-speech' && e.error !== 'aborted') {
         setListening(false);
       }
