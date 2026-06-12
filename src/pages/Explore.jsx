@@ -11,7 +11,8 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers } from 'lucide-react';
+import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain } from 'lucide-react';
+import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
@@ -133,6 +134,7 @@ export default function Explore() {
   const [searchQuery,    setSearchQuery]    = useState('');
   const [activeLayer,    setActiveLayer]    = useState('all');
   const [expeditionRoute, setExpeditionRoute] = useState([]);
+  const [showGeology,    setShowGeology]    = useState(false);
   const scrollRef = useRef(null);
 
   // Geolocation
@@ -212,6 +214,7 @@ export default function Explore() {
           activeLayer={activeLayer}
           collectionGapIds={collectionGapIds}
           expeditionRoute={expeditionRoute}
+          showGeology={showGeology}
           earnedBadgeCodes={earnedCodes}
           userMinerals={[...collectedMinerals]}
         />
@@ -250,6 +253,16 @@ export default function Explore() {
             }} aria-label="My location">
             {locating ? <Loader2 size={16} className="text-hud-cyan animate-spin"/> : <Locate size={16} className={userLocation ? 'text-hud-cyan' : 'text-white/50'}/>}
           </button>
+          <button onClick={() => setShowGeology(g => !g)}
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            style={{
+              background: showGeology ? 'hsla(150,60%,30%,.3)' : 'hsla(240,30%,8%,.88)',
+              border: showGeology ? '1px solid hsla(150,70%,50%,.55)' : '1px solid hsla(255,30%,40%,.3)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: showGeology ? '0 0 16px hsla(150,70%,50%,.25)' : 'none',
+            }} aria-label="Toggle geology layer">
+            <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
+          </button>
         </div>
 
         {/* Layer toggles */}
@@ -265,6 +278,12 @@ export default function Explore() {
             onHotspotFocus={h => { setActiveId(h.id); setDetailHotspot(h); }}
           />
         </div>
+
+        {showGeology && userLocation && (
+          <div className="mt-2 pointer-events-auto">
+            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} />
+          </div>
+        )}
 
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">

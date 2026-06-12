@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
+import { fetchGeologyAt, formatGeologyContext } from '@/lib/macrostrat';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
@@ -56,6 +57,8 @@ export default function Scan() {
   // runner identity is stable and ReconstructionStage's effect won't re-fire.
   const anglesRef = useRef(angles);
   anglesRef.current = angles;
+  const gpsRef = useRef(gpsCoords);
+  gpsRef.current = gpsCoords;
   const primaryRef = useRef(null);
 
   const runner = useCallback(async () => {
@@ -73,6 +76,13 @@ export default function Scan() {
 
     const primary = uploads[0]?.file_url;
     primaryRef.current = primary;
+
+    // Local bedrock geology context (Macrostrat) — improves ID plausibility
+    let geologyContext = '';
+    if (gpsRef.current) {
+      const units = await fetchGeologyAt(gpsRef.current.lat, gpsRef.current.lng).catch(() => []);
+      geologyContext = formatGeologyContext(units);
+    }
 
     // Multi-image identification — explainable observational geology mode.
     const r = await base44.integrations.Core.InvokeLLM({
@@ -103,7 +113,8 @@ export default function Scan() {
         'fun_fact (one surprising geological fact about this mineral — formation age, unusual property, famous deposit, cultural history), ' +
         'collection_value (brief note on what makes this specimen collectible or valuable — quality, locality, size, perfection), ' +
         'and up to 3 ranked candidates each with confidence, key distinguishing features, and one-sentence rationale. ' +
-        'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence.',
+        'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence.' +
+        geologyContext,
       file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {
         type: 'object',

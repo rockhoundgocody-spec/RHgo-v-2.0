@@ -134,6 +134,7 @@ export default function HotspotMap({
   collectionGapIds = new Set(), // set of hotspot IDs that have gap minerals
   expeditionRoute  = [],       // array of {lat,lng} waypoints
   earnedBadgeCodes = new Set(),
+  showGeology      = false,    // Macrostrat bedrock geology overlay
 }) {
   const isFullHeight = height === '100%';
 
@@ -187,6 +188,15 @@ export default function HotspotMap({
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; OSM &copy; CARTO'
         />
+
+        {/* Macrostrat bedrock geology overlay */}
+        {showGeology && (
+          <TileLayer
+            url="https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png"
+            attribution='&copy; Macrostrat'
+            opacity={0.55}
+          />
+        )}
 
         <ActivePanner hotspots={hotspots} activeId={activeId} />
         <UserPanner userLocation={userLocation} />

@@ -24,6 +24,34 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'image_url is required' }, { status: 400 });
     }
 
+    // ── LOCAL GEOLOGY CONTEXT (Macrostrat bedrock map) ────────────────────
+    let geologyContext = '';
+    let localGeology = null;
+    if (lat != null && lng != null) {
+      try {
+        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}`);
+        if (geoRes.ok) {
+          const geoJson = await geoRes.json();
+          const units = geoJson?.success?.data || [];
+          if (units.length) {
+            localGeology = units.slice(0, 3).map((u) => ({
+              name: u.name || u.strat_name,
+              age: u.age,
+              lithology: u.lith,
+              description: u.descrip,
+            }));
+            geologyContext =
+              ' LOCAL GEOLOGY CONTEXT (bedrock map units at the find location, from Macrostrat): ' +
+              localGeology.map((u) =>
+                '- ' + [u.name, u.age ? `age: ${u.age}` : null, u.lithology ? `lithology: ${u.lithology}` : null]
+                  .filter(Boolean).join(' | ')
+              ).join(' ') +
+              ' Weight candidates that are geologically plausible for this bedrock higher.';
+          }
+        }
+      } catch { /* geology context is optional */ }
+    }
+
     // ── VISION IDENTIFICATION (skip if result already provided by client) ──
     let identification = prefilled_result;
     if (!identification) identification = await base44.integrations.Core.InvokeLLM({
@@ -52,7 +80,8 @@ Deno.serve(async (req) => {
         'lookalikes (top 2-3 with one decisive differentiator test each), ' +
         'verification_tests (3-5 ranked field tests with expected outcome), ' +
         'candidates (top 3 alternative IDs with confidence, features, rationale). ' +
-        'Never refuse — always give best attempt with appropriate confidence.',
+        'Never refuse — always give best attempt with appropriate confidence.' +
+        geologyContext,
       file_urls: [image_url],
       response_json_schema: {
         type: 'object',
@@ -183,6 +212,7 @@ Deno.serve(async (req) => {
       identification,
       saved_specimen_id: savedSpecimen?.id || null,
       hotspot_contribution: hotspotContribution,
+      local_geology: localGeology,
       meta: {
         model: 'gemini_3_flash',
         user_email: user.email,
