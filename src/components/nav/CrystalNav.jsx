@@ -17,7 +17,7 @@ const NAV_TABS = [
 export default function CrystalNav({ activeTab, onTabClick, pathname }) {
   return (
     <nav
-      className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center"
+      className="fixed left-1/2 -translate-x-1/2 z-[1200] flex items-center"
       style={{
         bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         background: 'linear-gradient(180deg, hsla(250,20%,9%,0.92) 0%, hsla(245,22%,5%,0.97) 100%)',

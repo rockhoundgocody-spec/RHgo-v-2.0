@@ -200,7 +200,7 @@ export default function Explore() {
   const publicCount = hotspots.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type)).length;
 
   return (
-    <div className="relative w-full" style={{ height: 'calc(100vh - 0px)' }}>
+    <div className="relative w-full isolate overflow-hidden" style={{ height: '100dvh' }}>
 
       {/* ── FULLSCREEN MAP ── always mounted so hotspots render as soon as data arrives */}
       <div className="absolute inset-0">

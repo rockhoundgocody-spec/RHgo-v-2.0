@@ -37,6 +37,7 @@ export default function Layout() {
     location.pathname.startsWith(p)
   );
   const isRoot = PRIMARY_ROOTS.includes(location.pathname);
+  const isFullscreenMap = location.pathname.startsWith('/explore');
 
   const activeTab = (() => {
     if (location.pathname === '/') return '/';
@@ -123,7 +124,7 @@ export default function Layout() {
         <main
           className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
           style={
-            isAdminOrDocs
+            isAdminOrDocs || isFullscreenMap
               ? undefined
               : { paddingBottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }
           }
