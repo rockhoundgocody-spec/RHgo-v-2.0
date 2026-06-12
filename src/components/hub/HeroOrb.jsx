@@ -9,12 +9,51 @@ import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/us
 import { base44 } from '@/api/base44Client';
 import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
 
+const GREETINGS = (c, name) => {
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+
+  if (!c) return [`Hey ${name}! What did you find?`];
+
+  const mood = c.mood || 'calm';
+  const streak = c.streak_days || 0;
+  const energy = c.energy ?? 80;
+  const intention = c.last_intention;
+
+  const pool = [];
+
+  // Streak-based
+  if (streak >= 7) pool.push(`Seven days running — you're unstoppable. What are we hunting this ${timeOfDay}?`);
+  if (streak >= 3) pool.push(`Day ${streak + 1} of the streak. Still going strong. What did you find?`);
+
+  // Mood-based
+  if (mood === 'radiant') pool.push(`I can feel your energy from here. What amazing thing happened today?`);
+  if (mood === 'happy')   pool.push(`Good ${timeOfDay}! You seem in great spirits. Find anything cool?`);
+  if (mood === 'drowsy')  pool.push(`Hey, no pressure. I'm just glad you're here. What's on your mind?`);
+  if (mood === 'tender')  pool.push(`Taking it slow is perfectly fine. I'm here. What did you find today?`);
+
+  // Energy-based
+  if (energy < 30) pool.push(`Low energy day? Let's keep it light. Anything catch your eye recently?`);
+  if (energy > 90) pool.push(`You're charged up! I love it. What's the best thing you've spotted lately?`);
+
+  // Intention callback
+  if (intention) pool.push(`Good ${timeOfDay}! Did that intention — "${intention.slice(0, 40)}" — pan out for you?`);
+
+  // Fallbacks
+  pool.push(`Good ${timeOfDay}, ${name}. What did you find out there?`);
+  pool.push(`Hey! Tell me what's on your mind.`);
+  pool.push(`I'm here. What did you discover today?`);
+
+  return pool;
+};
+
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
-  const [ripples,    setRipples]    = useState([]);
-  const [active,     setActive]     = useState(false);
-  const [interim,    setInterim]    = useState('');
-  const [thinking,   setThinking]   = useState(false);
-  const [lastReply,  setLastReply]  = useState('');
+  const [ripples,       setRipples]       = useState([]);
+  const [active,        setActive]        = useState(false);
+  const [interim,       setInterim]       = useState('');
+  const [thinking,      setThinking]      = useState(false);
+  const [lastReply,     setLastReply]     = useState('');
+  const [interrupted,   setInterrupted]   = useState(false);
 
   const containerRef  = useRef(null);
   const activeRef     = useRef(false);
@@ -65,17 +104,23 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // Re-open mic after Clover finishes speaking — small breath gap to prevent
-  // the mic from catching the tail of synthesis audio
+  // Re-open mic after Clover finishes speaking
+  // Shorter gap when user interrupted (they're ready to talk immediately)
   useEffect(() => {
     if (!active || thinking || speaking) return;
+    if (interrupted) {
+      setInterrupted(false);
+      // Very short gap — user already spoke intent by tapping
+      const t = setTimeout(() => {
+        if (activeRef.current && !speakingRef.current && !thinkingRef.current) startListen();
+      }, 200);
+      return () => clearTimeout(t);
+    }
     const t = setTimeout(() => {
-      if (activeRef.current && !speakingRef.current && !thinkingRef.current) {
-        startListen();
-      }
-    }, 600);
+      if (activeRef.current && !speakingRef.current && !thinkingRef.current) startListen();
+    }, 450);
     return () => clearTimeout(t);
-  }, [active, speaking, thinking, startListen]);
+  }, [active, speaking, thinking, startListen, interrupted]);
 
   // Mirror mic level to listening state
   useEffect(() => {
@@ -108,25 +153,23 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
       setLastReply('');
 
       const c    = companionRef.current;
-      const pool = c
-        ? c.streak_days >= 3
-          ? [
-              `${c.streak_days} days in a row — I'm so proud of us. What are we hunting today?`,
-              `Day ${c.streak_days + 1}. Let's make it count. What did you find?`,
-            ]
-          : [
-              `I'm here. How are you, really?`,
-              `Hey! Tell me what's on your mind.`,
-              `Good to see you. What did you find today?`,
-            ]
-        : [`I'm here. What did you find?`];
-
+      const name = 'explorer';
+      const pool = GREETINGS(c, name);
       const greeting = pool[Math.floor(Math.random() * pool.length)];
       historyRef.current = [{ role: 'clover', content: greeting }];
       setLastReply(greeting);
       speak(greeting);
       startListen();
+
+    } else if (speaking) {
+      // INTERRUPT: user taps while Clover is speaking → cut her off, listen immediately
+      stopSpeak();
+      setInterrupted(true);
+      setInterim('');
+      // Don't close the session — just switch to listening
+
     } else {
+      // Tap while idle/listening → close session
       stopSpeak();
       stopListen();
       micRef.current.stop();
@@ -154,7 +197,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
           ref={containerRef}
           onClick={awaken}
           role="button"
-          aria-label={active ? 'End conversation with Clover' : 'Talk to Clover'}
+          aria-label={!active ? 'Talk to Clover' : speaking ? 'Interrupt Clover' : 'End conversation with Clover'}
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
           style={{ width: 140, height: 140 }}

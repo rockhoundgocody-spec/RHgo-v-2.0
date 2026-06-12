@@ -5,8 +5,17 @@
  * - Speaking: waveform bars + words appear one-by-one as Clover speaks
  * - After speaking: reply lingers for 3s so user can read it
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const THINKING_PHRASES = [
+  'On it…',
+  'Hmm…',
+  'Let me think…',
+  'Good question…',
+  'Just a sec…',
+  'Processing…',
+];
 
 const STATES = {
   listening: {
@@ -128,6 +137,16 @@ export default function VoiceStateHUD({ listening, thinking, speaking, interim =
   const stateKey = listening ? 'listening' : thinking ? 'thinking' : speaking ? 'speaking' : null;
   const cfg = stateKey ? STATES[stateKey] : null;
 
+  // Vary thinking phrase each time thinking starts
+  const [thinkingPhrase, setThinkingPhrase] = useState(THINKING_PHRASES[0]);
+  const prevThinking = useRef(false);
+  useEffect(() => {
+    if (thinking && !prevThinking.current) {
+      setThinkingPhrase(THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)]);
+    }
+    prevThinking.current = thinking;
+  }, [thinking]);
+
   // Linger: keep reply visible for a beat after speaking ends
   const [lingerReply, setLingerReply] = useState('');
   const lingerTimer = useRef(null);
@@ -173,7 +192,7 @@ export default function VoiceStateHUD({ listening, thinking, speaking, interim =
                 className="font-mono text-[11px] uppercase tracking-[0.28em] font-semibold"
                 style={{ color: cfg.color }}
               >
-                {cfg.label}
+                {stateKey === 'thinking' ? thinkingPhrase : cfg.label}
               </span>
             </div>
           </motion.div>
