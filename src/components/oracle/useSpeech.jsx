@@ -3,27 +3,21 @@ import { base44 } from '@/api/base44Client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
-//
-// Uses Google Cloud TTS (via the synthesizeSpeech backend) for high-quality,
-// non-pixelated audio. Falls back to browser synthesis only if the backend
-// call fails hard.
-//
-// Amplitude / spectrum are computed from the decoded AudioBuffer via Web Audio,
-// driving the orb visual exactly as before.
+// Google Cloud TTS via synthesizeSpeech backend → Web Audio analyser for
+// amplitude/spectrum. Falls back to browser TTS on backend failure.
 // ─────────────────────────────────────────────────────────────────────────────
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false);
 
-  const audioCtxRef = useRef(null);
-  const sourceRef = useRef(null);      // active AudioBufferSourceNode
-  const amplitudeRef = useRef(0);
-  const bassRef = useRef(0);
-  const midRef = useRef(0);
-  const trebleRef = useRef(0);
-  const rafRef = useRef(null);
-  const analyserRef = useRef(null);
+  const audioCtxRef   = useRef(null);
+  const sourceRef     = useRef(null);
+  const amplitudeRef  = useRef(0);
+  const bassRef       = useRef(0);
+  const midRef        = useRef(0);
+  const trebleRef     = useRef(0);
+  const rafRef        = useRef(null);
+  const analyserRef   = useRef(null);
 
-  // ── amplitude animation loop (driven by real AudioContext analyser) ──
   const startAmpLoop = useCallback((analyser) => {
     analyserRef.current = analyser;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -33,21 +27,21 @@ export function useSpeechSynthesis() {
       analyser.getByteFrequencyData(freqBuf);
       const len = freqBuf.length;
       const bassEnd = Math.floor(len * 0.1);
-      const midEnd = Math.floor(len * 0.45);
+      const midEnd  = Math.floor(len * 0.45);
 
       let bassSum = 0, midSum = 0, trebleSum = 0;
-      for (let i = 0; i < bassEnd; i++) bassSum += freqBuf[i];
-      for (let i = bassEnd; i < midEnd; i++) midSum += freqBuf[i];
-      for (let i = midEnd; i < len; i++) trebleSum += freqBuf[i];
+      for (let i = 0;        i < bassEnd; i++) bassSum   += freqBuf[i];
+      for (let i = bassEnd;  i < midEnd;  i++) midSum    += freqBuf[i];
+      for (let i = midEnd;   i < len;     i++) trebleSum += freqBuf[i];
 
-      const b = bassSum / (bassEnd * 255);
-      const m = midSum / ((midEnd - bassEnd) * 255);
-      const t = trebleSum / ((len - midEnd) * 255);
-      const amp = (b * 0.5 + m * 0.35 + t * 0.15);
+      const b   = bassSum   / (bassEnd * 255);
+      const m   = midSum    / ((midEnd - bassEnd) * 255);
+      const t   = trebleSum / ((len - midEnd) * 255);
+      const amp = b * 0.5 + m * 0.35 + t * 0.15;
 
-      bassRef.current += (b - bassRef.current) * 0.15;
-      midRef.current += (m - midRef.current) * 0.15;
-      trebleRef.current += (t - trebleRef.current) * 0.15;
+      bassRef.current      += (b   - bassRef.current)      * 0.15;
+      midRef.current       += (m   - midRef.current)       * 0.15;
+      trebleRef.current    += (t   - trebleRef.current)    * 0.15;
       amplitudeRef.current += (amp - amplitudeRef.current) * 0.12;
 
       rafRef.current = requestAnimationFrame(tick);
@@ -57,47 +51,43 @@ export function useSpeechSynthesis() {
 
   const stopAmpLoop = useCallback(() => {
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-    amplitudeRef.current = 0;
-    bassRef.current = midRef.current = trebleRef.current = 0;
-    analyserRef.current = null;
+    amplitudeRef.current = bassRef.current = midRef.current = trebleRef.current = 0;
+    analyserRef.current  = null;
   }, []);
 
   const getAmplitude = useCallback(() => amplitudeRef.current, []);
-  const getSpectrum = useCallback(
+  const getSpectrum  = useCallback(
     () => ({ bass: bassRef.current, mid: midRef.current, treble: trebleRef.current }),
     []
   );
 
-  // ── core speak via Google TTS ──
   const speak = useCallback(async (text) => {
     if (!text) return;
 
-    // Stop anything currently playing
+    // Stop anything already playing
     try {
       if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; }
       window.speechSynthesis?.cancel();
     } catch {}
+    stopAmpLoop();
 
     setSpeaking(true);
 
     try {
-      // 1. Get high-quality audio from Google TTS backend
       const res = await base44.functions.invoke('synthesizeSpeech', {
-        text: String(text).slice(0, 800),
+        text:  String(text).slice(0, 800),
         voice: 'en-US-Neural2-F',
-        rate: 0.90,
+        rate:  0.92,
         pitch: 0.0,
       });
 
       const b64 = res?.data?.audioContent;
       if (!b64) throw new Error('No audio content returned');
 
-      // 2. Decode base64 → ArrayBuffer
       const binary = atob(b64);
-      const bytes = new Uint8Array(binary.length);
+      const bytes  = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
-      // 3. Decode MP3 via Web Audio
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
@@ -106,10 +96,9 @@ export function useSpeechSynthesis() {
 
       const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
 
-      // 4. Wire through analyser → destination
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.55;  // tighter than 0.75 — crisp orb response, no smear
+      analyser.smoothingTimeConstant = 0.55;
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
@@ -120,17 +109,15 @@ export function useSpeechSynthesis() {
       startAmpLoop(analyser);
 
       source.onended = () => {
-        setSpeaking(false);
         stopAmpLoop();
         sourceRef.current = null;
+        setSpeaking(false);
       };
 
       source.start(0);
     } catch (err) {
-      // Fallback to browser TTS if backend fails
       console.warn('TTS backend failed, falling back to browser:', err);
       stopAmpLoop();
-      // setSpeaking stays true — _browserFallback will manage it via onstart/onend
       _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop);
     }
   }, [startAmpLoop, stopAmpLoop]);
@@ -138,8 +125,8 @@ export function useSpeechSynthesis() {
   const stop = useCallback(() => {
     try { if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; } } catch {}
     window.speechSynthesis?.cancel();
-    setSpeaking(false);
     stopAmpLoop();
+    setSpeaking(false);
   }, [stopAmpLoop]);
 
   useEffect(() => () => {
@@ -147,29 +134,27 @@ export function useSpeechSynthesis() {
     try { audioCtxRef.current?.close(); } catch {}
   }, [stop]);
 
-  return { speak, stop, speaking, supported: true, voices: [], getAmplitude, getSpectrum };
+  return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum };
 }
 
-// Browser synthesis fallback (used only if backend TTS is unreachable)
 function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
 
   const _speak = () => {
-    const utter = new SpeechSynthesisUtterance(String(text));
-    utter.lang = 'en-US';
-    utter.rate = 0.88;
-    utter.pitch = 1.1;
-    utter.volume = 1.0;
-    const voices = window.speechSynthesis.getVoices();
-    const best = voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira/i.test(v.name))
-      || voices.find((v) => /en[-_]US/i.test(v.lang)) || voices[0];
+    const utter    = new SpeechSynthesisUtterance(String(text));
+    utter.lang     = 'en-US';
+    utter.rate     = 0.90;
+    utter.pitch    = 1.05;
+    utter.volume   = 1.0;
+    const voices   = window.speechSynthesis.getVoices();
+    const best     = voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira/i.test(v.name))
+                  || voices.find((v) => /en[-_]US/i.test(v.lang))
+                  || voices[0];
     if (best) utter.voice = best;
-    utter.onstart = () => setSpeaking(true);
-    utter.onend = () => { setSpeaking(false); stopAmpLoop(); };
-    utter.onerror = (e) => {
-      if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); }
-    };
-    window.speechSynthesis.cancel(); // clear any pending queue
+    utter.onstart  = () => setSpeaking(true);
+    utter.onend    = () => { setSpeaking(false); stopAmpLoop(); };
+    utter.onerror  = (e) => { if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   };
 
@@ -177,15 +162,12 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
   if (voices.length > 0) {
     _speak();
   } else {
-    // Voices not loaded yet — wait for them (common on mobile)
     window.speechSynthesis.onvoiceschanged = () => {
       window.speechSynthesis.onvoiceschanged = null;
       _speak();
     };
-    // Safety: if onvoiceschanged never fires (some browsers), speak after 500ms anyway
     setTimeout(() => {
-      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
-      _speak();
+      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) _speak();
     }, 500);
   }
 }
@@ -194,38 +176,41 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechRecognition
 //
-// Hard-noise rejection (strict command-only gate):
-//   • CONFIDENCE_THRESHOLD: 0.75  — only high-confidence, clearly-spoken words
-//   • MIN_TRANSCRIPT_CHARS: 10    — rejects phoneme blips, single-syllable noise
-//   • MIN_WORD_COUNT: 3           — must be a real sentence / direct command
-//   • continuous = false          — single utterance per session, no ambient drift
-//   • interimResults = false      — no partial transcripts; only final, committed text
-//   • Silence timeout: 3s         — cuts off quickly to prevent ambient accumulation
-//   • 'no-speech' / 'aborted' errors are silently ignored
+// - interimResults = true  → show partial text so user knows they're heard
+// - Silence timer resets on EVERY interim result (user is still speaking)
+// - Silence timer only fires final stop when speech goes quiet
+// - confidence gate is lenient (Chrome often reports 0)
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.45;  // lowered — Chrome often reports 0 anyway
-const MIN_TRANSCRIPT_CHARS = 2;     // single words like "yes", "hi" are valid
-const MIN_WORD_COUNT = 1;           // allow single-word answers
-const SILENCE_TIMEOUT_MS = 5000;    // more breathing room
+const CONFIDENCE_THRESHOLD = 0.45;
+const MIN_TRANSCRIPT_CHARS = 2;
+const MIN_WORD_COUNT       = 1;
+const SILENCE_TIMEOUT_MS   = 4500;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
-  const onResultRef = useRef(onResult);
+  const onResultRef  = useRef(onResult);
   const onInterimRef = useRef(onInterim);
-  onResultRef.current = onResult;
+  onResultRef.current  = onResult;
   onInterimRef.current = onInterim;
 
-  const recRef = useRef(null);
+  const recRef       = useRef(null);
   const silenceTimer = useRef(null);
-  const deadRef = useRef(false);
+  const deadRef      = useRef(false);
+  const gotFinalRef  = useRef(false);
 
-  const SR =
-    typeof window !== 'undefined'
-      ? window.SpeechRecognition || window.webkitSpeechRecognition
-      : null;
+  const SR = typeof window !== 'undefined'
+    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+    : null;
   const supported = !!SR;
 
   const _clearTimer = () => { clearTimeout(silenceTimer.current); silenceTimer.current = null; };
+
+  const _resetSilenceTimer = useCallback((rec) => {
+    _clearTimer();
+    silenceTimer.current = setTimeout(() => {
+      try { rec?.stop(); } catch {}
+    }, SILENCE_TIMEOUT_MS);
+  }, []);
 
   const _killRec = useCallback(() => {
     _clearTimer();
@@ -238,75 +223,76 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const start = useCallback(() => {
     if (!SR) return;
     _killRec();
-    deadRef.current = false;
+    deadRef.current     = false;
+    gotFinalRef.current = false;
     setListening(true);
 
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = true;   // show partial so user knows they're being heard
-    rec.maxAlternatives = 1;
-    rec.lang = 'en-US';
-    recRef.current = rec;
+    const rec            = new SR();
+    rec.continuous       = false;
+    rec.interimResults   = true;
+    rec.maxAlternatives  = 1;
+    rec.lang             = 'en-US';
+    recRef.current       = rec;
 
     rec.onresult = (e) => {
-      _clearTimer();
-      let interim = '';
+      let interim   = '';
       let finalText = '';
-      let finalConfidence = 1;
+      let finalConf = 1;
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
         if (r.isFinal) {
           finalText += r[0].transcript;
-          finalConfidence = Math.min(finalConfidence, r[0].confidence ?? 1);
+          finalConf  = Math.min(finalConf, r[0].confidence ?? 1);
         } else {
           interim += r[0].transcript;
         }
       }
 
-      // interimResults=false so interim will always be empty — no-op guard kept for safety
+      // Reset silence timer whenever user is speaking (interim or final)
+      if (interim || finalText) _resetSilenceTimer(rec);
+
       if (interim && onInterimRef.current) onInterimRef.current(interim);
 
       if (finalText) {
-        const clean = finalText.trim();
+        const clean     = finalText.trim();
         const wordCount = clean.split(/\s+/).filter(Boolean).length;
-        const isTooShort = clean.length < MIN_TRANSCRIPT_CHARS;
-        const isTooFew = wordCount < MIN_WORD_COUNT;
-        // confidence === 0 means browser didn't report it (Chrome quirk) — let through
-        const isNoise = finalConfidence > 0 && finalConfidence < CONFIDENCE_THRESHOLD;
+        const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
+        const tooFew    = wordCount < MIN_WORD_COUNT;
+        const isNoise   = finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD;
 
-        if (!isTooShort && !isTooFew && !isNoise) {
+        onInterimRef.current?.('');
+        gotFinalRef.current = true;
+
+        if (!tooShort && !tooFew && !isNoise) {
           onResultRef.current?.(clean);
         }
-        // Always clear interim display after a final result
-        onInterimRef.current?.('');
       }
     };
 
     rec.onend = () => {
-      if (!deadRef.current) setListening(false);
       _clearTimer();
       recRef.current = null;
+      if (!deadRef.current) setListening(false);
     };
 
     rec.onerror = (e) => {
+      _clearTimer();
+      recRef.current = null;
       if (e.error !== 'no-speech' && e.error !== 'aborted') {
         setListening(false);
       }
-      _clearTimer();
-      recRef.current = null;
     };
 
     try {
       rec.start();
-      silenceTimer.current = setTimeout(() => {
-        try { recRef.current?.stop(); } catch {}
-      }, SILENCE_TIMEOUT_MS);
+      // Initial silence timer — resets on any speech activity
+      _resetSilenceTimer(rec);
     } catch {
       setListening(false);
       recRef.current = null;
     }
-  }, [SR, _killRec]);
+  }, [SR, _killRec, _resetSilenceTimer]);
 
   const stop = useCallback(() => {
     deadRef.current = true;

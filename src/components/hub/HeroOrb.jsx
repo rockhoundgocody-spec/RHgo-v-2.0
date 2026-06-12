@@ -7,28 +7,35 @@ import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useSpeechSynthesis, useSpeechRecognition } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
-import { Mic, MicOff } from 'lucide-react';
 import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
 
 export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
-  const [ripples, setRipples] = useState([]);
-  const [active, setActive] = useState(false);
-  const [interim, setInterim] = useState('');
-  const [thinking, setThinking] = useState(false);
-  const containerRef = useRef(null);
-  const activeRef = useRef(false);
-  activeRef.current = active;
-  const historyRef = useRef([]);
-  const companionRef = useRef(companion);
-  companionRef.current = companion;
-  const todaysFindsRef = useRef(todaysSpecimens);
-  todaysFindsRef.current = todaysSpecimens;
+  const [ripples,    setRipples]    = useState([]);
+  const [active,     setActive]     = useState(false);
+  const [interim,    setInterim]    = useState('');
+  const [thinking,   setThinking]   = useState(false);
+  const [lastReply,  setLastReply]  = useState('');
+
+  const containerRef  = useRef(null);
+  const activeRef     = useRef(false);
+  activeRef.current   = active;
+
+  const historyRef        = useRef([]);
+  const companionRef      = useRef(companion);
+  companionRef.current    = companion;
+  const todaysFindsRef    = useRef(todaysSpecimens);
+  todaysFindsRef.current  = todaysSpecimens;
 
   const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
-  const mic = useMicLevel();
+  const mic    = useMicLevel();
   const micRef = useRef(mic);
   micRef.current = mic;
-  const micError = mic.error; // 'denied' | 'unavailable' | null
+  const micError = mic.error;
+
+  const speakingRef = useRef(speaking);
+  speakingRef.current = speaking;
+  const thinkingRef = useRef(thinking);
+  thinkingRef.current = thinking;
 
   const handleTranscript = useCallback(async (transcript) => {
     if (!transcript?.trim()) return;
@@ -37,46 +44,40 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
     setThinking(true);
 
     try {
-      const res = await base44.functions.invoke('cloverChat', {
-        history: historyRef.current.slice(-6),
-        companion: companionRef.current,
+      const res  = await base44.functions.invoke('cloverChat', {
+        history:      historyRef.current.slice(-8),
+        companion:    companionRef.current,
         todays_finds: todaysFindsRef.current,
       });
       const text = res?.data?.reply || "I'm here with you.";
       historyRef.current.push({ role: 'clover', content: text });
+      setLastReply(text);
       setThinking(false);
       speak(text);
     } catch {
       setThinking(false);
-      speak("I'm here. Something went quiet — try again.");
+      const fallback = "Something went quiet on my end — try again?";
+      setLastReply(fallback);
+      speak(fallback);
     }
   }, [speak]);
 
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
     useSpeechRecognition({ onResult: handleTranscript, onInterim: setInterim });
 
-  // Resume listening after Clover finishes speaking.
-  // Key: only watching `speaking` — when it flips false after an utterance,
-  // we wait a short breath then start a fresh recognition session.
-  // Guard with activeRef (not `active`) to avoid stale closure captures.
-  const speakingRef = useRef(speaking);
-  speakingRef.current = speaking;
-  const thinkingRef = useRef(thinking);
-  thinkingRef.current = thinking;
-
+  // Re-open mic after Clover finishes speaking — small breath gap to prevent
+  // the mic from catching the tail of synthesis audio
   useEffect(() => {
     if (!active || thinking || speaking) return;
-    // Small breath between Clover speaking and mic opening — prevents
-    // the mic from catching the tail-end of speech synthesis audio
     const t = setTimeout(() => {
       if (activeRef.current && !speakingRef.current && !thinkingRef.current) {
         startListen();
       }
-    }, 700);
+    }, 600);
     return () => clearTimeout(t);
   }, [active, speaking, thinking, startListen]);
 
-  // Mic level mirrors listening state
+  // Mirror mic level to listening state
   useEffect(() => {
     if (active && listening) micRef.current.start();
     else micRef.current.stop();
@@ -92,30 +93,38 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
 
   const awaken = async (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
-    const x = rect ? e.clientX - rect.left : 96;
-    const y = rect ? e.clientY - rect.top : 96;
+    const x    = rect ? e.clientX - rect.left : 70;
+    const y    = rect ? e.clientY - rect.top  : 70;
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
     if (!active) {
-      // Eagerly request mic permission so the browser prompt fires on tap
-      // (required on mobile where getUserMedia must happen in a user gesture)
+      // Request mic permission inside the user gesture (required on mobile)
       try {
         const stream = await navigator.mediaDevices?.getUserMedia({ audio: true, video: false });
-        stream?.getTracks().forEach((t) => t.stop()); // immediately release — useMicLevel will re-open it
+        stream?.getTracks().forEach((t) => t.stop());
       } catch {}
 
       setActive(true);
-      const c = companionRef.current;
+      setLastReply('');
+
+      const c    = companionRef.current;
       const pool = c
         ? c.streak_days >= 3
-          ? [`${c.streak_days} days in a row — I'm so proud of us.`, `Hey, day ${c.streak_days + 1}. Let's make it count.`]
-          : [`I'm here. How are you, really?`, `Hey friend. Tell me what's on your mind.`, `Good to see you. What did you find today?`]
+          ? [
+              `${c.streak_days} days in a row — I'm so proud of us. What are we hunting today?`,
+              `Day ${c.streak_days + 1}. Let's make it count. What did you find?`,
+            ]
+          : [
+              `I'm here. How are you, really?`,
+              `Hey! Tell me what's on your mind.`,
+              `Good to see you. What did you find today?`,
+            ]
         : [`I'm here. What did you find?`];
+
       const greeting = pool[Math.floor(Math.random() * pool.length)];
       historyRef.current = [{ role: 'clover', content: greeting }];
+      setLastReply(greeting);
       speak(greeting);
-      // Start listening directly inside the user gesture so iOS Safari
-      // honours the permission grant — the useEffect restarts it after speech.
       startListen();
     } else {
       stopSpeak();
@@ -123,17 +132,23 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
       micRef.current.stop();
       setActive(false);
       setInterim('');
+      setLastReply('');
       historyRef.current = [];
     }
   };
 
   const removeRipple = (id) => setRipples((r) => r.filter((rp) => rp.id !== id));
 
+  const orbState = !active ? 'idle'
+    : thinking  ? 'thinking'
+    : speaking  ? 'speaking'
+    : listening ? 'listening'
+    : 'idle';
+
   return (
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
 
-        {/* Orb + ring stacked together — ring is absolutely centered over the orb */}
         <div
           className="relative cursor-pointer select-none active:scale-[0.97] transition-transform"
           ref={containerRef}
@@ -146,11 +161,10 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
         >
           <AmethystOrb
             size={140}
-            orbState={!active ? 'idle' : thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'idle'}
+            orbState={orbState}
             getAmplitude={active ? getAmplitude : undefined}
-            getSpectrum={active ? getSpectrum : undefined}
+            getSpectrum={active   ? getSpectrum  : undefined}
           />
-          {/* Ring is centered over the orb exactly */}
           <VoiceprintRing
             size={192}
             active={active}
@@ -165,16 +179,16 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
           ))}
         </div>
 
+        {/* Voice status HUD — shown when active */}
         {active && (
-          <div className="mt-4">
-            <VoiceStateHUD listening={listening} thinking={thinking} speaking={speaking} interim={interim} />
-          </div>
-        )}
-
-        {/* interim shown inside VoiceStateHUD — keep this only as fallback when not active */}
-        {!active && interim && (
-          <div className="mt-2 text-white/50 text-xs italic max-w-[240px] text-center truncate">
-            "{interim}"
+          <div className="mt-4 flex flex-col items-center gap-2 w-full max-w-[280px]">
+            <VoiceStateHUD
+              listening={listening}
+              thinking={thinking}
+              speaking={speaking}
+              interim={interim}
+              lastReply={lastReply}
+            />
           </div>
         )}
 

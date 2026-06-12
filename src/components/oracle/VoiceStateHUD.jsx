@@ -1,141 +1,148 @@
 /**
- * VoiceStateHUD — shared sci-fi status indicator used across all voice surfaces.
- * Three distinct states: listening (red/rose scan pulse), thinking (cyan spinner grid),
- * speaking (amethyst wave bars).
+ * VoiceStateHUD — voice conversation status indicator for the Clover orb.
+ * Shows: Listening (with interim transcript), Thinking (spinner), Speaking (with reply text).
  */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Loader2, Volume2, Radio } from 'lucide-react';
 
 const STATES = {
   listening: {
-    icon: Mic,
-    label: 'Listening',
-    color: '#f43f5e',          // rose-500
-    glow: 'hsla(345,90%,58%,0.55)',
-    border: 'hsla(345,90%,58%,0.4)',
-    bg: 'hsla(345,80%,15%,0.6)',
-    dotColor: '#fb7185',
+    label:     'Listening',
+    color:     '#f43f5e',
+    glow:      'hsla(345,90%,58%,0.5)',
+    border:    'hsla(345,90%,58%,0.35)',
+    bg:        'hsla(345,80%,14%,0.65)',
+    dotColor:  '#fb7185',
   },
   thinking: {
-    icon: Loader2,
-    label: 'Processing',
-    color: '#22d3ee',          // cyan-400
-    glow: 'hsla(190,100%,55%,0.5)',
-    border: 'hsla(190,100%,55%,0.35)',
-    bg: 'hsla(200,80%,10%,0.65)',
-    dotColor: '#67e8f9',
+    label:     'Thinking…',
+    color:     '#22d3ee',
+    glow:      'hsla(190,100%,55%,0.45)',
+    border:    'hsla(190,100%,55%,0.3)',
+    bg:        'hsla(200,80%,10%,0.65)',
+    dotColor:  '#67e8f9',
   },
   speaking: {
-    icon: Volume2,
-    label: 'Speaking',
-    color: '#c084fc',          // purple-400 / amethyst
-    glow: 'hsla(280,90%,65%,0.5)',
-    border: 'hsla(280,90%,65%,0.35)',
-    bg: 'hsla(270,60%,12%,0.65)',
-    dotColor: '#e879f9',
+    label:     'Speaking',
+    color:     '#c084fc',
+    glow:      'hsla(280,90%,65%,0.45)',
+    border:    'hsla(280,90%,65%,0.3)',
+    bg:        'hsla(270,60%,12%,0.65)',
+    dotColor:  '#e879f9',
   },
-  idle: null,
 };
 
-// Animated bars for the "speaking" state
+function ListeningDot({ color }) {
+  return (
+    <span className="relative flex items-center justify-center w-3.5 h-3.5 shrink-0">
+      <span className="absolute inline-flex w-full h-full rounded-full animate-ping opacity-55"
+        style={{ background: color }} />
+      <span className="relative inline-flex rounded-full w-2 h-2" style={{ background: color }} />
+    </span>
+  );
+}
+
+function ThinkingDots({ color }) {
+  return (
+    <span className="flex items-center gap-[3px]">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="w-[5px] h-[5px] rounded-full"
+          style={{ background: color }}
+          animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
+        />
+      ))}
+    </span>
+  );
+}
+
 function SpeakingBars({ color }) {
-  const heights = [0.4, 0.7, 1, 0.6, 0.85, 0.5, 0.9, 0.45];
+  const heights = [0.45, 0.75, 1, 0.6, 0.85, 0.5, 0.9, 0.5];
   return (
     <div className="flex items-center gap-[2px]">
       {heights.map((h, i) => (
-        <motion.div
-          key={i}
-          className="w-[3px] rounded-full"
-          style={{ background: color, height: 14 }}
-          animate={{ scaleY: [h, 1, h * 0.6, 0.9, h] }}
-          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.07, ease: 'easeInOut' }}
+        <motion.div key={i} className="w-[3px] rounded-full"
+          style={{ background: color, height: 13 }}
+          animate={{ scaleY: [h, 1, h * 0.55, 0.85, h] }}
+          transition={{ duration: 0.75, repeat: Infinity, delay: i * 0.065, ease: 'easeInOut' }}
         />
       ))}
     </div>
   );
 }
 
-// Pinging dot for the "listening" state
-function ListeningDot({ color }) {
-  return (
-    <span className="relative flex items-center justify-center w-4 h-4">
-      <span
-        className="absolute inline-flex w-full h-full rounded-full animate-ping opacity-60"
-        style={{ background: color }}
-      />
-      <span className="relative inline-flex rounded-full w-2.5 h-2.5" style={{ background: color }} />
-    </span>
-  );
-}
-
-// Spinning grid for the "thinking" state
-function ThinkingGrid({ color }) {
-  return (
-    <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
-      className="w-4 h-4 rounded-sm border-2"
-      style={{ borderColor: `${color}80`, borderTopColor: color }}
-    />
-  );
-}
-
-export default function VoiceStateHUD({ listening, thinking, speaking, interim = '', size = 'md' }) {
-  const stateKey = listening ? 'listening' : thinking ? 'thinking' : speaking ? 'speaking' : 'idle';
-  const cfg = STATES[stateKey];
-
-  const compact = size === 'sm';
+export default function VoiceStateHUD({ listening, thinking, speaking, interim = '', lastReply = '' }) {
+  const stateKey = listening ? 'listening' : thinking ? 'thinking' : speaking ? 'speaking' : null;
+  const cfg = stateKey ? STATES[stateKey] : null;
 
   return (
-    <AnimatePresence mode="wait">
-      {cfg && (
-        <motion.div
-          key={stateKey}
-          initial={{ opacity: 0, y: 6, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -4, scale: 0.94 }}
-          transition={{ duration: 0.18 }}
-          className="flex flex-col items-center gap-2"
-        >
-          {/* Main pill */}
-          <div
-            className="flex items-center gap-2.5 px-4 py-2 rounded-full backdrop-blur-md"
-            style={{
-              background: cfg.bg,
-              border: `1px solid ${cfg.border}`,
-              boxShadow: `0 0 18px -4px ${cfg.glow}, inset 0 1px 0 hsla(0,0%,100%,0.08)`,
-            }}
+    <div className="flex flex-col items-center gap-2 w-full">
+      <AnimatePresence mode="wait">
+        {cfg && (
+          <motion.div
+            key={stateKey}
+            initial={{ opacity: 0, y: 5, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0,  scale: 1    }}
+            exit={{    opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.16 }}
           >
-            {/* State-specific visual */}
-            {stateKey === 'listening' && <ListeningDot color={cfg.dotColor} />}
-            {stateKey === 'thinking' && <ThinkingGrid color={cfg.color} />}
-            {stateKey === 'speaking' && <SpeakingBars color={cfg.color} />}
-
-            {/* Label */}
-            <span
-              className="font-mono text-[11px] uppercase tracking-[0.3em] font-semibold"
-              style={{ color: cfg.color }}
+            <div
+              className="flex items-center gap-2.5 px-4 py-2 rounded-full backdrop-blur-md"
+              style={{
+                background:  cfg.bg,
+                border:      `1px solid ${cfg.border}`,
+                boxShadow:   `0 0 16px -4px ${cfg.glow}, inset 0 1px 0 hsla(0,0%,100%,0.07)`,
+              }}
             >
-              {cfg.label}
-            </span>
-          </div>
+              {stateKey === 'listening' && <ListeningDot   color={cfg.dotColor} />}
+              {stateKey === 'thinking'  && <ThinkingDots   color={cfg.color}    />}
+              {stateKey === 'speaking'  && <SpeakingBars   color={cfg.color}    />}
 
-          {/* Interim transcript — only when listening */}
-          <AnimatePresence>
-            {stateKey === 'listening' && interim && (
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-rose-200/70 text-[11px] italic max-w-[260px] text-center truncate px-2"
+              <span
+                className="font-mono text-[11px] uppercase tracking-[0.28em] font-semibold"
+                style={{ color: cfg.color }}
               >
-                "{interim}"
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                {cfg.label}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Interim transcript while listening */}
+      <AnimatePresence>
+        {listening && interim && (
+          <motion.div
+            key="interim"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-rose-200/65 text-[11px] italic text-center max-w-[260px] px-2 leading-snug"
+          >
+            "{interim}"
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clover's last reply — shown while speaking so user can read along */}
+      <AnimatePresence>
+        {speaking && lastReply && (
+          <motion.div
+            key="reply"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="text-center px-4 max-w-[280px]"
+          >
+            <p className="text-amethyst-glow/80 text-[12px] leading-relaxed font-light">
+              {lastReply}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
