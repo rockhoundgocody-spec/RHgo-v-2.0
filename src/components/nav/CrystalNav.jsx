@@ -3,6 +3,7 @@
  * Clean lucide icons in HUD-cyan / amethyst duotone, refined hero Scan button.
  */
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Home, Map, Gem, Store, ScanLine } from 'lucide-react';
 
@@ -15,11 +16,16 @@ const NAV_TABS = [
 ];
 
 export default function CrystalNav({ activeTab, onTabClick, pathname }) {
-  return (
+  // Rendered into document.body via portal — escapes the app's internal
+  // scroll container so Leaflet's composited map layers can never paint
+  // over or hide the nav (iOS WebKit fixed-position bug).
+  return createPortal(
     <nav
-      className="fixed left-1/2 -translate-x-1/2 z-[1200] flex items-center"
+      className="fixed left-1/2 z-[5000] flex items-center"
       style={{
         bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+        transform: 'translateX(-50%) translateZ(0)',
+        willChange: 'transform',
         background: 'linear-gradient(180deg, hsla(250,20%,9%,0.92) 0%, hsla(245,22%,5%,0.97) 100%)',
         backdropFilter: 'blur(28px) saturate(140%)',
         WebkitBackdropFilter: 'blur(28px) saturate(140%)',
@@ -77,7 +83,8 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
           </button>
         );
       })}
-    </nav>
+    </nav>,
+    document.body
   );
 }
 
