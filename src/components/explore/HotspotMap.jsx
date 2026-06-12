@@ -42,8 +42,10 @@ const DIFF_BADGE = {
 };
 
 // ── Custom div icon factory ───────────────────────────────────────────────────
-function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty }) {
-  const size   = isActive ? 36 : 28;
+// highContrast: used when the geology overlay is on — solid fills, dark halos
+// and thick white rings so markers stay readable in bright sunlight.
+function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
+  const size   = highContrast ? (isActive ? 42 : 34) : (isActive ? 36 : 28);
   const glow   = isActive  ? `0 0 18px ${color}, 0 0 36px ${color}55`
                : isGlowing ? `0 0 12px ${color}cc`
                : 'none';
@@ -55,14 +57,20 @@ function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty }) {
       <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
     </circle>` : '';
 
+  const coreR = isActive ? 14 : highContrast ? 12 : 10;
+  const halo  = highContrast
+    ? `<circle cx="22" cy="22" r="${coreR + 4}" fill="#0a0f1e" opacity="0.85"/>`
+    : '';
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 44 44">
       ${pulse}
       ${ring}
-      <circle cx="22" cy="22" r="${isActive ? 14 : 10}" fill="${color}" opacity="0.92"
-        style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${color})"/>
-      <circle cx="22" cy="22" r="${isActive ? 14 : 10}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="${isActive ? 2 : 1.5}"/>
-      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 12 : 9}" fill="white" font-weight="bold">${badge}</text>
+      ${halo}
+      <circle cx="22" cy="22" r="${coreR}" fill="${color}" opacity="${highContrast ? 1 : 0.92}"
+        style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${highContrast ? '#0a0f1e' : color})"/>
+      <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.6)'}" stroke-width="${highContrast ? 3 : isActive ? 2 : 1.5}"/>
+      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold"
+        ${highContrast ? 'stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
     </svg>`;
 
   return L.divIcon({
@@ -73,31 +81,35 @@ function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty }) {
   });
 }
 
-function makeSpecimenIcon(rarity) {
+function makeSpecimenIcon(rarity, highContrast) {
   const glow = RARITY_GLOW[rarity];
   const color = rarity === 'legendary' ? '#f59e0b' : rarity === 'rare' ? '#a78bfa' : '#c084fc';
+  const s = highContrast ? 24 : 18;
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="${color}" opacity="0.9"
-        style="filter:drop-shadow(0 0 ${glow ? 5 : 2}px ${color})"/>
-      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 18 18">
+      ${highContrast ? `<polygon points="9,0.5 17.5,6.5 14,16.5 4,16.5 0.5,6.5" fill="#0a0f1e" opacity="0.85"/>` : ''}
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="${color}" opacity="${highContrast ? 1 : 0.9}"
+        style="filter:drop-shadow(0 0 ${glow ? 5 : 2}px ${highContrast ? '#0a0f1e' : color})"/>
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.5)'}" stroke-width="${highContrast ? 1.5 : 1}"/>
     </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [18, 18], iconAnchor: [9, 9] });
+  return L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
 }
 
-function makeUserIcon() {
+function makeUserIcon(highContrast) {
+  const s = highContrast ? 36 : 28;
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 28 28">
       <circle cx="14" cy="14" r="12" fill="#22d3ee" opacity="0.2">
         <animate attributeName="r" values="10;16;10" dur="2.5s" repeatCount="indefinite"/>
         <animate attributeName="opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite"/>
       </circle>
+      ${highContrast ? `<circle cx="14" cy="14" r="10" fill="#0a0f1e" opacity="0.85"/>` : ''}
       <circle cx="14" cy="14" r="7" fill="#22d3ee" opacity="0.95"
-        style="filter:drop-shadow(0 0 6px #22d3ee)"/>
-      <circle cx="14" cy="14" r="7" fill="none" stroke="white" stroke-width="2"/>
+        style="filter:drop-shadow(0 0 6px ${highContrast ? '#0a0f1e' : '#22d3ee'})"/>
+      <circle cx="14" cy="14" r="7" fill="none" stroke="white" stroke-width="${highContrast ? 3 : 2}"/>
       <circle cx="14" cy="14" r="2.5" fill="white"/>
     </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
+  return L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
 }
 
 // ── Inner map effect components ───────────────────────────────────────────────
@@ -167,7 +179,7 @@ export default function HotspotMap({
     [specimens]
   );
 
-  const userIcon = useMemo(() => makeUserIcon(), []);
+  const userIcon = useMemo(() => makeUserIcon(showGeology), [showGeology]);
 
   return (
     <div
@@ -194,7 +206,7 @@ export default function HotspotMap({
           <TileLayer
             url="https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png"
             attribution='&copy; Macrostrat'
-            opacity={0.55}
+            opacity={0.7}
           />
         )}
 
@@ -226,6 +238,7 @@ export default function HotspotMap({
 
           const icon = makeHotspotIcon({
             color, isActive, isGlowing, hasGap, difficulty: h.difficulty,
+            highContrast: showGeology,
           });
 
           return (
@@ -241,7 +254,7 @@ export default function HotspotMap({
 
         {/* Specimen finds (personal) — shown on all + gaps layers */}
         {(activeLayer === 'all' || activeLayer === 'gaps') && geoSpecimens.map(s => {
-          const icon = makeSpecimenIcon(s.rarity);
+          const icon = makeSpecimenIcon(s.rarity, showGeology);
           return (
             <Marker key={s.id} position={[s.lat, s.lng]} icon={icon}>
               <Popup>
