@@ -1,6 +1,6 @@
 /**
  * CrystalNav — bottom 5-tab navigation, dark obsidian style.
- * Monochrome lucide icons, single amethyst accent, refined hero Scan button.
+ * Clean lucide icons in HUD-cyan / amethyst duotone, refined hero Scan button.
  */
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -53,15 +53,17 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
             onClick={() => onTabClick(tab.to, isActive)}
             className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center"
             style={{
-              color: isActive ? 'hsl(0,0%,98%)' : 'hsla(255,15%,65%,0.55)',
-              background: isActive ? 'hsla(0,0%,100%,0.05)' : 'transparent',
+              color: isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
+              background: isActive ? 'hsla(195,100%,60%,0.07)' : 'transparent',
             }}
             aria-label={tab.label}
           >
-            <Icon size={19} strokeWidth={isActive ? 2 : 1.6} />
+            <div style={{ filter: isActive ? 'drop-shadow(0 0 6px hsla(195,100%,60%,0.6))' : 'none' }}>
+              <Icon size={19} strokeWidth={isActive ? 2 : 1.6} />
+            </div>
             <span
               className="text-[8px] font-semibold uppercase tracking-[0.18em]"
-              style={{ color: isActive ? 'hsla(0,0%,100%,0.85)' : 'hsla(255,15%,60%,0.45)' }}
+              style={{ color: isActive ? 'hsla(195,100%,82%,0.95)' : 'hsla(220,25%,65%,0.45)' }}
             >
               {tab.label}
             </span>
@@ -69,7 +71,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
               <motion.div
                 layoutId="nav-indicator"
                 className="absolute bottom-1 w-1 h-1 rounded-full"
-                style={{ background: 'hsl(var(--amethyst-glow))', boxShadow: '0 0 8px hsla(280,100%,75%,0.7)' }}
+                style={{ background: 'hsl(195,100%,70%)', boxShadow: '0 0 8px hsla(195,100%,65%,0.8)' }}
               />
             )}
           </button>

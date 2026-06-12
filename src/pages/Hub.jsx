@@ -135,19 +135,29 @@ export default function Hub() {
   );
 }
 
-function QuickAction({ to, icon: Icon, label }) {
+const QUICK_ACCENTS = {
+  cyan:     { icon: 'hsl(195,100%,78%)', glow: 'hsla(195,100%,60%,0.45)', border: 'hsla(195,90%,60%,0.22)' },
+  amethyst: { icon: 'hsl(280,85%,82%)',  glow: 'hsla(280,100%,65%,0.4)',  border: 'hsla(280,70%,65%,0.22)' },
+};
+
+function QuickAction({ to, icon: Icon, label, color }) {
+  const a = ['cyan', 'amber'].includes(color) ? QUICK_ACCENTS.cyan : QUICK_ACCENTS.amethyst;
   return (
     <Link
       to={to}
       className="group flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-[0.96]"
       style={{
         background: 'linear-gradient(180deg, hsla(255,30%,16%,0.55) 0%, hsla(250,28%,10%,0.7) 100%)',
-        border: '1px solid hsla(260,30%,55%,0.18)',
+        border: `1px solid ${a.border}`,
         boxShadow: 'inset 0 1px 0 hsla(270,60%,90%,0.07), 0 4px 16px -8px hsla(260,60%,10%,0.6)',
         backdropFilter: 'blur(12px)',
       }}
     >
-      <Icon size={19} strokeWidth={1.5} className="text-white/75 transition-colors group-hover:text-amethyst-glow" />
+      <Icon
+        size={19}
+        strokeWidth={1.5}
+        style={{ color: a.icon, filter: `drop-shadow(0 0 5px ${a.glow})` }}
+      />
       <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/40 transition-colors group-hover:text-white/65">
         {label}
       </span>
