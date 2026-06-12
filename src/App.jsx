@@ -42,6 +42,7 @@ const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
 const Badges = lazy(() => import('@/pages/Badges.jsx'));
 const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 
+
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));
@@ -112,6 +113,8 @@ const AuthenticatedApp = () => {
           <Route path="/QuestDashboard" element={<Navigate to="/quests" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
+          <Route path="/companion" element={<CompanionDashboard />} />
+          <Route path="/CompanionDashboard" element={<Navigate to="/companion" replace />} />
           <Route path="/companion" element={<CompanionDashboard />} />
           <Route path="/CompanionDashboard" element={<Navigate to="/companion" replace />} />
 
