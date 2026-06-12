@@ -142,17 +142,17 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
           aria-label={active ? 'End conversation with Clover' : 'Talk to Clover'}
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
-          style={{ width: 192, height: 192 }}
+          style={{ width: 140, height: 140 }}
         >
           <AmethystOrb
-            size={192}
+            size={140}
             orbState={!active ? 'idle' : thinking ? 'thinking' : speaking ? 'speaking' : listening ? 'listening' : 'idle'}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active ? getSpectrum : undefined}
           />
           {/* Ring is centered over the orb exactly */}
           <VoiceprintRing
-            size={256}
+            size={192}
             active={active}
             getAmplitude={getAmplitude}
             getSpectrum={getSpectrum}

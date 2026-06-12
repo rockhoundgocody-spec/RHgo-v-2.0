@@ -59,9 +59,9 @@ export default function Hub() {
         </div>
         <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
 
-        <div className="mt-5 select-none">
+        <div className="mt-3 select-none">
           <span
-            className="text-[72px] sm:text-[96px] font-black leading-none text-amethyst-glow glow-amethyst block"
+            className="text-[56px] sm:text-[80px] font-black leading-none text-amethyst-glow glow-amethyst block"
             style={{
               letterSpacing: '-0.02em',
               textShadow:
