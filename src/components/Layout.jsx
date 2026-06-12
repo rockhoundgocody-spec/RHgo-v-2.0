@@ -129,18 +129,25 @@ export default function Layout() {
               : { paddingBottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }
           }
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          {isFullscreenMap ? (
+            /* Leaflet maps break inside AnimatePresence exit transitions —
+               render the map route without the animation wrapper so
+               navigating away always works. */
+            <Outlet />
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={location.pathname}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </main>
 
         {/* Crystal V2.5 bottom nav */}
