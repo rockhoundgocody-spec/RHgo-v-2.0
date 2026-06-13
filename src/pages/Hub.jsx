@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Sword, Heart, Trophy } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
+import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
@@ -100,6 +101,9 @@ export default function Hub() {
 
         {/* Daily Rock Roulette — Chaos mode only */}
         {chaos && <DailyRoulette />}
+
+        {/* Intention Roulette — Randonautica-style wildcard, always visible */}
+        <IntentionRoulette />
 
         {/* AR Rock Battle — always visible */}
         <ARRockBattle />
