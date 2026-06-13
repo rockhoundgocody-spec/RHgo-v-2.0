@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
+import AdminRoute from '@/components/AdminRoute.jsx';
 import Hub from '@/pages/Hub';
 const Landing = lazy(() => import('@/pages/Landing'));
 
@@ -95,12 +96,7 @@ const AuthenticatedApp = () => {
         <Route path="/onboarding" element={<Onboarding />} />
 
         <Route element={<Layout />}>
-          {/* PRIMARY WORKFLOW ROUTES */}
           <Route path="/" element={<Hub />} />
-          {/* Legacy / redirect routes */}
-          <Route path="/Hub" element={<Navigate to="/" replace />} />
-          <Route path="/hub" element={<Navigate to="/" replace />} />
-          <Route path="/Landing" element={<Navigate to="/" replace />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />
@@ -110,22 +106,22 @@ const AuthenticatedApp = () => {
           <Route path="/market" element={<Market />} />
           <Route path="/specimen/:id" element={<SpecimenDetail />} />
           <Route path="/quests" element={<QuestDashboard />} />
-          <Route path="/QuestDashboard" element={<Navigate to="/quests" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
           <Route path="/companion" element={<CompanionDashboard />} />
-          <Route path="/CompanionDashboard" element={<Navigate to="/companion" replace />} />
 
-          {/* SECONDARY / ADMIN ROUTES */}
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/docs" element={<Docs />} />
+          {/* USER ROUTES */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/dev/architecture" element={<ArchitectureBoundaries />} />
-
-          {/* LEGACY / FEATURE ROUTES (kept for backwards compat, not in main nav) */}
+          <Route path="/docs" element={<Docs />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+        </Route>
+
+        {/* ADMIN-ONLY ROUTES — require role="admin" */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/dev/architecture" element={<ArchitectureBoundaries />} />
           <Route path="/dev/design-system" element={<DesignSystem />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
