@@ -12,6 +12,7 @@
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain } from 'lucide-react';
+import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
@@ -263,6 +264,7 @@ export default function Explore() {
             }} aria-label="Toggle geology layer">
             <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
           </button>
+          <QuickPinButton userLocation={userLocation} />
         </div>
 
         {/* Layer toggles */}
