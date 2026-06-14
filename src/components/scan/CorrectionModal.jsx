@@ -84,10 +84,11 @@ export default function CorrectionModal({
           )}
         </p>
 
-        <label className="block text-[10px] font-mono uppercase tracking-[0.3em] text-white/50 mb-1.5">
+        <label htmlFor="user-label" className="block text-[10px] font-mono uppercase tracking-[0.3em] text-white/50 mb-1.5">
           What is it really?
         </label>
         <Input
+          id="user-label"
           autoFocus
           value={userLabel}
           onChange={(e) => setUserLabel(e.target.value)}
@@ -95,10 +96,11 @@ export default function CorrectionModal({
           className="bg-white/5 border-white/10 text-white placeholder:text-white/30 mb-3"
         />
 
-        <label className="block text-[10px] font-mono uppercase tracking-[0.3em] text-white/50 mb-1.5">
+        <label htmlFor="correction-notes" className="block text-[10px] font-mono uppercase tracking-[0.3em] text-white/50 mb-1.5">
           Notes (optional)
         </label>
         <Textarea
+          id="correction-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Anything helpful for the model — locality, distinctive features…"
