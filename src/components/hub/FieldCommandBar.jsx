@@ -146,6 +146,7 @@ export default function FieldCommandBar({ collectionCount }) {
                 </div>
                 <button
                   onClick={() => setExpanded(p => !p)}
+                  aria-label={expanded ? 'Collapse details' : 'Expand details'}
                   className="text-white/30 hover:text-white/60 transition shrink-0 mt-0.5"
                 >
                   {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}

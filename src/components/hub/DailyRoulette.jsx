@@ -68,7 +68,7 @@ function MemeCard({ challenge, onClose }) {
         {/* Meme header */}
         <div className="relative px-6 pt-8 pb-4 text-center"
           style={{ background: 'linear-gradient(180deg, hsla(30,90%,50%,0.15) 0%, transparent 100%)' }}>
-          <button onClick={onClose} className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition">
+          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition">
             <X size={16} />
           </button>
           <div className="text-6xl mb-3">{challenge.emoji}</div>
@@ -216,7 +216,7 @@ export default function DailyRoulette() {
               <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-emerald-400 text-xs font-bold"
                 style={{ background: 'hsla(145,60%,15%,0.4)', border: '1px solid hsla(145,60%,40%,0.3)' }}>
                 <CheckCircle2 size={13} /> Challenge Claimed!
-                <button onClick={() => setShowMeme(true)} className="ml-1 text-white/40 hover:text-white/70 transition">
+                <button onClick={() => setShowMeme(true)} aria-label="Share" className="ml-1 text-white/40 hover:text-white/70 transition">
                   <Share2 size={11} />
                 </button>
               </div>
