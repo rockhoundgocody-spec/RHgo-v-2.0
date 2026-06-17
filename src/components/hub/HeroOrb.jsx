@@ -192,8 +192,10 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       const greeting = pool[Math.floor(Math.random() * pool.length)];
       historyRef.current = [{ role: 'clover', content: greeting }];
       setLastReply(greeting);
+      // Don't call startListen() here — the useEffect re-opens the mic
+      // automatically once speaking finishes, preventing the orb from
+      // hearing its own TTS output.
       speak(greeting);
-      startListen();
 
     } else if (speaking) {
       // INTERRUPT: user taps while Clover is speaking → cut her off, listen immediately
@@ -238,7 +240,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           style={{ width: size, height: size }}
         >
           <AmethystOrb
-            size={140}
+            size={size}
             orbState={orbState}
             getAmplitude={active ? getAmplitude : undefined}
             getSpectrum={active   ? getSpectrum  : undefined}
