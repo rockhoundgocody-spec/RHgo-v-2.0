@@ -3,6 +3,7 @@ import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
+import PermissionsPrompt from '@/components/PermissionsPrompt.jsx';
 
 const DEFAULT_VOICE = { rate: 0.92, pitch: 1.18, volume: 0.95 };
 
@@ -68,6 +69,9 @@ export default function Settings() {
         <h1 className="text-3xl font-bold text-white tracking-tight">Settings</h1>
         <p className="text-white/50 text-sm mt-2">Customize your RockHound-GO experience</p>
       </div>
+
+      {/* Permissions prompt */}
+      <PermissionsPrompt />
 
       {/* Notifications */}
       <div className="mb-6">
