@@ -21,7 +21,7 @@ const STATE_CONFIG = {
 };
 
 export default function AmethystOrb({
-  size = 220,
+  size = 221,
   className = '',
   label,
   sublabel,

@@ -46,6 +46,7 @@ const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
+const Paywall = lazy(() => import('@/pages/Paywall'));
 const Contact = lazy(() => import('@/pages/Contact'));
 
 const RouteFallback = () => (
@@ -116,6 +117,7 @@ const AuthenticatedApp = () => {
           <Route path="/docs" element={<Docs />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/paywall" element={<Paywall />} />
         </Route>
 
         {/* ADMIN-ONLY ROUTES — require role="admin" */}

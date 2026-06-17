@@ -49,7 +49,7 @@ const GREETINGS = (c, name) => {
   return pool;
 };
 
-export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
+export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) {
   const [ripples,       setRipples]       = useState([]);
   const [active,        setActive]        = useState(false);
   const [interim,       setInterim]       = useState('');
@@ -235,7 +235,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0 }) {
           aria-label={!active ? 'Talk to Clover' : speaking ? 'Interrupt Clover' : 'End conversation with Clover'}
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && awaken(e)}
-          style={{ width: 140, height: 140 }}
+          style={{ width: size, height: size }}
         >
           <AmethystOrb
             size={140}

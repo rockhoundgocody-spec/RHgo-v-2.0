@@ -58,7 +58,7 @@ export default function Hub() {
         <div className="w-full flex justify-end mb-2">
           <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} locked={chaosLocked} />
         </div>
-        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} />
+        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} size={141} />
 
         <div className="mt-3 select-none">
           <span
