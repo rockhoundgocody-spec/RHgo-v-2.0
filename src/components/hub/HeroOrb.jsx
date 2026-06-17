@@ -7,6 +7,7 @@ import useMicLevel from './useMicLevel';
 import useHaptic from './useHaptic';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
+import useXaiVoice from '@/components/oracle/useXaiVoice';
 import { base44 } from '@/api/base44Client';
 import { Gem } from 'lucide-react';
 import VoiceStateHUD from '@/components/oracle/VoiceStateHUD.jsx';
@@ -50,117 +51,38 @@ const GREETINGS = (c, name) => {
 };
 
 export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) {
-  const [ripples,       setRipples]       = useState([]);
-  const [active,        setActive]        = useState(false);
-  const [interim,       setInterim]       = useState('');
-  const [thinking,      setThinking]      = useState(false);
-  const [lastReply,     setLastReply]     = useState('');
-  const [interrupted,   setInterrupted]   = useState(false);
-  const [loggedFind,    setLoggedFind]    = useState(null);
+  const [ripples,    setRipples]    = useState([]);
+  const [active,     setActive]     = useState(false);
+  const [loggedFind, setLoggedFind] = useState(null);
 
-  const gpsPosRef = useRef(null);
+  const containerRef = useRef(null);
+  const activeRef    = useRef(false);
+  activeRef.current  = active;
 
-  const containerRef  = useRef(null);
-  const activeRef     = useRef(false);
-  activeRef.current   = active;
-
-  const historyRef        = useRef([]);
-  const companionRef      = useRef(companion);
-  companionRef.current    = companion;
-  const todaysFindsRef    = useRef(todaysSpecimens);
-  todaysFindsRef.current  = todaysSpecimens;
-
-  const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
   const mic    = useMicLevel();
   const micRef = useRef(mic);
   micRef.current = mic;
   const micError = mic.error;
 
-  const speakingRef = useRef(speaking);
-  speakingRef.current = speaking;
-  const thinkingRef = useRef(thinking);
-  thinkingRef.current = thinking;
+  // xAI Realtime Voice — primary backend
+  const xai = useXaiVoice({ onFindLogged: (name) => setLoggedFind(name) });
 
-  const handleTranscript = useCallback(async (transcript) => {
-    if (!transcript?.trim()) return;
-    setInterim('');
-    historyRef.current.push({ role: 'user', content: transcript });
-    setThinking(true);
+  // Legacy TTS for the greeting only (spoken before xAI session is warmed up)
+  const { speak: legacySpeak, stop: legacyStop, speaking: legacySpeaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
 
-    try {
-      const res  = await base44.functions.invoke('cloverChat', {
-        history:      historyRef.current.slice(-8),
-        companion:    companionRef.current,
-        todays_finds: todaysFindsRef.current,
-      });
-      const data = res?.data || {};
-      let text = data.reply || "I'm here with you.";
-
-      // Hands-free find logging — parse the dictation and save the specimen
-      if (data.log_find && data.find_details) {
-        try {
-          const logRes = await base44.functions.invoke('parseSpecimenDictation', {
-            transcript: data.find_details,
-            create: true,
-            lat: gpsPosRef.current?.lat,
-            lng: gpsPosRef.current?.lng,
-          });
-          const created = logRes?.data?.created;
-          if (created?.mineral_name) {
-            text += ` ${created.mineral_name} is in your GeoDex.`;
-            setLoggedFind(created.mineral_name);
-          }
-        } catch {
-          text += " I couldn't save that one — try logging it again in a moment.";
-        }
-      }
-
-      historyRef.current.push({ role: 'clover', content: text });
-      setLastReply(text);
-      setThinking(false);
-      speak(text);
-    } catch {
-      setThinking(false);
-      const fallback = "Something went quiet on my end — try again?";
-      setLastReply(fallback);
-      speak(fallback);
-    }
-  }, [speak]);
-
-  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useVoiceInput({ onResult: handleTranscript, onInterim: setInterim });
-
-  // Re-open mic after Clover finishes speaking
-  // Shorter gap when user interrupted (they're ready to talk immediately)
-  useEffect(() => {
-    if (!active || thinking || speaking || listening) return;
-    if (interrupted) {
-      setInterrupted(false);
-      // Very short gap — user already spoke intent by tapping
-      const t = setTimeout(() => {
-        if (activeRef.current && !speakingRef.current && !thinkingRef.current) startListen();
-      }, 200);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => {
-      if (activeRef.current && !speakingRef.current && !thinkingRef.current) startListen();
-    }, 450);
-    return () => clearTimeout(t);
-  }, [active, speaking, thinking, listening, startListen, interrupted]);
-
-  // Mirror mic level to listening state
-  useEffect(() => {
-    if (active && listening) micRef.current.start();
-    else micRef.current.stop();
-  }, [active, listening]);
+  const speaking  = xai.speaking  || legacySpeaking;
+  const listening = xai.listening;
+  const thinking  = xai.status === 'connecting';
+  const interim   = xai.userTranscript;
+  const lastReply = xai.transcript;
 
   useHaptic({ active: active && (speaking || listening), getAmplitude });
 
   useEffect(() => () => {
-    stopSpeak();
-    stopListen();
+    legacyStop();
+    xai.disconnect();
     try { micRef.current.stop(); } catch {}
-  }, [stopSpeak, stopListen]);
+  }, []); // eslint-disable-line
 
   const awaken = async (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -169,51 +91,31 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     setRipples((r) => [...r, { id: Date.now() + Math.random(), x, y }]);
 
     if (!active) {
-      // Request mic permission inside the user gesture (required on mobile)
-      try {
-        const stream = await navigator.mediaDevices?.getUserMedia({ audio: true, video: false });
-        stream?.getTracks().forEach((t) => t.stop());
-      } catch {}
-
       setActive(true);
-      setLastReply('');
       setLoggedFind(null);
 
-      // Capture GPS so dictated finds get geotagged
-      navigator.geolocation?.getCurrentPosition(
-        (pos) => { gpsPosRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
-        () => {},
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-
-      const c    = companionRef.current;
-      const name = 'explorer';
-      const pool = GREETINGS(c, name);
+      // Greeting via legacy TTS while xAI warms up
+      const c    = companion;
+      const pool = GREETINGS(c, 'explorer');
       const greeting = pool[Math.floor(Math.random() * pool.length)];
-      historyRef.current = [{ role: 'clover', content: greeting }];
-      setLastReply(greeting);
-      // Don't call startListen() here — the useEffect re-opens the mic
-      // automatically once speaking finishes, preventing the orb from
-      // hearing its own TTS output.
-      speak(greeting);
+      legacySpeak(greeting);
+
+      // Connect xAI Realtime (parallel — mic buffering starts immediately)
+      xai.connect();
 
     } else if (speaking) {
-      // INTERRUPT: user taps while Clover is speaking → cut her off, listen immediately
-      stopSpeak();
-      setInterrupted(true);
-      setInterim('');
-      // Don't close the session — just switch to listening
-
+      // Interrupt
+      legacyStop();
+      if (xai.status === 'active') {
+        // xAI handles its own interruption via VAD — just stop legacy TTS
+      }
     } else {
-      // Tap while idle/listening → close session
-      stopSpeak();
-      stopListen();
+      // End session
+      legacyStop();
+      xai.disconnect();
       micRef.current.stop();
       setActive(false);
-      setInterim('');
-      setLastReply('');
       setLoggedFind(null);
-      historyRef.current = [];
     }
   };
 
@@ -284,7 +186,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           </div>
         )}
 
-        {!micSupported && !active && (
+        {!xai.status && !active && (
           <div className="mt-3 text-white/30 text-[11px] text-center">
             Voice not supported in this browser
           </div>
@@ -301,7 +203,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           </div>
         )}
 
-        <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={speak} />
+        <IdleWhispers enabled={active} isOrbBusy={speaking || thinking || listening} speak={legacySpeak} />
       </div>
     </div>
   );
