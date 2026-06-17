@@ -16,6 +16,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Sword, Heart, Trophy } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
+import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
@@ -95,6 +96,9 @@ export default function Hub() {
 
         {/* Live stats wired to real data */}
         <LiveStatStrip />
+
+        {/* Daily discovery trend chart */}
+        <DiscoveryTrendChart />
 
         {/* Companion Progress Dashboard */}
         <CompanionProgressDashboard companion={companion} />
