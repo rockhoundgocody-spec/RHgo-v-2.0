@@ -5,31 +5,39 @@ import useHotspotProximity from '@/lib/useHotspotProximity';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 
-/**
- * Mounted globally inside Layout. Watches user position, fires a browser
- * notification when within 500m of a Hotspot, and shows an in-app banner
- * with a CTA to explore the site.
- */
+const STORAGE_KEY = 'rh_dismissed_hotspots';
+const TODAY = new Date().toDateString();
+
+function getDismissed() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    // Reset daily
+    if (raw.date !== TODAY) return {};
+    return raw.ids || {};
+  } catch { return {}; }
+}
+
+function saveDismissed(ids) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: TODAY, ids }));
+}
+
 export default function HotspotProximityWatcher() {
   const { nearby, requestPermission, permission } = useHotspotProximity({ enabled: true });
-  const [dismissedId, setDismissedId] = useState(null);
-  const [askedOnce, setAskedOnce] = useState(false);
+  const [dismissedIds, setDismissedIds] = useState(() => getDismissed());
+  const timerRef = useRef(null);
+  const bannerRef = useRef(null);
 
-  // One-time, low-friction prompt for notification permission.
-  useEffect(() => {
-    if (askedOnce) return;
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'default') {
-      // Don't auto-prompt; we let the user trigger it via the banner.
-    }
-    setAskedOnce(true);
-  }, [askedOnce]);
+  const dismiss = (id) => {
+    const next = { ...dismissedIds, [id]: true };
+    setDismissedIds(next);
+    saveDismissed(next);
+  };
 
-  // Track when a hotspot proximity alert fires
-  const trackedHotspotRef = useRef(null);
+  // Track analytics once per hotspot
+  const trackedRef = useRef(null);
   useEffect(() => {
-    if (nearby && nearby.hotspot.id !== trackedHotspotRef.current) {
-      trackedHotspotRef.current = nearby.hotspot.id;
+    if (nearby && nearby.hotspot.id !== trackedRef.current) {
+      trackedRef.current = nearby.hotspot.id;
       base44.analytics.track({
         eventName: 'hotspot_proximity_alert',
         properties: { hotspot_name: nearby.hotspot.name, distance_m: nearby.distance_m, land_type: nearby.hotspot.land_type || 'unknown' },
@@ -37,10 +45,40 @@ export default function HotspotProximityWatcher() {
     }
   }, [nearby]);
 
-  if (!nearby || dismissedId === nearby.hotspot.id) return null;
+  const hotspotId = nearby?.hotspot?.id;
+  const visible = nearby && !dismissedIds[hotspotId];
+
+  // Auto-dismiss after 7 seconds
+  useEffect(() => {
+    if (!visible || !hotspotId) return;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => dismiss(hotspotId), 7000);
+    return () => clearTimeout(timerRef.current);
+  }, [visible, hotspotId]);
+
+  // Dismiss when user scrolls past 33% of the page
+  useEffect(() => {
+    if (!visible || !hotspotId) return;
+    const root = document.getElementById('root') || window;
+    const onScroll = () => {
+      const el = root === window ? document.documentElement : root;
+      const scrolled = el.scrollTop;
+      const total = el.scrollHeight - el.clientHeight;
+      if (total > 0 && scrolled / total >= 0.33) {
+        dismiss(hotspotId);
+      }
+    };
+    root.addEventListener('scroll', onScroll, { passive: true });
+    return () => root.removeEventListener('scroll', onScroll);
+  }, [visible, hotspotId]);
+
+  if (!visible) return null;
+
+  const distMiles = (nearby.distance_m / 1609.34).toFixed(1);
 
   return (
     <div
+      ref={bannerRef}
       className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md"
       role="status"
       aria-live="polite"
@@ -54,7 +92,7 @@ export default function HotspotProximityWatcher() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[10px] uppercase tracking-[0.3em] text-amethyst-glow">
-            Hotspot Nearby · {nearby.distance_m}m
+            Hotspot Nearby · {distMiles}mi
           </div>
           <div className="text-white text-sm font-semibold truncate">
             {nearby.hotspot.name}
@@ -70,12 +108,13 @@ export default function HotspotProximityWatcher() {
         </div>
         <Link
           to="/explore"
+          onClick={() => dismiss(hotspotId)}
           className="text-xs px-3 py-1.5 rounded-md bg-amethyst/30 hover:bg-amethyst/50 text-white border border-amethyst/50"
         >
           Explore
         </Link>
         <button
-          onClick={() => setDismissedId(nearby.hotspot.id)}
+          onClick={() => dismiss(hotspotId)}
           className="text-white/50 hover:text-white"
           aria-label="Dismiss"
         >

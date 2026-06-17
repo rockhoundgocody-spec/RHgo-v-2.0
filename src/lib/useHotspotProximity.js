@@ -15,7 +15,7 @@ function distanceMeters(a, b) {
   return 2 * R * Math.asin(Math.sqrt(x));
 }
 
-const RADIUS_M = 500;
+const RADIUS_M = 8047; // ~5 miles
 const NOTIFY_COOLDOWN_MS = 15 * 60 * 1000; // don't re-notify the same hotspot for 15 min
 
 /**
@@ -25,6 +25,15 @@ const NOTIFY_COOLDOWN_MS = 15 * 60 * 1000; // don't re-notify the same hotspot f
  *
  * Returns { nearby, requestPermission, permission }.
  */
+// Persist GPS consent answer so it survives sign-out/sign-in
+const GPS_KEY = 'rh_gps_consent';
+function getStoredGpsConsent() {
+  try { return localStorage.getItem(GPS_KEY); } catch { return null; }
+}
+function storeGpsConsent(val) {
+  try { localStorage.setItem(GPS_KEY, val); } catch {}
+}
+
 export default function useHotspotProximity({ enabled = true } = {}) {
   const [nearby, setNearby] = useState(null);
   const [permission, setPermission] = useState(
@@ -96,10 +105,17 @@ export default function useHotspotProximity({ enabled = true } = {}) {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [enabled]);
 
+  // Restore remembered GPS consent on mount
+  useEffect(() => {
+    const stored = getStoredGpsConsent();
+    if (stored) setPermission(stored);
+  }, []);
+
   const requestPermission = async () => {
     if (typeof Notification === 'undefined') return 'unsupported';
     const result = await Notification.requestPermission();
     setPermission(result);
+    storeGpsConsent(result);
     return result;
   };
 
