@@ -10,6 +10,7 @@ import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
 import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
+import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
 import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 import CrystalNav from '@/components/nav/CrystalNav.jsx';
 
@@ -156,6 +157,7 @@ export default function Layout() {
         )}
 
         <HotspotProximityWatcher />
+        <StreakReminderBanner />
         <OracleOverlays />
         <FloatingGrokOrb />
       </div>
