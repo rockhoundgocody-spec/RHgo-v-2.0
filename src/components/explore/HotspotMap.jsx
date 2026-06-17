@@ -142,11 +142,12 @@ export default function HotspotMap({
   activeId      = null,
   onMarkerClick,
   userLocation  = null,
-  activeLayer   = 'all',      // 'all' | 'rare' | 'gaps' | 'public' | 'expedition'
-  collectionGapIds = new Set(), // set of hotspot IDs that have gap minerals
-  expeditionRoute  = [],       // array of {lat,lng} waypoints
+  activeLayer   = 'all',
+  collectionGapIds = new Set(),
+  expeditionRoute  = [],
   earnedBadgeCodes = new Set(),
-  showGeology      = false,    // Macrostrat bedrock geology overlay
+  showGeology      = false,
+  hudMode          = false,
 }) {
   const isFullHeight = height === '100%';
 
@@ -179,7 +180,7 @@ export default function HotspotMap({
     [specimens]
   );
 
-  const userIcon = useMemo(() => makeUserIcon(showGeology), [showGeology]);
+  const userIcon = useMemo(() => makeUserIcon(showGeology || hudMode), [showGeology, hudMode]);
 
   return (
     <div
@@ -196,9 +197,23 @@ export default function HotspotMap({
         zoomControl={false}
         attributionControl={false}
       >
+        {hudMode ? (
+          <TileLayer
+            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+            attribution='&copy; Stadia Maps &copy; OSM'
+          />
+        ) : (
+          <TileLayer
+            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+            attribution='&copy; Stadia Maps &copy; OSM'
+          />
+        )}
+
+        {/* Animated terrain accent layer — subtle topo lines */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OSM &copy; CARTO'
+          url="https://stamen-tiles.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}.png"
+          attribution=""
+          opacity={hudMode ? 0.35 : 0.12}
         />
 
         {/* Macrostrat bedrock geology overlay */}
@@ -238,7 +253,7 @@ export default function HotspotMap({
 
           const icon = makeHotspotIcon({
             color, isActive, isGlowing, hasGap, difficulty: h.difficulty,
-            highContrast: showGeology,
+            highContrast: showGeology || hudMode,
           });
 
           return (
@@ -254,7 +269,7 @@ export default function HotspotMap({
 
         {/* Specimen finds (personal) — shown on all + gaps layers */}
         {(activeLayer === 'all' || activeLayer === 'gaps') && geoSpecimens.map(s => {
-          const icon = makeSpecimenIcon(s.rarity, showGeology);
+          const icon = makeSpecimenIcon(s.rarity, showGeology || hudMode);
           return (
             <Marker key={s.id} position={[s.lat, s.lng]} icon={icon}>
               <Popup>

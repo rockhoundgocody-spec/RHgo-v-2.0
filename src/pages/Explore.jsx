@@ -11,9 +11,10 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain } from 'lucide-react';
+import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
+import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
 import HotspotMap from '@/components/explore/HotspotMap.jsx';
 import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
@@ -136,6 +137,8 @@ export default function Explore() {
   const [activeLayer,    setActiveLayer]    = useState('all');
   const [expeditionRoute, setExpeditionRoute] = useState([]);
   const [showGeology,    setShowGeology]    = useState(false);
+  const [hudMode,        setHudMode]        = useState(false);
+  const [showWeather,    setShowWeather]    = useState(false);
   const scrollRef = useRef(null);
 
   // Geolocation
@@ -202,6 +205,15 @@ export default function Explore() {
 
   return (
     <div className="relative w-full isolate overflow-hidden" style={{ height: '100dvh' }}>
+      {/* HUD mode overlay */}
+      {hudMode && (
+        <div className="absolute inset-0 z-[1] pointer-events-none"
+          style={{
+            background: 'linear-gradient(180deg, hsla(215,80%,6%,.55) 0%, transparent 30%, transparent 70%, hsla(215,80%,6%,.4) 100%)',
+            mixBlendMode: 'multiply',
+          }}
+        />
+      )}
 
       {/* ── FULLSCREEN MAP ── always mounted so hotspots render as soon as data arrives */}
       <div className="absolute inset-0">
@@ -218,6 +230,7 @@ export default function Explore() {
           showGeology={showGeology}
           earnedBadgeCodes={earnedCodes}
           userMinerals={[...collectedMinerals]}
+          hudMode={hudMode}
         />
         {/* Overlay spinner while first load is in flight (no cached data yet) */}
         {loading && filteredHotspots.length === 0 && (
@@ -230,7 +243,13 @@ export default function Explore() {
       </div>
 
       {/* ── TOP HUD ── */}
-      <div className="absolute top-0 inset-x-0 z-[1000] px-4 pt-4 pointer-events-none">
+      <div className={`absolute top-0 inset-x-0 z-[1000] px-4 pt-4 pointer-events-none transition-all duration-300 ${hudMode ? 'hud-mode-active' : ''}`}>
+        {hudMode && (
+          <style>{`
+            .hud-mode-active input { background: hsla(215,80%,7%,.96) !important; border-color: hsla(195,100%,60%,.6) !important; color: hsl(195,100%,82%) !important; }
+            .hud-mode-active input::placeholder { color: hsla(195,100%,60%,.4) !important; }
+          `}</style>
+        )}
         {/* Search + locate row */}
         <div className="flex items-center gap-2 pointer-events-auto mb-2">
           <div className="flex-1 relative">
@@ -265,6 +284,38 @@ export default function Explore() {
             <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
           </button>
           <QuickPinButton userLocation={userLocation} />
+
+          {/* HUD mode toggle */}
+          <button
+            onClick={() => setHudMode(h => !h)}
+            title="High-contrast HUD mode"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            style={{
+              background: hudMode ? 'hsla(195,100%,30%,.4)' : 'hsla(240,30%,8%,.88)',
+              border: hudMode ? '1px solid hsla(195,100%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: hudMode ? '0 0 18px hsla(195,100%,60%,.4)' : 'none',
+            }}
+            aria-label="Toggle HUD mode"
+          >
+            <Sun size={16} className={hudMode ? 'text-hud-cyan' : 'text-white/50'} />
+          </button>
+
+          {/* Weather toggle */}
+          <button
+            onClick={() => setShowWeather(w => !w)}
+            title="Beach weather conditions"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            style={{
+              background: showWeather ? 'hsla(38,80%,30%,.35)' : 'hsla(240,30%,8%,.88)',
+              border: showWeather ? '1px solid hsla(43,100%,60%,.6)' : '1px solid hsla(255,30%,40%,.3)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: showWeather ? '0 0 16px hsla(43,100%,60%,.25)' : 'none',
+            }}
+            aria-label="Toggle weather"
+          >
+            <CloudRain size={16} className={showWeather ? 'text-amber-300' : 'text-white/50'} />
+          </button>
         </div>
 
         {/* Layer toggles */}
@@ -286,6 +337,14 @@ export default function Explore() {
             <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setShowGeology(false)} />
           </div>
         )}
+
+        <AnimatePresence>
+          {showWeather && (
+            <div className="mt-2 pointer-events-auto">
+              <WeatherPanel userLocation={userLocation} hudMode={hudMode} onClose={() => setShowWeather(false)} />
+            </div>
+          )}
+        </AnimatePresence>
 
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">
