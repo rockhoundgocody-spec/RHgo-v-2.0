@@ -5,12 +5,13 @@
  *
  * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGES } from '@/lib/badgeDefinitions.js';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
+import { base44 } from '@/api/base44Client';
 
 const LAND_LABEL = {
   public:         { label: 'Public Land',      color: '#34d399' },
@@ -114,6 +115,22 @@ export default function HotspotDetailSheet({
       .slice(-5)
       .reverse();
   }, [specimens, hotspot]);
+
+  // Track hotspot discovery view
+  useEffect(() => {
+    if (!hotspot) return;
+    base44.analytics.track({
+      eventName: 'hotspot_discovered',
+      properties: {
+        hotspot_name: hotspot.name,
+        land_type: hotspot.land_type || 'unknown',
+        difficulty: hotspot.difficulty || 'unknown',
+        state: hotspot.state || 'unknown',
+        minerals_count: (hotspot.minerals || []).length,
+        has_collection_gap: collectionGapMinerals.length > 0,
+      },
+    });
+  }, [hotspot?.id]);
 
   // ── EARLY RETURN after all hooks ──────────────────────────────────────────
   if (!hotspot) return null;
@@ -305,6 +322,14 @@ export default function HotspotDetailSheet({
           <div className="px-5 mb-2">
             <Link
               to="/scan"
+              onClick={() => base44.analytics.track({
+                eventName: 'hotspot_log_find_tapped',
+                properties: {
+                  hotspot_name: hotspot.name,
+                  land_type: hotspot.land_type || 'unknown',
+                  state: hotspot.state || 'unknown',
+                },
+              })}
               className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-98"
               style={{
                 background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
