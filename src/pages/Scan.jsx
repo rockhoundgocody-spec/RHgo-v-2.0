@@ -348,60 +348,65 @@ export default function Scan() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Scan</h1>
-        <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">
-          AI Vision · 3D Reconstruction
-        </p>
-        <StageStrip stage={stage} />
-        {/* Wet/Dry toggle — show on live and capture stages */}
-        {(stage === 'live' || stage === 'capture') && (
-          <div className="mt-3 flex justify-center">
+    <div className="flex flex-col w-full max-w-md mx-auto px-3"
+      style={{ height: '100dvh', paddingTop: 'max(env(safe-area-inset-top,0px), 8px)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 72px)' }}>
+
+      {/* Compact header */}
+      <div className="flex items-center justify-between mb-2 px-1">
+        <div>
+          <h1 className="text-lg font-bold text-white tracking-tight leading-none">Scan</h1>
+          <p className="text-white/35 text-[9px] uppercase tracking-[0.22em] mt-0.5">AI Vision · 3D Reconstruction</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {(stage === 'live' || stage === 'capture') && (
             <WetDryToggle value={wetDry} onChange={setWetDry} />
-          </div>
-        )}
+          )}
+          <StageStrip stage={stage} />
+        </div>
       </div>
 
-      {stage === 'live' && (
-        <LiveScanStage
-          onBeginCapture={() => setStage('capture')}
-          onUploadFallback={handleUploadFallback}
-        />
-      )}
+      {/* Main content — fills remaining height */}
+      <div className="flex-1 min-h-0">
+        {stage === 'live' && (
+          <LiveScanStage
+            onBeginCapture={() => setStage('capture')}
+            onUploadFallback={handleUploadFallback}
+          />
+        )}
 
-      {stage === 'capture' && (
-        <MultiAngleCapture
-          onComplete={handleCaptureComplete}
-          onCancel={() => setStage('live')}
-        />
-      )}
+        {stage === 'capture' && (
+          <MultiAngleCapture
+            onComplete={handleCaptureComplete}
+            onCancel={() => setStage('live')}
+          />
+        )}
 
-      {stage === 'reconstruct' && (
-        <ReconstructionStage
-          runner={runner}
-          onDone={handleReconstructed}
-          onError={handleReconstructError}
-        />
-      )}
+        {stage === 'reconstruct' && (
+          <ReconstructionStage
+            runner={runner}
+            onDone={handleReconstructed}
+            onError={handleReconstructError}
+          />
+        )}
 
-      {stage === 'result' && result && (
-        <HolographicResult
-          primaryImageUrl={primaryUrl}
-          result={result}
-          reasoningResult={reasoningResult}
-          saved={!!savedId}
-          savedId={savedId}
-          modelVersion="gemini-flash"
-          onSave={() => setChoiceOpen(true)}
-          onReset={reset}
-          onCompare={() =>
-            navigate('/compare-live', {
-              state: { scanImageUrl: primaryUrl, scanName: result.top_match },
-            })
-          }
-        />
-      )}
+        {stage === 'result' && result && (
+          <HolographicResult
+            primaryImageUrl={primaryUrl}
+            result={result}
+            reasoningResult={reasoningResult}
+            saved={!!savedId}
+            savedId={savedId}
+            modelVersion="gemini-flash"
+            onSave={() => setChoiceOpen(true)}
+            onReset={reset}
+            onCompare={() =>
+              navigate('/compare-live', {
+                state: { scanImageUrl: primaryUrl, scanName: result.top_match },
+              })
+            }
+          />
+        )}
+      </div>
 
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
@@ -429,12 +434,12 @@ function StageStrip({ stage }) {
   const stages = [
     { id: 'live', label: 'Vision' },
     { id: 'capture', label: 'Capture' },
-    { id: 'reconstruct', label: 'Reconstruct' },
-    { id: 'result', label: 'Hologram' },
+    { id: 'reconstruct', label: 'AI' },
+    { id: 'result', label: 'Result' },
   ];
   const activeIdx = stages.findIndex((s) => s.id === stage);
   return (
-    <div className="mt-3 flex items-center justify-center gap-1.5">
+    <div className="flex items-center gap-1">
       {stages.map((s, i) => {
         const done = i < activeIdx;
         const active = i === activeIdx;
@@ -442,7 +447,7 @@ function StageStrip({ stage }) {
           <React.Fragment key={s.id}>
             {/* eslint-disable-next-line */}
             <div
-              className="text-[8px] font-mono uppercase tracking-[0.25em] px-2 py-0.5 rounded-full"
+              className="text-[7px] font-mono uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-full"
               style={{
                 color: active
                   ? 'hsl(280 100% 85%)'
@@ -459,7 +464,7 @@ function StageStrip({ stage }) {
             </div>
             {i < stages.length - 1 && (
               <div
-                className="w-3 h-px"
+                className="w-2 h-px"
                 style={{
                   background: i < activeIdx ? 'hsl(145 80% 55%)' : 'hsla(0,0%,100%,0.15)',
                 }}

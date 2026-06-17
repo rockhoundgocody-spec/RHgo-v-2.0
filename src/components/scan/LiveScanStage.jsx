@@ -76,7 +76,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const col = STATE_COLORS[scanState] || STATE_COLORS.idle;
 
   return (
-    <div className="relative rounded-2xl overflow-hidden flex flex-col"
+    <div className="relative rounded-2xl overflow-hidden flex flex-col h-full"
       style={{
         background: 'hsla(265,40%,3%,0.98)',
         border: `1px solid ${col.border}`,
@@ -107,8 +107,8 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         </div>
       </div>
 
-      {/* ── MAIN VIEWPORT ── */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
+      {/* ── MAIN VIEWPORT ── fills remaining height */}
+      <div className="relative overflow-hidden flex-1 min-h-0">
 
         {error ? (
           <>
