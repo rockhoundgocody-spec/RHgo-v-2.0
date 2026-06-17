@@ -145,26 +145,32 @@ export default function Profile() {
       {/* Achievements — 3D collectible badge grid */}
       <div className="mb-8">
         <style>{`
-          @keyframes badge-float {
-            0%,100% { transform: translateY(0px) rotateY(0deg); }
-            25%      { transform: translateY(-4px) rotateY(8deg); }
-            75%      { transform: translateY(-2px) rotateY(-8deg); }
+          @keyframes badge-float-spin {
+            0%   { transform: translateY(0px)   rotateY(0deg); }
+            25%  { transform: translateY(-5px)  rotateY(90deg); }
+            50%  { transform: translateY(-2px)  rotateY(180deg); }
+            75%  { transform: translateY(-6px)  rotateY(270deg); }
+            100% { transform: translateY(0px)   rotateY(360deg); }
           }
           @keyframes badge-float-locked {
             0%,100% { transform: translateY(0px); }
-            50%      { transform: translateY(-2px); }
+            50%      { transform: translateY(-3px); }
           }
           @keyframes badge-pulse-glow {
-            0%,100% { opacity: 0.5; transform: scale(0.95); }
-            50%      { opacity: 1;   transform: scale(1.08); }
+            0%,100% { opacity: 0.4; transform: scale(0.9); }
+            50%      { opacity: 0.9; transform: scale(1.25); }
           }
-          .badge-collectible { perspective: 400px; }
+          @keyframes badge-halo-spin {
+            from { transform: scale(1.5) rotate(0deg); }
+            to   { transform: scale(1.5) rotate(360deg); }
+          }
+          .badge-collectible { perspective: 600px; }
           .badge-collectible-inner {
             transform-style: preserve-3d;
             transition: transform 0.3s ease, filter 0.3s ease;
           }
           .badge-collectible-inner.earned {
-            animation: badge-float 5s ease-in-out infinite;
+            animation: badge-float-spin 8s linear infinite;
           }
           .badge-collectible-inner.locked {
             animation: badge-float-locked 4s ease-in-out infinite;
@@ -204,17 +210,29 @@ export default function Profile() {
                 {/* Glow halo behind badge */}
                 {earned && (
                   <div className="relative">
+                    {/* Pulsing radial glow */}
                     <div
                       className="absolute inset-0 rounded-full pointer-events-none"
                       style={{
-                        background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
-                        transform: 'scale(1.6)',
+                        background: `radial-gradient(circle, ${glowColor} 0%, transparent 65%)`,
                         animation: `badge-pulse-glow ${2.8 + (allBadges.indexOf(b) % 3) * 0.5}s ${animDelay} ease-in-out infinite`,
                       }}
                     />
+                    {/* Spinning conic halo ring */}
                     <div
-                      className={`badge-collectible-inner ${earned ? 'earned' : 'locked'}`}
-                      style={{ animationDelay: animDelay }}
+                      className="absolute inset-0 rounded-full pointer-events-none"
+                      style={{
+                        background: `conic-gradient(from 0deg, transparent 60%, ${glowColor} 80%, transparent 100%)`,
+                        animation: `badge-halo-spin ${3 + (allBadges.indexOf(b) % 3)}s linear infinite`,
+                        opacity: 0.6,
+                      }}
+                    />
+                    <div
+                      className="badge-collectible-inner earned"
+                      style={{
+                        animationDelay: animDelay,
+                        filter: `drop-shadow(0 0 10px ${glowColor}) drop-shadow(0 4px 16px ${glowColor})`,
+                      }}
                     >
                       <LiquidMineralBadge badge={b} size={80} locked={false} />
                     </div>
