@@ -1,0 +1,125 @@
+{
+  "name": "SpecimenVerification",
+  "type": "object",
+  "description": "Community verification vote on a low-confidence specimen scan",
+  "properties": {
+    "specimen_id": {
+      "type": "string",
+      "description": "ID of the Specimen being verified"
+    },
+    "specimen_image_url": {
+      "type": "string"
+    },
+    "original_ai_guess": {
+      "type": "string"
+    },
+    "original_confidence": {
+      "type": "number"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the user who submitted the specimen"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "corrected",
+        "inconclusive"
+      ],
+      "default": "pending"
+    },
+    "votes": {
+      "type": "array",
+      "description": "Community votes on this specimen",
+      "items": {
+        "type": "object",
+        "properties": {
+          "voter_email": {
+            "type": "string"
+          },
+          "vote": {
+            "type": "string",
+            "enum": [
+              "agree",
+              "disagree",
+              "unsure"
+            ]
+          },
+          "suggested_name": {
+            "type": "string"
+          },
+          "tip": {
+            "type": "string"
+          },
+          "voted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "final_community_guess": {
+      "type": "string",
+      "description": "Consensus mineral name after votes"
+    },
+    "vote_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "agree_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "beach_name": {
+      "type": "string",
+      "description": "Reverse-geocoded beach/location name"
+    },
+    "wet_dry": {
+      "type": "string",
+      "enum": [
+        "wet",
+        "dry"
+      ],
+      "description": "Condition of specimen when photographed"
+    }
+  },
+  "required": [
+    "specimen_id",
+    "owner_email",
+    "original_ai_guess"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "CollectionWeight",
+  "type": "object",
+  "description": "Tracks estimated collected weight per user per year for Michigan legal limit compliance",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "year": {
+      "type": "integer",
+      "description": "Calendar year (e.g. 2026)"
+    },
+    "total_weight_lbs": {
+      "type": "number",
+      "default": 0,
+      "description": "Estimated total weight collected in pounds"
+    },
+    "specimen_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Number of collected specimens logged"
+    },
+    "state": {
+      "type": "string",
+      "default": "MI",
+      "description": "State whose regulations apply"
+    },
+    "limit_lbs": {
+      "type": "number",
+      "default": 25,
+      "description": "Annual limit in pounds for this state"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "owner_email",
+    "year"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

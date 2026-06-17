@@ -18,6 +18,9 @@ import { Compass, ScanLine, Gem, Sword, Heart, Trophy } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
+import StormWindowBanner from '@/components/hub/StormWindowBanner.jsx';
+import CollectionWeightTracker from '@/components/hub/CollectionWeightTracker.jsx';
+import CommunityVerificationQueue from '@/components/scan/CommunityVerificationQueue.jsx';
 import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
 import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
@@ -40,6 +43,9 @@ export default function Hub() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pb-28">
+      {/* Storm window alert — weather-based, near Great Lakes beaches */}
+      <StormWindowBanner />
+
       {/* Treasure spawn notification — fires after 4s */}
       <TreasureSpawnBanner />
 
@@ -99,6 +105,12 @@ export default function Hub() {
 
         {/* Daily discovery trend chart */}
         <DiscoveryTrendChart />
+
+        {/* Michigan annual weight tracker */}
+        {userEmail && <CollectionWeightTracker userEmail={userEmail} />}
+
+        {/* Community verification queue */}
+        {userEmail && <CommunityVerificationQueue userEmail={userEmail} />}
 
         {/* Companion Progress Dashboard */}
         <CompanionProgressDashboard companion={companion} />

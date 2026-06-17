@@ -1,30 +1,101 @@
 /**
- * identifySpecimen — REST-ready AI rock identification endpoint.
+ * identifySpecimen — Great Lakes regional specialist AI rock identification.
  *
  * POST /identifySpecimen
- * Body: { image_url: string, lat?: number, lng?: number, save?: boolean, share_to_map?: boolean }
- *
- * Returns full identification result + optional saved specimen ID.
- * Works for both in-app SDK calls and direct mobile API calls.
+ * Body: { image_url, lat?, lng?, save?, share_to_map?, prefilled_result?,
+ *         wet_dry?, beach_name?, post_storm?, season? }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+// ── Great Lakes 30-class list (inline — no local imports in Deno) ────────────
+const GL_30 = [
+  'Lake Superior Agate', 'Petoskey Stone', 'Charlevoix Stone', 'Leland Blue',
+  'Yooperlite', 'Pudding Stone', 'Jacobsville Sandstone', 'Native Copper',
+  'Prehnite', 'Thomsonite', 'Chlorastrolite (Greenstone)', 'Epidote',
+  'Basalt (Lake Superior)', 'Rhyolite', 'Granite', 'Quartzite',
+  'Quartz (milky)', 'Quartz (clear/smoky)', 'Chert / Flint', 'Carnelian',
+  'Jasper', 'Obsidian', 'Diorite', 'Gabbro', 'Schist', 'Gneiss',
+  'Limestone', 'Dolomite', 'Slag Glass', 'Copper Ore (Conglomerate)',
+];
+
+const BEACH_PRIORS = {
+  'eagle river': ['Lake Superior Agate', 'Native Copper', 'Basalt (Lake Superior)', 'Jacobsville Sandstone'],
+  'grand marais': ['Lake Superior Agate', 'Thomsonite', 'Carnelian', 'Jasper'],
+  'whitefish': ['Lake Superior Agate', 'Basalt (Lake Superior)', 'Quartzite'],
+  'petoskey': ['Petoskey Stone', 'Charlevoix Stone', 'Leland Blue', 'Limestone'],
+  'charlevoix': ['Charlevoix Stone', 'Petoskey Stone'],
+  'leland': ['Leland Blue', 'Slag Glass', 'Quartzite'],
+  'keweenaw': ['Native Copper', 'Jacobsville Sandstone', 'Chlorastrolite (Greenstone)', 'Copper Ore (Conglomerate)'],
+  'copper harbor': ['Native Copper', 'Basalt (Lake Superior)', 'Copper Ore (Conglomerate)'],
+  'marquette': ['Jacobsville Sandstone', 'Basalt (Lake Superior)', 'Quartzite'],
+  'isle royale': ['Chlorastrolite (Greenstone)', 'Native Copper', 'Basalt (Lake Superior)'],
+  'sleeping bear': ['Leland Blue', 'Slag Glass', 'Petoskey Stone'],
+  'ludington': ['Lake Superior Agate', 'Limestone', 'Chert / Flint'],
+  'thomsonite beach': ['Thomsonite', 'Prehnite', 'Basalt (Lake Superior)'],
+};
+
+function buildGreatLakesContext({ beachName, wetDry, postStorm, season }) {
+  const classList = GL_30.join(', ');
+  const beach = (beachName || '').toLowerCase();
+
+  // Location priors
+  let priorStr = '';
+  for (const [key, stones] of Object.entries(BEACH_PRIORS)) {
+    if (beach.includes(key)) {
+      priorStr = `BEACH PRIORS for ${beachName}: Strongly boost ${stones.join(', ')}.`;
+      break;
+    }
+  }
+
+  const wetNote = wetDry === 'wet'
+    ? 'CONDITION: Specimen is WET. Colors and patterns are vivid. Waxy lusters enhanced. Agate banding, Petoskey coral patterns, and Leland Blue glass are most identifiable wet. Increase confidence for pattern-dependent stones.'
+    : wetDry === 'dry'
+    ? 'CONDITION: Specimen is DRY. Surface may appear chalky/muted. Petoskey patterns may be nearly invisible dry. Luster reduced. Adjust confidence down slightly for pattern-dependent IDs.'
+    : '';
+
+  const stormNote = postStorm
+    ? 'POST-STORM CONDITIONS: Fresh specimens recently exposed. Boost Lake Superior Agate, basalt, copper ore, and quartzite priors. Hunters find agates freshly washed up after northeast blows.'
+    : '';
+
+  const seasonNote = season === 'spring'
+    ? 'SPRING THAW: Prime hunting season. Ice-transported fresh specimens common.'
+    : season === 'winter'
+    ? 'WINTER: Cold conditions, possible ice/frost on surface. Account for surface alteration in ID.'
+    : '';
+
+  return [
+    'GREAT LAKES REGIONAL SPECIALIST MODE.',
+    `RESTRICT your identification to this 30-class Great Lakes list: ${classList}.`,
+    'Penalize tropical, desert, or globally-rare minerals unless visual evidence is overwhelming.',
+    'These are WATER-WORN beach stones — ignore facets/terminations. Focus on luster, color pattern, density, translucency, banding, and inclusions.',
+    priorStr,
+    wetNote,
+    stormNote,
+    seasonNote,
+    'For each candidate include a one-sentence FIELD CLUE the hunter can check on the beach without tools.',
+  ].filter(Boolean).join(' ');
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { image_url, lat, lng, save = false, share_to_map = false, prefilled_result = null } = body;
+    const {
+      image_url, lat, lng,
+      save = false, share_to_map = false,
+      prefilled_result = null,
+      wet_dry = null,
+      beach_name = null,
+      post_storm = false,
+      season = null,
+    } = body;
 
-    if (!image_url) {
-      return Response.json({ error: 'image_url is required' }, { status: 400 });
-    }
+    if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
-    // ── LOCAL GEOLOGY CONTEXT (Macrostrat bedrock map) ────────────────────
+    // ── LOCAL GEOLOGY CONTEXT (Macrostrat) ────────────────────────────────────
     let geologyContext = '';
     let localGeology = null;
     if (lat != null && lng != null) {
@@ -35,118 +106,102 @@ Deno.serve(async (req) => {
           const units = geoJson?.success?.data || [];
           if (units.length) {
             localGeology = units.slice(0, 3).map((u) => ({
-              name: u.name || u.strat_name,
-              age: u.age,
-              lithology: u.lith,
-              description: u.descrip,
+              name: u.name || u.strat_name, age: u.age, lithology: u.lith,
             }));
-            geologyContext =
-              ' LOCAL GEOLOGY CONTEXT (bedrock map units at the find location, from Macrostrat): ' +
-              localGeology.map((u) =>
-                '- ' + [u.name, u.age ? `age: ${u.age}` : null, u.lithology ? `lithology: ${u.lithology}` : null]
-                  .filter(Boolean).join(' | ')
-              ).join(' ') +
-              ' Weight candidates that are geologically plausible for this bedrock higher.';
+            geologyContext = ' LOCAL GEOLOGY (Macrostrat): ' +
+              localGeology.map((u) => [u.name, u.age && `age: ${u.age}`, u.lithology && `lith: ${u.lithology}`].filter(Boolean).join(' | ')).join('; ') +
+              ' Weight geologically plausible candidates higher.';
           }
         }
-      } catch { /* geology context is optional */ }
+      } catch {}
     }
 
-    // ── VISION IDENTIFICATION (skip if result already provided by client) ──
+    // ── GREAT LAKES CONTEXT ───────────────────────────────────────────────────
+    // Auto-detect if we're in the Great Lakes region (~lat 41-48, lng -76 to -92)
+    const isGreatLakes = lat != null && lng != null
+      ? (lat >= 41 && lat <= 48 && lng >= -92 && lng <= -76)
+      : true; // default to GL mode if no GPS
+
+    const glContext = isGreatLakes
+      ? buildGreatLakesContext({ beachName: beach_name, wetDry: wet_dry, postStorm: post_storm, season })
+      : '';
+
+    // ── VISION IDENTIFICATION ─────────────────────────────────────────────────
     let identification = prefilled_result;
-    if (!identification) identification = await base44.integrations.Core.InvokeLLM({
-      model: 'gemini_3_flash',
-      prompt:
-        'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
-        'Study every visual detail: crystal habit, luster (vitreous/metallic/pearly/resinous/adamantine), ' +
-        'transparency, color zoning, cleavage planes, fracture type, crystal system, surface texture, matrix rock, weathering. ' +
-        'Provide: ' +
-        'top_match (specific mineral name), ' +
-        'scientific_name (full mineralogical name if different), ' +
-        'hardness_mohs (Mohs scale value or range, number), ' +
-        'crystal_system (cubic/hexagonal/tetragonal/orthorhombic/monoclinic/triclinic/amorphous), ' +
-        'chemical_formula (e.g. SiO2), ' +
-        'formation (how this mineral forms geologically, 1-2 sentences), ' +
-        'where_to_find (top 3 US states or global regions known for this mineral), ' +
-        'value_estimate (rough specimen value range, e.g. "$5-20 for typical specimens"), ' +
-        'rarity (common/uncommon/rare/legendary — based on specimen quality AND mineral scarcity), ' +
-        'confidence (0-1, calibrated — be conservative), ' +
-        'description (2 sentences for an excited young explorer), ' +
-        'reasoning (specific visual features that led to this ID), ' +
-        'fun_fact (one surprising geological or cultural fact), ' +
-        'collection_value (what makes this specimen collectible), ' +
-        'image_quality_score (0-1), ' +
-        'observed_features (array of {feature, value} pairs actually seen), ' +
-        'lookalikes (top 2-3 with one decisive differentiator test each), ' +
-        'verification_tests (3-5 ranked field tests with expected outcome), ' +
-        'candidates (top 3 alternative IDs with confidence, features, rationale). ' +
-        'Never refuse — always give best attempt with appropriate confidence.' +
-        geologyContext,
-      file_urls: [image_url],
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          top_match:           { type: 'string' },
-          scientific_name:     { type: 'string' },
-          hardness_mohs:       { type: 'number' },
-          crystal_system:      { type: 'string' },
-          chemical_formula:    { type: 'string' },
-          formation:           { type: 'string' },
-          where_to_find:       { type: 'array', items: { type: 'string' } },
-          value_estimate:      { type: 'string' },
-          rarity:              { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
-          confidence:          { type: 'number' },
-          description:         { type: 'string' },
-          reasoning:           { type: 'string' },
-          fun_fact:            { type: 'string' },
-          collection_value:    { type: 'string' },
-          image_quality_score: { type: 'number' },
-          observed_features: {
-            type: 'array',
-            items: { type: 'object', properties: { feature: { type: 'string' }, value: { type: 'string' } } },
-          },
-          lookalikes: {
-            type: 'array',
-            items: { type: 'object', properties: { name: { type: 'string' }, differentiator: { type: 'string' } } },
-          },
-          verification_tests: {
-            type: 'array',
-            items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
-          },
-          candidates: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name:       { type: 'string' },
-                confidence: { type: 'number' },
-                features:   { type: 'string' },
-                rationale:  { type: 'string' },
+    if (!identification) {
+      identification = await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_flash',
+        prompt:
+          'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
+          'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
+          'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
+          'Never refuse — always give best attempt with calibrated confidence.' +
+          glContext + geologyContext,
+        file_urls: [image_url],
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            top_match:           { type: 'string' },
+            scientific_name:     { type: 'string' },
+            hardness_mohs:       { type: 'number' },
+            crystal_system:      { type: 'string' },
+            chemical_formula:    { type: 'string' },
+            formation:           { type: 'string' },
+            where_to_find:       { type: 'array', items: { type: 'string' } },
+            value_estimate:      { type: 'string' },
+            rarity:              { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
+            confidence:          { type: 'number' },
+            description:         { type: 'string' },
+            reasoning:           { type: 'string' },
+            fun_fact:            { type: 'string' },
+            collection_value:    { type: 'string' },
+            image_quality_score: { type: 'number' },
+            field_clue:          { type: 'string' },
+            wet_dry_note:        { type: 'string' },
+            observed_features: {
+              type: 'array',
+              items: { type: 'object', properties: { feature: { type: 'string' }, value: { type: 'string' } } },
+            },
+            lookalikes: {
+              type: 'array',
+              items: { type: 'object', properties: { name: { type: 'string' }, differentiator: { type: 'string' } } },
+            },
+            verification_tests: {
+              type: 'array',
+              items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
+            },
+            candidates: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' }, confidence: { type: 'number' },
+                  features: { type: 'string' }, rationale: { type: 'string' },
+                },
               },
             },
           },
         },
-      },
-    });
-    // End of conditional Vision call block
-    if (!identification) {
-      return Response.json({ error: 'Identification failed' }, { status: 500 });
+      });
     }
 
-    // ── OPTIONAL SAVE TO COLLECTION ────────────────────────────────────────
+    if (!identification) return Response.json({ error: 'Identification failed' }, { status: 500 });
+
+    // ── OPTIONAL SAVE ─────────────────────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
-      // Build rich notes that include all scientific metadata
       const richNotes = [
         identification.description,
-        identification.scientific_name ? `Scientific name: ${identification.scientific_name}` : null,
-        identification.chemical_formula ? `Formula: ${identification.chemical_formula}` : null,
-        identification.crystal_system ? `Crystal system: ${identification.crystal_system}` : null,
-        identification.hardness_mohs != null ? `Hardness: ${identification.hardness_mohs} Mohs` : null,
-        identification.formation ? `Formation: ${identification.formation}` : null,
-        identification.value_estimate ? `Value: ${identification.value_estimate}` : null,
-        identification.fun_fact ? `Fun fact: ${identification.fun_fact}` : null,
-        identification.where_to_find?.length ? `Found in: ${identification.where_to_find.join(', ')}` : null,
+        identification.scientific_name && `Scientific name: ${identification.scientific_name}`,
+        identification.chemical_formula && `Formula: ${identification.chemical_formula}`,
+        identification.crystal_system && `Crystal system: ${identification.crystal_system}`,
+        identification.hardness_mohs != null && `Hardness: ${identification.hardness_mohs} Mohs`,
+        identification.formation && `Formation: ${identification.formation}`,
+        identification.value_estimate && `Value: ${identification.value_estimate}`,
+        identification.fun_fact && `Fun fact: ${identification.fun_fact}`,
+        identification.where_to_find?.length && `Found in: ${identification.where_to_find.join(', ')}`,
+        wet_dry && `Condition when found: ${wet_dry}`,
+        beach_name && `Beach: ${beach_name}`,
       ].filter(Boolean).join('\n\n');
 
       savedSpecimen = await base44.entities.Specimen.create({
@@ -158,49 +213,53 @@ Deno.serve(async (req) => {
         notes:         richNotes,
         rarity:        identification.rarity,
         found_date:    new Date().toISOString().split('T')[0],
+        found_at:      beach_name || null,
         verified:      false,
         ...(lat != null ? { lat } : {}),
         ...(lng != null ? { lng } : {}),
       });
 
-      // Award XP for saving a specimen
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
-      const xpGain = xpMap[identification.rarity] || 10;
-      base44.asServiceRole.functions.invoke('awardXP', { xp: xpGain }).catch(() => {});
+      base44.asServiceRole.functions.invoke('awardXP', { xp: xpMap[identification.rarity] || 10 }).catch(() => {});
+
+      // Queue low-confidence finds for community verification
+      if ((identification.confidence || 0) < 0.8) {
+        base44.asServiceRole.entities.SpecimenVerification.create({
+          specimen_id: savedSpecimen.id,
+          specimen_image_url: image_url,
+          original_ai_guess: identification.top_match,
+          original_confidence: identification.confidence,
+          owner_email: user.email,
+          beach_name: beach_name || null,
+          wet_dry: wet_dry || null,
+          status: 'pending',
+          votes: [],
+          vote_count: 0,
+          agree_count: 0,
+        }).catch(() => {});
+      }
     }
 
-    // ── OPTIONAL SHARE TO MAP (creates/updates hotspot record) ────────────
+    // ── OPTIONAL SHARE TO MAP ─────────────────────────────────────────────────
     let hotspotContribution = null;
     if (share_to_map && lat != null && lng != null && savedSpecimen) {
-      // Try to find a nearby hotspot (within ~0.01 deg ≈ 1km)
       const nearby = await base44.asServiceRole.entities.Hotspot.filter({});
-      const found = nearby.find(
-        (h) =>
-          h.lat != null &&
-          h.lng != null &&
-          Math.abs(h.lat - lat) < 0.01 &&
-          Math.abs(h.lng - lng) < 0.01
-      );
-
+      const found = nearby.find((h) => h.lat != null && h.lng != null &&
+        Math.abs(h.lat - lat) < 0.01 && Math.abs(h.lng - lng) < 0.01);
       if (found) {
-        // Append mineral to existing hotspot
         const minerals = found.minerals || [];
-        if (!minerals.includes(identification.top_match)) {
-          minerals.push(identification.top_match);
-          await base44.asServiceRole.entities.Hotspot.update(found.id, { minerals });
-        }
+        if (!minerals.includes(identification.top_match)) minerals.push(identification.top_match);
+        await base44.asServiceRole.entities.Hotspot.update(found.id, { minerals });
         hotspotContribution = { type: 'updated', id: found.id };
       } else {
-        // Create a user-contributed hotspot (admin review required — trust_score starts low)
         const newHotspot = await base44.asServiceRole.entities.Hotspot.create({
-          name:        `${identification.top_match} Site (User Find)`,
-          lat,
-          lng,
-          minerals:    [identification.top_match],
-          land_type:   'unknown',
-          difficulty:  'moderate',
+          name: `${identification.top_match} Site (User Find)`,
+          lat, lng,
+          minerals: [identification.top_match],
+          land_type: 'unknown',
+          difficulty: 'moderate',
           trust_score: 0.4,
-          source:      `user:${user.email}`,
+          source: `user:${user.email}`,
           description: `User-reported find: ${identification.description}`,
         });
         hotspotContribution = { type: 'created', id: newHotspot.id };
@@ -213,11 +272,8 @@ Deno.serve(async (req) => {
       saved_specimen_id: savedSpecimen?.id || null,
       hotspot_contribution: hotspotContribution,
       local_geology: localGeology,
-      meta: {
-        model: 'gemini_3_flash',
-        user_email: user.email,
-        timestamp: new Date().toISOString(),
-      },
+      great_lakes_mode: isGreatLakes,
+      meta: { model: 'gemini_3_flash', user_email: user.email, timestamp: new Date().toISOString() },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

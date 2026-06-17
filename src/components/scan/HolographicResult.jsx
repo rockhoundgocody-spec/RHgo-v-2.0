@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import MineralStoryCard from './MineralStoryCard.jsx';
 import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -355,6 +356,8 @@ export default function HolographicResult({
         {/* LORE TAB */}
         {activeTab === 'lore' && (
           <div className="p-4 space-y-4">
+            {/* Great Lakes origin story card */}
+            <MineralStoryCard mineralName={result?.top_match} />
             {result?.fun_fact && (
               <div className="px-4 py-4 rounded-xl" style={{ background: `linear-gradient(135deg, hsla(270,50%,15%,0.5), hsla(220,40%,8%,0.6))`, border: `1px solid ${rc.border}` }}>
                 <div className="text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1.5" style={{ color: rc.color }}>

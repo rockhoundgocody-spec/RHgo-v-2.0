@@ -11,6 +11,8 @@ import ShareToMapModal from '@/components/scan/ShareToMapModal.jsx';
 import DiscoveryChoiceModal from '@/components/scan/DiscoveryChoiceModal.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useNavigate } from 'react-router-dom';
+import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
+import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 
 /**
  * Scan — combined flow:
@@ -27,6 +29,8 @@ export default function Scan() {
   const [savedSpecimen, setSavedSpecimen] = useState(null);
   const [reasoningResult, setReasoningResult] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [wetDry, setWetDry] = useState('dry');
+  const [beachName, setBeachName] = useState(null);
   const [shareMapOpen, setShareMapOpen] = useState(false);
   const [choiceOpen, setChoiceOpen] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
@@ -36,7 +40,18 @@ export default function Scan() {
   React.useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        // Reverse geocode to get beach name (for Great Lakes context)
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+          .then((r) => r.json())
+          .then((d) => {
+            const addr = d?.address;
+            const name = addr?.beach || addr?.suburb || addr?.city || addr?.county || '';
+            if (name) setBeachName(name);
+          })
+          .catch(() => {});
+      },
       () => {}, // silently ignore if denied
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -238,8 +253,9 @@ export default function Scan() {
       lng,
       save: true,
       share_to_map: false,
-      // Pass through the already-computed result to avoid a second Vision call
       prefilled_result: result,
+      wet_dry: wetDry,
+      beach_name: beachName,
     });
     // Backend may return saved_specimen_id; fall back to direct creation if needed
     let specimenId = res?.data?.saved_specimen_id;
@@ -305,6 +321,12 @@ export default function Scan() {
       });
     }
 
+    // Track collected weight for Michigan legal limit
+    if (choice.disposition === 'collected') {
+      const me = await base44.auth.me().catch(() => null);
+      if (me?.email) logCollectedWeight(me.email);
+    }
+
     setSavedId(specimenId);
     setSavedSpecimen(specimenObj);
     refreshBadges();
@@ -321,6 +343,8 @@ export default function Scan() {
     setReasoningResult(null);
     setShareMapOpen(false);
     setChoiceOpen(false);
+    setWetDry('dry');
+    setBeachName(null);
   };
 
   return (
@@ -331,6 +355,12 @@ export default function Scan() {
           AI Vision · 3D Reconstruction
         </p>
         <StageStrip stage={stage} />
+        {/* Wet/Dry toggle — show on live and capture stages */}
+        {(stage === 'live' || stage === 'capture') && (
+          <div className="mt-3 flex justify-center">
+            <WetDryToggle value={wetDry} onChange={setWetDry} />
+          </div>
+        )}
       </div>
 
       {stage === 'live' && (
