@@ -107,6 +107,7 @@ export default function FieldCorePanel({ onClose }) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-white/50 hover:text-white"
           >
             <X size={18} />

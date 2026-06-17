@@ -142,7 +142,7 @@ export default function ExpeditionPlanner({
                   <Sparkles size={14} className="text-amber-400" />
                   <span className="text-white font-bold text-sm">Expedition Planner</span>
                 </div>
-                <button onClick={() => setOpen(false)}>
+                <button onClick={() => setOpen(false)} aria-label="Close">
                   <X size={15} className="text-white/40" />
                 </button>
               </div>
