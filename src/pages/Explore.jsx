@@ -283,7 +283,7 @@ export default function Explore() {
 
         {showGeology && userLocation && (
           <div className="mt-2 pointer-events-auto">
-            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} />
+            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setShowGeology(false)} />
           </div>
         )}
 

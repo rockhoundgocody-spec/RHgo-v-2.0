@@ -2,10 +2,10 @@
  * GeologyInfoCard — shows Macrostrat bedrock units beneath a lat/lng.
  */
 import React, { useEffect, useState } from 'react';
-import { Mountain, Loader2 } from 'lucide-react';
+import { Mountain, Loader2, X } from 'lucide-react';
 import { fetchGeologyAt } from '@/lib/macrostrat';
 
-export default function GeologyInfoCard({ lat, lng }) {
+export default function GeologyInfoCard({ lat, lng, onClose }) {
   const [units, setUnits] = useState(null);
 
   useEffect(() => {
@@ -33,6 +33,11 @@ export default function GeologyInfoCard({ lat, lng }) {
           Geology Beneath You
         </span>
         <span className="ml-auto text-[8px] text-white/25 uppercase tracking-wider">Macrostrat</span>
+        {onClose && (
+          <button onClick={onClose} className="ml-2 text-white/30 hover:text-white/70 transition">
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {units === null && (
