@@ -75,6 +75,7 @@ export default function HotspotProximityWatcher() {
   if (!visible) return null;
 
   const distMiles = (nearby.distance_m / 1609.34).toFixed(1);
+  const distKm = (nearby.distance_m / 1000).toFixed(1);
 
   return (
     <div
@@ -92,7 +93,7 @@ export default function HotspotProximityWatcher() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[10px] uppercase tracking-[0.3em] text-amethyst-glow">
-            Hotspot Nearby · {distMiles}mi
+            Hotspot Nearby · {distMiles}mi ({distKm}km)
           </div>
           <div className="text-white text-sm font-semibold truncate">
             {nearby.hotspot.name}
