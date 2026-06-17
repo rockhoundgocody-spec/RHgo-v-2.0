@@ -5,6 +5,8 @@ import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swor
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
 import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
+import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
+import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [battleHistory, setBattleHistory] = useState([]);
+  const { earnedCodes, allBadges } = useBadgeAwarder();
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -139,9 +142,29 @@ export default function Profile() {
         </Link>
       </GlassPanel>
 
-      {/* Top 3 achievements — photorealistic badge orbs */}
+      {/* Achievements — full badge grid */}
       <div className="mb-8">
-        <Top3BadgesStrip />
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Achievements</span>
+          <Link to="/badges" className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow transition">
+            View all →
+          </Link>
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {allBadges.map((b) => {
+            const earned = earnedCodes.has(b.code);
+            return (
+              <Link key={b.code} to="/badges" className="flex flex-col items-center gap-1 active:scale-95 transition-transform">
+                <div style={{ filter: earned ? `drop-shadow(0 0 10px hsla(280,80%,70%,0.5))` : 'none' }}>
+                  <LiquidMineralBadge badge={b} size={64} locked={!earned} />
+                </div>
+                <span className="text-[8px] text-center text-white/40 leading-tight line-clamp-1 w-full text-center">
+                  {b.title}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <SkillsSection />

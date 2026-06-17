@@ -2,27 +2,11 @@ import React, { useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import {
-  Gem, Layers, Library, Sparkles, Crown, Hexagon, MapPin, CheckCircle2,
-  TrendingUp, Star, Zap,
-} from 'lucide-react';
+import { TrendingUp, Star, Zap } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
-import { BADGES, evaluateEarnedCodes } from '@/lib/badgeDefinitions.js';
 import { cn } from '@/lib/utils';
-
-const ICON_MAP = {
-  Gem, Layers, Library, Sparkles, Crown, Hexagon, MapPin, CheckCircle2,
-};
-
-const RARITY_STYLE = {
-  common:    { text: 'text-white/70',      glow: 'bg-white/10',         ring: 'border-white/20' },
-  uncommon:  { text: 'text-emerald-300',   glow: 'bg-emerald-500/10',   ring: 'border-emerald-400/30' },
-  rare:      { text: 'text-hud-cyan',      glow: 'bg-cyan-500/10',      ring: 'border-cyan-400/30' },
-  epic:      { text: 'text-amethyst-glow', glow: 'bg-amethyst/10',      ring: 'border-amethyst/30' },
-  legendary: { text: 'text-amber-300',     glow: 'bg-amber-500/10',     ring: 'border-amber-400/30' },
-};
 
 const moodColor = {
   radiant: '#fcd34d',
@@ -65,16 +49,6 @@ export default function CompanionProgressDashboard({ companion }) {
     [logsRaw],
   );
 
-  // Achievements
-  const earnedCodes = useMemo(() => evaluateEarnedCodes(specimens), [specimens]);
-  const badgesWithStatus = useMemo(() =>
-    BADGES.map((b) => {
-      const earned = earnedCodes.includes(b.code);
-      const { current, target } = b.progress(specimens);
-      return { ...b, earned, current, target, pct: Math.round((current / target) * 100) };
-    }).sort((a, b) => b.earned - a.earned || b.pct - a.pct),
-  [earnedCodes, specimens]);
-
   // Level progress ring math
   const level = companion?.level ?? 1;
   const xp = companion?.xp ?? 0;
@@ -84,7 +58,7 @@ export default function CompanionProgressDashboard({ companion }) {
   const circumference = 2 * Math.PI * 36; // r=36
   const dashOffset = circumference - (levelPct / 100) * circumference;
 
-  const isLoading = logsLoading || specLoading;
+  const isLoading = logsLoading;
 
   return (
     <div className="space-y-4">
@@ -187,64 +161,7 @@ export default function CompanionProgressDashboard({ companion }) {
         </HudFrame>
       </GlassPanel>
 
-      {/* Achievements */}
-      <GlassPanel>
-        <HudFrame label={`Achievements · ${earnedCodes.length} / ${BADGES.length}`}>
-          {specLoading ? (
-            <div className="space-y-2">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-12 rounded bg-white/5 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {badgesWithStatus.map((b) => {
-                const Icon = ICON_MAP[b.icon] || Gem;
-                const style = RARITY_STYLE[b.rarity] || RARITY_STYLE.common;
-                return (
-                  <div
-                    key={b.code}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 border transition-all',
-                      b.earned ? style.glow : 'bg-white/5',
-                      b.earned ? style.ring : 'border-white/10',
-                      b.earned ? 'opacity-100' : 'opacity-50',
-                    )}
-                  >
-                    <div className={cn('flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center', b.earned ? style.glow : 'bg-white/5')}>
-                      <Icon size={14} className={b.earned ? style.text : 'text-white/30'} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={cn('text-xs font-semibold', b.earned ? style.text : 'text-white/40')}>
-                          {b.title}
-                        </span>
-                        {b.earned && (
-                          <span className={cn('text-[9px] uppercase tracking-widest', style.text)}>✓</span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-white/40 truncate">{b.description}</div>
-                      {!b.earned && (
-                        <div className="mt-1 h-1 rounded-full bg-white/10 overflow-hidden w-full">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-amethyst-deep to-amethyst-glow"
-                            style={{ width: `${b.pct}%` }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {!b.earned && (
-                      <div className="text-[10px] text-white/30 flex-shrink-0">
-                        {b.current}/{b.target}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </HudFrame>
-      </GlassPanel>
+
     </div>
   );
 }
