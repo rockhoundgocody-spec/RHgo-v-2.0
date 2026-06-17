@@ -197,23 +197,9 @@ export default function HotspotMap({
         zoomControl={false}
         attributionControl={false}
       >
-        {hudMode ? (
-          <TileLayer
-            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-            attribution='&copy; Stadia Maps &copy; OSM'
-          />
-        ) : (
-          <TileLayer
-            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-            attribution='&copy; Stadia Maps &copy; OSM'
-          />
-        )}
-
-        {/* Animated terrain accent layer — subtle topo lines */}
         <TileLayer
-          url="https://stamen-tiles.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}.png"
-          attribution=""
-          opacity={hudMode ? 0.35 : 0.12}
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OSM &copy; CARTO'
         />
 
         {/* Macrostrat bedrock geology overlay */}
