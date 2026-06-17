@@ -142,25 +142,102 @@ export default function Profile() {
         </Link>
       </GlassPanel>
 
-      {/* Achievements — full badge grid */}
+      {/* Achievements — 3D collectible badge grid */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
+        <style>{`
+          @keyframes badge-float {
+            0%,100% { transform: translateY(0px) rotateY(0deg); }
+            25%      { transform: translateY(-4px) rotateY(8deg); }
+            75%      { transform: translateY(-2px) rotateY(-8deg); }
+          }
+          @keyframes badge-float-locked {
+            0%,100% { transform: translateY(0px); }
+            50%      { transform: translateY(-2px); }
+          }
+          @keyframes badge-pulse-glow {
+            0%,100% { opacity: 0.5; transform: scale(0.95); }
+            50%      { opacity: 1;   transform: scale(1.08); }
+          }
+          .badge-collectible { perspective: 400px; }
+          .badge-collectible-inner {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, filter 0.3s ease;
+          }
+          .badge-collectible-inner.earned {
+            animation: badge-float 5s ease-in-out infinite;
+          }
+          .badge-collectible-inner.locked {
+            animation: badge-float-locked 4s ease-in-out infinite;
+          }
+          .badge-collectible:active .badge-collectible-inner {
+            transform: scale(0.92) !important;
+          }
+        `}</style>
+
+        <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Achievements</span>
           <Link to="/badges" className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow transition">
             View all →
           </Link>
         </div>
-        <div className="grid grid-cols-4 gap-3">
+
+        <div className="grid grid-cols-3 gap-4">
           {allBadges.map((b) => {
             const earned = earnedCodes.has(b.code);
+            // Rarity-specific glow color
+            const glowMap = {
+              common: 'hsla(215,40%,65%,0.55)',
+              uncommon: 'hsla(152,80%,50%,0.6)',
+              rare: 'hsla(195,100%,60%,0.65)',
+              epic: 'hsla(270,90%,72%,0.7)',
+              legendary: 'hsla(45,100%,60%,0.8)',
+            };
+            const glowColor = glowMap[b.rarity] || glowMap.common;
+            const animDelay = `${(allBadges.indexOf(b) % 5) * 0.6}s`;
+
             return (
-              <Link key={b.code} to="/badges" className="flex flex-col items-center gap-1 active:scale-95 transition-transform">
-                <div style={{ filter: earned ? `drop-shadow(0 0 10px hsla(280,80%,70%,0.5))` : 'none' }}>
-                  <LiquidMineralBadge badge={b} size={64} locked={!earned} />
+              <Link
+                key={b.code}
+                to="/badges"
+                className="badge-collectible flex flex-col items-center gap-2"
+              >
+                {/* Glow halo behind badge */}
+                {earned && (
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 rounded-full pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
+                        transform: 'scale(1.6)',
+                        animation: `badge-pulse-glow ${2.8 + (allBadges.indexOf(b) % 3) * 0.5}s ${animDelay} ease-in-out infinite`,
+                      }}
+                    />
+                    <div
+                      className={`badge-collectible-inner ${earned ? 'earned' : 'locked'}`}
+                      style={{ animationDelay: animDelay }}
+                    >
+                      <LiquidMineralBadge badge={b} size={80} locked={false} />
+                    </div>
+                  </div>
+                )}
+                {!earned && (
+                  <div
+                    className={`badge-collectible-inner locked`}
+                    style={{ animationDelay: animDelay }}
+                  >
+                    <LiquidMineralBadge badge={b} size={80} locked={true} />
+                  </div>
+                )}
+                <div className="text-center">
+                  <div className={`text-[9px] font-semibold leading-tight line-clamp-1 ${earned ? 'text-white/70' : 'text-white/25'}`}>
+                    {b.title}
+                  </div>
+                  {earned && (
+                    <div className="text-[8px] uppercase tracking-widest mt-0.5" style={{ color: glowColor }}>
+                      earned ✓
+                    </div>
+                  )}
                 </div>
-                <span className="text-[8px] text-center text-white/40 leading-tight line-clamp-1 w-full text-center">
-                  {b.title}
-                </span>
               </Link>
             );
           })}
