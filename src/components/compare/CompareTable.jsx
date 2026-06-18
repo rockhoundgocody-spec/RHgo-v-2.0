@@ -13,7 +13,7 @@ function SlotCard({ slot, onPick, onClear }) {
     return (
       <button
         onClick={onPick}
-        className="w-full aspect-square rounded-2xl border-2 border-dashed border-amethyst/30 bg-amethyst/5 hover:bg-amethyst/10 hover:border-amethyst/60 transition flex flex-col items-center justify-center text-amethyst/70"
+        className="w-full aspect-square rounded-2xl border-2 border-dashed border-amethyst/30 bg-amethyst/5 hover:bg-amethyst/10 hover:border-amethyst/60 focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none transition flex flex-col items-center justify-center text-amethyst/70"
       >
         <Plus size={28} />
         <span className="text-[10px] uppercase tracking-[0.2em] mt-2">Select Specimen</span>
@@ -25,8 +25,8 @@ function SlotCard({ slot, onPick, onClear }) {
     <div className="relative">
       <button
         onClick={onClear}
-        className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-black/60 border border-white/15 text-white/80 hover:text-white flex items-center justify-center"
-        aria-label="Remove"
+        className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-black/60 border border-white/15 text-white/80 hover:text-white focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none flex items-center justify-center"
+        aria-label="Remove specimen"
       >
         <X size={12} />
       </button>
