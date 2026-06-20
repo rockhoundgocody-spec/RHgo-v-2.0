@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   Calendar, MapPin, Star, Gem, Shield, FlaskConical,
-  Zap, TrendingUp, Share2, ChevronLeft, Lock, BookOpen
+  Zap, TrendingUp, Share2, ChevronLeft, Lock, BookOpen,
+  PlusCircle, EyeOff, Beaker, Clock, AlertTriangle, CheckCircle2
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 
@@ -95,6 +97,18 @@ export default function SpecimenDetail() {
     ? ((specimen.ai_confidence * 0.7 + (evoLevel / 4) * 0.3) * 5).toFixed(1)
     : null;
 
+  const conf = specimen.ai_confidence;
+  const confLabel = conf == null ? null
+    : conf >= 0.88 ? 'Near Certain'
+    : conf >= 0.72 ? 'High Confidence'
+    : conf >= 0.52 ? 'Moderate — field test recommended'
+    : 'Uncertain — verify before recording';
+  const confColor = conf == null ? '#94a3b8'
+    : conf >= 0.88 ? '#34d399'
+    : conf >= 0.72 ? '#38bdf8'
+    : conf >= 0.52 ? '#fbbf24'
+    : '#f87171';
+
   const tabs = [
     { key: 'story',   label: 'Story' },
     { key: 'science', label: 'Science' },
@@ -102,7 +116,9 @@ export default function SpecimenDetail() {
   ];
 
   return (
-    <div className="min-h-screen pb-32" style={{ background: 'hsl(240 20% 4%)' }}>
+    <div className="min-h-screen pb-32" style={{ background: 'hsl(240 20% 4%)' }}
+      // reveal: framer not needed here, CSS transition on mount is enough
+    >
       {/* Back nav */}
       <div className="absolute top-0 inset-x-0 z-10 px-4 pt-4 flex items-center gap-3 pointer-events-none">
         <button onClick={() => navigate(-1)}
@@ -174,6 +190,23 @@ export default function SpecimenDetail() {
           </div>
         </div>
 
+        {/* Honest AI confidence banner */}
+        {conf != null && (
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+            style={{ background: `${confColor}10`, border: `1px solid ${confColor}35` }}>
+            <span className="text-base flex-shrink-0">{conf >= 0.72 ? '✅' : '⚠️'}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: confColor }}>
+                AI: {confLabel}
+              </div>
+              {conf < 0.72 && (
+                <div className="text-[9px] text-white/35 mt-0.5">Run a hardness or streak test to confirm.</div>
+              )}
+            </div>
+            <div className="text-lg font-black tabular-nums" style={{ color: confColor }}>{purity}%</div>
+          </div>
+        )}
+
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2">
           <StatBlock
@@ -194,6 +227,23 @@ export default function SpecimenDetail() {
             value={specimen.ai_confidence ? `${(specimen.ai_confidence * 100).toFixed(0)}%` : '—'}
             color={rarity.color}
           />
+        </div>
+
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { icon: '➕', label: 'Add to Collection', color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)' },
+            { icon: '🛡️', label: 'Mark Private', color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)' },
+            { icon: '🧪', label: 'Run Field Test', color: '#38bdf8', bg: 'hsla(205,60%,12%,0.6)', border: 'hsla(195,80%,50%,0.3)' },
+            { icon: '⏳', label: 'Verify Later', color: '#fbbf24', bg: 'hsla(40,50%,10%,0.6)', border: 'hsla(45,80%,50%,0.3)' },
+          ].map(({ icon, label, color, bg, border }) => (
+            <button key={label}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
+              style={{ background: bg, border: `1px solid ${border}`, color }}>
+              <span>{icon}</span>
+              <span className="leading-tight text-left">{label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Evolution tracker */}
