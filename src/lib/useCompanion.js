@@ -11,7 +11,10 @@ export default function useCompanion({ onMilestone } = {}) {
   const [companion, setCompanion] = useState(null);
   const [todaysSpecimenCount, setTodaysSpecimenCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const prevRef = useRef(null); // previous companion snapshot for diffing
+  const prevRef = useRef(null);
+  // Store onMilestone in a ref so it never causes refresh to re-create
+  const onMilestoneRef = useRef(onMilestone);
+  useEffect(() => { onMilestoneRef.current = onMilestone; }, [onMilestone]);
 
   const refresh = useCallback(async () => {
     const maxRetries = 3;
@@ -20,19 +23,16 @@ export default function useCompanion({ onMilestone } = {}) {
         const res = await base44.functions.invoke('getCompanionState', {});
         const next = res?.data?.companion || null;
 
-        if (next && prevRef.current && onMilestone) {
+        if (next && prevRef.current && onMilestoneRef.current) {
           const prev = prevRef.current;
-
-          // Level-up detection
           if (next.level > prev.level) {
-            onMilestone({ type: 'levelup', level: next.level, label: `Reached Level ${next.level}!` });
+            onMilestoneRef.current({ type: 'levelup', level: next.level, label: `Reached Level ${next.level}!` });
           } else {
-            // XP milestone detection (only if no level-up to avoid double toast)
             const prevXP = prev.xp ?? 0;
             const nextXP = next.xp ?? 0;
             const crossed = XP_MILESTONES.find((m) => prevXP < m && nextXP >= m);
             if (crossed) {
-              onMilestone({ type: 'milestone', xp: crossed, label: `${crossed} Total XP Reached!` });
+              onMilestoneRef.current({ type: 'milestone', xp: crossed, label: `${crossed} Total XP Reached!` });
             }
           }
         }
@@ -51,7 +51,7 @@ export default function useCompanion({ onMilestone } = {}) {
         await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
       }
     }
-  }, [onMilestone]);
+  }, []); // no deps — stable forever, uses refs for callbacks
 
   useEffect(() => {
     refresh();

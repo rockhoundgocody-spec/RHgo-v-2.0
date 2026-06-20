@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { flushWhenStable } from '@/lib/offlineQueue.js';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import useCompanion from '@/lib/useCompanion.js';
@@ -28,12 +28,15 @@ import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import HelpTip from '@/components/hub/HelpTip.jsx';
+import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
+  const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
-  const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: setMilestone });
+  const handleMilestone = useCallback((m) => setMilestone(m), []);
+  const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: handleMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
 
   useEffect(() => {
@@ -42,6 +45,10 @@ export default function Hub() {
       .then((u) => { if (u?.email) setUserEmail(u.email); })
       .catch(() => {});
   }, []);
+
+  if (showCinematic) {
+    return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pb-28">
