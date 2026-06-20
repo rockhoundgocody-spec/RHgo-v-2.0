@@ -90,10 +90,10 @@ export default function Hub() {
         <div className="mt-6 grid grid-cols-3 gap-2 w-full">
           <QuickAction to="/scan" icon={ScanLine} label="Scan" color="amethyst" />
           <QuickAction to="/explore" icon={Compass} label="Explore" color="cyan" />
-          <QuickAction to="/collection" icon={Gem} label="Collect" color="purple" />
-          <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
-          <QuickAction to="/leaderboard" icon={Trophy} label="Leaderboard" color="amber" />
-          <QuickAction to="/companion" icon={Heart} label="Companion" color="rose" />
+          <QuickAction to="/collection" icon={Gem} label="Codex" color="purple" />
+          <QuickAction to="/quests" icon={Sword} label="Missions" color="gold" />
+          <QuickAction to="/badges" icon={Trophy} label="Badges" color="amber" />
+          <QuickAction to="/companion" icon={Heart} label="Clover" color="rose" />
           <QuickAction to="/private-log" icon={Lock} label="My Finds" color="amethyst" />
         </div>
       </section>

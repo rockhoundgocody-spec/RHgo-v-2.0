@@ -354,8 +354,8 @@ export default function Scan() {
       {/* Compact header */}
       <div className="flex items-center justify-between mb-2 px-1">
         <div>
-          <h1 className="text-lg font-bold text-white tracking-tight leading-none">Scan</h1>
-          <p className="text-white/35 text-[9px] uppercase tracking-[0.22em] mt-0.5">AI Vision · 3D Reconstruction</p>
+          <h1 className="text-lg font-black text-white tracking-tight leading-none">AI Scanner</h1>
+          <p className="text-white/30 text-[9px] uppercase tracking-[0.22em] mt-0.5">Vision · 3D Reconstruct · Field ID</p>
         </div>
         <div className="flex items-center gap-2">
           {(stage === 'live' || stage === 'capture') && (
