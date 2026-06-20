@@ -7,24 +7,14 @@ export default function DeleteAccountDialog({ onClose }) {
   const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
+
   const handleDelete = async () => {
     setConfirming(true);
-    // Delete user's data entities
     try {
-      const user = await base44.auth.me();
-      const [specimens, companions, drafts, badges] = await Promise.all([
-        base44.entities.Specimen.filter({ created_by: user.email }),
-        base44.entities.Companion.filter({ owner_email: user.email }),
-        base44.entities.SpecimenDraft.filter({ owner_email: user.email }),
-        base44.entities.Badge.filter({ owner_email: user.email }),
-      ]);
-      await Promise.all([
-        ...specimens.map((r) => base44.entities.Specimen.delete(r.id)),
-        ...companions.map((r) => base44.entities.Companion.delete(r.id)),
-        ...drafts.map((r) => base44.entities.SpecimenDraft.delete(r.id)),
-        ...badges.map((r) => base44.entities.Badge.delete(r.id)),
-      ]);
+      await base44.functions.invoke('deleteAccountData');
       base44.auth.logout('/');
+    } catch (error) {
+      console.error('Failed to delete account data:', error);
     } finally {
       setConfirming(false);
     }
