@@ -49,6 +49,8 @@ const PrivateRockLog = lazy(() => import('@/pages/PrivateRockLog'));
 const About = lazy(() => import('@/pages/About'));
 const Paywall = lazy(() => import('@/pages/Paywall'));
 const Contact = lazy(() => import('@/pages/Contact'));
+const Auth = lazy(() => import('@/pages/Auth'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
 
 const RouteFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -77,9 +79,11 @@ const AuthenticatedApp = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
@@ -91,11 +95,15 @@ const AuthenticatedApp = () => {
     <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* Auth routes — outside Layout, no nav bar */}
+        {/* Auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        {/* Public pricing — no auth required */}
+        <Route path="/pricing" element={<Pricing />} />
 
         <Route element={<Layout />}>
           <Route path="/" element={<Hub />} />

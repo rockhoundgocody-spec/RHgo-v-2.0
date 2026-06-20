@@ -238,7 +238,7 @@ export default function Landing() {
         className="w-full max-w-md px-4 mt-8 z-10"
       >
         <Link
-          to="/register"
+          to="/auth"
           className="w-full py-4 rounded-2xl font-black text-white text-base text-center flex items-center justify-center gap-2 transition active:scale-95"
           style={{
             background: 'linear-gradient(135deg, hsl(265,70%,50%), hsl(280,90%,62%))',
@@ -246,6 +246,13 @@ export default function Landing() {
           }}
         >
           <Zap size={17} /> Join the Hunt — It's Free <ChevronRight size={16} />
+        </Link>
+        <Link
+          to="/pricing"
+          className="w-full py-3 rounded-2xl font-semibold text-white/45 text-sm text-center flex items-center justify-center gap-2 transition hover:text-white/70 mt-2"
+          style={{ background: 'hsla(255,25%,14%,0.5)', border: '1px solid hsla(270,30%,35%,0.2)' }}
+        >
+          View Plans & Pricing
         </Link>
       </motion.div>
     </div>

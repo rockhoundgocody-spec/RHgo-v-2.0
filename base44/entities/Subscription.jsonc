@@ -1,0 +1,92 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "description": "User subscription tier and status. Source of truth for feature access gating across rhgo.base44.app.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the authenticated user this subscription belongs to"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "field_pro",
+        "family"
+      ],
+      "default": "free",
+      "description": "free = Free Explorer, field_pro = Field Pro Companion, family = Family/Expedition"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "past_due",
+        "trialing"
+      ],
+      "default": "active"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer ID \u2014 set after first payment"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription ID \u2014 set after first payment"
+    },
+    "current_period_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the current billing period ends"
+    },
+    "trial_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "owner_email",
+    "tier"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

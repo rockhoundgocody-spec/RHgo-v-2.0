@@ -84,6 +84,24 @@ export default function Settings() {
         <p className="text-white/40 text-sm mt-1">Configure your field companion</p>
       </div>
 
+      {/* Pricing / upgrade CTA */}
+      <a href="/pricing"
+        className="block mb-6 rounded-2xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-transform no-underline"
+        style={{
+          background: 'linear-gradient(135deg, hsla(270,60%,20%,0.55), hsla(280,80%,15%,0.65))',
+          border: '1px solid hsla(280,70%,60%,0.22)',
+          boxShadow: '0 4px 24px -8px hsla(270,80%,60%,0.3)',
+        }}>
+        <div className="flex items-center gap-3">
+          <Gem size={16} className="text-amethyst-glow" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-white">View Subscription Plans</div>
+            <div className="text-white/40 text-xs mt-0.5">Free · Field Pro · Family — see what's included</div>
+          </div>
+          <ChevronRight size={14} className="text-white/30 flex-shrink-0" />
+        </div>
+      </a>
+
       {/* Field Pro banner */}
       <div className="mb-6 rounded-2xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
         style={{
