@@ -45,9 +45,16 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const containerRef = useRef(null);
 
   const mic = useMicLevel();
-  const micError = mic.error;
+  const micError = mic?.error;
 
-  const xai = useXaiVoice({ onFindLogged: (name) => setLoggedFind(name) });
+  // Wrap xAI in error boundary isolation — a crash inside the hook
+  // must never propagate to the Hub page and unmount the whole tree.
+  let xai;
+  try {
+    xai = useXaiVoice({ onFindLogged: (name) => setLoggedFind(name) }); // eslint-disable-line
+  } catch {
+    xai = { connect: ()=>{}, disconnect: ()=>{}, sendText: ()=>{}, status: 'error', transcript: '', userTranscript: '', speaking: false, listening: false, getAmplitude: ()=>0, getSpectrum: ()=>new Uint8Array(0) };
+  }
 
   const { speaking, listening, getAmplitude, getSpectrum } = xai;
   const thinking  = xai.status === 'connecting';
@@ -57,8 +64,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   useHaptic({ active: active && (speaking || listening), getAmplitude });
 
   useEffect(() => () => {
-    xai.disconnect();
-    try { mic.stop(); } catch {}
+    try { xai.disconnect(); } catch {}
+    try { mic?.stop(); } catch {}
   }, []); // eslint-disable-line
 
   const awaken = (e) => {
@@ -72,16 +79,14 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       setLoggedFind(null);
       const pool = GREETINGS(companion, 'explorer');
       const greeting = pool[Math.floor(Math.random() * pool.length)];
-      // Pass greeting into connect() — it queues it and sends once session is ready
-      xai.connect(greeting);
+      try { xai.connect(greeting); } catch { setActive(false); }
     } else if (speaking || thinking) {
       // Interrupt — reconnect with no greeting
-      xai.disconnect();
-      xai.connect();
+      try { xai.disconnect(); xai.connect(); } catch {}
     } else {
       // End session
-      xai.disconnect();
-      try { mic.stop(); } catch {}
+      try { xai.disconnect(); } catch {}
+      try { mic?.stop(); } catch {}
       setActive(false);
       setLoggedFind(null);
     }

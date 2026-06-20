@@ -34,6 +34,7 @@ export default function useXaiVoice({ onFindLogged } = {}) {
   const [userTranscript, setUserTranscript] = useState('');
   const [speaking, setSpeaking]         = useState(false);
   const [listening, setListening]       = useState(false);
+  const [error, setError]               = useState(null);
 
   // Stable refs — never trigger re-renders
   const wsRef            = useRef(null);
@@ -168,9 +169,12 @@ export default function useXaiVoice({ onFindLogged } = {}) {
     let ctx;
     try {
       ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-      if (ctx.state === 'suspended') await ctx.resume();
       audioCtxRef.current = ctx;
-    } catch {
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {}); // non-fatal on iOS if gesture is slightly stale
+      }
+    } catch (e) {
+      console.warn('[xAI] AudioContext failed:', e);
       setStatus('error');
       return;
     }
