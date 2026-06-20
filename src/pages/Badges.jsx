@@ -3,7 +3,8 @@
  * 2-column grid, rarity filter tabs, detail modal, unlock animation.
  */
 import React, { useState } from 'react';
-import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check } from 'lucide-react';
+import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check, AlertCircle } from 'lucide-react';
+import { shareAchievement, buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
@@ -56,13 +57,17 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
   const [copied,  setCopied]  = useState(false);
   const scheme = COLOR_SCHEMES[badge.colorScheme] || COLOR_SCHEMES.amethyst;
 
-  const shareText = earned
-    ? `🏆 I earned the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`
+  const badgeExtra = earned
+    ? `🏆 I earned the "${badge.title}" badge (${badge.rarity})!`
     : `🎯 Working toward "${badge.title}" on RockHound-GO!`;
 
-  const handleShare = () => {
-    if (navigator.share) { navigator.share({ title: 'RockHound-GO Badge', text: shareText }); }
-    else { navigator.clipboard.writeText(shareText); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+  const handleShare = async () => {
+    const payload = buildSharePayload({ rank: badge.title, xp: null, extra: badgeExtra });
+    // Override text for badge context — still includes url
+    payload.text = `${badgeExtra}\n\nJoin me here:\nhttps://rhgo.base44.app`;
+    const result = await executeShare(payload);
+    if (result === 'clipboard') { setCopied(true); setTimeout(() => setCopied(false), 2200); }
+    else if (result === 'error') { setCopied('error'); setTimeout(() => setCopied(false), 2200); }
   };
 
   return (
@@ -114,12 +119,7 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
             <button onClick={handleShare}
               className="flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
               style={{ background: 'hsla(195,80%,14%,0.55)', border: `1px solid ${scheme.rim}`, color: scheme.secondary }}>
-              🔗 Share
-            </button>
-            <button onClick={() => { navigator.clipboard.writeText(shareText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
-              style={{ background: 'hsla(265,60%,14%,0.55)', border: `1px solid ${scheme.rim}`, color: scheme.secondary }}>
-              {copied ? '✓ Copied!' : '📋 Copy'}
+              {copied === 'error' ? '⚠ Failed' : copied ? '✓ Copied!' : '🔗 Share'}
             </button>
           </div>
 
@@ -198,11 +198,16 @@ export default function Badges() {
 
   const earnedCount = allBadges.filter((b) => earnedCodes.has(b.code)).length;
 
-  const handleShareProgress = () => {
+  const handleShareProgress = async () => {
     const pct = Math.round((earnedCount / allBadges.length) * 100);
-    const text = `🏆 I've earned ${earnedCount}/${allBadges.length} badges (${pct}%) on RockHound-GO! Can you beat my collection?`;
-    if (navigator.share) { navigator.share({ title: 'RockHound-GO Badges', text }); }
-    else { navigator.clipboard.writeText(text); setPageCopied(true); setTimeout(() => setPageCopied(false), 2000); }
+    const { executeShare } = await import('@/lib/shareAchievement');
+    const result = await executeShare({
+      title: 'RockHound-GO Challenge',
+      text: `🏆 I've earned ${earnedCount}/${allBadges.length} badges (${pct}%) on RockHound-GO! Can you beat my collection?\n\nJoin me here:\nhttps://rhgo.base44.app`,
+      url: 'https://rhgo.base44.app',
+    });
+    if (result === 'clipboard') { setPageCopied('copied'); setTimeout(() => setPageCopied(false), 2200); }
+    else if (result === 'error') { setPageCopied('error'); setTimeout(() => setPageCopied(false), 2200); }
   };
 
   const filtered = rarityFilter === 'all'
@@ -282,7 +287,9 @@ export default function Badges() {
               color: 'hsl(280,100%,85%)',
             }}
           >
-            {pageCopied ? <><Check size={13} /> Copied to clipboard!</> : <><Share2 size={13} /> Share My Badge Progress</>}
+            {pageCopied === 'error' ? <><AlertCircle size={13} /> Share failed — try again</>
+             : pageCopied ? <><Check size={13} /> Challenge copied — paste it anywhere</>
+             : <><Share2 size={13} /> Share My Badge Progress</>}
           </button>
         </div>
       </GlassPanel>

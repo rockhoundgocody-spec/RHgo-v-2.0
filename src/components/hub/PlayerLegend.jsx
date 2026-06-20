@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Upload, Trophy, Zap, Share2, ChevronRight } from 'lucide-react';
+import { User, Upload, Trophy, Zap, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
+import { shareAchievement } from '@/lib/shareAchievement';
 
 const LEVEL_TITLES = [
   'Pebble Scout',
@@ -129,16 +130,18 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
     }
   };
 
-  const handleShare = () => {
-    const text = `🪨 I'm a ${title} on RockHound-GO with ${player.totalXP.toLocaleString()} XP! Can you beat my score?`;
-    if (navigator.share) {
-      navigator.share({ title: 'My RockHound-GO Legend', text });
-    } else {
-      navigator.clipboard.writeText(text);
-      setShared(true);
-      setTimeout(() => setShared(false), 2000);
-    }
+  const handleShare = async () => {
     base44.analytics.track({ eventName: 'legend_shared', properties: { xp: player.totalXP, level } });
+    const result = await shareAchievement({ rank: title, xp: player.totalXP });
+    if (result === 'clipboard') {
+      setShared('copied');
+      setTimeout(() => setShared(false), 2400);
+    } else if (result === 'error') {
+      setShared('error');
+      setTimeout(() => setShared(false), 2400);
+    } else {
+      setShared(false);
+    }
   };
 
   return (
@@ -272,7 +275,9 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95"
               style={{ background: 'hsla(195,60%,20%,0.7)', border: '1px solid hsla(195,80%,50%,0.3)', color: 'hsl(195,100%,82%)' }}
             >
-              <Share2 size={10} /> {shared ? 'Copied!' : 'Share'}
+              {shared === 'copied' ? <><Check size={10} /> Copied!</>
+               : shared === 'error' ? <><AlertCircle size={10} /> Try again</>
+               : <><Share2 size={10} /> Share</>}
             </button>
           </div>
         </div>

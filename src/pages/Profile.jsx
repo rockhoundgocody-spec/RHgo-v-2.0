@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { shareAchievement } from '@/lib/shareAchievement';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy } from 'lucide-react';
+import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
 import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
@@ -16,6 +17,7 @@ export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [battleHistory, setBattleHistory] = useState([]);
+  const [shareState, setShareState] = useState(null); // null | 'copied' | 'error'
   const { earnedCodes, allBadges } = useBadgeAwarder();
   const fileInputRef = useRef(null);
 
@@ -54,6 +56,22 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await base44.auth.logout('/');
+  };
+
+  const handleShareProfile = async () => {
+    // Fetch XP from PlayerProfile for accurate rank
+    let xp = 0;
+    let rank = 'Rockhound';
+    try {
+      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: user?.email }, '-created_date', 1);
+      if (profiles[0]?.total_xp != null) xp = profiles[0].total_xp;
+      const LEVEL_TITLES = ['Pebble Scout','Crystal Apprentice','Geode Guardian','Titan Rockhound','Legendary Specimen Hunter','Mythic Earth Wizard'];
+      const level = Math.min(Math.floor(xp / 1200), LEVEL_TITLES.length - 1);
+      rank = LEVEL_TITLES[level];
+    } catch {}
+    const result = await shareAchievement({ rank, xp, extra: `${stats.findings} finds · ${stats.badges} badges` });
+    if (result === 'clipboard') { setShareState('copied'); setTimeout(() => setShareState(null), 2400); }
+    else if (result === 'error') { setShareState('error'); setTimeout(() => setShareState(null), 2400); }
   };
 
   if (loading) {
@@ -104,7 +122,7 @@ export default function Profile() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         <GlassPanel className="p-5 text-center">
           <div className="text-3xl font-bold text-amethyst-glow tabular-nums">{stats.findings}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Finds</div>
@@ -118,6 +136,23 @@ export default function Profile() {
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Role</div>
         </GlassPanel>
       </div>
+
+      {/* Share challenge button */}
+      <button
+        onClick={handleShareProfile}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider transition active:scale-95 mb-8"
+        style={{
+          background: 'linear-gradient(135deg, hsla(195,80%,16%,0.7), hsla(265,60%,14%,0.7))',
+          border: '1px solid hsla(195,80%,50%,0.3)',
+          color: 'hsl(195,100%,82%)',
+        }}
+      >
+        {shareState === 'copied'
+          ? <><Check size={13} /> Challenge copied — paste it anywhere</>
+          : shareState === 'error'
+          ? <><AlertCircle size={13} /> Share failed — try again</>
+          : <><Share2 size={13} /> Challenge a Friend</>}
+      </button>
 
       {/* Menu */}
       <GlassPanel className="mb-8 divide-y divide-white/8">
