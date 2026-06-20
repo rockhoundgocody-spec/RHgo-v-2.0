@@ -66,7 +66,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   useEffect(() => () => {
     try { xai.disconnect(); } catch {}
     try { mic?.stop(); } catch {}
-  }, []); // eslint-disable-line
+  }, []);
 
   const awaken = (e) => {
     const rect = containerRef.current?.getBoundingClientRect();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Trophy, Zap, Shield, Flame, Star, Users, Search } from 'lucide-react';
+import { Crown, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useEntityList } from '@/lib/useEntityQuery';
 import { getRank } from '@/components/hub/LiveStatStrip.jsx';

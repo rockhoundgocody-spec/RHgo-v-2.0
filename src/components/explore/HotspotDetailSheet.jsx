@@ -5,7 +5,7 @@
  *
  * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

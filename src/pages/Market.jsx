@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, Gem, MapPin, Shield, TrendingUp, Sparkles, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { motion } from 'framer-motion';
 
 const RARITY_MOCK = ['common', 'uncommon', 'rare', 'legendary', 'uncommon', 'rare'];
