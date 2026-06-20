@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2 } from 'lucide-react';
+import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
@@ -29,6 +29,24 @@ function VoiceSlider({ label, hint, min, max, step, value, onChange }) {
   );
 }
 
+function SectionHeader({ icon: Icon, title, subtitle, iconColor = 'text-white/60', badge }) {
+  return (
+    <div className="flex items-start gap-3 mb-4">
+      <Icon size={18} className={iconColor} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-bold text-white">{title}</h3>
+          {badge && (
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full"
+              style={badge.style}>{badge.text}</span>
+          )}
+        </div>
+        {subtitle && <p className="text-white/35 text-xs mt-0.5 leading-relaxed">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function Settings() {
   const [settings, setSettings] = useState({
     notifications: true,
@@ -44,7 +62,6 @@ export default function Settings() {
     localStorage.setItem('clover_voice', JSON.stringify(voice));
     setVoiceSaved(true);
     setTimeout(() => setVoiceSaved(false), 2000);
-    // Quick preview
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance("Hey! How does my voice sound now?");
@@ -54,71 +71,86 @@ export default function Settings() {
   };
 
   const resetVoice = () => setVoice(DEFAULT_VOICE);
-
-  const handleToggle = (key) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleChange = (key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+  const handleToggle = (key) => setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleChange = (key, value) => setSettings((prev) => ({ ...prev, [key]: value }));
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Settings</h1>
-        <p className="text-white/50 text-sm mt-2">Customize your RockHound-GO experience</p>
+
+      {/* Page header */}
+      <div className="mb-6">
+        <div className="text-[10px] uppercase tracking-[0.35em] text-white/30 mb-1 font-semibold">Field Controls</div>
+        <h1 className="text-3xl font-black text-white tracking-tight">Settings</h1>
+        <p className="text-white/40 text-sm mt-1">Configure your field companion</p>
+      </div>
+
+      {/* Field Pro banner */}
+      <div className="mb-6 rounded-2xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+        style={{
+          background: 'linear-gradient(135deg, hsla(270,60%,20%,0.55), hsla(280,80%,15%,0.65))',
+          border: '1px solid hsla(280,70%,60%,0.22)',
+          boxShadow: '0 4px 24px -8px hsla(270,80%,60%,0.3)',
+        }}>
+        <div className="absolute top-0 right-0 w-36 h-36 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, hsla(280,100%,65%,0.1) 0%, transparent 70%)', transform: 'translate(30%,-30%)' }} />
+        <div className="flex items-center gap-3 mb-2">
+          <Gem size={16} className="text-amethyst-glow" />
+          <div className="text-sm font-black text-white">Field Pro Companion</div>
+          <div className="ml-auto text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full"
+            style={{ background: 'hsla(280,80%,55%,0.2)', color: 'hsl(280,100%,85%)', border: '1px solid hsla(280,70%,60%,0.3)' }}>
+            Coming Soon
+          </div>
+        </div>
+        <p className="text-white/45 text-xs leading-relaxed ml-7">
+          Offline AI identification, advanced rarity heatmaps, unlimited private logs, and priority Clover voice sessions — all designed for serious field work.
+        </p>
       </div>
 
       {/* Permissions prompt */}
       <PermissionsPrompt />
 
-      {/* Notifications */}
+      {/* Stealth Mode & Privacy — elevated as field-critical */}
       <div className="mb-6">
-        <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Bell size={18} className="text-hud-cyan" />
-            <h3 className="font-bold text-white">Notifications</h3>
-          </div>
-          <div className="space-y-2 ml-9">
-            <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.notifications}
-                onChange={() => handleToggle('notifications')}
-                className="w-4 h-4 rounded border-white/30"
-              />
-              Scan results ready
-            </label>
-            <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
-              <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-white/30" />
-              Collection updates
-            </label>
-            <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
-              <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-white/30" />
-              Marketplace activity
-            </label>
+        <GlassPanel className="p-4" style={{ borderColor: 'hsla(280,60%,55%,0.22)' }}>
+          <SectionHeader
+            icon={Shield}
+            iconColor="text-amethyst-glow"
+            title="Stealth Mode & Privacy"
+            subtitle="Control exactly how your finds and locations are stored and shared. Your best spots stay yours."
+            badge={{
+              text: 'Field Critical',
+              style: { background: 'hsla(280,70%,55%,0.15)', color: 'hsl(280,100%,85%)', border: '1px solid hsla(280,60%,55%,0.25)' }
+            }}
+          />
+          <div className="ml-9 space-y-3">
+            <div>
+              <label className="block text-xs text-white/50 uppercase tracking-[0.2em] font-mono mb-2">Location Privacy</label>
+              <PrivacySelectSheet value={settings.privacyLevel} onChange={(v) => handleChange('privacyLevel', v)} />
+            </div>
           </div>
         </GlassPanel>
       </div>
 
-      {/* Privacy */}
+      {/* Notifications */}
       <div className="mb-6">
         <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Eye size={18} className="text-amethyst-glow" />
-            <h3 className="font-bold text-white">Privacy</h3>
-          </div>
-          <div className="ml-9 space-y-3">
-            <div>
-              <label className="block text-xs text-white/50 uppercase tracking-[0.2em] font-mono mb-2">
-                Location Privacy
+          <SectionHeader icon={Bell} iconColor="text-hud-cyan" title="Notifications" />
+          <div className="space-y-2 ml-9">
+            {[
+              { label: 'Scan results ready', key: 'notifications', checked: settings.notifications },
+              { label: 'Collection updates', key: null, defaultChecked: true },
+              { label: 'Marketplace activity', key: null, defaultChecked: true },
+            ].map(({ label, key, checked, defaultChecked }, i) => (
+              <label key={i} className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
+                <input
+                  type="checkbox"
+                  checked={key ? checked : defaultChecked}
+                  onChange={key ? () => handleToggle(key) : undefined}
+                  className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                />
+                {label}
               </label>
-              <PrivacySelectSheet
-                value={settings.privacyLevel}
-                onChange={(v) => handleChange('privacyLevel', v)}
-              />
-            </div>
+            ))}
           </div>
         </GlassPanel>
       </div>
@@ -126,22 +158,24 @@ export default function Settings() {
       {/* Field Mode */}
       <div className="mb-6">
         <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Zap size={18} className="text-emerald-400" />
-            <h3 className="font-bold text-white">Field Mode</h3>
-          </div>
+          <SectionHeader
+            icon={Zap}
+            iconColor="text-emerald-400"
+            title="Field Mode"
+            subtitle="Optimised for weak signal and bright outdoor conditions. Keeps scans and maps functional when off-grid."
+          />
           <div className="space-y-2 ml-9">
-            <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
+            <label className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
               <input
                 type="checkbox"
                 checked={settings.offlineMode}
                 onChange={() => handleToggle('offlineMode')}
-                className="w-4 h-4 rounded border-white/30"
+                className="w-4 h-4 rounded border-white/30 accent-amethyst"
               />
               Offline mode enabled
             </label>
-            <p className="text-xs text-white/40 ml-6">
-              Keep scans, maps, and collections working without network signal.
+            <p className="text-xs text-white/30 ml-7 leading-relaxed">
+              Field records load from local cache when signal is weak or absent.
             </p>
           </div>
         </GlassPanel>
@@ -150,19 +184,16 @@ export default function Settings() {
       {/* Storage */}
       <div className="mb-6">
         <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <HardDrive size={18} className="text-hud-cyan" />
-            <h3 className="font-bold text-white">Storage</h3>
-          </div>
+          <SectionHeader icon={HardDrive} iconColor="text-hud-cyan" title="Storage" />
           <div className="ml-9 space-y-2">
             <div className="flex items-center justify-between text-sm text-white/60">
               <span>Local cache</span>
               <span className="font-mono">245 MB</span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full bg-amethyst/60" style={{ width: '65%' }} />
+              <div className="h-full rounded-full" style={{ width: '65%', background: 'linear-gradient(90deg, hsl(270,80%,55%), hsl(280,100%,70%))' }} />
             </div>
-            <button className="text-xs text-amethyst hover:text-amethyst-glow mt-2">Clear cache</button>
+            <button className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition">Clear cache</button>
           </div>
         </GlassPanel>
       </div>
@@ -170,19 +201,15 @@ export default function Settings() {
       {/* Site Packs */}
       <div className="mb-6">
         <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin size={18} className="text-rose-300" />
-            <h3 className="font-bold text-white">Saved Site Packs</h3>
-          </div>
+          <SectionHeader icon={MapPin} iconColor="text-rose-300" title="Saved Site Packs" subtitle="Offline map packs for field-ready exploration without data." />
           <div className="ml-9 space-y-2 text-sm text-white/60">
-            <div className="flex items-center justify-between p-2 rounded bg-white/5">
-              <span>Colorado hotspots</span>
-              <span className="text-xs text-white/40">42 MB</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded bg-white/5">
-              <span>Utah field regions</span>
-              <span className="text-xs text-white/40">38 MB</span>
-            </div>
+            {[{ label: 'Colorado hotspots', size: '42 MB' }, { label: 'Utah field regions', size: '38 MB' }].map((p) => (
+              <div key={p.label} className="flex items-center justify-between p-2.5 rounded-xl transition"
+                style={{ background: 'hsla(255,20%,12%,0.5)', border: '1px solid hsla(255,20%,30%,0.15)' }}>
+                <span>{p.label}</span>
+                <span className="text-xs text-white/35 font-mono">{p.size}</span>
+              </div>
+            ))}
           </div>
         </GlassPanel>
       </div>
@@ -190,46 +217,19 @@ export default function Settings() {
       {/* Clover Voice */}
       <div className="mb-6">
         <GlassPanel className="p-4">
-          <div className="flex items-center gap-3 mb-1">
-            <Mic2 size={18} className="text-amethyst-glow" />
-            <h3 className="font-bold text-white">Clover 🍀 Voice</h3>
-          </div>
-          <p className="text-xs text-white/40 ml-9 mb-4">
-            Tune how Clover sounds. Press "Preview" to hear the result live.
-          </p>
+          <SectionHeader icon={Mic2} iconColor="text-amethyst-glow" title="Clover 🍀 Voice" subtitle="Tune how Clover sounds in the field. Press Preview to hear the result live." />
           <div className="ml-9 space-y-5">
-            <VoiceSlider
-              label="Speed"
-              hint="0.5 = slow & deliberate · 1.0 = natural · 1.5 = quick"
-              min={0.5} max={1.5} step={0.01}
-              value={voice.rate}
-              onChange={(v) => setVoice((p) => ({ ...p, rate: v }))}
-            />
-            <VoiceSlider
-              label="Pitch"
-              hint="0.8 = deeper · 1.0 = neutral · 1.5 = higher / more expressive"
-              min={0.8} max={1.5} step={0.01}
-              value={voice.pitch}
-              onChange={(v) => setVoice((p) => ({ ...p, pitch: v }))}
-            />
-            <VoiceSlider
-              label="Volume"
-              hint="0.5 = quiet · 1.0 = full"
-              min={0.5} max={1.0} step={0.01}
-              value={voice.volume}
-              onChange={(v) => setVoice((p) => ({ ...p, volume: v }))}
-            />
+            <VoiceSlider label="Speed" hint="0.5 = slow & deliberate · 1.0 = natural · 1.5 = quick" min={0.5} max={1.5} step={0.01} value={voice.rate} onChange={(v) => setVoice((p) => ({ ...p, rate: v }))} />
+            <VoiceSlider label="Pitch" hint="0.8 = deeper · 1.0 = neutral · 1.5 = higher / more expressive" min={0.8} max={1.5} step={0.01} value={voice.pitch} onChange={(v) => setVoice((p) => ({ ...p, pitch: v }))} />
+            <VoiceSlider label="Volume" hint="0.5 = quiet · 1.0 = full" min={0.5} max={1.0} step={0.01} value={voice.volume} onChange={(v) => setVoice((p) => ({ ...p, volume: v }))} />
             <div className="flex gap-3 pt-1">
-              <button
-                onClick={saveVoice}
-                className="flex-1 py-2 rounded-lg bg-amethyst/30 hover:bg-amethyst/50 border border-amethyst/40 text-white text-sm font-semibold transition select-none"
-              >
+              <button onClick={saveVoice}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition active:scale-95 select-none"
+                style={{ background: 'hsla(270,60%,30%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)' }}>
                 {voiceSaved ? '✓ Saved!' : 'Preview & Save'}
               </button>
-              <button
-                onClick={resetVoice}
-                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none"
-              >
+              <button onClick={resetVoice}
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none">
                 Reset
               </button>
             </div>
@@ -238,24 +238,18 @@ export default function Settings() {
       </div>
 
       {/* Save button */}
-      <button className="w-full py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-bold transition select-none">
+      <button className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none"
+        style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))', boxShadow: '0 6px 28px -6px hsla(270,80%,60%,0.5)' }}>
         Save Settings
       </button>
 
       {/* Danger zone */}
       <div className="mt-8 mb-6">
-        <GlassPanel className="p-4 border border-rose-500/20">
-          <div className="flex items-center gap-3 mb-3">
-            <Trash2 size={18} className="text-rose-400" />
-            <h3 className="font-bold text-white">Danger Zone</h3>
-          </div>
-          <p className="text-xs text-white/50 ml-9 mb-3">
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </p>
-          <button
-            onClick={() => setShowDeleteDialog(true)}
-            className="ml-9 px-4 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-semibold hover:bg-rose-500/20 transition select-none"
-          >
+        <GlassPanel className="p-4" style={{ borderColor: 'hsla(0,80%,50%,0.15)' }}>
+          <SectionHeader icon={Trash2} iconColor="text-rose-400" title="Danger Zone" subtitle="Permanently delete your account and all associated field data. This action cannot be undone." />
+          <button onClick={() => setShowDeleteDialog(true)}
+            className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none"
+            style={{ background: 'hsla(0,80%,50%,0.08)', border: '1px solid hsla(0,80%,50%,0.22)' }}>
             Delete Account
           </button>
         </GlassPanel>

@@ -226,9 +226,9 @@ export default function Badges() {
       <div className="mb-5 text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Gem size={16} className="text-amethyst-glow" />
-          <h1 className="text-2xl font-black text-white tracking-wide">Liquid Mineral Badges</h1>
+          <h1 className="text-2xl font-black text-white tracking-wide">Liquid Mineral Codex</h1>
         </div>
-        <p className="text-amethyst/55 text-[10px] uppercase tracking-[0.35em]">15 Collectible Achievements</p>
+        <p className="text-amethyst/55 text-[10px] uppercase tracking-[0.35em]">Collectible Field Achievements</p>
       </div>
 
       {/* ── Stats strip ── */}
@@ -326,7 +326,8 @@ export default function Badges() {
       {sorted.length === 0 && (
         <div className="mt-12 text-center text-white/38 text-sm">
           <Award className="mx-auto mb-2 text-amethyst/30" size={24} />
-          No badges in this category yet.
+          <p className="font-semibold mb-1">No entries in this codex tier yet.</p>
+          <p className="text-white/25 text-xs">Every scan, verify, and expedition unlocks your path here.</p>
         </div>
       )}
 

@@ -181,7 +181,7 @@ export default function Profile() {
         `}</style>
 
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Achievements</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Liquid Mineral Codex</span>
           <Link to="/badges" className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow transition">
             View all →
           </Link>
@@ -272,8 +272,9 @@ export default function Profile() {
           <span className="ml-auto text-[10px] text-white/30">{battleHistory.length} battles</span>
         </div>
         {battleHistory.length === 0 ? (
-          <div className="px-5 py-5 text-center text-white/30 text-xs">
-            No battles yet — enable Chaos Mode on the Hub to fight!
+          <div className="px-5 py-6 text-center">
+            <p className="text-white/40 text-sm font-semibold">No battle records etched yet.</p>
+            <p className="text-white/25 text-xs mt-1">Enable Chaos Mode on the Hub to start mineral battles.</p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">

@@ -9,6 +9,7 @@ import SpecimenCard from '@/components/collection/SpecimenCard.jsx';
 import CrystalCard from '@/components/collection/CrystalCard.jsx';
 import CollectionDashboard from '@/components/collection/CollectionDashboard.jsx';
 import EmptyState from '@/components/visuals/EmptyState.jsx';
+import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
@@ -47,9 +48,9 @@ export default function Collection() {
       {/* Crystal masonry view — default, premium */}
       {view === 'crystal' && (
         loading ? (
-          <div className="flex justify-center py-12 text-amethyst/60"><Loader2 className="animate-spin" /></div>
+          <SkeletonGrid count={6} cols={2} />
         ) : specimens.length === 0 ? (
-          <EmptyState icon="💎" title="Your GeoDex is empty" body="Scan your first rock to start building your liquid crystal collection." ctaLabel="Scan Your First Find" ctaTo="/scan" />
+          <EmptyState icon="💎" title="Your Codex is waiting for its first specimen." body="Every scan etches a new entry. Head to the field and bring something back." ctaLabel="Scan Your First Find" ctaTo="/scan" />
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {specimens.map((s, i) => <CrystalCard key={s.id} specimen={s} index={i} />)}
@@ -60,9 +61,9 @@ export default function Collection() {
       {/* Gallery view */}
       {view === 'gallery' && (
         loading ? (
-          <div className="flex justify-center py-12 text-amethyst/60"><Loader2 className="animate-spin" /></div>
+          <SkeletonGrid count={4} cols={2} />
         ) : specimens.length === 0 ? (
-          <EmptyState icon="📷" title="No specimens yet" body="Use the Scan tab to identify your first find." ctaLabel="Go to Scan" ctaTo="/scan" />
+          <EmptyState icon="📷" title="No discoveries etched yet." body="Your gallery is ready — head to the field and scan your first find." ctaLabel="Go to Scan" ctaTo="/scan" />
         ) : (
           <GalleryGrid specimens={specimens} />
         )

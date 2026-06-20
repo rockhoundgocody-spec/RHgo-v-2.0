@@ -4,9 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
   Sword, CheckCircle2, Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star,
+  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
 
 // ── Quest template pool ──────────────────────────────────────────────────────
 const QUEST_TEMPLATES = [
@@ -240,14 +241,14 @@ export default function QuestDashboard() {
           <ChevronLeft size={16} />
         </button>
         <div>
-          <h1 className="text-xl font-black text-white leading-tight">Quest Dashboard</h1>
-          <p className="text-white/35 text-[11px]">Challenges · XP · Streak</p>
+          <h1 className="text-xl font-black text-white leading-tight">Field Missions</h1>
+          <p className="text-white/35 text-[11px]">Challenges · XP · Expedition Streak</p>
         </div>
         <button onClick={generateQuests} disabled={generating || activeQuests.length > 0}
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition disabled:opacity-40"
           style={{ background: 'hsla(280,80%,35%,0.5)', border: '1px solid hsla(280,80%,55%,0.3)', color: 'hsl(280,80%,80%)' }}>
           <RefreshCw size={10} className={generating ? 'animate-spin' : ''} />
-          {quests.length === 0 ? 'Ask Clover' : 'Active'}
+          {quests.length === 0 ? 'New Mission' : 'Active'}
         </button>
       </div>
 
@@ -322,24 +323,22 @@ export default function QuestDashboard() {
 
       {/* ── QUEST LIST ── */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-7 h-7 border-4 border-amethyst/20 border-t-amethyst-glow rounded-full animate-spin" />
-        </div>
+        <SkeletonList count={3} />
       ) : filtered.length === 0 ? (
         <GlassPanel className="p-8 text-center">
           <Sparkles size={28} className="mx-auto text-amethyst/30 mb-3" />
           <p className="text-white/50 text-sm font-semibold mb-1">
-            {activeQuests.length === 0 ? 'No active quests' : `No ${filter} quests active`}
+            {activeQuests.length === 0 ? 'No active field missions' : `No ${filter} missions active`}
           </p>
           <p className="text-white/25 text-xs mb-4">
-            {activeQuests.length === 0 ? 'Ask Clover to assign challenges' : 'Switch tabs or generate new quests'}
+            {activeQuests.length === 0 ? 'Your next expedition starts here — ask Clover to generate missions' : 'Switch tabs or dispatch new field missions'}
           </p>
           {activeQuests.length === 0 && (
             <button onClick={generateQuests} disabled={generating}
               className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40"
               style={{ background: 'hsla(280,80%,30%,0.4)', border: '1px solid hsla(280,80%,55%,0.3)' }}>
               <RefreshCw size={11} className={`inline mr-1.5 ${generating ? 'animate-spin' : ''}`} />
-              Ask Clover for Quests
+              Dispatch Field Missions
             </button>
           )}
         </GlassPanel>

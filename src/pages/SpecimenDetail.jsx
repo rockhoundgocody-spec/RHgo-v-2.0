@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   Calendar, MapPin, Star, Gem, Shield, FlaskConical,
-  Zap, TrendingUp, Share2, ChevronLeft, Lock
+  Zap, TrendingUp, Share2, ChevronLeft, Lock, BookOpen
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
@@ -103,6 +103,15 @@ export default function SpecimenDetail() {
 
   return (
     <div className="min-h-screen pb-32" style={{ background: 'hsl(240 20% 4%)' }}>
+      {/* Back nav */}
+      <div className="absolute top-0 inset-x-0 z-10 px-4 pt-4 flex items-center gap-3 pointer-events-none">
+        <button onClick={() => navigate(-1)}
+          className="pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90"
+          style={{ background: 'hsla(220,40%,5%,0.75)', border: '1px solid hsla(0,0%,100%,0.12)', backdropFilter: 'blur(16px)' }}
+          aria-label="Go back">
+          <ChevronLeft size={16} className="text-white/70" />
+        </button>
+      </div>
       {/* Hero image */}
       <div className="relative w-full aspect-[4/3] max-h-72 overflow-hidden">
         {specimen.image_url ? (
@@ -347,6 +356,17 @@ export default function SpecimenDetail() {
         {/* Actions */}
         <div className="flex gap-2">
           <ShareSpecimenButton specimen={specimen} />
+        </div>
+
+        {/* Field journal export CTA */}
+        <div className="mt-4 rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+          style={{ background: 'hsla(270,40%,15%,0.4)', border: '1px solid hsla(280,50%,55%,0.18)' }}>
+          <BookOpen size={16} className="text-amethyst-glow flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-white/80 text-sm font-semibold">Add to Field Journal</div>
+            <div className="text-white/35 text-xs mt-0.5">Export this specimen's full record as a field note — coming soon.</div>
+          </div>
+          <ChevronLeft size={14} className="text-white/25 rotate-180" />
         </div>
       </div>
     </div>
