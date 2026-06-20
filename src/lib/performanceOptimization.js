@@ -141,7 +141,7 @@ export class VirtualScroller {
     const { start, end } = this.visibleRange;
     const visibleItems = this.items.slice(start, end);
 
-    this.container.innerHTML = '';
+    this.container.replaceChildren();
 
     visibleItems.forEach((item, i) => {
       const el = this.renderItem(item, start + i);
