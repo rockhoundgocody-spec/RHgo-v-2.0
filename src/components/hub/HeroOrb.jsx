@@ -61,7 +61,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     try { mic.stop(); } catch {}
   }, []); // eslint-disable-line
 
-  const awaken = async (e) => {
+  const awaken = (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
     const x = rect ? e.clientX - rect.left : 70;
     const y = rect ? e.clientY - rect.top  : 70;
@@ -70,16 +70,14 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     if (!active) {
       setActive(true);
       setLoggedFind(null);
-      // Connect xAI — it will greet the user via its own voice once the session is ready
       const pool = GREETINGS(companion, 'explorer');
       const greeting = pool[Math.floor(Math.random() * pool.length)];
-      await xai.connect();
-      // Send greeting as text once connected so Clover speaks it in her own voice
-      xai.sendText(greeting);
+      // Pass greeting into connect() — it queues it and sends once session is ready
+      xai.connect(greeting);
     } else if (speaking || thinking) {
-      // Interrupt
+      // Interrupt — reconnect with no greeting
       xai.disconnect();
-      await xai.connect();
+      xai.connect();
     } else {
       // End session
       xai.disconnect();
