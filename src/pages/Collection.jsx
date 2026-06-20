@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gem, Loader2, GitCompareArrows, Map, LayoutGrid, BarChart2, Images } from 'lucide-react';
+import { Gem, Loader2, GitCompareArrows, Map, LayoutGrid, BarChart2, Images, Sparkles } from 'lucide-react';
 import GalleryGrid from '@/components/collection/GalleryGrid.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
 import CollectionMap from '@/components/collection/CollectionMap.jsx';
 import SpecimenCard from '@/components/collection/SpecimenCard.jsx';
+import CrystalCard from '@/components/collection/CrystalCard.jsx';
 import CollectionDashboard from '@/components/collection/CollectionDashboard.jsx';
+import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
 export default function Collection() {
   const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
-  const [view, setView] = useState('gallery'); // 'gallery' | 'grid' | 'map' | 'dashboard'
+  const [view, setView] = useState('crystal'); // 'crystal' | 'gallery' | 'grid' | 'map' | 'dashboard'
 
   return (
     <PullToRefresh onRefresh={refetch} className="min-h-screen">
@@ -24,6 +26,7 @@ export default function Collection() {
         </div>
         {/* View toggle */}
         <div className="flex gap-1 p-1 rounded-xl glass-panel">
+          <button onClick={() => setView('crystal')} className={`p-2 rounded-lg transition ${view === 'crystal' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Crystal view"><Sparkles size={16} /></button>
           <button onClick={() => setView('gallery')} className={`p-2 rounded-lg transition ${view === 'gallery' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Gallery view"><Images size={16} /></button>
           <button onClick={() => setView('grid')} className={`p-2 rounded-lg transition ${view === 'grid' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Grid view"><LayoutGrid size={16} /></button>
           <button onClick={() => setView('map')} className={`p-2 rounded-lg transition ${view === 'map' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Map view"><Map size={16} /></button>
@@ -31,7 +34,7 @@ export default function Collection() {
         </div>
       </div>
 
-      {specimens.length >= 2 && (view === 'grid' || view === 'gallery') && (
+      {specimens.length >= 2 && (view === 'grid' || view === 'gallery' || view === 'crystal') && (
         <Link
         to="/compare"
         className="mb-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/30 bg-amethyst/8 hover:bg-amethyst/15 text-amethyst-glow text-[11px] uppercase tracking-[0.25em] transition"
@@ -41,12 +44,25 @@ export default function Collection() {
         </Link>
       )}
 
+      {/* Crystal masonry view — default, premium */}
+      {view === 'crystal' && (
+        loading ? (
+          <div className="flex justify-center py-12 text-amethyst/60"><Loader2 className="animate-spin" /></div>
+        ) : specimens.length === 0 ? (
+          <EmptyState icon="💎" title="Your GeoDex is empty" body="Scan your first rock to start building your liquid crystal collection." ctaLabel="Scan Your First Find" ctaTo="/scan" />
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {specimens.map((s, i) => <CrystalCard key={s.id} specimen={s} index={i} />)}
+          </div>
+        )
+      )}
+
       {/* Gallery view */}
       {view === 'gallery' && (
         loading ? (
           <div className="flex justify-center py-12 text-amethyst/60"><Loader2 className="animate-spin" /></div>
         ) : specimens.length === 0 ? (
-          <div className="text-center py-12 text-white/40 text-sm">No specimens yet. Use Scan to add your first find.</div>
+          <EmptyState icon="📷" title="No specimens yet" body="Use the Scan tab to identify your first find." ctaLabel="Go to Scan" ctaTo="/scan" />
         ) : (
           <GalleryGrid specimens={specimens} />
         )
@@ -90,11 +106,7 @@ export default function Collection() {
             <Loader2 className="animate-spin" />
           </div>
         ) : specimens.length === 0 ? (
-          <GlassPanel className="p-10 text-center">
-            <Gem className="mx-auto text-amethyst/40 mb-3" size={40} />
-            <p className="text-white/70">No specimens yet.</p>
-            <p className="text-white/40 text-xs mt-2">Use the Scan tab to identify your first find.</p>
-          </GlassPanel>
+          <EmptyState icon="🔬" title="No specimens yet" body="Use the Scan tab to identify your first find." ctaLabel="Scan Now" ctaTo="/scan" />
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {specimens.map((s, i) => (

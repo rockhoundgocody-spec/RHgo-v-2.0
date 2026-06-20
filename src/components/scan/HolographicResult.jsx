@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import MineralStoryCard from './MineralStoryCard.jsx';
 import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,11 @@ export default function HolographicResult({
       <RarityFireworks result={result} trigger={fireworksTrigger} />
 
       {/* ── HERO IMAGE CARD ── */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.88, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
       <div
         className="relative rounded-2xl overflow-hidden"
         style={{
@@ -145,6 +151,8 @@ export default function HolographicResult({
           </div>
         </div>
       </div>
+
+      </motion.div>
 
       {/* ── SAVE / ACTIONS ── */}
       <div className="mt-3 flex gap-2">
