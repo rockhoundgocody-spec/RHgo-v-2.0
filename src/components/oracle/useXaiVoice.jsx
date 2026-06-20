@@ -47,6 +47,7 @@ export default function useXaiVoice({ onFindLogged } = {}) {
 
   const wsRef           = useRef(null);
   const audioCtxRef     = useRef(null);
+  const analyserRef     = useRef(null);
   const workletNodeRef  = useRef(null);
   const micStreamRef    = useRef(null);
   const micBufferRef    = useRef([]);
@@ -59,6 +60,24 @@ export default function useXaiVoice({ onFindLogged } = {}) {
   const currentResponseId = useRef(null);
   const onFindLoggedRef = useRef(onFindLogged);
   onFindLoggedRef.current = onFindLogged;
+
+  const getAmplitude = useCallback(() => {
+    const analyser = analyserRef.current;
+    if (!analyser) return 0;
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+    return Math.sqrt(sum / buf.length);
+  }, []);
+
+  const getSpectrum = useCallback(() => {
+    const analyser = analyserRef.current;
+    if (!analyser) return new Uint8Array(0);
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(buf);
+    return buf;
+  }, []);
 
   const interruptPlayback = useCallback(() => {
     for (const src of queuedSources.current) { try { src.stop(); } catch {} }
@@ -80,7 +99,14 @@ export default function useXaiVoice({ onFindLogged } = {}) {
     buf.getChannelData(0).set(float32);
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(ctx.destination);
+    // Route through analyser for amplitude/spectrum visualisation
+    if (!analyserRef.current) {
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.connect(ctx.destination);
+      analyserRef.current = analyser;
+    }
+    src.connect(analyserRef.current);
     const now = ctx.currentTime;
     const startAt = Math.max(now, nextPlayTime.current);
     src.start(startAt);
@@ -134,6 +160,7 @@ export default function useXaiVoice({ onFindLogged } = {}) {
     interruptPlayback();
     if (workletNodeRef.current) { try { workletNodeRef.current.disconnect(); } catch {} workletNodeRef.current = null; }
     if (micStreamRef.current) { micStreamRef.current.getTracks().forEach(t => t.stop()); micStreamRef.current = null; }
+    analyserRef.current = null;
     if (audioCtxRef.current) { try { audioCtxRef.current.close(); } catch {} audioCtxRef.current = null; }
     micBufferRef.current = [];
     isSessionReady.current = false;
@@ -338,5 +365,5 @@ export default function useXaiVoice({ onFindLogged } = {}) {
     cleanup();
   }, [cleanup]);
 
-  return { connect, disconnect, sendText, status, transcript, userTranscript, speaking, listening };
+  return { connect, disconnect, sendText, status, transcript, userTranscript, speaking, listening, getAmplitude, getSpectrum };
 }
