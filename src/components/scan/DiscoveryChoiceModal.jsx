@@ -27,7 +27,8 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pt-4 pb-safe"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
           style={{ background: 'hsla(245,30%,4%,0.8)', backdropFilter: 'blur(8px)' }}
           onClick={onClose}
         >
@@ -37,7 +38,8 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
             exit={{ y: 40, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-3xl p-5"
+            className="w-full max-w-sm rounded-3xl p-5 overflow-y-auto"
+            style={{ maxHeight: 'calc(100dvh - 80px)' }}
             style={{
               background: 'linear-gradient(180deg, hsl(250 20% 12%) 0%, hsl(248 22% 7%) 100%)',
               border: '1px solid hsla(270,50%,60%,0.25)',
