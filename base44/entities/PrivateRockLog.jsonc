@@ -1,0 +1,73 @@
+{
+  "name": "PrivateRockLog",
+  "type": "object",
+  "description": "User's private collection of personally collected rocks with exact GPS coordinates and photos. Never shared with other users.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "location_label": {
+      "type": "string",
+      "description": "Human-readable location name"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "found_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "weight_lbs": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "owner_email",
+    "mineral_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "data.owner_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.owner_email": "{{user.email}}"
+    }
+  }
+}

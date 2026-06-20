@@ -14,7 +14,7 @@ import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
 import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword, Heart, Trophy } from 'lucide-react';
+import { Compass, ScanLine, Gem, Sword, Heart, Trophy, Lock } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
@@ -26,6 +26,8 @@ import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
+import NewUserTour from '@/components/hub/NewUserTour.jsx';
+import HelpTip from '@/components/hub/HelpTip.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -43,6 +45,7 @@ export default function Hub() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pb-28">
+      <NewUserTour />
       {/* Storm window alert — weather-based, near Great Lakes beaches */}
       <StormWindowBanner />
 
@@ -91,6 +94,7 @@ export default function Hub() {
           <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
           <QuickAction to="/leaderboard" icon={Trophy} label="Leaderboard" color="amber" />
           <QuickAction to="/companion" icon={Heart} label="Companion" color="rose" />
+          <QuickAction to="/private-log" icon={Lock} label="My Finds" color="amethyst" />
         </div>
       </section>
 

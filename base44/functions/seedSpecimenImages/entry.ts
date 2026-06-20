@@ -6,7 +6,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * Run from admin or on a schedule. Skips minerals that already have enough images.
  */
 
-const MIN_IMAGES_PER_MINERAL = 4; // 2 wet + 2 dry per mineral target
+const MIN_IMAGES_PER_MINERAL = 6; // 3 wet + 3 dry per mineral target
 
 Deno.serve(async (req) => {
   try {
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       const name = mineral.name;
       for (const condition of conditions) {
         try {
-          const searchPrompt = `Find 2 real field photograph URLs of ${name} mineral specimens (${condition}). Return only direct image URLs from geology/mineral databases, mindat.org, wikimedia, or rockhound forums. Format as JSON array of URLs.`;
+          const searchPrompt = `Search mindat.org, wikimedia commons, and geology photo databases for real field photograph URLs of ${name} mineral specimens (${condition}). I need actual direct image URLs (.jpg .jpeg .png .webp) — not page links. Prioritize mindat.org photo gallery images, Wikimedia Commons mineral photos, and verified geology forums. Return 3 direct image URLs.`;
 
           const res = await base44.asServiceRole.integrations.Core.InvokeLLM({
             prompt: searchPrompt,
