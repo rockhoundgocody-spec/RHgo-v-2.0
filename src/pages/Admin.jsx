@@ -57,8 +57,8 @@ export default function Admin() {
   const clearHotspots = async () => {
     if (!confirm('Delete all hotspots?')) return;
     setSeeding(true);
-    const all = await base44.entities.Hotspot.list();
-    await Promise.all(all.map((h) => base44.entities.Hotspot.delete(h.id)));
+
+    await base44.entities.Hotspot.deleteMany({});
     await refresh();
     setSeeding(false);
   };
