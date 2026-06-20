@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Gem, Loader2, GitCompareArrows, Map, LayoutGrid, BarChart2, Images, Sparkles } from 'lucide-react';
 import GalleryGrid from '@/components/collection/GalleryGrid.jsx';
@@ -13,17 +13,32 @@ import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
+const RARITY_FILTERS = ['all', 'common', 'uncommon', 'rare', 'legendary'];
+
 export default function Collection() {
   const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
   const [view, setView] = useState('crystal'); // 'crystal' | 'gallery' | 'grid' | 'map' | 'dashboard'
+  const [rarityFilter, setRarityFilter] = useState('all');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+
+  const filtered = useMemo(() => {
+    let list = specimens;
+    if (rarityFilter !== 'all') list = list.filter(s => s.rarity === rarityFilter);
+    if (verifiedOnly) list = list.filter(s => s.verified || (s.ai_confidence && s.ai_confidence >= 0.8));
+    return list;
+  }, [specimens, rarityFilter, verifiedOnly]);
+
+  const RARITY_COLORS = { all: 'hsla(270,50%,60%,1)', common: '#94a3b8', uncommon: '#34d399', rare: '#38bdf8', legendary: '#a78bfa' };
 
   return (
     <PullToRefresh onRefresh={refetch} className="min-h-screen">
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">GeoDex</h1>
-          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Your discovery index</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">GeoDex</h1>
+          <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-0.5">
+            {specimens.length} {specimens.length === 1 ? 'specimen' : 'specimens'} etched
+          </p>
         </div>
         {/* View toggle */}
         <div className="flex gap-1 p-1 rounded-xl glass-panel">
@@ -34,6 +49,34 @@ export default function Collection() {
           <button onClick={() => setView('dashboard')} className={`p-2 rounded-lg transition ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
         </div>
       </div>
+
+      {/* Rarity + verified filters */}
+      {(view === 'crystal' || view === 'grid' || view === 'gallery') && (
+        <div className="mb-4 space-y-2">
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+            {RARITY_FILTERS.map(r => (
+              <button key={r} onClick={() => setRarityFilter(r)}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
+                style={{
+                  background: rarityFilter === r ? `${RARITY_COLORS[r]}20` : 'hsla(245,25%,12%,0.6)',
+                  border: `1px solid ${rarityFilter === r ? `${RARITY_COLORS[r]}50` : 'hsla(270,20%,30%,0.2)'}`,
+                  color: rarityFilter === r ? RARITY_COLORS[r] : 'hsla(0,0%,100%,0.4)',
+                }}>
+                {r === 'all' ? `All (${specimens.length})` : r}
+              </button>
+            ))}
+            <button onClick={() => setVerifiedOnly(v => !v)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
+              style={{
+                background: verifiedOnly ? 'hsla(160,70%,50%,0.15)' : 'hsla(245,25%,12%,0.6)',
+                border: `1px solid ${verifiedOnly ? 'hsla(160,70%,50%,0.4)' : 'hsla(270,20%,30%,0.2)'}`,
+                color: verifiedOnly ? '#34d399' : 'hsla(0,0%,100%,0.4)',
+              }}>
+              ✓ Verified
+            </button>
+          </div>
+        </div>
+      )}
 
       {specimens.length >= 2 && (view === 'grid' || view === 'gallery' || view === 'crystal') && (
         <Link
@@ -51,9 +94,11 @@ export default function Collection() {
           <SkeletonGrid count={6} cols={2} />
         ) : specimens.length === 0 ? (
           <EmptyState icon="💎" title="Your Codex is waiting for its first specimen." body="Every scan etches a new entry. Head to the field and bring something back." ctaLabel="Scan Your First Find" ctaTo="/scan" />
+        ) : filtered.length === 0 ? (
+          <EmptyState icon="🔍" title="This layer is quiet." body="No specimens match the current filter. Try a different rarity or remove filters." ctaOnClick={() => { setRarityFilter('all'); setVerifiedOnly(false); }} ctaLabel="Clear Filters" />
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {specimens.map((s, i) => <CrystalCard key={s.id} specimen={s} index={i} />)}
+            {filtered.map((s, i) => <CrystalCard key={s.id} specimen={s} index={i} />)}
           </div>
         )
       )}
@@ -65,7 +110,7 @@ export default function Collection() {
         ) : specimens.length === 0 ? (
           <EmptyState icon="📷" title="No discoveries etched yet." body="Your gallery is ready — head to the field and scan your first find." ctaLabel="Go to Scan" ctaTo="/scan" />
         ) : (
-          <GalleryGrid specimens={specimens} />
+          <GalleryGrid specimens={filtered} />
         )
       )}
 
@@ -110,7 +155,7 @@ export default function Collection() {
           <EmptyState icon="🔬" title="No specimens yet" body="Use the Scan tab to identify your first find." ctaLabel="Scan Now" ctaTo="/scan" />
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {specimens.map((s, i) => (
+            {filtered.map((s, i) => (
               <SpecimenCard key={s.id} specimen={s} index={i} />
             ))}
           </div>

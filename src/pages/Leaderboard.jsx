@@ -65,12 +65,9 @@ export default function Leaderboard() {
 
       {/* HUD Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-1 h-6 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f97316)' }} />
-          <span className="text-[10px] font-mono uppercase tracking-[0.5em] text-yellow-400/80">Global Command</span>
-        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.35em] text-white/30 mb-1">Global Command</div>
         <h1 className="text-3xl font-black text-white tracking-tight">Rock Stars</h1>
-        <p className="text-white/60 text-[11px] uppercase tracking-[0.25em] mt-1">Top mineral collectors worldwide</p>
+        <p className="text-white/40 text-[11px] uppercase tracking-[0.22em] mt-1">Top field collectors · Monthly reset</p>
       </div>
 
       {/* Your rank callout */}
@@ -193,8 +190,8 @@ export default function Leaderboard() {
         </div>
 
         <div className="px-4 py-3 border-t border-white/5">
-          <p className="text-[9px] text-white/50 text-center font-mono">
-            Leaderboard resets monthly · keep scanning to climb the ranks
+          <p className="text-[9px] text-white/35 text-center font-mono">
+            Every scan counts · resets monthly · ethics earn XP too
           </p>
         </div>
       </GlassPanel>

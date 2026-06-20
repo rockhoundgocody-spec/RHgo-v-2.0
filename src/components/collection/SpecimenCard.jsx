@@ -39,9 +39,21 @@ export default function SpecimenCard({ specimen, index }) {
   const evoLabel = EVOLUTION_LABELS[evoLevel];
   const evoColor = EVOLUTION_COLORS[evoLevel];
   const specNum = String(index + 1).padStart(3, '0');
-  const purity = specimen.ai_confidence ? (specimen.ai_confidence * 100).toFixed(0) : '—';
-  const collectionScore = specimen.ai_confidence
-    ? ((specimen.ai_confidence * 0.7 + (evoLevel / 4) * 0.3) * 5).toFixed(1)
+  const conf = specimen.ai_confidence;
+  const purity = conf ? (conf * 100).toFixed(0) : null;
+  // Honest confidence label — never over-state certainty
+  const confLabel = conf == null ? null
+    : conf >= 0.88 ? 'Near certain'
+    : conf >= 0.72 ? 'High confidence'
+    : conf >= 0.52 ? 'Moderate'
+    : 'Needs field test';
+  const confColor = conf == null ? '#94a3b8'
+    : conf >= 0.88 ? '#34d399'
+    : conf >= 0.72 ? '#38bdf8'
+    : conf >= 0.52 ? '#fbbf24'
+    : '#f87171';
+  const collectionScore = conf
+    ? ((conf * 0.7 + (evoLevel / 4) * 0.3) * 5).toFixed(1)
     : '—';
 
   return (
@@ -106,10 +118,17 @@ export default function SpecimenCard({ specimen, index }) {
 
         {/* Stats row */}
         <div className="grid grid-cols-3 text-center gap-1">
-          <StatCell label="Purity" value={purity !== '—' ? `${purity}%` : '—'} color={rarity.color} />
+          <StatCell label="AI ID" value={purity ? `${purity}%` : '—'} color={confColor} />
           <StatCell label="Score" value={collectionScore !== '—' ? `${collectionScore}★` : '—'} color={rarity.color} />
           <StatCell label="Stage" value={evoLabel.split(' ')[0]} color={rarity.color} />
         </div>
+        {/* Honest confidence label */}
+        {confLabel && (
+          <div className="text-[9px] font-semibold px-2 py-0.5 rounded-full w-fit"
+            style={{ background: `${confColor}12`, color: confColor, border: `1px solid ${confColor}30` }}>
+            {confLabel}
+          </div>
+        )}
 
         {/* Date + location mini row */}
         <div className="flex items-center gap-3 text-[9px] text-white/35">
