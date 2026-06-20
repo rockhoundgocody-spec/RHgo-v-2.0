@@ -231,9 +231,13 @@ export function computeDeductiveScore(llmScore, facts) {
 // i.e. when all high-weight rules have already fired OR score >= target
 
 export function shouldHalt(deductiveResult) {
-  const highWeightUnfired = deductiveResult.unfired_rules.filter(r => {
+  if (!deductiveResult) return false;
+  const finalScore = deductiveResult.final_score || 0;
+  const unfiredRules = deductiveResult.unfired_rules || [];
+
+  const highWeightUnfired = unfiredRules.filter(r => {
     const rule = MINERAL_RULES.find(mr => mr.id === r.rule_id);
     return rule && rule.weight >= 0.12; // only halt if no high-value tests remain
   });
-  return deductiveResult.final_score >= 0.82 || highWeightUnfired.length === 0;
+  return finalScore >= 0.82 || highWeightUnfired.length === 0;
 }
