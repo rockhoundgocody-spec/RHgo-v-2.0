@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, X, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useBannerSlot } from '@/lib/bannerMutex';
 
 const SESSION_KEY = 'rhgo_streak_reminder_dismissed';
 const STORAGE_KEY = 'rhgo_streak_reminder_last_shown';
@@ -25,6 +26,7 @@ const MESSAGES = [
 export default function StreakReminderBanner() {
   const [visible, setVisible] = useState(false);
   const [msg, setMsg] = useState(null);
+  const { tryAcquire, release } = useBannerSlot('streak');
 
   useEffect(() => {
     // Only show once per day, and not if already dismissed this session
@@ -32,17 +34,19 @@ export default function StreakReminderBanner() {
     const lastShown = localStorage.getItem(STORAGE_KEY);
     if (lastShown === getTodayStr()) return;
 
-    // Pick a message based on day-of-week for variety
     const dayIndex = new Date().getDay() % MESSAGES.length;
     setMsg(MESSAGES[dayIndex]);
 
-    // Delay appearance so it doesn't interrupt page load
-    const t = setTimeout(() => setVisible(true), 3500);
+    // Delay appearance; also wait for slot to be free
+    const t = setTimeout(() => {
+      if (tryAcquire()) setVisible(true);
+    }, 3500);
     return () => clearTimeout(t);
-  }, []);
+  }, [tryAcquire]);
 
   const dismiss = () => {
     setVisible(false);
+    release();
     sessionStorage.setItem(SESSION_KEY, '1');
     localStorage.setItem(STORAGE_KEY, getTodayStr());
     base44.analytics.track({ eventName: 'streak_reminder_dismissed' });

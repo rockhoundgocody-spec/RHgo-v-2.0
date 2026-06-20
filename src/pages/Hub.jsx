@@ -7,7 +7,7 @@ import SpecimenTypeChart from '@/components/hub/SpecimenTypeChart.jsx';
 import QuestEngine from '@/components/hub/QuestEngine.jsx';
 import LiveStatStrip from '@/components/hub/LiveStatStrip.jsx';
 import DailyStreakCard from '@/components/hub/DailyStreakCard.jsx';
-import TreasureSpawnBanner from '@/components/hub/TreasureSpawnBanner.jsx';
+
 import RockStarLeaderboard from '@/components/hub/RockStarLeaderboard.jsx';
 import SeasonBanner from '@/components/hub/SeasonBanner.jsx';
 import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
@@ -48,9 +48,6 @@ export default function Hub() {
       <NewUserTour />
       {/* Storm window alert — weather-based, near Great Lakes beaches */}
       <StormWindowBanner />
-
-      {/* Treasure spawn notification — fires after 4s */}
-      <TreasureSpawnBanner />
 
       {/* Ambient purple backdrop */}
       <div

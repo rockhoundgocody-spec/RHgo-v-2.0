@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CloudLightning, Wind, X, Waves } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBannerSlot } from '@/lib/bannerMutex';
 
 const GL_BEACHES = [
   { name: 'Whitefish Point', lat: 46.77, lng: -84.96 },
@@ -17,6 +18,7 @@ const STORAGE_KEY = 'rh_storm_dismissed';
 export default function StormWindowBanner() {
   const [alert, setAlert] = useState(null);
   const [dismissed, setDismissed] = useState(false);
+  const { tryAcquire, release } = useBannerSlot('storm');
 
   useEffect(() => {
     // Check if dismissed today
@@ -54,6 +56,8 @@ export default function StormWindowBanner() {
           const isPostStorm = (code <= 3 && wind >= 15);
 
           if (isStormy || isPostStorm) {
+            const acquired = tryAcquire();
+            if (!acquired) return; // another banner is showing
             setAlert({
               beach: nearest.name,
               wind: Math.round(wind),
@@ -72,6 +76,7 @@ export default function StormWindowBanner() {
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+    release();
     setDismissed(true);
   };
 
