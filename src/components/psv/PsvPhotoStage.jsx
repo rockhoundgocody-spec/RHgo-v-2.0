@@ -51,16 +51,16 @@ export default function PsvPhotoStage({ onReady }) {
         <div className="grid grid-cols-4 gap-2">
           {previews.map((p, i) => (
             <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-black/30 border border-white/10">
-              <img src={p.preview} alt="" className="w-full h-full object-cover" />
+              <img src={p.preview} alt={`Preview of uploaded photo ${i + 1}`} className="w-full h-full object-cover" />
               <button aria-label="Remove photo" onClick={() => setPreviews((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center">
-                <X size={10} className="text-white" />
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white flex items-center justify-center transition">
+                <X size={12} className="text-white" />
               </button>
             </div>
           ))}
           {previews.length < 4 && (
-            <button onClick={() => inputRef.current?.click()}
-              className="aspect-square rounded-lg border-2 border-dashed border-amethyst/30 flex flex-col items-center justify-center gap-1 text-amethyst/50 hover:text-amethyst-glow hover:border-amethyst/60 transition">
+            <button aria-label="Add photo" onClick={() => inputRef.current?.click()}
+              className="aspect-square rounded-lg border-2 border-dashed border-amethyst/30 flex flex-col items-center justify-center gap-1 text-amethyst/50 hover:text-amethyst-glow hover:border-amethyst/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst transition">
               <Plus size={18} />
               <span className="text-[9px] uppercase tracking-[0.2em]">Add</span>
             </button>
@@ -71,11 +71,11 @@ export default function PsvPhotoStage({ onReady }) {
 
       <div className="flex items-center gap-3">
         <button onClick={locate} disabled={locating}
-          className="flex items-center gap-2 text-xs text-hud-cyan border border-hud-cyan/30 rounded-lg px-3 py-2 hover:bg-hud-cyan/10 transition">
+          className="flex items-center gap-2 text-xs text-hud-cyan border border-hud-cyan/30 rounded-lg px-3 py-2 hover:bg-hud-cyan/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan disabled:opacity-50 disabled:cursor-not-allowed transition">
           {locating ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
           {lat ? `${lat.toFixed(3)}, ${lng.toFixed(3)}` : 'Add location'}
         </button>
-        {lat && <button onClick={() => { setLat(null); setLng(null); }} className="text-white/30 text-xs hover:text-white/60">Clear</button>}
+        {lat && <button aria-label="Clear location" onClick={() => { setLat(null); setLng(null); }} className="text-white/30 text-xs hover:text-white/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/50 rounded px-1 transition">Clear</button>}
       </div>
 
       <Button onClick={handleStart} disabled={!previews.length || uploading}
