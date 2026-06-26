@@ -28,7 +28,7 @@ export default function GalleryGrid({ specimens }) {
               transition={{ delay: i * 0.025, type: 'spring', stiffness: 320, damping: 22 }}
               whileTap={{ scale: 0.93 }}
               onClick={() => setSelected(s)}
-              className="relative aspect-square rounded-2xl overflow-hidden cursor-pointer group"
+              className="relative aspect-square rounded-2xl overflow-hidden cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
               style={{
                 border: `1px solid ${r.color}30`,
                 boxShadow: `0 2px 12px ${r.glow.replace('0.', '0.08')}`,
@@ -168,7 +168,8 @@ export default function GalleryGrid({ specimens }) {
               </div>
 
               <button onClick={() => setSelected(null)}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+                aria-label="Close details"
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
                 style={{ background: 'hsla(240,30%,8%,.8)', border: '1px solid hsla(255,30%,40%,.25)' }}>
                 <X size={15} className="text-white/70" />
               </button>

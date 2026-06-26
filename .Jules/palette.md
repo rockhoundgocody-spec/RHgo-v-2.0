@@ -1,1 +1,4 @@
 ## 2024-03-24 - Missing ARIA Labels on Final Action Buttons\n**Learning:** The final summary/action card in Progressive Verification (PsvFinalCard) lacked aria-labels on its icon-only rescan button. This pattern often occurs in final 'action strips' where space is tight and icons replace text.\n**Action:** Add aria-label attributes to all icon-only action buttons in summary views.
+## 2024-06-27 - Gallery Component Keyboard & Screen Reader Access
+**Learning:** Custom interactive elements (like custom gallery grids and lightbox controls) frequently lack basic focus states and screen reader descriptions, breaking keyboard navigation entirely.
+**Action:** When auditing custom grid components and overlays, always verify interactive elements (`<button>`, custom triggers) have visible focus indicators (`focus-visible:ring-2`) and descriptive `aria-label` attributes if icon-only.
