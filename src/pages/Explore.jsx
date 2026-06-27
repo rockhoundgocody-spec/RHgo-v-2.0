@@ -260,7 +260,13 @@ export default function Explore() {
               style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40"><X size={13}/></button>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
+                aria-label="Clear search"
+              >
+                <X size={13}/>
+              </button>
             )}
           </div>
           <button onClick={locate} disabled={locating}
@@ -395,7 +401,8 @@ export default function Explore() {
                       </p>
                     </div>
                     <button onClick={() => setSheetOpen(false)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center"
+                      aria-label="Close details"
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                       style={{ background: 'hsla(255,30%,20%,.5)', border: '1px solid hsla(255,30%,40%,.2)' }}>
                       <X size={14} className="text-white/50"/>
                     </button>
