@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import MineralStoryCard from './MineralStoryCard.jsx';
-import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
+import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, Shield, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
@@ -171,19 +171,40 @@ export default function HolographicResult({
             {claimPath === 'chattel' ? '⛏️ Added to Hoard' : claimPath === 'affixed' ? '🌍 Logged to Atlas' : 'Saved ✓'}
           </div>
         )}
-        <Button onClick={onCompare} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl" title="Compare">
+        <Button
+          onClick={onCompare}
+          variant="outline"
+          className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl"
+          title="Compare"
+          aria-label="Compare with other specimens"
+        >
           <GitCompare size={16} />
         </Button>
-        <Button onClick={onReset} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl" title="Scan again">
+        <Button
+          onClick={onReset}
+          variant="outline"
+          className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl"
+          title="Scan again"
+          aria-label="Reset and scan a new specimen"
+        >
           <RotateCcw size={16} />
         </Button>
       </div>
 
       {/* ── TAB BAR ── */}
-      <div className="mt-4 flex gap-1 p-1 rounded-xl" style={{ background: 'hsla(220,40%,6%,0.8)', border: '1px solid hsla(270,30%,30%,0.25)' }}>
+      <div
+        role="tablist"
+        aria-label="Specimen data tabs"
+        className="mt-4 flex gap-1 p-1 rounded-xl"
+        style={{ background: 'hsla(220,40%,6%,0.8)', border: '1px solid hsla(270,30%,30%,0.25)' }}
+      >
         {TABS.map(({ id, icon: Icon, label }) => (
           <button
             key={id}
+            id={`tab-${id}`}
+            role="tab"
+            aria-selected={activeTab === id}
+            aria-controls={`tabpanel-${id}`}
             onClick={() => setActiveTab(id)}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-all text-[10px] font-semibold uppercase tracking-[0.15em]"
             style={{
@@ -203,7 +224,7 @@ export default function HolographicResult({
 
         {/* ID TAB */}
         {activeTab === 'id' && (
-          <div className="p-4 space-y-4">
+          <div id="tabpanel-id" role="tabpanel" aria-labelledby="tab-id" className="p-4 space-y-4">
             {/* Reasoning */}
             {result?.reasoning && (
               <div>
@@ -266,7 +287,7 @@ export default function HolographicResult({
 
         {/* SCIENCE TAB */}
         {activeTab === 'science' && (
-          <div className="p-4 space-y-3">
+          <div id="tabpanel-science" role="tabpanel" aria-labelledby="tab-science" className="p-4 space-y-3">
             {/* Scientific classification grid */}
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -314,7 +335,7 @@ export default function HolographicResult({
 
         {/* TESTS TAB */}
         {activeTab === 'tests' && (
-          <div className="p-4 space-y-3">
+          <div id="tabpanel-tests" role="tabpanel" aria-labelledby="tab-tests" className="p-4 space-y-3">
             {tests.length === 0 && (
               <p className="text-white/30 text-sm text-center py-6">No verification tests available.</p>
             )}
@@ -346,7 +367,7 @@ export default function HolographicResult({
 
         {/* FEATURES TAB */}
         {activeTab === 'features' && (
-          <div className="p-4">
+          <div id="tabpanel-features" role="tabpanel" aria-labelledby="tab-features" className="p-4">
             {features.length === 0 && (
               <p className="text-white/30 text-sm text-center py-6">No features extracted.</p>
             )}
@@ -363,7 +384,7 @@ export default function HolographicResult({
 
         {/* LORE TAB */}
         {activeTab === 'lore' && (
-          <div className="p-4 space-y-4">
+          <div id="tabpanel-lore" role="tabpanel" aria-labelledby="tab-lore" className="p-4 space-y-4">
             {/* Great Lakes origin story card */}
             <MineralStoryCard mineralName={result?.top_match} />
             {result?.fun_fact && (
