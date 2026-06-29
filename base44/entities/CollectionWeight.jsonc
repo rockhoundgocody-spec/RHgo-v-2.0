@@ -33,6 +33,11 @@
     "last_updated": {
       "type": "string",
       "format": "date-time"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this collection weight record (up to 1000 characters)"
     }
   },
   "required": [

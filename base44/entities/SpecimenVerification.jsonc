@@ -83,6 +83,11 @@
         "dry"
       ],
       "description": "Condition of specimen when photographed"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this verification record (up to 1000 characters)"
     }
   },
   "required": [

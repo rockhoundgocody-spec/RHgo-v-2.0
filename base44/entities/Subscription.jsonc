@@ -47,6 +47,11 @@
     "cancelled_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this subscription record (up to 1000 characters)"
     }
   },
   "required": [
