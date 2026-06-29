@@ -35,61 +35,80 @@ function StatBadge({ value, label, color }) {
 }
 
 export default function CollectionDashboard({ specimens = [] }) {
-  // ── Rarity breakdown ──────────────────────────────────────────────────────
-  const rarityData = useMemo(() => {
+  // ── Consolidated Stats ───────────────────────────────────────────────────
+  const stats = useMemo(() => {
     const counts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
-    specimens.forEach((s) => { if (counts[s.rarity] !== undefined) counts[s.rarity]++; });
-    return Object.entries(counts)
-      .filter(([, v]) => v > 0)
-      .map(([k, v]) => ({ name: RARITY_COLORS[k].label, value: v, color: RARITY_COLORS[k].color, key: k }));
-  }, [specimens]);
-
-  // ── Top 6 minerals ────────────────────────────────────────────────────────
-  const topMinerals = useMemo(() => {
-    const map = {};
-    specimens.forEach((s) => {
-      if (!s.mineral_name) return;
-      map[s.mineral_name] = (map[s.mineral_name] || 0) + 1;
-    });
-    return Object.entries(map)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([name, count]) => ({ name: name.length > 10 ? name.slice(0, 9) + '…' : name, count }));
-  }, [specimens]);
-
-  // ── Finds over last 8 weeks ───────────────────────────────────────────────
-  const weeklyFinds = useMemo(() => {
+    const mineralMap = {};
+    const geoMap = {};
+    const rarestFinds = [];
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (7 - i) * 7);
       return { label: `W${i + 1}`, count: 0, start: new Date(d) };
     });
+    const uniqueNamesSet = new Set();
+    let verifiedCount = 0;
+    let rarePlusCount = 0;
+    let confSum = 0;
+    let confCount = 0;
+
     specimens.forEach((s) => {
-      if (!s.found_date) return;
-      const d = new Date(s.found_date);
-      for (let i = weeks.length - 1; i >= 0; i--) {
-        if (d >= weeks[i].start) { weeks[i].count++; break; }
+      // Rarity
+      if (counts[s.rarity] !== undefined) counts[s.rarity]++;
+
+      // Mineral names & unique count
+      if (s.mineral_name) {
+        mineralMap[s.mineral_name] = (mineralMap[s.mineral_name] || 0) + 1;
+        uniqueNamesSet.add(s.mineral_name);
+      }
+
+      // Weekly finds
+      if (s.found_date) {
+        const d = new Date(s.found_date);
+        for (let i = weeks.length - 1; i >= 0; i--) {
+          if (d >= weeks[i].start) { weeks[i].count++; break; }
+        }
+      }
+
+      // Geo distribution
+      const loc = s.found_at?.split(',')[0]?.trim() || 'Unknown';
+      geoMap[loc] = (geoMap[loc] || 0) + 1;
+
+      // Rarest finds (limit to 3)
+      if ((s.rarity === 'legendary' || s.rarity === 'rare') && rarestFinds.length < 3) {
+        rarestFinds.push(s);
+      }
+
+      // Verified count
+      if (s.verified) verifiedCount++;
+
+      // Rare+ count
+      if (s.rarity === 'rare' || s.rarity === 'legendary') rarePlusCount++;
+
+      // AI confidence sum
+      if (s.ai_confidence) {
+        confSum += s.ai_confidence;
+        confCount++;
       }
     });
-    return weeks.map(({ label, count }) => ({ label, count }));
-  }, [specimens]);
 
-  // ── Geo distribution ──────────────────────────────────────────────────────
-  const geoStates = useMemo(() => {
-    const map = {};
-    specimens.forEach((s) => {
-      const loc = s.found_at?.split(',')[0]?.trim() || 'Unknown';
-      map[loc] = (map[loc] || 0) + 1;
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return {
+      rarityData: Object.entries(counts)
+        .filter(([, v]) => v > 0)
+        .map(([k, v]) => ({ name: RARITY_COLORS[k].label, value: v, color: RARITY_COLORS[k].color, key: k })),
+      topMinerals: Object.entries(mineralMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([name, count]) => ({ name: name.length > 10 ? name.slice(0, 9) + '…' : name, count })),
+      weeklyFinds: weeks.map(({ label, count }) => ({ label, count })),
+      geoStates: Object.entries(geoMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      rarestFinds,
+      verified: verifiedCount,
+      uniqueNames: uniqueNamesSet.size,
+      rarePlus: rarePlusCount,
+      avgConf: confCount > 0 ? confSum / confCount : 0
+    };
   }, [specimens]);
-
-  // ── Rarest finds ─────────────────────────────────────────────────────────
-  const rarestFinds = useMemo(() =>
-    specimens
-      .filter((s) => s.rarity === 'legendary' || s.rarity === 'rare')
-      .slice(0, 3),
-  [specimens]);
 
   if (specimens.length === 0) {
     return (
@@ -100,11 +119,7 @@ export default function CollectionDashboard({ specimens = [] }) {
     );
   }
 
-  const verified = specimens.filter((s) => s.verified).length;
-  const uniqueNames = new Set(specimens.map((s) => s.mineral_name)).size;
-  const rarePlus = specimens.filter((s) => s.rarity === 'rare' || s.rarity === 'legendary').length;
-  const avgConf = specimens.filter((s) => s.ai_confidence)
-    .reduce((a, s, _, arr) => a + s.ai_confidence / arr.length, 0);
+  const { rarityData, topMinerals, weeklyFinds, geoStates, rarestFinds, verified, uniqueNames, rarePlus, avgConf } = stats;
 
   return (
     <div className="space-y-4">
