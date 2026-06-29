@@ -11,6 +11,7 @@ import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import BadgeMaterialPanel from '@/components/badges/BadgeMaterialPanel.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { computeMetrics } from '@/lib/badgeDefinitions';
 
 const RARITY_ORDER  = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const FILTER_TABS   = ['all', ...RARITY_ORDER];
@@ -190,12 +191,13 @@ function BadgeCard({ badge, earned, onClick }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Badges() {
-  const { earnedCodes, pendingBadge, dismissPending, allBadges } = useBadgeAwarder();
+  const { earnedCodes, specimens, pendingBadge, dismissPending, allBadges } = useBadgeAwarder();
   const [selected,     setSelected]     = useState(null);
   const [replayBadge,  setReplayBadge]  = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
   const [pageCopied,   setPageCopied]   = useState(false);
 
+  const metrics = React.useMemo(() => computeMetrics(specimens), [specimens]);
   const earnedCount = allBadges.filter((b) => earnedCodes.has(b.code)).length;
 
   const handleShareProgress = async () => {
@@ -317,7 +319,7 @@ export default function Badges() {
       <div className="grid grid-cols-2 gap-3">
         {sorted.map((b) => {
           const earned = earnedCodes.has(b.code);
-          const prog   = b.progress ? b.progress([]) : { current: 0, target: 1 };
+          const prog   = b.progress ? b.progress(metrics) : { current: 0, target: 1 };
           return (
             <BadgeCard
               key={b.code}
@@ -343,7 +345,7 @@ export default function Badges() {
         <BadgeDetailModal
           badge={selected}
           earned={earnedCodes.has(selected.code)}
-          progress={selected.progress ? selected.progress([]) : { current: 0, target: 1 }}
+          progress={selected.progress ? selected.progress(metrics) : { current: 0, target: 1 }}
           onClose={() => setSelected(null)}
           onReplay={() => setReplayBadge(selected)}
         />

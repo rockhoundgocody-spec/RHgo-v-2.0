@@ -13,7 +13,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { BADGES } from '@/lib/badgeDefinitions';
+import { BADGES, computeMetrics } from '@/lib/badgeDefinitions';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 // Explicit map — wildcard imports from lucide-react aren't allowed.
@@ -55,10 +55,17 @@ export default function ProgressDashboard() {
     );
   }
 
-  const rows = BADGES.map((b) => {
-    const { current, target } = b.progress(specimens);
-    return { ...b, current, target, earned: current >= target };
-  });
+  const metrics = React.useMemo(() => {
+    return typeof computeMetrics === 'function' ? computeMetrics(specimens) : null;
+  }, [specimens]);
+
+  const rows = React.useMemo(() => {
+    if (!metrics) return [];
+    return BADGES.map((b) => {
+      const { current, target } = b.progress(metrics);
+      return { ...b, current, target, earned: current >= target };
+    });
+  }, [metrics]);
 
   const earnedCount = rows.filter((r) => r.earned).length;
   const totalCount = rows.length;
