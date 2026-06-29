@@ -13,6 +13,39 @@ import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useNavigate } from 'react-router-dom';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
+
+// Natural field-collector voice lines for each scan moment
+const SCAN_LINES = {
+  analyzing: [
+    "Got it — analyzing the crystal structure now.",
+    "Nice find. Running it through the mineral database.",
+    "Interesting specimen. Let me take a closer look.",
+    "On it. Cross-referencing the visual features now.",
+  ],
+  result_high: (name) => [
+    `That's ${name}! Strong match — I'm pretty confident on this one.`,
+    `Looks like ${name} to me. The luster and structure are a solid giveaway.`,
+    `${name} — nice! Good confidence on this identification.`,
+  ],
+  result_medium: (name) => [
+    `Best guess is ${name}, though I'd run a scratch test to confirm.`,
+    `Probably ${name}. Try the streak test on a tile to be sure.`,
+    `I'm leaning ${name} — the features line up, but grab a second angle if you can.`,
+  ],
+  result_low: [
+    "Hard to call this one from the photo alone. Try a different angle or wipe it down.",
+    "Low confidence — the lighting or angle is making this tricky. Give it another shot.",
+    "I need a cleaner shot to nail this down. Try wiping the surface and re-scanning.",
+  ],
+  error: [
+    "Couldn't get a read on that one. Try again with better lighting.",
+    "Something went wrong on my end. Give it another try.",
+  ],
+  rare: (name) => `Wait — ${name}?! That could be a rare one. Definitely save that location.`,
+};
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 /**
  * Scan — combined flow:
@@ -35,6 +68,9 @@ export default function Scan() {
   const [choiceOpen, setChoiceOpen] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
+  const { speak, stop } = useSpeechSynthesis();
+  // Read voice preference set in HeroOrb / Settings
+  const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
   // Auto-capture GPS as soon as the scan page loads
   React.useEffect(() => {
@@ -63,11 +99,13 @@ export default function Scan() {
     const blob = file;
     setAngles([{ key: 'front', label: 'Uploaded', captured: true, blob }]);
     setStage('reconstruct');
+    if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
   };
 
   const handleCaptureComplete = (capturedAngles) => {
     setAngles(capturedAngles);
     setStage('reconstruct');
+    if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
   };
 
   // Pipeline runs once per `angles` set — we capture angles in a ref so the
@@ -224,10 +262,28 @@ export default function Scan() {
     setResult(r);
     setReasoningResult(rr || null);
     setStage('result');
+
+    // Clover speaks the result
+    if (voiceEnabled && r?.top_match) {
+      const band = rr?.confidenceBand || 'low';
+      const name = r.top_match;
+      const isRare = ['rare', 'legendary'].includes(r.rarity);
+      // Rare minerals get a special excited line; otherwise use band-appropriate line
+      const line = isRare
+        ? SCAN_LINES.rare(name)
+        : band === 'high'
+          ? pickRandom(SCAN_LINES.result_high(name))
+          : band === 'medium'
+            ? pickRandom(SCAN_LINES.result_medium(name))
+            : pickRandom(SCAN_LINES.result_low);
+      // Small delay so result UI has time to render first
+      setTimeout(() => speak(line), 600);
+    }
   };
 
   const handleReconstructError = () => {
     // Soft fail back to live so the user can retry.
+    if (voiceEnabled) speak(pickRandom(SCAN_LINES.error));
     setStage('live');
   };
 
@@ -334,6 +390,7 @@ export default function Scan() {
   };
 
   const reset = () => {
+    stop();
     setStage('live');
     setAngles([]);
     setPrimaryUrl(null);
