@@ -148,6 +148,7 @@ export default function HotspotMap({
   earnedBadgeCodes = new Set(),
   showGeology      = false,
   hudMode          = false,
+  selectedMineralFilter = new Set(),
 }) {
   const isFullHeight = height === '100%';
 
@@ -157,23 +158,34 @@ export default function HotspotMap({
   );
 
   const visiblePoints = useMemo(() => {
+    let list;
     switch (activeLayer) {
       case 'rare':
-        return points.filter(h =>
+        list = points.filter(h =>
           h.minerals?.some(m => m.toLowerCase().includes('quartz') ||
             m.toLowerCase().includes('garnet') ||
             m.toLowerCase().includes('tourmaline') ||
             m.toLowerCase().includes('topaz') ||
             m.toLowerCase().includes('sapphire'))
         );
+        break;
       case 'gaps':
-        return points.filter(h => collectionGapIds.has(h.id));
+        list = points.filter(h => collectionGapIds.has(h.id));
+        break;
       case 'public':
-        return points.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
+        list = points.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
+        break;
       default:
-        return points;
+        list = points;
     }
-  }, [points, activeLayer, collectionGapIds]);
+    // Mineral type chip filter — applied on top of layer
+    if (selectedMineralFilter.size > 0) {
+      list = list.filter(h =>
+        (h.minerals || []).some(m => selectedMineralFilter.has(m.toLowerCase()))
+      );
+    }
+    return list;
+  }, [points, activeLayer, collectionGapIds, selectedMineralFilter]);
 
   const geoSpecimens = useMemo(
     () => specimens.filter(s => typeof s.lat === 'number' && typeof s.lng === 'number'),
