@@ -34,7 +34,7 @@ export default function GeologyInfoCard({ lat, lng, onClose }) {
         </span>
         <span className="ml-auto text-[8px] text-white/25 uppercase tracking-wider">Macrostrat</span>
         {onClose && (
-          <button onClick={onClose} className="ml-2 text-white/30 hover:text-white/70 transition">
+          <button onClick={onClose} aria-label="Close" className="ml-2 text-white/30 hover:text-white/70 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50 rounded-sm">
             <X size={14} />
           </button>
         )}

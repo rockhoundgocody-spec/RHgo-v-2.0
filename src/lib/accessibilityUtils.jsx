@@ -1,3 +1,4 @@
+import React from "react";
 /**
  * RockHound-GO Accessibility Framework
  * WCAG 2.1 AA compliance + reduced motion support
