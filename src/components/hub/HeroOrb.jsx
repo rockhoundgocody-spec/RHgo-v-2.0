@@ -7,8 +7,9 @@ import React, { useState, useRef } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useCloverChat from './useCloverChat';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
-import { Gem, Send, X, Loader2 } from 'lucide-react';
+import { Gem, Send, X, Loader2, Volume2, VolumeX } from 'lucide-react';
 
 const GREETINGS = (c, name) => {
   const hour = new Date().getHours();
@@ -36,6 +37,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const inputRef     = useRef(null);
   const bottomRef    = useRef(null);
 
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem('rhgo_clover_voice') !== 'off');
+
   const { sendMessage, loading } = useCloverChat({
     companion,
     todaysFinds: todaysSpecimens,
@@ -44,6 +47,17 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       setTimeout(() => setLoggedFind(null), 4000);
     },
   });
+
+  const { speak, stop, speaking } = useSpeechSynthesis();
+
+  const toggleVoice = () => {
+    setVoiceOn((prev) => {
+      const next = !prev;
+      localStorage.setItem('rhgo_clover_voice', next ? 'on' : 'off');
+      if (!next) stop();
+      return next;
+    });
+  };
 
   const addRipple = (e) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -65,6 +79,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     setMessages([{ role: 'assistant', content: '…', loading: true }]);
     const reply = await doSend(greeting, true);
     setMessages([{ role: 'assistant', content: reply }]);
+    if (voiceOn) speak(reply);
     setTimeout(() => { inputRef.current?.focus(); }, 200);
   };
 
@@ -108,6 +123,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       ...prev.filter(m => !m.loading),
       { role: 'assistant', content: reply },
     ]);
+    if (voiceOn) speak(reply);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
@@ -152,10 +168,21 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           >
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-white/8">
-              <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide">Clover 🍀</span>
-              <button onClick={() => setOpen(false)} className="text-white/25 hover:text-white/60 transition">
-                <X size={14} />
-              </button>
+              <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide flex items-center gap-1">
+                Clover 🍀 {speaking && <span className="inline-block w-1 h-1 rounded-full bg-amethyst-glow animate-pulse" />}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleVoice}
+                  className={`transition ${voiceOn ? 'text-amethyst-glow' : 'text-white/25 hover:text-white/50'}`}
+                  aria-label={voiceOn ? 'Mute Clover voice' : 'Unmute Clover voice'}
+                >
+                  {voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                </button>
+                <button onClick={() => { stop(); setOpen(false); }} className="text-white/25 hover:text-white/60 transition">
+                  <X size={14} />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
