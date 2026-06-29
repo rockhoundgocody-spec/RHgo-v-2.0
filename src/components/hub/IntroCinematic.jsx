@@ -6,12 +6,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const VIDEO_URL = 'https://media.base44.com/videos/public/69f35dd14650b54681c835ec/a133d0438_generated_video.mp4';
+const VIDEO_URL = 'https://media.base44.com/videos/public/69f35dd14650b54681c835ec/f0de774bb_generated_video.mp4';
 
 const LINES = [
-  { text: 'The earth is hiding something…',  delay: 0.6,  duration: 2.0 },
-  { text: 'Every rock has a story.',          delay: 2.8,  duration: 2.0 },
-  { text: 'Are you ready to find yours?',     delay: 4.6,  duration: 2.4 },
+  { text: 'Beneath your feet…',               delay: 0.8,  duration: 2.0 },
+  { text: 'Crystals are waiting to be found.', delay: 3.0,  duration: 2.0 },
+  { text: 'Your collection begins now.',      delay: 5.0,  duration: 2.4 },
 ];
 
 export default function IntroCinematic({ onDone }) {
