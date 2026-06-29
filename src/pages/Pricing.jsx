@@ -1,11 +1,15 @@
 /**
- * Pricing.jsx — RockHound-GO Subscription Tiers
+ * Pricing Page — optimized for field conversion.
+ * Features:
+ *   - Tier-based feature lists
+ *   - Stripe Checkout integration
+ *   - Responsive, dark-themed UI
  *
  * Stripe configuration (set these in environment variables / secrets):
- *   STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — e.g. price_1XxxxxFieldProMonthly
- *   STRIPE_FAMILY_MONTHLY_PRICE_ID     — e.g. price_1XxxxxFamilyMonthly
- *   STRIPE_SUCCESS_URL                 — e.g. https://rhgo.base44.app/settings?upgrade=success
- *   STRIPE_CANCEL_URL                  — e.g. https://rhgo.base44.app/pricing
+ *   VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID — e.g. price_1XxxxxFieldProMonthly
+ *   VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID    — e.g. price_1XxxxxFamilyMonthly
+ *   VITE_STRIPE_SUCCESS_URL                — e.g. https://rhgo.base44.app/settings?upgrade=success
+ *   VITE_STRIPE_CANCEL_URL                 — e.g. https://rhgo.base44.app/pricing
  *
  * When Stripe is connected: replace the handleUpgrade placeholder below with
  *   a call to your createCheckoutSession backend function.
@@ -17,20 +21,24 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Gem, Zap, Map, Shield, Star, Flame, Crown, Users, BookOpen, X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
 // ─── STRIPE PRICE IDs ─────────────────────────────────────────────────────
-// TODO: replace these with your real Stripe price IDs from the Stripe dashboard
-// and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
-// in Base44 environment variables.
+// These IDs are pulled from Vite environment variables.
+// Ensure they are set in your .env or deployment dashboard.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: null, label: 'Field Pro' },   // set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID
-  family:    { priceId: null, label: 'Family' },       // set STRIPE_FAMILY_MONTHLY_PRICE_ID
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  fieldPro:  {
+    priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || null,
+    label: 'Field Pro'
+  },
+  family:    {
+    priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || null,
+    label: 'Family'
+  },
+  successUrl: import.meta.env.VITE_STRIPE_SUCCESS_URL || (typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : ''),
+  cancelUrl:  import.meta.env.VITE_STRIPE_CANCEL_URL || (typeof window !== 'undefined' ? `${window.location.origin}/pricing` : ''),
 };
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -119,15 +127,10 @@ export default function Pricing() {
 
     const priceId = tier.id === 'field_pro' ? STRIPE_CONFIG.fieldPro.priceId : STRIPE_CONFIG.family.priceId;
 
-    // ─── Stripe not yet connected ───────────────────────────────────────
-    // Once your Stripe account is linked and price IDs are set, replace this
-    // block with a call to your createCheckoutSession backend function, e.g.:
-    //   const res = await base44.functions.invoke('createCheckoutSession', {
-    //     priceId, successUrl: STRIPE_CONFIG.successUrl, cancelUrl: STRIPE_CONFIG.cancelUrl,
-    //   });
-    //   window.location.href = res.data.url;
+    // ─── Stripe Integration ─────────────────────────────────────────────
     if (!priceId) {
-      alert('Checkout setup in progress — check back very soon!\n\nDeveloper note: set STRIPE_' + tier.id.toUpperCase() + '_MONTHLY_PRICE_ID in environment variables and wire up the createCheckoutSession backend function.');
+      const envVarName = tier.id === 'field_pro' ? 'VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID' : 'VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID';
+      alert(`Checkout setup in progress — check back very soon!\n\nDeveloper note: Set ${envVarName} in environment variables.`);
       return;
     }
 
