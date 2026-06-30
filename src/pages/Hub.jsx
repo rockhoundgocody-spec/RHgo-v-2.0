@@ -14,7 +14,7 @@ import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
 import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword, Heart, Trophy, Lock } from 'lucide-react';
+import { Compass, ScanLine, Gem, Sword, Heart, Trophy, Lock, Users } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
@@ -99,6 +99,7 @@ export default function Hub() {
           <QuickAction to="/badges" icon={Trophy} label="Badges" color="amber" />
           <QuickAction to="/companion" icon={Heart} label="Clover" color="rose" />
           <QuickAction to="/private-log" icon={Lock} label="My Finds" color="amethyst" />
+          <QuickAction to="/community" icon={Users} label="Social" color="cyan" />
         </div>
       </section>
 

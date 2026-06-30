@@ -1,0 +1,152 @@
+{
+  "name": "Post",
+  "type": "object",
+  "description": "Social feed post \u2014 find share, photo, or text. Public read; owner edits/deletes.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "author_avatar_url": {
+      "type": "string"
+    },
+    "post_type": {
+      "type": "string",
+      "enum": [
+        "find_share",
+        "text"
+      ],
+      "default": "text"
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "specimen_id": {
+      "type": "string"
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ]
+    },
+    "location_label": {
+      "type": "string"
+    },
+    "reactions": {
+      "type": "object",
+      "properties": {
+        "fire": {
+          "type": "integer",
+          "default": 0
+        },
+        "gem": {
+          "type": "integer",
+          "default": 0
+        },
+        "clap": {
+          "type": "integer",
+          "default": 0
+        },
+        "wow": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
+    "reactors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "comment_count": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "owner_email",
+    "author_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

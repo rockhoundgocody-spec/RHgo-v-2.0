@@ -25,6 +25,7 @@ const Explore = lazy(() => import('@/pages/Explore.jsx'));
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
 const Collections = lazy(() => import('@/pages/Collections'));
+const Community = lazy(() => import('@/pages/Community'));
 const Market = lazy(() => import('@/pages/Market'));
 const Expeditions = lazy(() => import('@/pages/Expeditions'));
 const ExpeditionDetail = lazy(() => import('@/pages/ExpeditionDetail'));
@@ -110,6 +111,7 @@ const AuthenticatedApp = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/expeditions" element={<Expeditions />} />
           <Route path="/expedition/:expeditionId" element={<ExpeditionDetail />} />
