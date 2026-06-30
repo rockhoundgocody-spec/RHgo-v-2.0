@@ -1,0 +1,119 @@
+{
+  "name": "MarketListing",
+  "type": "object",
+  "description": "Collector-to-collector mineral trade listing with verified provenance",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "seller_name": {
+      "type": "string"
+    },
+    "specimen_id": {
+      "type": "string",
+      "description": "Linked Specimen record"
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "asking_price": {
+      "type": "number",
+      "description": "USD asking price, 0 = trade only"
+    },
+    "trade_only": {
+      "type": "boolean",
+      "default": false
+    },
+    "location_label": {
+      "type": "string"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_confidence": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "sold",
+        "reserved",
+        "removed"
+      ],
+      "default": "active"
+    },
+    "view_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "offer_count": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "owner_email",
+    "mineral_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
