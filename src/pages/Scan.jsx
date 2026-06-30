@@ -7,10 +7,12 @@ import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
 import HolographicResult from '@/components/scan/HolographicResult.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
+import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
 import ShareToMapModal from '@/components/scan/ShareToMapModal.jsx';
 import DiscoveryChoiceModal from '@/components/scan/DiscoveryChoiceModal.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
@@ -66,6 +68,7 @@ export default function Scan() {
   const [beachName, setBeachName] = useState(null);
   const [shareMapOpen, setShareMapOpen] = useState(false);
   const [choiceOpen, setChoiceOpen] = useState(false);
+  const [rarePopup, setRarePopup] = useState(null); // { rarity, mineralName, badge }
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
   const { speak, stop } = useSpeechSynthesis();
@@ -385,7 +388,16 @@ export default function Scan() {
 
     setSavedId(specimenId);
     setSavedSpecimen(specimenObj);
-    refreshBadges();
+
+    // Trigger rare mineral popup for rare/legendary saves
+    if (['rare', 'legendary'].includes(result.rarity)) {
+      // Briefly wait for badge refresh so we can attach it to the popup
+      await refreshBadges();
+      setRarePopup({ rarity: result.rarity, mineralName: result.top_match });
+    } else {
+      refreshBadges();
+    }
+
     if (choice.geoPrivacy !== 'private') setTimeout(() => setShareMapOpen(true), 800);
   };
 
@@ -400,6 +412,7 @@ export default function Scan() {
     setReasoningResult(null);
     setShareMapOpen(false);
     setChoiceOpen(false);
+    setRarePopup(null);
     setWetDry('dry');
     setBeachName(null);
   };
@@ -465,6 +478,19 @@ export default function Scan() {
         )}
       </div>
 
+      {/* Rare mineral popup — overlays scan result as a bottom toast */}
+      <AnimatePresence>
+        {rarePopup && !pendingBadge && (
+          <RareMineralPopup
+            rarity={rarePopup.rarity}
+            mineralName={rarePopup.mineralName}
+            badge={null}
+            onClose={() => setRarePopup(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Full badge unlock cinematic — fires after rare popup clears */}
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={dismissPending} />
       )}
