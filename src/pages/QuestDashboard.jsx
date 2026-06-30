@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
   Sword, CheckCircle2, Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass,
+  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass, Cpu,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
@@ -202,18 +202,35 @@ export default function QuestDashboard() {
   const generateQuests = async () => {
     if (!user?.email || generating) return;
     setGenerating(true);
-    const picks = [...QUEST_TEMPLATES].sort(() => Math.random() - 0.5).slice(0, 3);
-    await Promise.all(picks.map(t =>
-      base44.entities.Quest.create({
-        owner_email: user.email,
-        ...t,
-        status: 'active',
-        progress: 0,
-        expires_at: getExpiryDate(t.quest_type),
-      })
-    ));
-    setGenerating(false);
-    refetch();
+    try {
+      // Try AI-generated missions first
+      let lat, lng;
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {}
+
+      const res = await base44.functions.invoke('generateFieldMissions', { lat, lng });
+      if (!res?.data?.count) throw new Error('no missions returned');
+    } catch {
+      // Fallback to static templates
+      const picks = [...QUEST_TEMPLATES].sort(() => Math.random() - 0.5).slice(0, 3);
+      await Promise.all(picks.map(t =>
+        base44.entities.Quest.create({
+          owner_email: user.email,
+          ...t,
+          status: 'active',
+          progress: 0,
+          expires_at: getExpiryDate(t.quest_type),
+        })
+      ));
+    } finally {
+      setGenerating(false);
+      refetch();
+    }
   };
 
   // Totals
@@ -247,8 +264,8 @@ export default function QuestDashboard() {
         <button onClick={generateQuests} disabled={generating || activeQuests.length > 0}
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition disabled:opacity-40"
           style={{ background: 'hsla(280,80%,35%,0.5)', border: '1px solid hsla(280,80%,55%,0.3)', color: 'hsl(280,80%,80%)' }}>
-          <RefreshCw size={10} className={generating ? 'animate-spin' : ''} />
-          {quests.length === 0 ? 'New Mission' : 'Active'}
+          {generating ? <Cpu size={10} className="animate-pulse" /> : <RefreshCw size={10} />}
+          {generating ? 'AI…' : quests.length === 0 ? 'New Mission' : 'Active'}
         </button>
       </div>
 
@@ -331,14 +348,14 @@ export default function QuestDashboard() {
             {activeQuests.length === 0 ? 'No active field missions' : `No ${filter} missions active`}
           </p>
           <p className="text-white/25 text-xs mb-4">
-            {activeQuests.length === 0 ? 'Your next expedition starts here — ask Clover to generate missions' : 'Switch tabs or dispatch new field missions'}
+            {activeQuests.length === 0 ? 'Your next expedition starts here — Clover will generate AI-tailored missions based on your collection and location.' : 'Switch tabs or dispatch new field missions'}
           </p>
           {activeQuests.length === 0 && (
             <button onClick={generateQuests} disabled={generating}
-              className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40"
+              className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40 flex items-center gap-2 mx-auto"
               style={{ background: 'hsla(280,80%,30%,0.4)', border: '1px solid hsla(280,80%,55%,0.3)' }}>
-              <RefreshCw size={11} className={`inline mr-1.5 ${generating ? 'animate-spin' : ''}`} />
-              Dispatch Field Missions
+              {generating ? <Cpu size={11} className="animate-pulse" /> : <Sparkles size={11} />}
+              {generating ? 'Clover is building your missions…' : 'Generate AI Field Missions'}
             </button>
           )}
         </GlassPanel>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Users, Wifi } from 'lucide-react';
 import PostCard from '@/components/community/PostCard.jsx';
 import PostComposer from '@/components/community/PostComposer.jsx';
 
@@ -51,13 +51,32 @@ export default function Community() {
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
 
+  // Real-time subscription — new posts appear instantly
+  useEffect(() => {
+    const unsubscribe = base44.entities.Post.subscribe((event) => {
+      if (event.type === 'create' && event.data) {
+        setPosts(prev => [event.data, ...prev]);
+      } else if (event.type === 'update' && event.data) {
+        setPosts(prev => prev.map(p => p.id === event.data.id ? event.data : p));
+      } else if (event.type === 'delete') {
+        setPosts(prev => prev.filter(p => p.id !== event.id));
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   return (
     <div className="min-h-screen px-4 pt-6 pb-28 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 mb-5">
         <Users size={20} className="text-amethyst-glow" />
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-black text-white tracking-tight">Community</h1>
           <p className="text-white/35 text-[10px] uppercase tracking-[0.18em]">Share finds · React · Connect</p>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{ background: 'hsla(145,70%,20%,0.3)', border: '1px solid hsla(145,70%,45%,0.25)' }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Live</span>
         </div>
       </div>
 
