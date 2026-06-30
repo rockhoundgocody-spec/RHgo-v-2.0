@@ -8,12 +8,13 @@ import SkillsSection from '@/components/profile/SkillsSection.jsx';
 import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ findings: 0, badges: 0 });
+  const [stats, setStats] = useState({ findings: 0, badges: 0, rarityCounts: { common: 0, uncommon: 0, rare: 0, legendary: 0 } });
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [battleHistory, setBattleHistory] = useState([]);
@@ -29,7 +30,9 @@ export default function Profile() {
         base44.entities.Badge.filter({ owner_email: u.email }),
         base44.entities.PlayerProfile.filter({ owner_email: u.email }, '-created_date', 1),
       ]);
-      setStats({ findings: specimens.length, badges: badges.length });
+      const rarityCounts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
+      for (const x of specimens) { if (rarityCounts[x.rarity] != null) rarityCounts[x.rarity]++; }
+      setStats({ findings: specimens.length, badges: badges.length, rarityCounts });
       if (profiles[0]?.avatar_url) setAvatarUrl(profiles[0].avatar_url);
       const battles = await base44.entities.BattleResult.filter({ owner_email: u.email }, '-created_date', 10).catch(() => []);
       setBattleHistory(battles);
@@ -136,6 +139,9 @@ export default function Profile() {
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Role</div>
         </GlassPanel>
       </div>
+
+      {/* Rarity collection badges */}
+      <RarityBadgeShowcase earnedCodes={earnedCodes} rarityCounts={stats.rarityCounts} />
 
       {/* Share challenge button */}
       <button

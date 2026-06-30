@@ -18,6 +18,36 @@ const streakDays = (s) => {
 };
 
 export const BADGES = [
+  // ── RARITY COLLECTION: unlock by collecting minerals of each rarity tier ──
+  {
+    code: 'rarity_common', title: 'Stone Signer',
+    description: 'Collect your first common mineral.',
+    rarity: 'common', icon: 'Gem', material: 'natural_stone', colorScheme: 'slate',
+    check: s => s.some(x => x.rarity === 'common'),
+    progress: s => ({ current: Math.min(s.filter(x => x.rarity === 'common').length, 1), target: 1 }),
+  },
+  {
+    code: 'rarity_uncommon', title: 'Uncommon Eye',
+    description: 'Collect your first uncommon mineral.',
+    rarity: 'uncommon', icon: 'Sparkle', material: 'liquid_glass', colorScheme: 'teal',
+    check: s => s.some(x => x.rarity === 'uncommon'),
+    progress: s => ({ current: Math.min(s.filter(x => x.rarity === 'uncommon').length, 1), target: 1 }),
+  },
+  {
+    code: 'rarity_rare', title: 'Rare Hunter',
+    description: 'Collect your first rare mineral.',
+    rarity: 'rare', icon: 'Diamond', material: 'crystal_core', colorScheme: 'cyan',
+    check: s => s.some(x => x.rarity === 'rare'),
+    progress: s => ({ current: Math.min(s.filter(x => x.rarity === 'rare').length, 1), target: 1 }),
+  },
+  {
+    code: 'rarity_legendary', title: 'Legendary Finder',
+    description: 'Collect your first legendary mineral.',
+    rarity: 'legendary', icon: 'Crown', material: 'crystal_core', colorScheme: 'gold',
+    check: s => s.some(x => x.rarity === 'legendary'),
+    progress: s => ({ current: Math.min(s.filter(x => x.rarity === 'legendary').length, 1), target: 1 }),
+  },
+
   // ── TIER 1: FIRST STEPS ──────────────────────────────────────────────────
   {
     code: 'first_find', title: 'Crystal Whisperer',
