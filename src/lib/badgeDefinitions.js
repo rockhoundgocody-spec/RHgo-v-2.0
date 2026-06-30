@@ -29,7 +29,7 @@ export const BADGES = [
   {
     code: 'rarity_uncommon', title: 'Uncommon Eye',
     description: 'Collect your first uncommon mineral.',
-    rarity: 'uncommon', icon: 'Sparkle', material: 'liquid_glass', colorScheme: 'teal',
+    rarity: 'uncommon', icon: 'Sparkles', material: 'liquid_glass', colorScheme: 'teal',
     check: s => s.some(x => x.rarity === 'uncommon'),
     progress: s => ({ current: Math.min(s.filter(x => x.rarity === 'uncommon').length, 1), target: 1 }),
   },

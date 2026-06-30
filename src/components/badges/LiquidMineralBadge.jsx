@@ -20,14 +20,14 @@ import { cn } from '@/lib/utils';
 import {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
-  Mountain, Target, Crown, Zap, Share2, Lock,
+  Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
 } from 'lucide-react';
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
 const ICON_MAP = {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
-  Mountain, Target, Crown, Zap, Share2, Lock,
+  Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
 };
 
 // ── Color Schemes ─────────────────────────────────────────────────────────────
