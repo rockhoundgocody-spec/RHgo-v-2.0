@@ -28,6 +28,10 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import useSpawns from '@/lib/useSpawns';
+import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
+import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
+import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -141,7 +145,13 @@ export default function Explore() {
   const [showGeology,    setShowGeology]    = useState(false);
   const [hudMode,        setHudMode]        = useState(false);
   const [showWeather,    setShowWeather]    = useState(false);
+  const [arActive,       setArActive]       = useState(false);
+  const [activeSpawn,    setActiveSpawn]    = useState(null);
   const scrollRef = useRef(null);
+
+  const { spawns, caughtToday, dailyCap, catchSpawn, dismissSpawn } = useSpawns({
+    userLocation, hotspots,
+  });
 
   // Geolocation
   const locate = useCallback(() => {
@@ -246,6 +256,14 @@ export default function Explore() {
 
       {/* ── FULLSCREEN MAP ── always mounted so hotspots render as soon as data arrives */}
       <div className="absolute inset-0">
+        {arActive && (
+          <SpawnMapLayer
+            spawns={spawns}
+            caughtToday={caughtToday}
+            dailyCap={dailyCap}
+            onSpawnTap={(spawn) => setActiveSpawn(spawn)}
+          />
+        )}
         <HotspotMap
           hotspots={filteredHotspots}
           specimens={specimens}
@@ -319,6 +337,13 @@ export default function Explore() {
             }} aria-label="Toggle geology layer">
             <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
           </button>
+          <SpawnHUD
+            spawns={spawns}
+            caughtToday={caughtToday}
+            dailyCap={dailyCap}
+            arActive={arActive}
+            onToggleAR={() => setArActive(a => !a)}
+          />
           <QuickPinButton userLocation={userLocation} />
 
           {/* HUD mode toggle */}
@@ -502,6 +527,17 @@ export default function Explore() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* AR Encounter Screen */}
+      <AnimatePresence>
+        {activeSpawn && (
+          <AREncounterScreen
+            spawn={activeSpawn}
+            onCatch={(spawn) => catchSpawn(spawn.id)}
+            onDismiss={() => { dismissSpawn(activeSpawn?.id); setActiveSpawn(null); }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Badge unlock overlay (fires when a badge is earned on the map) */}
       {pendingBadge && <BadgeUnlockAnimation badge={pendingBadge} onClose={dismissPending} />}
