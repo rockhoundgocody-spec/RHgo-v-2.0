@@ -11,7 +11,7 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun } from 'lucide-react';
+import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
@@ -147,6 +147,7 @@ export default function Explore() {
   const [showWeather,    setShowWeather]    = useState(false);
   const [arActive,       setArActive]       = useState(false);
   const [activeSpawn,    setActiveSpawn]    = useState(null);
+  const [showHeatMap,    setShowHeatMap]    = useState(false);
   const scrollRef = useRef(null);
 
   const { spawns, caughtToday, dailyCap, catchSpawn, dismissSpawn } = useSpawns({
@@ -279,6 +280,7 @@ export default function Explore() {
           userMinerals={[...collectedMinerals]}
           hudMode={hudMode}
           selectedMineralFilter={selectedMineralsLower}
+          showHeatMap={showHeatMap}
         />
         {/* Overlay spinner while first load is in flight (no cached data yet) */}
         {loading && filteredHotspots.length === 0 && (
@@ -360,6 +362,22 @@ export default function Explore() {
             aria-label="Toggle HUD mode"
           >
             <Sun size={16} className={hudMode ? 'text-hud-cyan' : 'text-white/50'} />
+          </button>
+
+          {/* Heat map toggle */}
+          <button
+            onClick={() => setShowHeatMap(h => !h)}
+            title="Community activity heat map"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            style={{
+              background: showHeatMap ? 'hsla(0,80%,30%,.4)' : 'hsla(240,30%,8%,.88)',
+              border: showHeatMap ? '1px solid hsla(0,80%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: showHeatMap ? '0 0 18px hsla(0,80%,55%,.4)' : 'none',
+            }}
+            aria-label="Toggle activity heat map"
+          >
+            <Flame size={16} className={showHeatMap ? 'text-red-400' : 'text-white/50'} />
           </button>
 
           {/* Weather toggle */}

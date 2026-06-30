@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import ActivityHeatLayer from '@/components/explore/ActivityHeatLayer.jsx';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -149,6 +150,7 @@ export default function HotspotMap({
   showGeology      = false,
   hudMode          = false,
   selectedMineralFilter = new Set(),
+  showHeatMap       = false,
 }) {
   const isFullHeight = height === '100%';
 
@@ -225,6 +227,9 @@ export default function HotspotMap({
 
         <ActivePanner hotspots={hotspots} activeId={activeId} />
         <UserPanner userLocation={userLocation} />
+
+        {/* Community activity heat map */}
+        {showHeatMap && <ActivityHeatLayer specimens={specimens} />}
 
         {/* Expedition route polyline */}
         {expeditionRoute.length >= 2 && (
