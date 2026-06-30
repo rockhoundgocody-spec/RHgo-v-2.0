@@ -76,7 +76,7 @@ export default function WeatherPanel({ userLocation, hudMode, onClose }) {
               Beach Conditions
             </span>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/60 transition">
+          <button onClick={onClose} aria-label="Close" className="text-white/30 hover:text-white/60 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50 rounded-sm">
             <X size={14} />
           </button>
         </div>

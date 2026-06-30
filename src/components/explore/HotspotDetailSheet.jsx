@@ -191,7 +191,8 @@ export default function HotspotDetailSheet({
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50"
                 style={{ background: 'hsla(255,30%,20%,0.5)', border: '1px solid hsla(255,30%,40%,0.2)' }}
               >
                 <X size={14} className="text-white/60" />
