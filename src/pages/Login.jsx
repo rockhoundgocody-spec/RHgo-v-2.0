@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2, Gem, Compass, Zap } from "lucide-react";
+import { Mail, Lock, Loader2, Gem, Compass, Zap, Flame } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,6 +105,25 @@ export default function Login() {
           <div className="mb-7 text-center lg:text-left">
             <h1 className="text-2xl font-black text-white tracking-tight">Welcome back</h1>
             <p className="text-white/45 text-sm mt-1">Your collection is waiting for you.</p>
+          </div>
+
+          {/* 🔥 Guest Demo — top of form, most prominent */}
+          <button
+            onClick={() => navigate('/demo')}
+            className="w-full h-12 rounded-xl font-black text-white text-sm flex items-center justify-center gap-2 mb-5 transition active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, hsl(20,90%,45%), hsl(35,100%,52%))',
+              boxShadow: '0 4px 24px -4px hsla(25,100%,55%,0.55)',
+            }}
+          >
+            <Flame size={15} /> Try Full Demo (No Sign-Up)
+          </button>
+
+          <div className="relative mb-5">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="px-3 text-white/30 bg-transparent">or sign in</span>
+            </div>
           </div>
 
           {/* OAuth buttons */}

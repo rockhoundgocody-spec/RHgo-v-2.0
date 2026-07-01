@@ -49,6 +49,7 @@ const PrivateRockLog = lazy(() => import('@/pages/PrivateRockLog'));
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
 const About = lazy(() => import('@/pages/About'));
 const Paywall = lazy(() => import('@/pages/Paywall'));
+const Demo = lazy(() => import('@/pages/Demo'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const Auth = lazy(() => import('@/pages/Auth'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
@@ -85,6 +86,7 @@ const AuthenticatedApp = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/demo" element={<Demo />} />
             <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
@@ -105,6 +107,8 @@ const AuthenticatedApp = () => {
         <Route path="/onboarding" element={<Onboarding />} />
         {/* Public pricing — no auth required */}
         <Route path="/pricing" element={<Pricing />} />
+        {/* Guest demo — no auth required */}
+        <Route path="/demo" element={<Demo />} />
 
         <Route element={<Layout />}>
           <Route path="/" element={<Hub />} />

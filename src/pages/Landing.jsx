@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Compass, ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FEATURES = [
@@ -82,6 +82,7 @@ function CrystalParticle({ style }) {
 
 export default function Landing() {
   const [heroVisible, setHeroVisible] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => { setHeroVisible(true); }, []);
 
   return (
@@ -136,35 +137,51 @@ export default function Landing() {
             />
           </div>
 
-          <div className="text-white/35 text-[10px] uppercase tracking-[0.4em] mb-3 font-semibold">Built by collectors · for collectors</div>
+          {/* SEO/brand headline */}
+          <div className="text-white/35 text-[10px] uppercase tracking-[0.4em] mb-3 font-semibold">Built by collectors · for collectors · Used in 47 states</div>
 
-          <h1 className="text-white font-black text-[44px] leading-[1.05] mb-4" style={{ letterSpacing: '-0.02em', textShadow: '0 0 60px hsla(280,100%,70%,0.5)' }}>
-            The Game for<br />
-            <span style={{ color: 'hsl(280,100%,88%)', textShadow: '0 0 80px hsla(280,100%,70%,0.7)' }}>Real Rockhounds</span>
+          <h1 className="text-white font-black text-[38px] leading-[1.05] mb-3" style={{ letterSpacing: '-0.02em', textShadow: '0 0 60px hsla(280,100%,70%,0.5)' }}>
+            The only Rockhounding OS<br />
+            <span style={{ color: 'hsl(280,100%,88%)', textShadow: '0 0 80px hsla(280,100%,70%,0.7)' }}>that finds → IDs → builds 🔥</span>
           </h1>
-          <p className="text-white/50 text-[15px] leading-relaxed mb-8 max-w-[280px]">
-            AI mineral identification, geospatial discovery, gamified collecting, and voice-guided field intelligence — all in your pocket.
+          <p className="text-white/50 text-[14px] leading-relaxed mb-2 max-w-[290px]">
+            AI mineral ID, geospatial hotspot maps, gamified GeoDex collection, and voice field intelligence — all in your pocket.
           </p>
+          <p className="text-white/25 text-[11px] mb-7 max-w-[260px]">Built in Illinois · 250+ minerals · 1,400+ hotspots mapped</p>
 
-          {/* Primary CTA */}
+          {/* 🔥 Guest Demo — primary CTA, no sign-up */}
           <Link
-            to="/register"
+            to="/demo"
             className="w-full max-w-xs py-4 rounded-2xl font-black text-white text-base text-center flex items-center justify-center gap-2 transition active:scale-95 mb-3"
             style={{
-              background: 'linear-gradient(135deg, hsl(265,70%,50%), hsl(280,90%,62%))',
-              boxShadow: '0 8px 40px -8px hsla(270,80%,60%,0.65), inset 0 1px 0 hsla(280,80%,95%,0.2)',
+              background: 'linear-gradient(135deg, hsl(20,90%,45%), hsl(35,100%,52%))',
+              boxShadow: '0 8px 40px -8px hsla(25,100%,55%,0.65), inset 0 1px 0 hsla(40,80%,95%,0.2)',
             }}
           >
-            <Zap size={17} /> Start Playing Free
+            <Flame size={17} /> Try Full Demo (No Sign-Up)
           </Link>
+
+          {/* Sign up */}
+          <Link
+            to="/register"
+            className="w-full max-w-xs py-3.5 rounded-2xl font-bold text-white text-sm text-center flex items-center justify-center gap-2 transition active:scale-95 mb-2"
+            style={{
+              background: 'linear-gradient(135deg, hsl(265,70%,50%), hsl(280,90%,62%))',
+              boxShadow: '0 4px 24px -4px hsla(270,80%,60%,0.5), inset 0 1px 0 hsla(280,80%,95%,0.2)',
+            }}
+          >
+            <Zap size={15} /> Start Free — Takes 8 Seconds
+          </Link>
+
+          <p className="text-white/20 text-[11px] mt-1 mb-4">Free forever · No credit card · Works on any phone</p>
+
+          {/* Login — bottom, de-emphasized */}
           <Link
             to="/login"
-            className="w-full max-w-xs py-3.5 rounded-2xl font-semibold text-white/55 text-sm text-center border transition active:scale-95"
-            style={{ borderColor: 'hsla(280,40%,60%,0.2)', background: 'hsla(270,30%,15%,0.3)' }}
+            className="text-white/30 text-xs hover:text-white/50 transition"
           >
-            Already a Rockhound? Log in →
+            Already a Rockhound? Sign in →
           </Link>
-          <p className="text-white/20 text-[11px] mt-4">Free forever · No credit card · Works on any phone</p>
         </motion.div>
       </section>
 
@@ -238,21 +255,21 @@ export default function Landing() {
         className="w-full max-w-md px-4 mt-8 z-10"
       >
         <Link
-          to="/auth"
+          to="/demo"
           className="w-full py-4 rounded-2xl font-black text-white text-base text-center flex items-center justify-center gap-2 transition active:scale-95"
           style={{
-            background: 'linear-gradient(135deg, hsl(265,70%,50%), hsl(280,90%,62%))',
-            boxShadow: '0 8px 40px -8px hsla(270,80%,60%,0.55), inset 0 1px 0 hsla(280,80%,95%,0.2)',
+            background: 'linear-gradient(135deg, hsl(20,90%,45%), hsl(35,100%,52%))',
+            boxShadow: '0 8px 40px -8px hsla(25,100%,55%,0.55), inset 0 1px 0 hsla(40,80%,95%,0.2)',
           }}
         >
-          <Zap size={17} /> Join the Hunt — It's Free <ChevronRight size={16} />
+          <Flame size={17} /> Try Full Demo — No Sign-Up <ChevronRight size={16} />
         </Link>
         <Link
-          to="/pricing"
-          className="w-full py-3 rounded-2xl font-semibold text-white/45 text-sm text-center flex items-center justify-center gap-2 transition hover:text-white/70 mt-2"
-          style={{ background: 'hsla(255,25%,14%,0.5)', border: '1px solid hsla(270,30%,35%,0.2)' }}
+          to="/register"
+          className="w-full py-3 rounded-2xl font-semibold text-white/60 text-sm text-center flex items-center justify-center gap-2 transition hover:text-white/80 mt-2"
+          style={{ background: 'hsla(265,40%,22%,0.5)', border: '1px solid hsla(270,40%,40%,0.2)' }}
         >
-          View Plans & Pricing
+          <Zap size={13} /> Start Free — Join the Hunt
         </Link>
       </motion.div>
     </div>
