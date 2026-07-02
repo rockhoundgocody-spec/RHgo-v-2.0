@@ -12,6 +12,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
+import CloverReunion from '@/components/hub/CloverReunion.jsx';
 
 // ── Emotionally bonding narration ───────────────────────────────────────────
 const STORY = [
@@ -37,7 +38,7 @@ const BOND_AT = 13000;       // fully hatched, looks up
 const SPEAK_AT = 14500;
 const EXIT_AT = 23500;
 
-export default function OpeningBuffer({ onDone }) {
+function BirthSequence({ onDone }) {
   const [phase, setPhase] = useState('void');
   const [activeLine, setActiveLine] = useState(-1);
   const [showWords, setShowWords] = useState(false);
@@ -422,4 +423,85 @@ function Typewriter({ text, start }) {
       “{shown}{shown.length < text.length && <span className="opacity-40 animate-pulse">▌</span>}”
     </p>
   );
+}
+
+// ── Bond memory — persists per user + device so the birth happens once ───────
+const BOND_KEY = 'rhgo_clover_bond';
+const DEVICE_KEY = 'rhgo_device_id';
+
+function getDeviceId() {
+  let id = localStorage.getItem(DEVICE_KEY);
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(DEVICE_KEY, id);
+  }
+  return id;
+}
+
+function loadBond() {
+  try {
+    const raw = localStorage.getItem(BOND_KEY);
+    if (!raw) return null;
+    const b = JSON.parse(raw);
+    if (!b || !b.hatchedAt) return null;
+    return b;
+  } catch { return null; }
+}
+
+function freshBond() {
+  const now = Date.now();
+  return {
+    hatchedAt: now,
+    bondedAt: now,
+    deviceId: getDeviceId(),
+    opens: 1,
+    lastSeenAt: now,
+    daysTogether: 0,
+    bondLevel: 1,
+  };
+}
+
+function updateBond(b) {
+  const now = Date.now();
+  const opens = (b.opens || 1) + 1;
+  const daysTogether = Math.floor((now - (b.hatchedAt || now)) / 86400000);
+  const bondLevel = Math.min(5, 1 + Math.floor(daysTogether / 3) + Math.floor((opens - 1) / 10));
+  const next = { ...b, opens, lastSeenAt: now, daysTogether, bondLevel };
+  localStorage.setItem(BOND_KEY, JSON.stringify(next));
+  return next;
+}
+
+function persistFreshBond() {
+  const next = freshBond();
+  localStorage.setItem(BOND_KEY, JSON.stringify(next));
+  return next;
+}
+
+/**
+ * OpeningBuffer — dispatcher.
+ * First-ever open on this device → BirthSequence (hatching), then bond is saved.
+ * Every subsequent open → CloverReunion (warm greeting that grows with them).
+ */
+export default function OpeningBuffer({ onDone }) {
+  const [mode, setMode] = useState('loading'); // loading | birth | reunion
+  const [bond, setBond] = useState(null);
+
+  useEffect(() => {
+    const existing = loadBond();
+    if (!existing) setMode('birth');
+    else { setBond(existing); setMode('reunion'); }
+  }, []);
+
+  if (mode === 'loading') return null;
+
+  if (mode === 'reunion' && bond) {
+    return (
+      <CloverReunion
+        bond={bond}
+        onDone={() => { updateBond(bond); onDone(); }}
+      />
+    );
+  }
+
+  return <BirthSequence onDone={() => { persistFreshBond(); onDone(); }} />;
 }

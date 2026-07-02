@@ -34,7 +34,7 @@ import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
-  const [bufferDone, setBufferDone] = useState(() => localStorage.getItem('rhgo_buffer_seen') === '1');
+  const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
@@ -49,7 +49,7 @@ export default function Hub() {
   }, []);
 
   if (!bufferDone) {
-    return <OpeningBuffer onDone={() => { localStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
+    return <OpeningBuffer onDone={() => { sessionStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
   }
 
   if (showCinematic) {
