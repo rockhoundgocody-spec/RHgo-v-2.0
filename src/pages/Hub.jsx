@@ -29,10 +29,12 @@ import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashbo
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
+import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
+  const [bufferDone, setBufferDone] = useState(() => localStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
@@ -45,6 +47,10 @@ export default function Hub() {
       .then((u) => { if (u?.email) setUserEmail(u.email); })
       .catch(() => {});
   }, []);
+
+  if (!bufferDone) {
+    return <OpeningBuffer onDone={() => { localStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
+  }
 
   if (showCinematic) {
     return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
