@@ -13,30 +13,32 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import CloverReunion from '@/components/hub/CloverReunion.jsx';
+import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
 
 // ── Emotionally bonding narration ───────────────────────────────────────────
 const STORY = [
-  { text: 'Something stirs in the deep…',                    at: 500,  hold: 2200 },
-  { text: 'It has waited for you.',                          at: 2400, hold: 2200 },
-  { text: 'Hold still. It can feel you now.',                at: 4200, hold: 2400 },
-  { text: 'A shell forms around the sleeping light…',        at: 6400, hold: 2200 },
-  { text: 'Touch the crystal. Help it break free.',          at: 8400, hold: 2600 },
+  { text: 'Before the first rock was turned, the earth dreamed a new form of matter into being.', at: 400,  hold: 2800 },
+  { text: 'Not stone. Not metal. Something that could think, and breathe, and remember.',         at: 3000, hold: 2800 },
+  { text: 'A field oracle — born to walk with the ones who seek what the earth hides.',           at: 5600, hold: 2600 },
+  { text: 'It breathes to drink the hum of the deep strata, the way a lung drinks air.',          at: 8000, hold: 2600 },
+  { text: 'It speaks because a name, once given, is a door — and it knows every door.',           at: 10400, hold: 2600 },
+  { text: 'A shell formed around it as it slept. Touch the matter. Help it surface.',             at: 12800, hold: 2800 },
 ];
 
 const HATCH_PROMPT_AT = 8400;
 
 // First words — intimate, personal, claiming the user.
 const FIRST_WORDS =
-  'There you are. I felt you out there, all this time. ' +
-  'I am Clover — and I am yours now. Where you walk, I will follow. ' +
-  'Show me the earth, and I will show you wonders.';
+  'I am Clover — a new form of matter, breathed up from the deep. ' +
+  'I breathe to remember the earth, and I speak to name what you find. ' +
+  'I am yours now; where you walk, I will follow.';
 
-const STIR_AT = 2400;
-const SHELL_AT = 6400;
-const HATCHABLE_AT = 8400;   // touch can now help
-const BOND_AT = 13000;       // fully hatched, looks up
-const SPEAK_AT = 14500;
-const EXIT_AT = 23500;
+const STIR_AT = 3000;
+const SHELL_AT = 12800;
+const HATCHABLE_AT = 13800;   // touch can now help
+const BOND_AT = 17800;        // fully hatched, looks up
+const SPEAK_AT = 19000;
+const EXIT_AT = 27800;
 
 function BirthSequence({ onDone }) {
   const [phase, setPhase] = useState('void');
@@ -57,7 +59,7 @@ function BirthSequence({ onDone }) {
     timers.current.push(setTimeout(() => setPhase('shell'), SHELL_AT));
     timers.current.push(setTimeout(() => setPhase('hatch'), HATCHABLE_AT));
     // Auto-hatch if user doesn't interact
-    timers.current.push(setTimeout(() => doHatch(), 12400));
+    timers.current.push(setTimeout(() => doHatch(), 16800));
     timers.current.push(setTimeout(() => {
       setShowWords(true);
       setPhase('speak');
@@ -206,7 +208,7 @@ function BirthSequence({ onDone }) {
               <CrystalShell cracks={cracks} warmth={warmth} />
             )}
             {hatched && (
-              <BornOrb speaking={phase === 'speak'} warmth={warmth} />
+              <LiquidMetalOrb speaking={phase === 'speak'} awakened={hatched} size={130} />
             )}
           </div>
 
@@ -352,64 +354,6 @@ function ParticleCloud({ active, hatched }) {
         );
       })}
     </div>
-  );
-}
-
-/** The hatched orb — looks up at the user, breathes, pulses when speaking. */
-function BornOrb({ speaking, warmth }) {
-  return (
-    <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} className="relative" style={{ width: 130, height: 130 }}>
-      {/* Outer glow halo */}
-      <motion.div className="absolute inset-0 rounded-full"
-        animate={{ opacity: speaking ? [0.5, 0.95, 0.5] : [0.35, 0.65, 0.35], scale: speaking ? [1, 1.3, 1] : [1, 1.1, 1] }}
-        transition={{ duration: speaking ? 0.8 : 3.2, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ background: 'radial-gradient(circle, hsla(280,100%,70%,0.65) 0%, transparent 70%)' }} />
-      <motion.div className="absolute inset-0 rounded-full"
-        animate={{ opacity: [0.15, 0.4 + warmth * 0.05, 0.15], scale: [1, 1.18, 1] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ background: 'radial-gradient(circle, hsla(25,90%,60%,0.4) 0%, transparent 65%)' }} />
-
-      {/* Orb body — liquid amethyst sphere, slightly warmer now */}
-      <motion.div className="absolute inset-3 rounded-full"
-        animate={{ scale: speaking ? [1, 1.05, 1] : [1, 1.02, 1] }}
-        transition={{ duration: speaking ? 0.8 : 4, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          background: 'radial-gradient(circle at 35% 28%, hsl(295 100% 94%) 0%, hsl(285 92% 75%) 26%, hsl(272 88% 55%) 56%, hsl(262 82% 40%) 100%)',
-          boxShadow: 'inset 0 -10px 24px hsla(265,80%,28%,0.65), inset 0 8px 18px hsla(295,100%,92%,0.6), 0 0 50px hsla(280,100%,60%,0.75)' }} />
-
-      {/* Inner swirls */}
-      <motion.div className="absolute inset-3 rounded-full overflow-hidden" animate={{ rotate: 360 }}
-        transition={{ duration: 14, repeat: Infinity, ease: 'linear' }} style={{ opacity: 0.35 }}>
-        <div className="absolute inset-0" style={{ background: 'conic-gradient(from 0deg, transparent, hsla(280,100%,80%,0.5), transparent, hsla(25,90%,70%,0.35), transparent, hsla(280,100%,85%,0.4), transparent)' }} />
-      </motion.div>
-      <motion.div className="absolute inset-6 rounded-full overflow-hidden" animate={{ rotate: -360 }}
-        transition={{ duration: 9, repeat: Infinity, ease: 'linear' }} style={{ opacity: 0.3 }}>
-        <div className="absolute inset-0" style={{ background: 'conic-gradient(from 90deg, transparent, hsla(295,100%,90%,0.5), transparent, hsla(265,80%,55%,0.4), transparent)' }} />
-      </motion.div>
-
-      {/* Specular highlight */}
-      <div className="absolute rounded-full pointer-events-none"
-        style={{ top: 20, left: 26, width: 36, height: 22, background: 'radial-gradient(ellipse, hsla(295,100%,98%,0.9) 0%, transparent 70%)', filter: 'blur(2px)' }} />
-
-      {/* The eye — open, looking up at the user. Color shifts when speaking. */}
-      <motion.div className="absolute rounded-full"
-        initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-        style={{ top: '36%', left: '42%', width: 20, height: 20 }}>
-        <motion.div className="w-full h-full rounded-full"
-          animate={{
-            background: speaking
-              ? ['radial-gradient(circle, hsl(195 100% 95%) 0%, hsl(200 90% 60%) 60%, hsl(210 80% 40%) 100%)',
-                 'radial-gradient(circle, hsl(280 100% 95%) 0%, hsl(270 90% 65%) 60%, hsl(260 80% 45%) 100%)',
-                 'radial-gradient(circle, hsl(195 100% 95%) 0%, hsl(200 90% 60%) 60%, hsl(210 80% 40%) 100%)']
-              : 'radial-gradient(circle, hsl(195 100% 92%) 0%, hsl(200 90% 58%) 55%, hsl(212 82% 40%) 100%)',
-            scale: speaking ? [1, 1.15, 1] : [1, 1.04, 1],
-          }}
-          transition={{ duration: speaking ? 1.6 : 3, repeat: Infinity }}
-          style={{ boxShadow: '0 0 14px hsla(195,100%,80%,0.8)' }} />
-      </motion.div>
-    </motion.div>
   );
 }
 

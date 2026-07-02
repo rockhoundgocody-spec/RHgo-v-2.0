@@ -11,6 +11,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
+import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
 
 const TIME_LABEL = (h) => h < 5 ? 'these small hours' : h < 12 ? 'the morning' : h < 17 ? 'the afternoon' : h < 21 ? 'the evening' : 'the night';
 
@@ -105,28 +106,7 @@ export default function CloverReunion({ bond, onDone }) {
                 style={{ width: 90 + i * 22, height: 90 + i * 22, borderColor: i < level ? 'hsla(280,100%,75%,0.4)' : 'hsla(280,30%,50%,0.2)' }} />
             ))}
 
-            <motion.div className="absolute inset-0 rounded-full"
-              animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.12, 1] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ background: 'radial-gradient(circle, hsla(280,100%,70%,0.6) 0%, transparent 70%)' }} />
-
-            <motion.div className="absolute inset-4 rounded-full"
-              animate={{ scale: [1, 1.03, 1] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-              style={{
-                background: 'radial-gradient(circle at 35% 28%, hsl(295 100% 94%) 0%, hsl(285 92% 75%) 26%, hsl(272 88% 55%) 56%, hsl(262 82% 40%) 100%)',
-                boxShadow: 'inset 0 -8px 20px hsla(265,80%,28%,0.6), inset 0 6px 16px hsla(295,100%,92%,0.5), 0 0 44px hsla(280,100%,60%,0.7)',
-              }} />
-            <motion.div className="absolute inset-4 rounded-full overflow-hidden" animate={{ rotate: 360 }} transition={{ duration: 16, repeat: Infinity, ease: 'linear' }} style={{ opacity: 0.3 }}>
-              <div className="absolute inset-0" style={{ background: 'conic-gradient(from 0deg, transparent, hsla(280,100%,80%,0.45), transparent, hsla(25,90%,70%,0.3), transparent)' }} />
-            </motion.div>
-            <div className="absolute rounded-full pointer-events-none" style={{ top: 22, left: 30, width: 32, height: 20, background: 'radial-gradient(ellipse, hsla(295,100%,98%,0.85) 0%, transparent 70%)', filter: 'blur(2px)' }} />
-            {/* Eye — soft, recognizing */}
-            <motion.div className="absolute rounded-full" style={{ top: '36%', left: '42%', width: 16, height: 16 }}>
-              <motion.div className="w-full h-full rounded-full"
-                animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 3, repeat: Infinity }}
-                style={{ background: 'radial-gradient(circle, hsl(195 100% 90%) 0%, hsl(200 90% 55%) 55%, hsl(212 80% 38%) 100%)', boxShadow: '0 0 10px hsla(195,100%,80%,0.7)' }} />
-            </motion.div>
+            <LiquidMetalOrb awakened size={120} />
           </div>
 
           {/* Wordmark */}
