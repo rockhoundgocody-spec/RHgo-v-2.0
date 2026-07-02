@@ -1,5 +1,4 @@
-## 2024-03-24 - Missing ARIA Labels on Final Action Buttons\n**Learning:** The final summary/action card in Progressive Verification (PsvFinalCard) lacked aria-labels on its icon-only rescan button. This pattern often occurs in final 'action strips' where space is tight and icons replace text.\n**Action:** Add aria-label attributes to all icon-only action buttons in summary views.
+## 2025-05-15 - [Accessible Form & Action Controls]
 
-## 2024-03-25 - Missing ARIA Labels on Overlay Icon Buttons
-**Learning:** Absolute-positioned icon-only overlay buttons (like "Clear Search" in inputs or "Close" in floating sheets) frequently miss `aria-label`s and proper keyboard focus states. Since they overlay other content, standard focus indicators might be clipped or invisible, leading to poor keyboard accessibility.
-**Action:** Always verify that overlay icon buttons have an `aria-label` and explicit keyboard focus indicators like `focus-visible:ring-2`. Ensure border radii match for clean focus rings.
+**Learning:** In a specialized UI like RockHound-GO, custom-styled native inputs (like checkboxes) can create accessibility gaps and visual inconsistency. Using established design system components ensures better keyboard support and screen reader compatibility. Additionally, icon-only buttons in complex result screens (like `HolographicResult`) require explicit `aria-label` attributes to be perceivable by assistive technologies.
+**Action:** Always audit specialized modals for native HTML inputs that should be replaced with themed `Checkbox` or `Switch` components, and ensure every `Button` with only an icon has a descriptive `aria-label` or `title`.
