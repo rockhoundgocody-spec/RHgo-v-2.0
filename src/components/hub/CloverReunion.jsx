@@ -35,16 +35,22 @@ export default function CloverReunion({ bond, onDone }) {
   const { speak, stop } = useSpeechSynthesis();
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
   const timer = useRef();
+  const spokenRef = useRef(false);
 
   useEffect(() => {
     const line = pickGreeting(bond);
     setGreeting(line);
     if (voiceEnabled) {
       // small delay so the orb settles before speaking
-      const t = setTimeout(() => speak(line, { voice: 'honey' }), 500);
+      const t = setTimeout(() => {
+        if (spokenRef.current) return;
+        spokenRef.current = true;
+        stop();
+        speak(line, { voice: 'honey' });
+      }, 500);
       return () => clearTimeout(t);
     }
-  }, [bond, speak, voiceEnabled]);
+  }, [bond, speak, stop, voiceEnabled]);
 
   useEffect(() => {
     timer.current = setTimeout(() => setLeaving(true), 3200);

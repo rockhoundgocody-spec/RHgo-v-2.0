@@ -45,6 +45,7 @@ function BirthSequence({ onDone }) {
   const [cracks, setCracks] = useState(0);        // number of shell cracks from touch
   const [warmth, setWarmth] = useState(0);        // bonding warmth 0-3
   const timers = useRef([]);
+  const spokenRef = useRef(false);
   const { speak, stop } = useSpeechSynthesis();
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
@@ -60,7 +61,11 @@ function BirthSequence({ onDone }) {
     timers.current.push(setTimeout(() => {
       setShowWords(true);
       setPhase('speak');
-      if (voiceEnabled) speak(FIRST_WORDS, { voice: 'honey' });
+      if (voiceEnabled && !spokenRef.current) {
+        spokenRef.current = true;
+        stop();
+        speak(FIRST_WORDS, { voice: 'honey' });
+      }
     }, SPEAK_AT));
     timers.current.push(setTimeout(() => setPhase('exit'), EXIT_AT));
     return () => { clearTimers(); stop(); };
