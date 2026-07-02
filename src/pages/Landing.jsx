@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight, Flame } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight, Flame } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const FEATURES = [
   {

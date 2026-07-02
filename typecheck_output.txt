@@ -1,0 +1,1502 @@
+
+> base44-app@0.0.0 typecheck
+> tsc -p ./jsconfig.json
+
+node_modules/leaflet/dist/leaflet-src.js(7,41): error TS2591: Cannot find name 'module'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/leaflet/dist/leaflet-src.js(8,10): error TS2304: Cannot find name 'define'.
+node_modules/leaflet/dist/leaflet-src.js(8,35): error TS2304: Cannot find name 'define'.
+node_modules/leaflet/dist/leaflet-src.js(8,48): error TS2304: Cannot find name 'define'.
+node_modules/leaflet/dist/leaflet-src.js(9,4): error TS2322: Type 'typeof globalThis | typeof import("/app/node_modules/leaflet/dist/leaflet-src")' is not assignable to type 'typeof import("/app/node_modules/leaflet/dist/leaflet-src")'.
+  Type 'typeof globalThis' is missing the following properties from type 'typeof import("/app/node_modules/leaflet/dist/leaflet-src")': Bounds, Browser, CRS, Canvas, and 73 more.
+node_modules/leaflet/dist/leaflet-src.js(9,93): error TS2339: Property 'leaflet' does not exist on type 'typeof import("/app/node_modules/leaflet/dist/leaflet-src")'.
+node_modules/leaflet/dist/leaflet-src.js(402,15): error TS2304: Cannot find name 'L'.
+node_modules/leaflet/dist/leaflet-src.js(402,37): error TS2304: Cannot find name 'L'.
+node_modules/leaflet/dist/leaflet-src.js(402,43): error TS2304: Cannot find name 'L'.
+node_modules/leaflet/dist/leaflet-src.js(407,25): error TS2304: Cannot find name 'L'.
+node_modules/leaflet/dist/leaflet-src.js(570,31): error TS2538: Type 'true' cannot be used as an index type.
+node_modules/leaflet/dist/leaflet-src.js(1038,15): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1038,28): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1039,11): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1040,11): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1042,11): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1042,41): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1043,11): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1043,41): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1044,11): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1044,41): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1045,11): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1045,41): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1054,19): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1054,32): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1055,19): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1055,32): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1061,25): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1061,37): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1067,25): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1067,37): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1073,17): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1079,17): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1085,17): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1085,35): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1109,27): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1110,27): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1111,27): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1112,27): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1121,20): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1122,20): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1137,20): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1138,20): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1150,20): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1150,32): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1159,20): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1160,16): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1178,17): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1179,11): error TS2339: Property 'max' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(1245,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1246,19): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1264,11): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1265,11): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1281,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1282,19): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1295,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1295,41): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1296,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1296,41): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1302,17): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1308,17): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1326,17): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1332,17): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1338,17): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1344,17): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1360,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1361,19): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1380,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1381,19): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1396,19): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1397,19): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1420,17): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1421,17): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1427,20): error TS2551: Property '_southWest' does not exist on type 'LatLngBounds'. Did you mean 'getSouthWest'?
+node_modules/leaflet/dist/leaflet-src.js(1427,39): error TS2551: Property '_northEast' does not exist on type 'LatLngBounds'. Did you mean 'getNorthEast'?
+node_modules/leaflet/dist/leaflet-src.js(1963,24): error TS2339: Property 'opera' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(1994,23): error TS2339: Property 'L_DISABLE_3D' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(2008,50): error TS2551: Property 'MSPointerEvent' does not exist on type 'Window & typeof globalThis'. Did you mean 'PointerEvent'?
+node_modules/leaflet/dist/leaflet-src.js(2024,23): error TS2339: Property 'L_NO_TOUCH' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(2035,59): error TS2339: Property 'deviceXDPI' does not exist on type 'Screen'.
+node_modules/leaflet/dist/leaflet-src.js(2035,86): error TS2339: Property 'logicalXDPI' does not exist on type 'Screen'.
+node_modules/leaflet/dist/leaflet-src.js(2068,45): error TS2339: Property 'namespaceURI' does not exist on type 'ChildNode'.
+node_modules/leaflet/dist/leaflet-src.js(2079,11): error TS2339: Property 'style' does not exist on type 'ChildNode'.
+node_modules/leaflet/dist/leaflet-src.js(2081,35): error TS2339: Property 'adj' does not exist on type 'ChildNode'.
+node_modules/leaflet/dist/leaflet-src.js(2285,61): error TS2339: Property 'for' does not exist on type 'NamedNodeMap'.
+node_modules/leaflet/dist/leaflet-src.js(2503,12): error TS2339: Property 'Enabled' does not exist on type 'true'.
+node_modules/leaflet/dist/leaflet-src.js(2504,12): error TS2339: Property 'Opacity' does not exist on type 'true'.
+node_modules/leaflet/dist/leaflet-src.js(2809,5): error TS2322: Type '{ dblclick: any; simDblclick: (e: any) => void; }' is not assignable to type '(e: any) => any'.
+  Type '{ dblclick: any; simDblclick: (e: any) => void; }' provides no match for the signature '(e: any): any'.
+node_modules/leaflet/dist/leaflet-src.js(3047,30): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(3145,21): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(3531,12): error TS2339: Property '_move' does not exist on type 'frame'.
+node_modules/leaflet/dist/leaflet-src.js(3532,13): error TS2339: Property 'unproject' does not exist on type 'frame'.
+node_modules/leaflet/dist/leaflet-src.js(3533,13): error TS2339: Property 'getScaleZoom' does not exist on type 'frame'.
+node_modules/leaflet/dist/leaflet-src.js(3538,9): error TS2339: Property '_move' does not exist on type 'frame'.
+node_modules/leaflet/dist/leaflet-src.js(5074,24): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5481,22): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5597,13): error TS2339: Property 'options' does not exist on type '(Anonymous function)'.
+node_modules/leaflet/dist/leaflet-src.js(5603,10): error TS2339: Property 'addControl' does not exist on type '(Anonymous function)'.
+node_modules/leaflet/dist/leaflet-src.js(5628,23): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5754,29): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5884,11): error TS2339: Property 'Layers' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5885,11): error TS2339: Property 'Zoom' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5886,11): error TS2339: Property 'Scale' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5887,11): error TS2339: Property 'Attribution' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5945,11): error TS2339: Property 'addTo' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(5970,27): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(6101,17): error TS2339: Property 'SVGElementInstance' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(6101,74): error TS2339: Property 'SVGElementInstance' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(6202,10): error TS2339: Property '_code' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(6210,9): error TS2339: Property '_code' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(6335,21): error TS2345: Argument of type 'number | Point' is not assignable to parameter of type 'number'.
+  Type 'Point' is not assignable to type 'number'.
+node_modules/leaflet/dist/leaflet-src.js(6375,9): error TS2365: Operator '>' cannot be applied to types 'number | Point' and 'number'.
+node_modules/leaflet/dist/leaflet-src.js(6377,6): error TS2322: Type 'number | Point' is not assignable to type 'number'.
+  Type 'Point' is not assignable to type 'number'.
+node_modules/leaflet/dist/leaflet-src.js(6813,23): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(7485,26): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(7529,17): error TS2339: Property 'href' does not exist on type 'Element'.
+node_modules/leaflet/dist/leaflet-src.js(7529,40): error TS2339: Property 'href' does not exist on type 'Element'.
+node_modules/leaflet/dist/leaflet-src.js(7551,28): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(8550,11): error TS2365: Operator '<' cannot be applied to types 'number | Point' and 'number'.
+node_modules/leaflet/dist/leaflet-src.js(8551,8): error TS2322: Type 'number | Point' is not assignable to type 'number'.
+  Type 'Point' is not assignable to type 'number'.
+node_modules/leaflet/dist/leaflet-src.js(8557,15): error TS2339: Property 'distance' does not exist on type 'number | Point'.
+  Property 'distance' does not exist on type 'number'.
+node_modules/leaflet/dist/leaflet-src.js(9571,31): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(11057,22): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(11109,8): error TS2339: Property 'Default' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(11474,6): error TS2322: Type 'number' is not assignable to type 'string'.
+node_modules/leaflet/dist/leaflet-src.js(11476,67): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+node_modules/leaflet/dist/leaflet-src.js(11501,14): error TS2554: Expected 0 arguments, but got 1.
+node_modules/leaflet/dist/leaflet-src.js(11584,13): error TS2339: Property 'z' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(11610,14): error TS2339: Property 'z' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(11784,14): error TS2339: Property 'z' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(11872,12): error TS2339: Property 'z' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(12002,15): error TS2339: Property 'z' does not exist on type 'Point'.
+node_modules/leaflet/dist/leaflet-src.js(13064,14): error TS2339: Property 'namespaces' does not exist on type 'Document'.
+node_modules/leaflet/dist/leaflet-src.js(13104,15): error TS2339: Property 'coordsize' does not exist on type 'HTMLElement'.
+node_modules/leaflet/dist/leaflet-src.js(13519,25): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(13593,35): error TS2339: Property 'min' does not exist on type 'Bounds'.
+node_modules/leaflet/dist/leaflet-src.js(13666,33): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(13749,22): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(13948,26): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(14134,33): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(14217,25): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(14281,20): error TS2339: Property '_simulated' does not exist on type 'MouseEvent'.
+node_modules/leaflet/dist/leaflet-src.js(14313,27): error TS2339: Property 'extend' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+node_modules/leaflet/dist/leaflet-src.js(14503,21): error TS2339: Property 'L' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(14505,11): error TS2339: Property 'L' does not exist on type 'Window & typeof globalThis'.
+node_modules/leaflet/dist/leaflet-src.js(14509,10): error TS2339: Property 'L' does not exist on type 'Window & typeof globalThis'.
+node_modules/three/build/three.core.js(643,21): error TS2339: Property 'isVector2' does not exist on type 'Vector2'.
+node_modules/three/build/three.core.js(736,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(1120,21): error TS2339: Property 'isMatrix3' does not exist on type 'Matrix3'.
+node_modules/three/build/three.core.js(1495,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(1879,11): error TS2339: Property 'width' does not exist on type 'HTMLElement'.
+node_modules/three/build/three.core.js(1880,11): error TS2339: Property 'height' does not exist on type 'HTMLElement'.
+node_modules/three/build/three.core.js(1882,27): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+node_modules/three/build/three.core.js(2124,6): error TS1052: A 'set' accessor parameter cannot have an initializer.
+node_modules/three/build/three.core.js(2138,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(2365,21): error TS2339: Property 'isVector4' does not exist on type 'Vector4'.
+node_modules/three/build/three.core.js(2484,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(3132,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(3480,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(3986,21): error TS2339: Property 'isVector3' does not exist on type 'Vector3'.
+node_modules/three/build/three.core.js(4070,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(4785,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(5468,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(5958,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(5968,21): error TS2339: Property 'isMatrix4' does not exist on type 'Matrix4'.
+node_modules/three/build/three.core.js(6958,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(7370,31): error TS2339: Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7370,46): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7370,63): error TS2339: Property 'scale' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7376,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7386,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7392,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7400,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7408,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7419,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7433,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7462,44): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7464,8): error TS2339: Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7524,13): error TS2339: Property 'isCamera' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7524,30): error TS2339: Property 'isLight' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7534,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7540,9): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7813,29): error TS2339: Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7813,44): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7813,61): error TS2339: Property 'scale' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7958,13): error TS2339: Property 'isInstancedMesh' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7961,24): error TS2339: Property 'count' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7962,33): error TS2339: Property 'instanceMatrix' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7963,14): error TS2339: Property 'instanceColor' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7963,67): error TS2339: Property 'instanceColor' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7967,13): error TS2339: Property 'isBatchedMesh' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7970,41): error TS2339: Property 'perObjectFrustumCulled' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7971,30): error TS2339: Property 'sortObjects' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7973,29): error TS2339: Property '_drawRanges' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7974,33): error TS2339: Property '_reservedRanges' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7976,29): error TS2339: Property '_visibility' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7977,25): error TS2339: Property '_active' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7978,25): error TS2339: Property '_bounds' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7988,35): error TS2339: Property '_maxInstanceCount' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7989,33): error TS2339: Property '_maxVertexCount' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7990,32): error TS2339: Property '_maxIndexCount' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7992,38): error TS2339: Property '_geometryInitialized' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7993,32): error TS2339: Property '_geometryCount' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7995,34): error TS2339: Property '_matricesTexture' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7997,14): error TS2339: Property '_colorsTexture' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7997,68): error TS2339: Property '_colorsTexture' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(7999,14): error TS2339: Property 'boundingSphere' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8008,14): error TS2339: Property 'boundingBox' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8033,13): error TS2339: Property 'isScene' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8035,14): error TS2339: Property 'background' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8037,15): error TS2339: Property 'background' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8039,31): error TS2339: Property 'background' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8041,22): error TS2339: Property 'background' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8043,31): error TS2339: Property 'background' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8049,14): error TS2339: Property 'environment' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8049,34): error TS2339: Property 'environment' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8049,64): error TS2339: Property 'environment' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8051,31): error TS2339: Property 'environment' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8055,20): error TS2339: Property 'isMesh' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8055,35): error TS2339: Property 'isLine' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8055,50): error TS2339: Property 'isPoints' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8057,55): error TS2339: Property 'geometry' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8059,28): error TS2339: Property 'geometry' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8085,13): error TS2339: Property 'isSkinnedMesh' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8087,27): error TS2339: Property 'bindMode' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8088,29): error TS2339: Property 'bindMatrix' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8090,14): error TS2339: Property 'skeleton' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8092,37): error TS2339: Property 'skeleton' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8094,28): error TS2339: Property 'skeleton' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8100,13): error TS2339: Property 'material' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8102,29): error TS2339: Property 'material' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8106,31): error TS2339: Property 'material' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8108,50): error TS2339: Property 'material' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8116,55): error TS2339: Property 'material' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8200,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(8210,8): error TS2339: Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8211,8): error TS2339: Property 'rotation' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8212,8): error TS2339: Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8213,8): error TS2339: Property 'scale' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(8428,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(8886,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(9384,13): error TS2339: Property 'color' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9384,27): error TS2339: Property 'color' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9384,61): error TS2339: Property 'color' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9386,13): error TS2339: Property 'roughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9386,61): error TS2339: Property 'roughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9387,13): error TS2339: Property 'metalness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9387,61): error TS2339: Property 'metalness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9389,13): error TS2339: Property 'sheen' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9389,53): error TS2339: Property 'sheen' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9390,13): error TS2339: Property 'sheenColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9390,32): error TS2339: Property 'sheenColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9390,76): error TS2339: Property 'sheenColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9391,13): error TS2339: Property 'sheenRoughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9391,71): error TS2339: Property 'sheenRoughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9392,13): error TS2339: Property 'emissive' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9392,30): error TS2339: Property 'emissive' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9392,70): error TS2339: Property 'emissive' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9393,13): error TS2339: Property 'emissiveIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9393,53): error TS2339: Property 'emissiveIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9393,109): error TS2339: Property 'emissiveIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9395,13): error TS2339: Property 'specular' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9395,30): error TS2339: Property 'specular' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9395,70): error TS2339: Property 'specular' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9396,13): error TS2339: Property 'specularIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9396,77): error TS2339: Property 'specularIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9397,13): error TS2339: Property 'specularColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9397,35): error TS2339: Property 'specularColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9397,85): error TS2339: Property 'specularColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9398,13): error TS2339: Property 'shininess' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9398,61): error TS2339: Property 'shininess' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9399,13): error TS2339: Property 'clearcoat' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9399,61): error TS2339: Property 'clearcoat' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9400,13): error TS2339: Property 'clearcoatRoughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9400,79): error TS2339: Property 'clearcoatRoughness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9402,13): error TS2339: Property 'clearcoatMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9402,34): error TS2339: Property 'clearcoatMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9404,29): error TS2339: Property 'clearcoatMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9408,13): error TS2339: Property 'clearcoatRoughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9408,43): error TS2339: Property 'clearcoatRoughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9410,38): error TS2339: Property 'clearcoatRoughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9414,13): error TS2339: Property 'clearcoatNormalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9414,40): error TS2339: Property 'clearcoatNormalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9416,35): error TS2339: Property 'clearcoatNormalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9417,37): error TS2339: Property 'clearcoatNormalScale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9421,13): error TS2339: Property 'dispersion' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9421,63): error TS2339: Property 'dispersion' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9423,13): error TS2339: Property 'iridescence' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9423,65): error TS2339: Property 'iridescence' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9424,13): error TS2339: Property 'iridescenceIOR' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9424,71): error TS2339: Property 'iridescenceIOR' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9425,13): error TS2339: Property 'iridescenceThicknessRange' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9425,93): error TS2339: Property 'iridescenceThicknessRange' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9427,13): error TS2339: Property 'iridescenceMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9427,36): error TS2339: Property 'iridescenceMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9429,31): error TS2339: Property 'iridescenceMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9433,13): error TS2339: Property 'iridescenceThicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9433,45): error TS2339: Property 'iridescenceThicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9435,40): error TS2339: Property 'iridescenceThicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9439,13): error TS2339: Property 'anisotropy' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9439,63): error TS2339: Property 'anisotropy' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9440,13): error TS2339: Property 'anisotropyRotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9440,79): error TS2339: Property 'anisotropyRotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9442,13): error TS2339: Property 'anisotropyMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9442,35): error TS2339: Property 'anisotropyMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9444,30): error TS2339: Property 'anisotropyMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9448,13): error TS2339: Property 'map' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9448,25): error TS2339: Property 'map' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9448,57): error TS2339: Property 'map' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9449,13): error TS2339: Property 'matcap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9449,28): error TS2339: Property 'matcap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9449,66): error TS2339: Property 'matcap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9450,13): error TS2339: Property 'alphaMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9450,30): error TS2339: Property 'alphaMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9450,72): error TS2339: Property 'alphaMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9452,13): error TS2339: Property 'lightMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9452,30): error TS2339: Property 'lightMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9454,25): error TS2339: Property 'lightMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9455,34): error TS2339: Property 'lightMapIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9459,13): error TS2339: Property 'aoMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9459,27): error TS2339: Property 'aoMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9461,22): error TS2339: Property 'aoMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9462,31): error TS2339: Property 'aoMapIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9466,13): error TS2339: Property 'bumpMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9466,29): error TS2339: Property 'bumpMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9468,24): error TS2339: Property 'bumpMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9469,26): error TS2339: Property 'bumpScale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9473,13): error TS2339: Property 'normalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9473,31): error TS2339: Property 'normalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9475,26): error TS2339: Property 'normalMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9476,30): error TS2339: Property 'normalMapType' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9477,28): error TS2339: Property 'normalScale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9481,13): error TS2339: Property 'displacementMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9481,37): error TS2339: Property 'displacementMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9483,32): error TS2339: Property 'displacementMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9484,34): error TS2339: Property 'displacementScale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9485,33): error TS2339: Property 'displacementBias' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9489,13): error TS2339: Property 'roughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9489,34): error TS2339: Property 'roughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9489,84): error TS2339: Property 'roughnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9490,13): error TS2339: Property 'metalnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9490,34): error TS2339: Property 'metalnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9490,84): error TS2339: Property 'metalnessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9492,13): error TS2339: Property 'emissiveMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9492,33): error TS2339: Property 'emissiveMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9492,81): error TS2339: Property 'emissiveMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9493,13): error TS2339: Property 'specularMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9493,33): error TS2339: Property 'specularMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9493,81): error TS2339: Property 'specularMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9494,13): error TS2339: Property 'specularIntensityMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9494,42): error TS2339: Property 'specularIntensityMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9494,108): error TS2339: Property 'specularIntensityMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9495,13): error TS2339: Property 'specularColorMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9495,38): error TS2339: Property 'specularColorMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9495,96): error TS2339: Property 'specularColorMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9497,13): error TS2339: Property 'envMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9497,28): error TS2339: Property 'envMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9499,23): error TS2339: Property 'envMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9501,14): error TS2339: Property 'combine' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9501,58): error TS2339: Property 'combine' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9505,13): error TS2339: Property 'envMapRotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9505,71): error TS2339: Property 'envMapRotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9506,13): error TS2339: Property 'envMapIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9506,73): error TS2339: Property 'envMapIntensity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9507,13): error TS2339: Property 'reflectivity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9507,67): error TS2339: Property 'reflectivity' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9508,13): error TS2339: Property 'refractionRatio' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9508,73): error TS2339: Property 'refractionRatio' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9510,13): error TS2339: Property 'gradientMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9510,33): error TS2339: Property 'gradientMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9512,28): error TS2339: Property 'gradientMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9516,13): error TS2339: Property 'transmission' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9516,67): error TS2339: Property 'transmission' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9517,13): error TS2339: Property 'transmissionMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9517,37): error TS2339: Property 'transmissionMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9517,93): error TS2339: Property 'transmissionMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9518,13): error TS2339: Property 'thickness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9518,61): error TS2339: Property 'thickness' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9519,13): error TS2339: Property 'thicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9519,34): error TS2339: Property 'thicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9519,84): error TS2339: Property 'thicknessMap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9520,13): error TS2339: Property 'attenuationDistance' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9520,55): error TS2339: Property 'attenuationDistance' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9520,122): error TS2339: Property 'attenuationDistance' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9521,13): error TS2339: Property 'attenuationColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9521,75): error TS2339: Property 'attenuationColor' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9523,13): error TS2339: Property 'size' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9523,51): error TS2339: Property 'size' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9525,13): error TS2339: Property 'sizeAttenuation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9525,73): error TS2339: Property 'sizeAttenuation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9558,13): error TS2339: Property 'rotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9558,44): error TS2339: Property 'rotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9558,82): error TS2339: Property 'rotation' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9564,13): error TS2339: Property 'linewidth' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9564,45): error TS2339: Property 'linewidth' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9564,85): error TS2339: Property 'linewidth' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9565,13): error TS2339: Property 'dashSize' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9565,59): error TS2339: Property 'dashSize' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9566,13): error TS2339: Property 'gapSize' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9566,57): error TS2339: Property 'gapSize' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9567,13): error TS2339: Property 'scale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9567,53): error TS2339: Property 'scale' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9577,13): error TS2339: Property 'wireframe' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9578,13): error TS2339: Property 'wireframeLinewidth' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9578,69): error TS2339: Property 'wireframeLinewidth' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9579,13): error TS2339: Property 'wireframeLinecap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9579,73): error TS2339: Property 'wireframeLinecap' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9580,13): error TS2339: Property 'wireframeLinejoin' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9580,75): error TS2339: Property 'wireframeLinejoin' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9582,13): error TS2339: Property 'flatShading' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9588,13): error TS2339: Property 'fog' does not exist on type 'Material'.
+node_modules/three/build/three.core.js(9626,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(10331,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(11473,13): error TS2339: Property 'parameters' does not exist on type 'BufferGeometry'.
+node_modules/three/build/three.core.js(11475,28): error TS2339: Property 'parameters' does not exist on type 'BufferGeometry'.
+node_modules/three/build/three.core.js(11571,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(12613,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(13177,36): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.core.js(13304,15): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.core.js(13306,4): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.core.js(13457,18): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(13967,8): error TS2339: Property 'modelViewMatrix' does not exist on type 'Sprite'.
+node_modules/three/build/three.core.js(13969,43): error TS2339: Property 'modelViewMatrix' does not exist on type 'Sprite'.
+node_modules/three/build/three.core.js(14123,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14147,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14176,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14210,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14226,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14282,23): error TS2339: Property 'levels' does not exist on type 'LOD'.
+node_modules/three/build/three.core.js(14714,27): error TS2345: Argument of type 'Float32Array<ArrayBuffer>' is not assignable to parameter of type 'any[]'.
+  Type 'Float32Array<ArrayBuffer>' is missing the following properties from type 'any[]': pop, push, concat, shift, and 6 more.
+node_modules/three/build/three.core.js(15347,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(15526,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(17009,47): error TS2339: Property 'scale' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17009,62): error TS2339: Property 'scale' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17009,77): error TS2339: Property 'scale' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17012,21): error TS2339: Property 'isLineSegments' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17038,14): error TS2339: Property 'isLineLoop' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17070,14): error TS2339: Property 'isLineLoop' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(17317,47): error TS2339: Property 'scale' does not exist on type 'Points'.
+node_modules/three/build/three.core.js(17317,62): error TS2339: Property 'scale' does not exist on type 'Points'.
+node_modules/three/build/three.core.js(17317,77): error TS2339: Property 'scale' does not exist on type 'Points'.
+node_modules/three/build/three.core.js(17467,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(17695,25): error TS2554: Expected 0 arguments, but got 2.
+node_modules/three/build/three.core.js(17707,32): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(17755,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(17762,29): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(17875,30): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(17876,30): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(18009,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(18292,26): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.core.js(18293,26): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.core.js(18294,26): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.core.js(19728,7): error TS2415: Class 'CapsuleGeometry' incorrectly extends base class 'LatheGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; length: number; capSegments: number; radialSegments: number; }' is missing the following properties from type '{ points: Vector2[]; segments: number; phiStart: number; phiLength: number; }': points, segments, phiStart, phiLength
+node_modules/three/build/three.core.js(20137,7): error TS2415: Class 'ConeGeometry' incorrectly extends base class 'CylinderGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; height: number; radialSegments: number; heightSegments: number; openEnded: boolean; thetaStart: number; thetaLength: number; }' is missing the following properties from type '{ radiusTop: number; radiusBottom: number; height: number; radialSegments: number; heightSegments: number; openEnded: boolean; thetaStart: number; thetaLength: number; }': radiusTop, radiusBottom
+node_modules/three/build/three.core.js(20478,7): error TS2415: Class 'DodecahedronGeometry' incorrectly extends base class 'PolyhedronGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; detail: number; }' is missing the following properties from type '{ vertices: any[]; indices: any[]; radius: number; detail: number; }': vertices, indices
+node_modules/three/build/three.core.js(21695,3): error TS2322: Type '(Shape & any[]) | Shape[]' is not assignable to type 'Shape'.
+  Type 'Shape[]' is missing the following properties from type 'Shape': uuid, type, holes, getPointsHoles, and 36 more.
+node_modules/three/build/three.core.js(21702,31): error TS2339: Property 'length' does not exist on type 'Shape'.
+node_modules/three/build/three.core.js(22372,31): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Shape'.
+  Type 'any[]' is missing the following properties from type 'Shape': uuid, type, holes, getPointsHoles, and 36 more.
+node_modules/three/build/three.core.js(22464,7): error TS2415: Class 'IcosahedronGeometry' incorrectly extends base class 'PolyhedronGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; detail: number; }' is missing the following properties from type '{ vertices: any[]; indices: any[]; radius: number; detail: number; }': vertices, indices
+node_modules/three/build/three.core.js(22502,7): error TS2415: Class 'OctahedronGeometry' incorrectly extends base class 'PolyhedronGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; detail: number; }' is missing the following properties from type '{ vertices: any[]; indices: any[]; radius: number; detail: number; }': vertices, indices
+node_modules/three/build/three.core.js(22909,29): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Shape'.
+  Type 'any[]' is missing the following properties from type 'Shape': uuid, type, holes, getPointsHoles, and 36 more.
+node_modules/three/build/three.core.js(23071,7): error TS2415: Class 'TetrahedronGeometry' incorrectly extends base class 'PolyhedronGeometry'.
+  Types of property 'parameters' are incompatible.
+    Type '{ radius: number; detail: number; }' is missing the following properties from type '{ vertices: any[]; indices: any[]; radius: number; detail: number; }': vertices, indices
+node_modules/three/build/three.core.js(25255,27): error TS2554: Expected 0 arguments, but got 3.
+node_modules/three/build/three.core.js(25259,29): error TS2554: Expected 0 arguments, but got 4.
+node_modules/three/build/three.core.js(25552,10): error TS2339: Property 'interpolation' does not exist on type '{ name: any; times: any; values: any; }'.
+node_modules/three/build/three.core.js(25611,10): error TS2339: Property 'ValueTypeName' does not exist on type 'KeyframeTrack'.
+node_modules/three/build/three.core.js(25943,21): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(25961,7): error TS2415: Class 'BooleanKeyframeTrack' incorrectly extends base class 'KeyframeTrack'.
+  Types of property 'ValueBufferType' are incompatible.
+    Property 'BYTES_PER_ELEMENT' is missing in type 'ArrayConstructor' but required in type 'Float32ArrayConstructor'.
+node_modules/three/build/three.core.js(26047,7): error TS2415: Class 'StringKeyframeTrack' incorrectly extends base class 'KeyframeTrack'.
+  Types of property 'ValueBufferType' are incompatible.
+    Property 'BYTES_PER_ELEMENT' is missing in type 'ArrayConstructor' but required in type 'Float32ArrayConstructor'.
+node_modules/three/build/three.core.js(26443,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(26449,27): error TS2339: Property 'toJSON' does not exist on type 'Function'.
+node_modules/three/build/three.core.js(26519,17): error TS2339: Property 'parse' does not exist on type 'typeof BooleanKeyframeTrack | typeof QuaternionKeyframeTrack'.
+  Property 'parse' does not exist on type 'typeof BooleanKeyframeTrack'.
+node_modules/three/build/three.core.js(26521,20): error TS2339: Property 'parse' does not exist on type 'typeof BooleanKeyframeTrack | typeof QuaternionKeyframeTrack'.
+  Property 'parse' does not exist on type 'typeof BooleanKeyframeTrack'.
+node_modules/three/build/three.core.js(26735,16): error TS2554: Expected 0 arguments, but got 4.
+node_modules/three/build/three.core.js(27159,35): error TS2554: Expected 0 arguments, but got 2.
+node_modules/three/build/three.core.js(27162,22): error TS2339: Property 'width' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27163,23): error TS2339: Property 'height' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27164,23): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27165,24): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27172,20): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27174,6): error TS2739: Type 'any[]' is missing the following properties from type '{ width: any; height: any; }': width, height
+node_modules/three/build/three.core.js(27175,32): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27200,35): error TS2554: Expected 0 arguments, but got 2.
+node_modules/three/build/three.core.js(27202,19): error TS2339: Property 'isCubemap' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27204,29): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27204,55): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27210,37): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27212,43): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27212,65): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27213,38): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27214,37): error TS2339: Property 'width' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27215,38): error TS2339: Property 'height' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27221,6): error TS2739: Type 'any[]' is missing the following properties from type '{ width: any; height: any; }': width, height
+node_modules/three/build/three.core.js(27225,37): error TS2339: Property 'width' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27226,38): error TS2339: Property 'height' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27227,33): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27231,19): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27237,31): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27323,48): error TS2339: Property 'crossOrigin' does not exist on type 'HTMLElement'.
+node_modules/three/build/three.core.js(27329,9): error TS2339: Property 'src' does not exist on type 'HTMLElement'.
+node_modules/three/build/three.core.js(27419,28): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.core.js(27436,17): error TS2339: Property 'image' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27438,29): error TS2339: Property 'image' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27440,24): error TS2339: Property 'data' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27442,35): error TS2339: Property 'width' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27443,36): error TS2339: Property 'height' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27444,34): error TS2339: Property 'data' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27448,28): error TS2339: Property 'wrapS' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27448,58): error TS2339: Property 'wrapS' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27449,28): error TS2339: Property 'wrapT' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27449,58): error TS2339: Property 'wrapT' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27451,32): error TS2339: Property 'magFilter' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27451,66): error TS2339: Property 'magFilter' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27452,32): error TS2339: Property 'minFilter' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27452,66): error TS2339: Property 'minFilter' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27454,33): error TS2339: Property 'anisotropy' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27454,68): error TS2339: Property 'anisotropy' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27456,17): error TS2339: Property 'colorSpace' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27458,34): error TS2339: Property 'colorSpace' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27462,17): error TS2339: Property 'flipY' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27464,29): error TS2339: Property 'flipY' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27468,17): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27470,30): error TS2339: Property 'format' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27474,17): error TS2339: Property 'type' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27476,28): error TS2339: Property 'type' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27480,17): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27482,31): error TS2339: Property 'mipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27487,17): error TS2339: Property 'mipmapCount' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27493,17): error TS2339: Property 'generateMipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27495,39): error TS2339: Property 'generateMipmaps' does not exist on type 'void'.
+node_modules/three/build/three.core.js(27586,13): error TS2339: Property 'groundColor' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27586,72): error TS2339: Property 'groundColor' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27588,13): error TS2339: Property 'distance' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27588,66): error TS2339: Property 'distance' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27589,13): error TS2339: Property 'angle' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27589,60): error TS2339: Property 'angle' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27590,13): error TS2339: Property 'decay' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27590,60): error TS2339: Property 'decay' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27591,13): error TS2339: Property 'penumbra' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27591,66): error TS2339: Property 'penumbra' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27593,13): error TS2339: Property 'shadow' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27593,62): error TS2339: Property 'shadow' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27594,13): error TS2339: Property 'target' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27594,62): error TS2339: Property 'target' does not exist on type 'Light'.
+node_modules/three/build/three.core.js(27612,8): error TS2339: Property 'position' does not exist on type 'HemisphereLight'.
+node_modules/three/build/three.core.js(27753,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(27831,8): error TS2339: Property 'position' does not exist on type 'SpotLight'.
+node_modules/three/build/three.core.js(28183,8): error TS2339: Property 'position' does not exist on type 'DirectionalLight'.
+node_modules/three/build/three.core.js(28459,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(29137,57): error TS2339: Property 'setUsage' does not exist on type 'BufferAttribute | InterleavedBufferAttribute'.
+  Property 'setUsage' does not exist on type 'InterleavedBufferAttribute'.
+node_modules/three/build/three.core.js(29836,55): error TS2339: Property 'compareFunction' does not exist on type 'Texture'.
+node_modules/three/build/three.core.js(30082,12): error TS2339: Property '_drawRanges' does not exist on type 'BatchedMesh'.
+node_modules/three/build/three.core.js(30083,12): error TS2339: Property '_reservedRanges' does not exist on type 'BatchedMesh'.
+node_modules/three/build/three.core.js(30085,12): error TS2339: Property '_visibility' does not exist on type 'BatchedMesh'.
+node_modules/three/build/three.core.js(30086,12): error TS2339: Property '_active' does not exist on type 'BatchedMesh'.
+node_modules/three/build/three.core.js(30087,12): error TS2339: Property '_bounds' does not exist on type 'BatchedMesh'.
+node_modules/three/build/three.core.js(30183,67): error TS2339: Property 'position' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30183,84): error TS2339: Property 'quaternion' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30183,103): error TS2339: Property 'scale' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'scale' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30187,46): error TS2339: Property 'position' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'position' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30188,46): error TS2339: Property 'rotation' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'rotation' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30189,48): error TS2339: Property 'quaternion' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'quaternion' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30190,43): error TS2339: Property 'scale' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'scale' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30201,54): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30202,49): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30203,55): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30204,51): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30205,52): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30206,51): error TS2339: Property 'shadow' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'shadow' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30244,48): error TS2339: Property 'autoUpdate' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'autoUpdate' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30255,13): error TS2339: Property 'addLevel' does not exist on type 'Object3D | Mesh | Sprite | LOD | BatchedMesh | Line | Points'.
+  Property 'addLevel' does not exist on type 'Object3D'.
+node_modules/three/build/three.core.js(30428,31): error TS2345: Argument of type '{ credentials: string; headers: {}; }' is not assignable to parameter of type 'RequestInit'.
+  Types of property 'credentials' are incompatible.
+    Type 'string' is not assignable to type 'RequestCredentials'.
+node_modules/three/build/three.core.js(30434,36): error TS2345: Argument of type '{ premultiplyAlpha: string; } & { colorSpaceConversion: string; }' is not assignable to parameter of type 'ImageBitmapOptions'.
+  Types of property 'colorSpaceConversion' are incompatible.
+    Type 'string' is not assignable to type 'ColorSpaceConversion'.
+node_modules/three/build/three.core.js(30472,51): error TS2551: Property 'webkitAudioContext' does not exist on type 'Window & typeof globalThis'. Did you mean 'AudioContext'?
+node_modules/three/build/three.core.js(31289,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(31312,2): error TS2416: Property 'connect' in type 'PositionalAudio' is not assignable to the same property in base type 'Audio'.
+  Type '() => void' is not assignable to type '() => this'.
+    Type 'void' is not assignable to type 'this'.
+      'this' could be instantiated with an arbitrary type which could be unrelated to 'void'.
+node_modules/three/build/three.core.js(31320,2): error TS2416: Property 'disconnect' in type 'PositionalAudio' is not assignable to the same property in base type 'Audio'.
+  Type '() => void' is not assignable to type '() => this'.
+    Type 'void' is not assignable to type 'this'.
+      'this' could be instantiated with an arbitrary type which could be unrelated to 'void'.
+node_modules/three/build/three.core.js(34448,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(34757,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(34817,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(34827,21): error TS2339: Property 'isMatrix2' does not exist on type 'Matrix2'.
+node_modules/three/build/three.core.js(34926,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(35184,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.core.js(35272,13): error TS2339: Property 'scale' does not exist on type 'LineSegments'.
+node_modules/three/build/three.core.js(35578,3): error TS2322: Type 'Color' is not assignable to type 'number'.
+node_modules/three/build/three.core.js(35579,3): error TS2322: Type 'Color' is not assignable to type 'number'.
+node_modules/three/build/three.core.js(35594,10): error TS2339: Property 'toArray' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35595,10): error TS2339: Property 'toArray' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35596,10): error TS2339: Property 'toArray' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35597,10): error TS2339: Property 'toArray' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35626,3): error TS2322: Type 'Color' is not assignable to type 'number'.
+node_modules/three/build/three.core.js(35627,3): error TS2322: Type 'Color' is not assignable to type 'number'.
+node_modules/three/build/three.core.js(35648,24): error TS2339: Property 'r' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35648,33): error TS2339: Property 'g' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35648,42): error TS2339: Property 'b' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35649,24): error TS2339: Property 'r' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35649,33): error TS2339: Property 'g' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35649,42): error TS2339: Property 'b' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35673,24): error TS2339: Property 'r' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35673,33): error TS2339: Property 'g' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35673,42): error TS2339: Property 'b' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35683,24): error TS2339: Property 'r' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35683,33): error TS2339: Property 'g' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35683,42): error TS2339: Property 'b' does not exist on type 'number'.
+node_modules/three/build/three.core.js(35788,19): error TS2339: Property 'scale' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(36189,23): error TS2339: Property 'position' does not exist on type 'Box3Helper'.
+node_modules/three/build/three.core.js(36191,21): error TS2339: Property 'scale' does not exist on type 'Box3Helper'.
+node_modules/three/build/three.core.js(36193,8): error TS2339: Property 'scale' does not exist on type 'Box3Helper'.
+node_modules/three/build/three.core.js(36240,8): error TS2339: Property 'position' does not exist on type 'PlaneHelper'.
+node_modules/three/build/three.core.js(36242,8): error TS2339: Property 'scale' does not exist on type 'PlaneHelper'.
+node_modules/three/build/three.core.js(36286,8): error TS2339: Property 'position' does not exist on type 'ArrowHelper'.
+node_modules/three/build/three.core.js(36307,9): error TS2339: Property 'quaternion' does not exist on type 'ArrowHelper'.
+node_modules/three/build/three.core.js(36311,9): error TS2339: Property 'quaternion' does not exist on type 'ArrowHelper'.
+node_modules/three/build/three.core.js(36319,9): error TS2339: Property 'quaternion' does not exist on type 'ArrowHelper'.
+node_modules/three/build/three.core.js(36327,13): error TS2339: Property 'scale' does not exist on type 'Line'.
+node_modules/three/build/three.core.js(36330,13): error TS2339: Property 'scale' does not exist on type 'Mesh'.
+node_modules/three/build/three.core.js(36331,13): error TS2339: Property 'position' does not exist on type 'Mesh'.
+node_modules/three/build/three.core.js(36695,26): error TS2532: Object is possibly 'undefined'.
+node_modules/three/build/three.core.js(36965,13): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.core.js(36967,2): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.core.js(36975,14): error TS2339: Property '__THREE__' does not exist on type 'Window & typeof globalThis'.
+node_modules/three/build/three.core.js(36981,10): error TS2339: Property '__THREE__' does not exist on type 'Window & typeof globalThis'.
+node_modules/three/build/three.module.js(1382,6): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(1461,6): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(1671,25): error TS2538: Type 'boolean' cannot be used as an index type.
+node_modules/three/build/three.module.js(1676,14): error TS2538: Type 'boolean' cannot be used as an index type.
+node_modules/three/build/three.module.js(2496,51): error TS2339: Property 'numPlanes' does not exist on type 'setState'.
+node_modules/three/build/three.module.js(2497,9): error TS2339: Property 'numPlanes' does not exist on type 'setState'.
+node_modules/three/build/three.module.js(3061,48): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(3143,57): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(5410,20): error TS2322: Type 'number' is not assignable to type 'string'.
+node_modules/three/build/three.module.js(5410,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+node_modules/three/build/three.module.js(7635,11): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(7642,12): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(7821,16): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(8231,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(8303,18): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(8310,19): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(8387,50): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(9103,22): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(9104,22): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(9105,24): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(12483,15): error TS2339: Property 'joints' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12484,15): error TS2339: Property 'inputState' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12499,20): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12500,20): error TS2339: Property 'linearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12501,20): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12502,20): error TS2339: Property 'angularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12517,15): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12518,15): error TS2339: Property 'linearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12519,15): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12520,15): error TS2339: Property 'angularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12643,27): error TS2339: Property 'joints' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12644,27): error TS2339: Property 'joints' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12650,15): error TS2339: Property 'inputState' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12652,11): error TS2339: Property 'inputState' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12659,24): error TS2339: Property 'inputState' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12661,11): error TS2339: Property 'inputState' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12679,35): error TS2339: Property 'position' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12679,50): error TS2339: Property 'rotation' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12679,65): error TS2339: Property 'scale' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12684,13): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12685,13): error TS2339: Property 'linearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12689,13): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12695,13): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12696,13): error TS2339: Property 'angularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12700,13): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12724,44): error TS2339: Property 'position' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12724,64): error TS2339: Property 'rotation' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12724,84): error TS2339: Property 'scale' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12729,17): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12730,17): error TS2339: Property 'linearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12734,17): error TS2339: Property 'hasLinearVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12740,17): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12741,17): error TS2339: Property 'angularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12745,17): error TS2339: Property 'hasAngularVelocity' does not exist on type 'Group'.
+node_modules/three/build/three.module.js(12880,56): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+node_modules/three/build/three.module.js(12944,11): error TS2339: Property 'viewport' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(12947,11): error TS2339: Property 'viewport' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13178,24): error TS2304: Cannot find name 'XRWebGLLayer'.
+node_modules/three/build/three.module.js(13216,22): error TS2304: Cannot find name 'XRWebGLBinding'.
+node_modules/three/build/three.module.js(13240,21): error TS2551: Property 'isXRRenderTarget' does not exist on type 'WebGLRenderTarget'. Did you mean 'isRenderTarget'?
+node_modules/three/build/three.module.js(13642,14): error TS2339: Property 'viewport' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13648,38): error TS2339: Property 'position' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13648,55): error TS2339: Property 'quaternion' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13648,74): error TS2339: Property 'scale' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13651,13): error TS2339: Property 'viewport' does not exist on type 'PerspectiveCamera'.
+node_modules/three/build/three.module.js(13656,43): error TS2339: Property 'position' does not exist on type 'ArrayCamera'.
+node_modules/three/build/three.module.js(13656,62): error TS2339: Property 'quaternion' does not exist on type 'ArrayCamera'.
+node_modules/three/build/three.module.js(13656,83): error TS2339: Property 'scale' does not exist on type 'ArrayCamera'.
+node_modules/three/build/three.module.js(13713,21): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14931,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14934,12): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14936,19): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14938,12): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14946,11): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14947,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14949,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14950,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14951,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14952,20): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14953,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14954,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14955,19): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14957,19): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14958,16): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14959,18): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14960,19): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14961,17): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14963,21): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(14970,10): error TS2339: Property 'capabilities' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14971,10): error TS2339: Property 'extensions' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14972,10): error TS2339: Property 'properties' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14973,10): error TS2339: Property 'renderLists' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14974,10): error TS2339: Property 'shadowMap' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14975,10): error TS2339: Property 'state' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(14976,10): error TS2339: Property 'info' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(15254,10): error TS2339: Property 'state' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(15763,21): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.module.js(15859,9): error TS2339: Property 'info' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(15871,14): error TS2339: Property 'info' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(15871,45): error TS2339: Property 'info' does not exist on type 'WebGLRenderer'.
+node_modules/three/build/three.module.js(17549,15): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.module.js(17551,4): error TS2304: Cannot find name '__THREE_DEVTOOLS__'.
+node_modules/three/build/three.webgpu.js(799,27): error TS2339: Property 'type' does not exist on type 'Function'.
+node_modules/three/build/three.webgpu.js(842,15): error TS2339: Property 'self' does not exist on type 'Node'.
+node_modules/three/build/three.webgpu.js(956,30): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(1058,26): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(1069,99): error TS1313: The body of an 'if' statement cannot be the empty statement.
+node_modules/three/build/three.webgpu.js(1421,67): error TS2554: Expected 0-1 arguments, but got 2.
+node_modules/three/build/three.webgpu.js(1783,28): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(1851,51): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(1857,34): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(2021,58): error TS2367: This comparison appears to be unintentional because the types '"color" | "string" | "bool" | "vec2" | "vec3" | "vec4" | "mat3" | "mat4" | "shader" | "ArrayBuffer"' and '"boolean"' have no overlap.
+node_modules/three/build/three.webgpu.js(2268,31): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(iterable?: Iterable<readonly [any, any]>): Map<any, any>', gave the following error.
+    Argument of type 'ConstNode[]' is not assignable to parameter of type 'Iterable<readonly [any, any]>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<ConstNode, any>' is not assignable to type 'IteratorResult<readonly [any, any], any>'.
+          Type 'IteratorYieldResult<ConstNode>' is not assignable to type 'IteratorResult<readonly [any, any], any>'.
+            Type 'IteratorYieldResult<ConstNode>' is not assignable to type 'IteratorYieldResult<readonly [any, any]>'.
+              Type 'ConstNode' is not assignable to type 'readonly [any, any]'.
+  Overload 2 of 4, '(entries?: readonly (readonly [any, any])[]): Map<any, any>', gave the following error.
+    Argument of type 'ConstNode[]' is not assignable to parameter of type 'readonly (readonly [any, any])[]'.
+      Type 'ConstNode' is not assignable to type 'readonly [any, any]'.
+node_modules/three/build/three.webgpu.js(2268,81): error TS2551: Property 'value' does not exist on type '[any, any]'. Did you mean 'values'?
+node_modules/three/build/three.webgpu.js(2271,33): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(iterable?: Iterable<readonly [any, any]>): Map<any, any>', gave the following error.
+    Argument of type 'ConstNode[]' is not assignable to parameter of type 'Iterable<readonly [any, any]>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<ConstNode, any>' is not assignable to type 'IteratorResult<readonly [any, any], any>'.
+          Type 'IteratorYieldResult<ConstNode>' is not assignable to type 'IteratorResult<readonly [any, any], any>'.
+            Type 'IteratorYieldResult<ConstNode>' is not assignable to type 'IteratorYieldResult<readonly [any, any]>'.
+              Type 'ConstNode' is not assignable to type 'readonly [any, any]'.
+  Overload 2 of 4, '(entries?: readonly (readonly [any, any])[]): Map<any, any>', gave the following error.
+    Argument of type 'ConstNode[]' is not assignable to parameter of type 'readonly (readonly [any, any])[]'.
+      Type 'ConstNode' is not assignable to type 'readonly [any, any]'.
+node_modules/three/build/three.webgpu.js(2271,82): error TS2551: Property 'value' does not exist on type '[any, any]'. Did you mean 'values'?
+node_modules/three/build/three.webgpu.js(2359,48): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2360,46): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2361,36): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2362,40): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2366,21): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2451,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2453,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2454,13): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2455,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2456,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2458,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2459,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2460,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2461,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2463,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2464,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2465,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2466,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2468,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2469,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2470,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2471,15): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2473,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2474,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2475,14): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(2609,24): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(2635,34): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(2694,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(3953,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(4024,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(4987,33): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(4997,49): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(5033,48): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(5206,6): error TS2611: 'value' is defined as a property in class 'UniformNode', but is overridden here in 'TextureNode' as an accessor.
+node_modules/three/build/three.webgpu.js(5448,39): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(5595,23): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(5989,2): error TS2416: Property 'setUpdateMatrix' in type 'CubeTextureNode' is not assignable to the same property in base type 'TextureNode'.
+  Type '() => void' is not assignable to type '(value: any) => this'.
+    Type 'void' is not assignable to type 'this'.
+      'this' could be instantiated with an arbitrary type which could be unrelated to 'void'.
+node_modules/three/build/three.webgpu.js(6038,28): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(6173,48): error TS2322: Type 'Int32ArrayConstructor' is not assignable to type 'Float32ArrayConstructor'.
+  The types of 'prototype.filter(...).findLast' are incompatible between these types.
+    Type '{ <S extends number>(predicate: (value: number, index: number, array: Int32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int32Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Float32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Float32Array<...>) => unknown, thisArg?: any): number; }'.
+      Types of parameters 'predicate' and 'predicate' are incompatible.
+        Type '(value: number, index: number, array: Float32Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Int32Array<ArrayBuffer>) => value is any'.
+          Signature '(value: number, index: number, array: Float32Array<ArrayBuffer>): unknown' must be a type predicate.
+node_modules/three/build/three.webgpu.js(6174,53): error TS2322: Type 'Uint32ArrayConstructor' is not assignable to type 'Float32ArrayConstructor'.
+  The types of 'prototype.filter(...).findLast' are incompatible between these types.
+    Type '{ <S extends number>(predicate: (value: number, index: number, array: Uint32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Uint32Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Float32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Float32Array<...>) => unknown, thisArg?: any): number; }'.
+      Types of parameters 'predicate' and 'predicate' are incompatible.
+        Type '(value: number, index: number, array: Float32Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Uint32Array<ArrayBuffer>) => value is any'.
+          Signature '(value: number, index: number, array: Float32Array<ArrayBuffer>): unknown' must be a type predicate.
+node_modules/three/build/three.webgpu.js(7672,35): error TS2554: Expected 1 arguments, but got 0.
+node_modules/three/build/three.webgpu.js(8471,35): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(8945,6): error TS2611: 'type' is defined as a property in class 'Material', but is overridden here in 'NodeMaterial' as an accessor.
+node_modules/three/build/three.webgpu.js(8947,27): error TS2339: Property 'type' does not exist on type 'Function'.
+node_modules/three/build/three.webgpu.js(9012,57): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(9058,24): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(9239,13): error TS2339: Property 'displacementMap' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(9370,20): error TS2339: Property 'envMap' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(9372,16): error TS2339: Property 'envMap' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(9400,42): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(9445,44): error TS2339: Property 'emissiveNode' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(9453,52): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(9457,51): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(9745,6): error TS2611: 'alphaToCoverage' is defined as a property in class 'NodeMaterial', but is overridden here in 'InstancedPointsNodeMaterial' as an accessor.
+node_modules/three/build/three.webgpu.js(9823,52): error TS2551: Property 'offsetNodeNode' does not exist on type 'LineDashedNodeMaterial'. Did you mean 'offsetNode'?
+node_modules/three/build/three.webgpu.js(9826,55): error TS2339: Property 'dashGapNode' does not exist on type 'LineDashedNodeMaterial'.
+node_modules/three/build/three.webgpu.js(9958,54): error TS2551: Property 'offsetNodeNode' does not exist on type 'Line2NodeMaterial'. Did you mean 'offsetNode'?
+node_modules/three/build/three.webgpu.js(10135,57): error TS2339: Property 'dashGapNode' does not exist on type 'Line2NodeMaterial'.
+node_modules/three/build/three.webgpu.js(10291,6): error TS2611: 'alphaToCoverage' is defined as a property in class 'NodeMaterial', but is overridden here in 'Line2NodeMaterial' as an accessor.
+node_modules/three/build/three.webgpu.js(10413,36): error TS2345: Argument of type 'NodeMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'NodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+node_modules/three/build/three.webgpu.js(10765,43): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(10771,2): error TS2416: Property 'setupLightMap' in type 'MeshBasicNodeMaterial' is not assignable to the same property in base type 'NodeMaterial'.
+  Type '(builder: any) => BasicLightMapNode' is not assignable to type '(builder: any) => IrradianceNode'.
+    Property 'node' is missing in type 'BasicLightMapNode' but required in type 'IrradianceNode'.
+node_modules/three/build/three.webgpu.js(10902,43): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(10945,43): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(11939,34): error TS2554: Expected 0-1 arguments, but got 3.
+node_modules/three/build/three.webgpu.js(11940,35): error TS2554: Expected 0-1 arguments, but got 3.
+node_modules/three/build/three.webgpu.js(11941,35): error TS2554: Expected 0-1 arguments, but got 3.
+node_modules/three/build/three.webgpu.js(12503,22): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(12728,41): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(12840,15): error TS2551: Property 'clearcoat' does not exist on type 'MeshPhysicalNodeMaterial'. Did you mean 'useClearcoat'?
+node_modules/three/build/three.webgpu.js(12846,15): error TS2551: Property 'iridescence' does not exist on type 'MeshPhysicalNodeMaterial'. Did you mean 'useIridescence'?
+node_modules/three/build/three.webgpu.js(12852,15): error TS2339: Property 'sheen' does not exist on type 'MeshPhysicalNodeMaterial'.
+node_modules/three/build/three.webgpu.js(12858,15): error TS2551: Property 'anisotropy' does not exist on type 'MeshPhysicalNodeMaterial'. Did you mean 'useAnisotropy'?
+node_modules/three/build/three.webgpu.js(12864,15): error TS2551: Property 'transmission' does not exist on type 'MeshPhysicalNodeMaterial'. Did you mean 'useTransmission'?
+node_modules/three/build/three.webgpu.js(12870,15): error TS2551: Property 'dispersion' does not exist on type 'MeshPhysicalNodeMaterial'. Did you mean 'useDispersion'?
+node_modules/three/build/three.webgpu.js(12892,24): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(12993,75): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(13055,65): error TS2554: Expected 0-1 arguments, but got 3.
+node_modules/three/build/three.webgpu.js(13604,2): error TS2416: Property 'setUpdateMatrix' in type 'Texture3DNode' is not assignable to the same property in base type 'TextureNode'.
+  Type '() => void' is not assignable to type '(value: any) => this'.
+    Type 'void' is not assignable to type 'this'.
+      'this' could be instantiated with an arbitrary type which could be unrelated to 'void'.
+node_modules/three/build/three.webgpu.js(13650,31): error TS2339: Property 'map' does not exist on type 'VolumeNodeMaterial'.
+node_modules/three/build/three.webgpu.js(14039,39): error TS2339: Property 'group' does not exist on type 'RenderObject'.
+node_modules/three/build/three.webgpu.js(15902,25): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(15903,26): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(15922,40): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(15922,54): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(15936,33): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(15937,34): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16049,11): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16049,18): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16049,26): error TS2339: Property 'depth' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16173,11): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16174,11): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16175,11): error TS2339: Property 'depth' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16179,11): error TS2339: Property 'width' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16179,26): error TS2339: Property 'height' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16179,42): error TS2339: Property 'depth' does not exist on type 'Vector3'.
+node_modules/three/build/three.webgpu.js(16266,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(16343,22): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(16352,22): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(16364,32): error TS2350: Only a void function can be called with the 'new' keyword.
+node_modules/three/build/three.webgpu.js(17029,23): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(17029,46): error TS2551: Property 'reflectorNode' does not exist on type 'ReflectorNode'. Did you mean 'reflector'?
+node_modules/three/build/three.webgpu.js(17398,27): error TS2339: Property 'fragmentNode' does not exist on type 'MeshBasicMaterial'.
+node_modules/three/build/three.webgpu.js(17775,30): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(17866,48): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(18525,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(18564,14): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(18918,12): error TS2339: Property 'isMeshToonOutlineMaterial' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(19191,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(19805,34): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(20201,53): error TS2339: Property 'id' does not exist on type 'RangeNode'.
+node_modules/three/build/three.webgpu.js(20239,31): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(20271,44): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(20272,38): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(20434,74): error TS2339: Property 'id' does not exist on type 'WorkgroupInfoNode'.
+node_modules/three/build/three.webgpu.js(21264,67): error TS2353: Object literal may only specify known properties, and 'shadowTexture' does not exist in type '{ filterFn: any; depthTexture: any; shadowCoord: any; shadow: any; }'.
+node_modules/three/build/three.webgpu.js(21383,3): error TS2740: Type 'NodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+node_modules/three/build/three.webgpu.js(21387,3): error TS2740: Type 'NodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+node_modules/three/build/three.webgpu.js(21511,40): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(21865,17): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(24070,92): error TS2345: Argument of type 'NodeMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'NodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+node_modules/three/build/three.webgpu.js(25219,37): error TS2339: Property 'uniforms' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(25434,11): error TS2339: Property 'uniforms' does not exist on type 'NodeMaterial'.
+node_modules/three/build/three.webgpu.js(25461,32): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(iterable?: Iterable<readonly [Int8ArrayConstructor, string]>): Map<Int8ArrayConstructor, string>', gave the following error.
+    Argument of type '([Int8ArrayConstructor, string] | [Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [...] | [...] | [...] | [...])[]' is not assignable to parameter of type 'Iterable<readonly [Int8ArrayConstructor, string]>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<[Int8ArrayConstructor, string] | [Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [...] | [...] | [...] | [...], any>' is not assignable to type 'IteratorResult<readonly [Int8ArrayConstructor, string], any>'.
+          Type 'IteratorYieldResult<[Int8ArrayConstructor, string] | [Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [...] | [...] | [...] | [...]>' is not assignable to type 'IteratorResult<readonly [Int8ArrayConstructor, string], any>'.
+            Type 'IteratorYieldResult<[Int8ArrayConstructor, string] | [Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [...] | [...] | [...] | [...]>' is not assignable to type 'IteratorYieldResult<readonly [Int8ArrayConstructor, string]>'.
+              Type '[Int8ArrayConstructor, string] | [Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [...] | [...] | [...] | [...]' is not assignable to type 'readonly [Int8ArrayConstructor, string]'.
+                Type '[Int16ArrayConstructor, string]' is not assignable to type 'readonly [Int8ArrayConstructor, string]'.
+                  Type at position 0 in source is not compatible with type at position 0 in target.
+                    The types of 'prototype.filter(...).findLast' are incompatible between these types.
+                      Type '{ <S extends number>(predicate: (value: number, index: number, array: Int16Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int16Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Int8Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int8Array<...>) => unknown, thisArg?: any): number; }'.
+                        Types of parameters 'predicate' and 'predicate' are incompatible.
+                          Type '(value: number, index: number, array: Int8Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Int16Array<ArrayBuffer>) => value is any'.
+                            Signature '(value: number, index: number, array: Int8Array<ArrayBuffer>): unknown' must be a type predicate.
+node_modules/three/build/three.webgpu.js(26498,18): error TS2551: Property 'buildFunctionCode' does not exist on type 'NodeBuilder'. Did you mean 'buildFunctionNode'?
+node_modules/three/build/three.webgpu.js(27174,17): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(27259,17): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(27403,17): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(27450,17): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(28359,29): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(29179,31): error TS2339: Property 'minDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29179,71): error TS2339: Property 'minDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29180,31): error TS2339: Property 'maxDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29180,71): error TS2339: Property 'maxDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29299,19): error TS2339: Property 'fragmentNode' does not exist on type 'MeshBasicMaterial'.
+node_modules/three/build/three.webgpu.js(29496,12): error TS2339: Property 'minDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29497,12): error TS2339: Property 'maxDepth' does not exist on type 'Vector4'.
+node_modules/three/build/three.webgpu.js(29591,19): error TS2339: Property 'fragmentNode' does not exist on type 'MeshBasicMaterial'.
+node_modules/three/build/three.webgpu.js(29705,13): error TS2551: Property 'isDeviceLost' does not exist on type 'Renderer'. Did you mean '_isDeviceLost'?
+node_modules/three/build/three.webgpu.js(30327,29): error TS2351: This expression is not constructable.
+  Type 'Function' has no construct signatures.
+node_modules/three/build/three.webgpu.js(31059,15): error TS2551: Property 'isPBOTexture' does not exist on type 'DataTexture'. Did you mean 'isTexture'?
+node_modules/three/build/three.webgpu.js(31081,39): error TS2554: Expected 0-1 arguments, but got 2.
+node_modules/three/build/three.webgpu.js(31837,47): error TS2554: Expected 0 arguments, but got 1.
+node_modules/three/build/three.webgpu.js(32070,35): error TS2339: Property 'canvas' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(32070,76): error TS2339: Property 'canvas' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(32265,4): error TS2322: Type 'DualAttributeData' is not assignable to type '{ bufferGPU: any; bufferType: any; type: any; byteLength: number; bytesPerElement: number; version: any; pbo: any; isInteger: boolean; id: number; }'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number'.
+node_modules/three/build/three.webgpu.js(34602,2): error TS2416: Property 'init' in type 'WebGLBackend' is not assignable to the same property in base type 'Backend'.
+  Type '(renderer: any) => void' is not assignable to type '(renderer: any) => Promise<void>'.
+    Type 'void' is not assignable to type 'Promise<void>'.
+node_modules/three/build/three.webgpu.js(34610,34): error TS2339: Property 'context' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(34610,71): error TS2339: Property 'context' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(34645,38): error TS2339: Property 'trackTimestamp' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(35757,35): error TS2554: Expected 0-1 arguments, but got 2.
+node_modules/three/build/three.webgpu.js(36067,4): error TS2322: Type 'string' is not assignable to type 'any[]'.
+node_modules/three/build/three.webgpu.js(36075,4): error TS2322: Type 'string' is not assignable to type 'any[]'.
+node_modules/three/build/three.webgpu.js(36800,11): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(36800,47): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37102,15): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37102,49): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37102,76): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37106,13): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37112,13): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37239,11): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37239,47): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(37358,12): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(37358,38): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(37384,30): error TS2304: Cannot find name 'GPUMapMode'.
+node_modules/three/build/three.webgpu.js(37453,53): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(image: CanvasImageSource, init?: VideoFrameInit): VideoFrame', gave the following error.
+    Argument of type 'Uint8Array<ArrayBuffer>' is not assignable to parameter of type 'CanvasImageSource'.
+  Overload 2 of 2, '(data: AllowSharedBufferSource, init: VideoFrameBufferInit): VideoFrame', gave the following error.
+    Argument of type '{ timestamp: number; codedWidth: number; codedHeight: number; format: string; }' is not assignable to parameter of type 'VideoFrameBufferInit'.
+      Types of property 'format' are incompatible.
+        Type 'string' is not assignable to type 'VideoPixelFormat'.
+node_modules/three/build/three.webgpu.js(38350,63): error TS2339: Property 'GPUShaderStage' does not exist on type 'Window & typeof globalThis'.
+node_modules/three/build/three.webgpu.js(38733,95): error TS2554: Expected 0-5 arguments, but got 6.
+node_modules/three/build/three.webgpu.js(39954,21): error TS2339: Property 'gpu' does not exist on type 'Navigator'.
+node_modules/three/build/three.webgpu.js(39962,50): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(iterable?: Iterable<readonly [Int8ArrayConstructor, string[]]>): Map<Int8ArrayConstructor, string[]>', gave the following error.
+    Argument of type '([Int8ArrayConstructor, string[]] | [Uint8ArrayConstructor, string[]] | [Int16ArrayConstructor, string[]] | [...] | [...] | [...] | [...])[]' is not assignable to parameter of type 'Iterable<readonly [Int8ArrayConstructor, string[]]>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<[Int8ArrayConstructor, string[]] | [Uint8ArrayConstructor, string[]] | [Int16ArrayConstructor, string[]] | [...] | [...] | [...] | [...], any>' is not assignable to type 'IteratorResult<readonly [Int8ArrayConstructor, string[]], any>'.
+          Type 'IteratorYieldResult<[Int8ArrayConstructor, string[]] | [Uint8ArrayConstructor, string[]] | [Int16ArrayConstructor, string[]] | [...] | [...] | [...] | [...]>' is not assignable to type 'IteratorResult<readonly [Int8ArrayConstructor, string[]], any>'.
+            Type 'IteratorYieldResult<[Int8ArrayConstructor, string[]] | [Uint8ArrayConstructor, string[]] | [Int16ArrayConstructor, string[]] | [...] | [...] | [...] | [...]>' is not assignable to type 'IteratorYieldResult<readonly [Int8ArrayConstructor, string[]]>'.
+              Type '[Int8ArrayConstructor, string[]] | [Uint8ArrayConstructor, string[]] | [Int16ArrayConstructor, string[]] | [...] | [...] | [...] | [...]' is not assignable to type 'readonly [Int8ArrayConstructor, string[]]'.
+                Type '[Uint8ArrayConstructor, string[]]' is not assignable to type 'readonly [Int8ArrayConstructor, string[]]'.
+                  Type at position 0 in source is not compatible with type at position 0 in target.
+                    The types of 'prototype.filter(...).findLast' are incompatible between these types.
+                      Type '{ <S extends number>(predicate: (value: number, index: number, array: Uint8Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Uint8Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Int8Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int8Array<...>) => unknown, thisArg?: any): number; }'.
+                        Types of parameters 'predicate' and 'predicate' are incompatible.
+                          Type '(value: number, index: number, array: Int8Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Uint8Array<ArrayBuffer>) => value is any'.
+                            Signature '(value: number, index: number, array: Int8Array<ArrayBuffer>): unknown' must be a type predicate.
+node_modules/three/build/three.webgpu.js(39976,61): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(iterable?: Iterable<readonly [Int16ArrayConstructor, string]>): Map<Int16ArrayConstructor, string>', gave the following error.
+    Argument of type '([Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [Uint16ArrayConstructor, string] | [...] | [...])[]' is not assignable to parameter of type 'Iterable<readonly [Int16ArrayConstructor, string]>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<[Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [Uint16ArrayConstructor, string] | [...] | [...], any>' is not assignable to type 'IteratorResult<readonly [Int16ArrayConstructor, string], any>'.
+          Type 'IteratorYieldResult<[Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [Uint16ArrayConstructor, string] | [...] | [...]>' is not assignable to type 'IteratorResult<readonly [Int16ArrayConstructor, string], any>'.
+            Type 'IteratorYieldResult<[Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [Uint16ArrayConstructor, string] | [...] | [...]>' is not assignable to type 'IteratorYieldResult<readonly [Int16ArrayConstructor, string]>'.
+              Type '[Int16ArrayConstructor, string] | [Int32ArrayConstructor, string] | [Uint16ArrayConstructor, string] | [...] | [...]' is not assignable to type 'readonly [Int16ArrayConstructor, string]'.
+                Type '[Int32ArrayConstructor, string]' is not assignable to type 'readonly [Int16ArrayConstructor, string]'.
+                  Type at position 0 in source is not compatible with type at position 0 in target.
+                    The types of 'prototype.filter(...).findLast' are incompatible between these types.
+                      Type '{ <S extends number>(predicate: (value: number, index: number, array: Int32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int32Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Int16Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Int16Array<...>) => unknown, thisArg?: any): number; }'.
+                        Types of parameters 'predicate' and 'predicate' are incompatible.
+                          Type '(value: number, index: number, array: Int16Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Int32Array<ArrayBuffer>) => value is any'.
+                            Signature '(value: number, index: number, array: Int16Array<ArrayBuffer>): unknown' must be a type predicate.
+node_modules/three/build/three.webgpu.js(40194,11): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(40194,37): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(40213,33): error TS2304: Cannot find name 'GPUMapMode'.
+node_modules/three/build/three.webgpu.js(40535,20): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(40535,45): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(41287,19): error TS2339: Property 'alpha' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41289,19): error TS2339: Property 'requiredLimits' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41319,19): error TS2339: Property 'device' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41322,33): error TS2339: Property 'powerPreference' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41325,75): error TS2339: Property 'gpu' does not exist on type 'Navigator'.
+node_modules/three/build/three.webgpu.js(41351,32): error TS2339: Property 'requiredLimits' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41358,24): error TS2339: Property 'device' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41375,32): error TS2339: Property 'context' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41375,69): error TS2339: Property 'context' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41380,32): error TS2339: Property 'alpha' does not exist on type '{}'.
+node_modules/three/build/three.webgpu.js(41387,11): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(41387,47): error TS2304: Cannot find name 'GPUTextureUsage'.
+node_modules/three/build/three.webgpu.js(41762,14): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(41762,45): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(41775,13): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(41775,39): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(41841,48): error TS2304: Cannot find name 'GPUMapMode'.
+node_modules/three/build/three.webgpu.js(42470,13): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42470,44): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42475,13): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42475,39): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42508,27): error TS2304: Cannot find name 'GPUMapMode'.
+node_modules/three/build/three.webgpu.js(42626,51): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42626,74): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42626,100): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42632,51): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42632,75): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42632,101): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42638,51): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42638,76): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42638,100): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42638,126): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42644,51): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42644,76): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42644,102): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(42644,128): error TS2304: Cannot find name 'GPUBufferUsage'.
+node_modules/three/build/three.webgpu.js(43039,23): error TS2339: Property 'fragmentNode' does not exist on type 'MeshBasicMaterial'.
+node_modules/three/build/three.webgpu.js(43189,27): error TS2345: Argument of type 'Uint32ArrayConstructor' is not assignable to parameter of type 'Float32ArrayConstructor'.
+  The types of 'prototype.filter(...).findLast' are incompatible between these types.
+    Type '{ <S extends number>(predicate: (value: number, index: number, array: Uint32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Uint32Array<...>) => unknown, thisArg?: any): number; }' is not assignable to type '{ <S extends number>(predicate: (value: number, index: number, array: Float32Array<ArrayBuffer>) => value is S, thisArg?: any): S; (predicate: (value: number, index: number, array: Float32Array<...>) => unknown, thisArg?: any): number; }'.
+      Types of parameters 'predicate' and 'predicate' are incompatible.
+        Type '(value: number, index: number, array: Float32Array<ArrayBuffer>) => unknown' is not assignable to type '(value: number, index: number, array: Uint32Array<ArrayBuffer>) => value is any'.
+          Signature '(value: number, index: number, array: Float32Array<ArrayBuffer>): unknown' must be a type predicate.
+src/components/PermissionsPrompt.jsx(33,26): error TS2339: Property 'state' does not exist on type 'EventTarget'.
+src/components/admin/MindatCrawlerPanel.jsx(102,16): error TS2322: Type '{ children: (string | Element)[]; onClick: () => void; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/admin/MindatCrawlerPanel.jsx(106,16): error TS2322: Type '{ children: (string | Element)[]; onClick: () => Promise<void>; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/badges/BadgeUnlockAnimation.jsx(349,20): error TS2741: Property 'onClick' is missing in type '{ badge: any; size: number; locked: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/badges/LiquidMineralBadge.jsx(380,17): error TS2353: Object literal may only specify known properties, and ''--px'' does not exist in type 'Properties<string | number, string & {}>'.
+src/components/badges/ProfileBadgeStrip.jsx(45,16): error TS2741: Property 'onClick' is missing in type '{ badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; size: number; locked: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/collection/CollectionMap.jsx(23,55): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(37,16): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(47,20): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(70,28): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(91,31): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(97,33): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/collection/CollectionMap.jsx(102,24): error TS2339: Property 'google' does not exist on type 'Window & typeof globalThis'.
+src/components/compare/LiveCompare.jsx(58,10): error TS2322: Type '{ children: string; onClick: () => void; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/explore/ActivityHeatLayer.jsx(89,15): error TS2322: Type '{ center: any[]; radius: number; pathOptions: { color: any; fillColor: any; fillOpacity: number; weight: number; }; }' is not assignable to type 'IntrinsicAttributes & CircleMarkerProps & RefAttributes<LeafletCircleMarker<any>>'.
+  Property 'radius' does not exist on type 'IntrinsicAttributes & CircleMarkerProps & RefAttributes<LeafletCircleMarker<any>>'.
+src/components/explore/ActivityHeatLayer.jsx(100,15): error TS2322: Type '{ children: Element; center: any[]; radius: number; pathOptions: { color: any; fillColor: any; fillOpacity: any; weight: number; opacity: number; }; }' is not assignable to type 'IntrinsicAttributes & CircleMarkerProps & RefAttributes<LeafletCircleMarker<any>>'.
+  Property 'radius' does not exist on type 'IntrinsicAttributes & CircleMarkerProps & RefAttributes<LeafletCircleMarker<any>>'.
+src/components/explore/ActivityHeatLayer.jsx(110,17): error TS2322: Type '{ children: Element; direction: string; offset: number[]; opacity: number; permanent: boolean; }' is not assignable to type 'IntrinsicAttributes & TooltipProps & RefAttributes<LeafletTooltip>'.
+  Property 'direction' does not exist on type 'IntrinsicAttributes & TooltipProps & RefAttributes<LeafletTooltip>'.
+src/components/explore/HotspotDetailSheet.jsx(306,24): error TS2741: Property 'onClick' is missing in type '{ badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; size: number; locked: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/explore/HotspotDetailSheet.jsx(314,22): error TS2741: Property 'onClick' is missing in type '{ badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; size: number; locked: true; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/explore/HotspotMap.jsx(14,15): error TS2339: Property 'Default' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+src/components/explore/HotspotMap.jsx(15,8): error TS2339: Property 'Default' does not exist on type '{ (...args: any[]): void; __super__: any; prototype: any; }'.
+src/components/explore/HotspotMap.jsx(155,24): error TS2367: This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.
+src/components/explore/HotspotMap.jsx(208,9): error TS2322: Type '{ children: (Element | Element[])[]; center: number[]; zoom: number; style: { width: string; height: string; background: string; }; zoomControl: boolean; attributionControl: boolean; }' is not assignable to type 'IntrinsicAttributes & MapContainerProps & RefAttributes<LeafletMap>'.
+  Property 'center' does not exist on type 'IntrinsicAttributes & MapContainerProps & RefAttributes<LeafletMap>'.
+src/components/explore/HotspotMap.jsx(216,11): error TS2322: Type '{ url: string; attribution: string; }' is not assignable to type 'IntrinsicAttributes & TileLayerProps & RefAttributes<LeafletTileLayer>'.
+  Property 'attribution' does not exist on type 'IntrinsicAttributes & TileLayerProps & RefAttributes<LeafletTileLayer>'.
+src/components/explore/HotspotMap.jsx(223,13): error TS2322: Type '{ url: string; attribution: string; opacity: number; }' is not assignable to type 'IntrinsicAttributes & TileLayerProps & RefAttributes<LeafletTileLayer>'.
+  Property 'attribution' does not exist on type 'IntrinsicAttributes & TileLayerProps & RefAttributes<LeafletTileLayer>'.
+src/components/explore/HotspotMap.jsx(266,15): error TS2322: Type '{ key: any; position: any[]; icon: any; zIndexOffset: number; eventHandlers: { click: () => any; }; }' is not assignable to type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+src/components/explore/HotspotMap.jsx(277,58): error TS2322: Type '{ children: Element; key: any; position: any[]; icon: any; }' is not assignable to type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+src/components/explore/HotspotMap.jsx(291,67): error TS2322: Type '{ children: Element; position: any[]; icon: any; }' is not assignable to type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & MarkerProps & RefAttributes<LeafletMarker<any>>'.
+src/components/explore/QuickPinButton.jsx(28,46): error TS2345: Argument of type '{ entity: string; op: string; data: { name: string; lat: any; lng: any; land_type: string; trust_score: number; source: string; }; }' is not assignable to parameter of type '{ entity: any; op?: string; id: any; data: any; }'.
+  Property 'id' is missing in type '{ entity: string; op: string; data: { name: string; lat: any; lng: any; land_type: string; trust_score: number; source: string; }; }' but required in type '{ entity: any; op?: string; id: any; data: any; }'.
+src/components/hub/ARRockBattle.jsx(213,18): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/ARRockBattle.jsx(213,45): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/ARRockBattle.jsx(271,20): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/ARRockBattle.jsx(271,41): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/CloverReunion.jsx(50,21): error TS2554: Expected 0-1 arguments, but got 2.
+src/components/hub/CloverReunion.jsx(57,5): error TS2322: Type 'number' is not assignable to type 'undefined'.
+src/components/hub/CompanionProgressDashboard.jsx(148,36): error TS2739: Type '{}' is missing the following properties from type '{ active: any; payload: any; label: any; }': active, payload, label
+src/components/hub/DailyRoulette.jsx(155,16): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/DailyRoulette.jsx(155,37): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/DiscoveryTrendChart.jsx(121,10): error TS2741: Property 'small' is missing in type '{ label: string; value: number; color: string; }' but required in type '{ label: any; value: any; color: any; small: any; }'.
+src/components/hub/DiscoveryTrendChart.jsx(123,10): error TS2741: Property 'small' is missing in type '{ label: string; value: string; color: string; }' but required in type '{ label: any; value: any; color: any; small: any; }'.
+src/components/hub/DiscoveryTrendChart.jsx(152,32): error TS2739: Type '{}' is missing the following properties from type '{ active: any; payload: any; label: any; }': active, payload, label
+src/components/hub/HeroOrb.jsx(43,5): error TS2353: Object literal may only specify known properties, and 'companion' does not exist in type '{ todaysFinds?: number; }'.
+src/components/hub/HeroOrb.jsx(147,12): error TS2739: Type '{ size: number; orbState: string; }' is missing the following properties from type '{ size?: number; className?: string; label: any; sublabel: any; orbState?: string; speaking?: boolean; getAmplitude: any; getSpectrum: any; }': label, sublabel, getAmplitude, getSpectrum
+src/components/hub/OpeningBuffer.jsx(69,28): error TS2554: Expected 0-1 arguments, but got 2.
+src/components/hub/PlayerLegend.jsx(98,12): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/PlayerLegend.jsx(115,27): error TS2339: Property '__rhgo_addXP' does not exist on type 'Window & typeof globalThis'.
+src/components/hub/PlayerLegend.jsx(137,17): error TS2345: Argument of type '"copied"' is not assignable to parameter of type 'SetStateAction<boolean>'.
+src/components/hub/PlayerLegend.jsx(140,17): error TS2345: Argument of type '"error"' is not assignable to parameter of type 'SetStateAction<boolean>'.
+src/components/hub/PlayerLegend.jsx(278,16): error TS2367: This comparison appears to be unintentional because the types 'boolean' and 'string' have no overlap.
+src/components/hub/PlayerLegend.jsx(279,18): error TS2367: This comparison appears to be unintentional because the types 'boolean' and 'string' have no overlap.
+src/components/hub/SeasonBanner.jsx(20,31): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/hub/SeasonBanner.jsx(20,103): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/hub/SpecimenTypeChart.jsx(66,30): error TS2739: Type '{}' is missing the following properties from type '{ active: any; payload: any; }': active, payload
+src/components/hub/StormWindowBanner.jsx(26,17): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/hub/StormWindowBanner.jsx(26,30): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/hub/useCloverChat.jsx(12,41): error TS2339: Property 'companion' does not exist on type '{ todaysFinds?: number; }'.
+src/components/hub/useCloverChat.jsx(12,69): error TS2339: Property 'onFindLogged' does not exist on type '{ todaysFinds?: number; }'.
+src/components/oracle/useSpeech.jsx(92,66): error TS2551: Property 'webkitAudioContext' does not exist on type 'Window & typeof globalThis'. Did you mean 'AudioContext'?
+src/components/oracle/useSpeech.jsx(189,40): error TS2339: Property 'onResult' does not exist on type '{}'.
+src/components/oracle/useSpeech.jsx(189,50): error TS2339: Property 'onInterim' does not exist on type '{}'.
+src/components/oracle/useSpeech.jsx(203,15): error TS2339: Property 'SpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/components/oracle/useSpeech.jsx(203,43): error TS2339: Property 'webkitSpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/components/profile/RarityBadgeShowcase.jsx(163,10): error TS2741: Property 'onClick' is missing in type '{ badge: any; size: number; locked: boolean; showLabel: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/profile/RarityBadgeShowcase.jsx(224,29): error TS2339: Property 'common' does not exist on type '{}'.
+src/components/profile/RarityBadgeShowcase.jsx(225,29): error TS2339: Property 'uncommon' does not exist on type '{}'.
+src/components/profile/RarityBadgeShowcase.jsx(226,29): error TS2339: Property 'rare' does not exist on type '{}'.
+src/components/profile/RarityBadgeShowcase.jsx(227,29): error TS2339: Property 'legendary' does not exist on type '{}'.
+src/components/psv/PsvPhotoStage.jsx(81,8): error TS2322: Type '{ children: Element; onClick: () => Promise<void>; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/psv/PsvProvenancePanel.jsx(44,14): error TS2741: Property 'signed' is missing in type '{ label: string; value: any; used: number; note: string; }' but required in type '{ label: any; value: any; used: any; note: any; signed: any; }'.
+src/components/psv/PsvProvenancePanel.jsx(50,14): error TS2741: Property 'used' is missing in type '{ label: string; value: any; note: string; signed: true; }' but required in type '{ label: any; value: any; used: any; note: any; signed: any; }'.
+src/components/scan/CorrectionModal.jsx(91,11): error TS2322: Type '{ id: string; autoFocus: true; value: string; onChange: (e: any) => void; placeholder: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/CorrectionModal.jsx(103,11): error TS2322: Type '{ id: string; value: string; onChange: (e: any) => void; placeholder: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/CorrectionModal.jsx(111,12): error TS2322: Type '{ children: string; variant: string; onClick: any; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/CorrectionModal.jsx(119,12): error TS2322: Type '{ children: string | Element; onClick: () => Promise<void>; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/DiscoveryChoiceModal.jsx(32,11): error TS17001: JSX elements cannot have multiple attributes with the same name.
+src/components/scan/DiscoveryChoiceModal.jsx(43,13): error TS17001: JSX elements cannot have multiple attributes with the same name.
+src/components/scan/HolographicResult.jsx(160,12): error TS2322: Type '{ children: (string | Element)[]; onClick: () => void; className: string; style: { background: string; border: string; boxShadow: string; }; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/HolographicResult.jsx(174,10): error TS2322: Type '{ children: Element; onClick: any; variant: string; className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/HolographicResult.jsx(177,10): error TS2322: Type '{ children: Element; onClick: any; variant: string; className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/LiveScanStage.jsx(208,12): error TS2322: Type '{ children: (string | Element)[]; onClick: any; disabled: boolean; className: string; style: { background: string; border: string; boxShadow: string; transition: string; }; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/MultiAngleCapture.jsx(93,10): error TS2322: Type '{ children: (string | Element)[]; onClick: () => Promise<void>; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/MultiAngleCapture.jsx(101,10): error TS2322: Type '{ children: string; onClick: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/scan/RareMineralPopup.jsx(188,16): error TS2741: Property 'onClick' is missing in type '{ badge: any; size: number; locked: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/components/scan/ReconstructionStage.jsx(91,12): error TS2739: Type '{ size: number; orbState: string; }' is missing the following properties from type '{ size?: number; className?: string; label: any; sublabel: any; orbState?: string; speaking?: boolean; getAmplitude: any; getSpectrum: any; }': label, sublabel, getAmplitude, getSpectrum
+src/components/ui/accordion.jsx(9,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/accordion.jsx(10,4): error TS2741: Property 'value' is missing in type '{ ref: ForwardedRef<any>; className: string; }' but required in type 'AccordionItemProps'.
+src/components/ui/accordion.jsx(14,46): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/accordion.jsx(14,57): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/accordion.jsx(31,46): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/accordion.jsx(31,57): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/button.jsx(37,36): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/button.jsx(37,47): error TS2339: Property 'variant' does not exist on type '{}'.
+src/components/ui/button.jsx(37,56): error TS2339: Property 'size' does not exist on type '{}'.
+src/components/ui/button.jsx(37,62): error TS2339: Property 'asChild' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(7,38): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(7,49): error TS2339: Property 'containerClassName' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(8,4): error TS2322: Type '{ ref: ForwardedRef<any>; containerClassName: string; className: string; }' is not assignable to type 'IntrinsicAttributes & (OTPInputProps & RefAttributes<HTMLInputElement>)'.
+  Property 'maxLength' is missing in type '{ ref: ForwardedRef<any>; containerClassName: string; className: string; }' but required in type '{ value?: string; onChange?: (newValue: string) => unknown; maxLength: number; textAlign?: "center" | "left" | "right"; onComplete?: (...args: any[]) => unknown; pushPasswordManagerStrategy?: "none" | "increase-width"; pasteTransformer?: (pasted: string) => string; containerClassName?: string; noScriptCSSFallback?: ...'.
+src/components/ui/input-otp.jsx(16,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(21,42): error TS2339: Property 'index' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(21,49): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input.jsx(5,35): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input.jsx(5,46): error TS2339: Property 'type' does not exist on type '{}'.
+src/components/ui/label.jsx(11,35): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/textarea.jsx(5,38): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/visuals/AmethystOrb.jsx(45,53): error TS2339: Property 'gpu' does not exist on type 'Navigator'.
+src/components/visuals/AmethystOrb.jsx(217,28): error TS2339: Property 'deviceMemory' does not exist on type 'Navigator'.
+src/components/visuals/AmethystOrb.jsx(217,54): error TS2339: Property 'deviceMemory' does not exist on type 'Navigator'.
+src/components/visuals/BlackOpalShader.jsx(161,43): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+src/components/visuals/LiquidGlassShader.jsx(101,43): error TS2345: Argument of type 'ShaderMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'ShaderMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 12 more.
+src/components/visuals/WebGPUFluidOverlay.jsx(31,56): error TS2339: Property 'gpu' does not exist on type 'Navigator'.
+src/components/visuals/WebGPUFluidOverlay.jsx(166,37): error TS2345: Argument of type 'MeshBasicNodeMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'MeshBasicNodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+src/components/visuals/WebGPUOpalShader.jsx(31,56): error TS2339: Property 'gpu' does not exist on type 'Navigator'.
+src/components/visuals/WebGPUOpalShader.jsx(160,37): error TS2345: Argument of type 'MeshBasicNodeMaterial' is not assignable to parameter of type 'MeshBasicMaterial'.
+  Type 'MeshBasicNodeMaterial' is missing the following properties from type 'MeshBasicMaterial': isMeshBasicMaterial, color, map, lightMap, and 14 more.
+src/lib/AuthContext.jsx(5,21): error TS2554: Expected 1 arguments, but got 0.
+src/lib/app-params.js(43,65): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/app-params.js(46,87): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/app-params.js(47,76): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/badgeDefinitions.js(13,19): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/badgeDefinitions.js(13,40): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/badgeDefinitions.js(154,41): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/badgeDefinitions.js(154,69): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/badgeDefinitions.js(158,41): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/badgeDefinitions.js(158,69): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/reasoningEngine.js(235,39): error TS2339: Property 'confidence' does not exist on type 'string | object'.
+  Property 'confidence' does not exist on type 'string'.
+src/lib/reasoningEngine.js(235,73): error TS2339: Property 'confidence' does not exist on type 'string | object'.
+  Property 'confidence' does not exist on type 'string'.
+src/lib/reasoningEngine.js(259,35): error TS2339: Property 'observed_features' does not exist on type 'string | object'.
+  Property 'observed_features' does not exist on type 'string'.
+src/lib/reasoningEngine.js(264,48): error TS2339: Property 'uncertainty' does not exist on type 'string | object'.
+  Property 'uncertainty' does not exist on type 'string'.
+src/lib/reasoningEngine.js(264,71): error TS2339: Property 'uncertainty' does not exist on type 'string | object'.
+  Property 'uncertainty' does not exist on type 'string'.
+src/lib/reasoningEngine.js(268,28): error TS2339: Property 'primary_result' does not exist on type 'string | object'.
+  Property 'primary_result' does not exist on type 'string'.
+src/lib/reasoningEngine.js(275,31): error TS2339: Property 'reasoning' does not exist on type 'string | object'.
+  Property 'reasoning' does not exist on type 'string'.
+src/lib/shareAchievement.js(16,35): error TS2739: Type '{}' is missing the following properties from type '{ rank: string; xp: number; extra?: string; }': rank, xp
+src/lib/useCompanion.js(10,40): error TS2339: Property 'onMilestone' does not exist on type '{}'.
+src/lib/useOfflineHotspots.js(30,35): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/lib/useOfflineHotspots.js(50,5): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(options: DefinedInitialDataOptions<unknown, Error, unknown, string[]>, queryClient?: QueryClient): DefinedUseQueryResult<unknown, Error>', gave the following error.
+    Object literal may only specify known properties, and 'onError' does not exist in type 'DefinedInitialDataOptions<unknown, Error, unknown, string[]>'.
+  Overload 2 of 3, '(options: UndefinedInitialDataOptions<Pick<any, string | number | symbol>[], Error, Pick<any, string | number | symbol>[], string[]>, queryClient?: QueryClient): UseQueryResult<...>', gave the following error.
+    Object literal may only specify known properties, and 'onError' does not exist in type 'UndefinedInitialDataOptions<Pick<any, string | number | symbol>[], Error, Pick<any, string | number | symbol>[], string[]>'.
+  Overload 3 of 3, '(options: UseQueryOptions<Pick<any, string | number | symbol>[], Error, Pick<any, string | number | symbol>[], string[]>, queryClient?: QueryClient): UseQueryResult<...>', gave the following error.
+    Object literal may only specify known properties, and 'onError' does not exist in type 'UseQueryOptions<Pick<any, string | number | symbol>[], Error, Pick<any, string | number | symbol>[], string[]>'.
+src/lib/useOfflineHotspots.js(54,40): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Admin.jsx(118,16): error TS2322: Type '{ children: (string | Element)[]; onClick: () => Promise<void>; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Admin.jsx(132,16): error TS2322: Type '{ children: (string | Element)[]; onClick: () => Promise<void>; disabled: boolean; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(89,6): error TS2322: Type '{ children: any[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(121,12): error TS2322: Type '{ children: Element; maxLength: number; value: string; onChange: Dispatch<SetStateAction<string>>; autoFocus: true; autoComplete: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(122,14): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(123,61): error TS2322: Type '{ key: number; index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(127,10): error TS2322: Type '{ children: string | Element; className: string; style: { background: string; }; onClick: () => Promise<void>; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(219,22): error TS2322: Type '{ children: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(226,28): error TS2322: Type '{ type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(231,18): error TS2322: Type '{ children: string | Element; type: string; disabled: boolean; className: string; style: { background: string; boxShadow: string; }; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(255,18): error TS2741: Property 'autoFocus' is missing in type '{ id: string; label: string; type: string; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; autoComplete: string; placeholder: string; value: string; onChange: Dispatch<...>; }' but required in type '{ id: any; label: any; type: any; icon: any; value: any; onChange: any; autoComplete: any; placeholder: any; autoFocus: any; }'.
+src/pages/Auth.jsx(257,18): error TS2741: Property 'autoFocus' is missing in type '{ id: string; label: string; type: string; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; autoComplete: string; placeholder: string; value: string; onChange: Dispatch<...>; }' but required in type '{ id: any; label: any; type: any; icon: any; value: any; onChange: any; autoComplete: any; placeholder: any; autoFocus: any; }'.
+src/pages/Auth.jsx(259,18): error TS2322: Type '{ children: string | Element; type: string; disabled: boolean; className: string; style: { background: string; boxShadow: string; }; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(286,8): error TS2322: Type '{ children: any; htmlFor: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Auth.jsx(289,16): error TS2322: Type '{ id: any; type: any; autoComplete: any; placeholder: any; autoFocus: any; value: any; onChange: (e: any) => any; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Badges.jsx(70,46): error TS2345: Argument of type '"error"' is not assignable to parameter of type 'SetStateAction<boolean>'.
+src/pages/Badges.jsx(99,12): error TS2741: Property 'onClick' is missing in type '{ badge: any; size: number; locked: boolean; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/pages/Badges.jsx(122,16): error TS2367: This comparison appears to be unintentional because the types 'boolean' and 'string' have no overlap.
+src/pages/Badges.jsx(171,8): error TS2741: Property 'onClick' is missing in type '{ badge: any; size: number; locked: boolean; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/pages/Badges.jsx(209,49): error TS2345: Argument of type '"copied"' is not assignable to parameter of type 'SetStateAction<boolean>'.
+src/pages/Badges.jsx(210,50): error TS2345: Argument of type '"error"' is not assignable to parameter of type 'SetStateAction<boolean>'.
+src/pages/Badges.jsx(290,14): error TS2367: This comparison appears to be unintentional because the types 'boolean' and 'string' have no overlap.
+src/pages/Badges.jsx(327,15): error TS2322: Type '{ key: string; badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; earned: boolean; onClick: () => void; progress: { ...; }; }' is not assignable to type 'IntrinsicAttributes & { badge: any; earned: any; onClick: any; }'.
+  Property 'progress' does not exist on type 'IntrinsicAttributes & { badge: any; earned: any; onClick: any; }'.
+src/pages/Collection.jsx(96,12): error TS2741: Property 'ctaOnClick' is missing in type '{ icon: string; title: string; body: string; ctaLabel: string; ctaTo: string; }' but required in type '{ icon?: string; title: any; body: any; ctaLabel: any; ctaTo: any; ctaOnClick: any; }'.
+src/pages/Collection.jsx(98,12): error TS2741: Property 'ctaTo' is missing in type '{ icon: string; title: string; body: string; ctaOnClick: () => void; ctaLabel: string; }' but required in type '{ icon?: string; title: any; body: any; ctaLabel: any; ctaTo: any; ctaOnClick: any; }'.
+src/pages/Collection.jsx(111,12): error TS2741: Property 'ctaOnClick' is missing in type '{ icon: string; title: string; body: string; ctaLabel: string; ctaTo: string; }' but required in type '{ icon?: string; title: any; body: any; ctaLabel: any; ctaTo: any; ctaOnClick: any; }'.
+src/pages/Collection.jsx(155,12): error TS2741: Property 'ctaOnClick' is missing in type '{ icon: string; title: string; body: string; ctaLabel: string; ctaTo: string; }' but required in type '{ icon?: string; title: any; body: any; ctaLabel: any; ctaTo: any; ctaOnClick: any; }'.
+src/pages/Collections.jsx(35,81): error TS2339: Property 'email' does not exist on type 'Promise<User>'.
+src/pages/Collections.jsx(97,68): error TS2339: Property 'email' does not exist on type 'Promise<User>'.
+src/pages/DesignSystem.jsx(43,12): error TS2739: Type '{ size: number; label: string; sublabel: string; }' is missing the following properties from type '{ size?: number; className?: string; label: any; sublabel: any; orbState?: string; speaking?: boolean; getAmplitude: any; getSpectrum: any; }': getAmplitude, getSpectrum
+src/pages/DesignSystem.jsx(44,12): error TS2739: Type '{ size: number; label: string; sublabel: string; }' is missing the following properties from type '{ size?: number; className?: string; label: any; sublabel: any; orbState?: string; speaking?: boolean; getAmplitude: any; getSpectrum: any; }': getAmplitude, getSpectrum
+src/pages/DesignSystem.jsx(45,12): error TS2739: Type '{ size: number; }' is missing the following properties from type '{ size?: number; className?: string; label: any; sublabel: any; orbState?: string; speaking?: boolean; getAmplitude: any; getSpectrum: any; }': label, sublabel, getAmplitude, getSpectrum
+src/pages/DesignSystem.jsx(81,14): error TS2322: Type '{ children: (string | Element)[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DesignSystem.jsx(84,14): error TS2322: Type '{ children: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DesignSystem.jsx(87,14): error TS2322: Type '{ children: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Docs.jsx(142,18): error TS2322: Type '{ children: Element[]; key: string; value: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Docs.jsx(143,20): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Docs.jsx(149,20): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Explore.jsx(153,19): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.
+src/pages/Explore.jsx(177,14): error TS2339: Property 'forEach' does not exist on type 'unknown'.
+src/pages/Explore.jsx(192,14): error TS2339: Property 'forEach' does not exist on type 'unknown'.
+src/pages/Explore.jsx(216,24): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(222,47): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(223,47): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(224,47): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(225,47): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(228,19): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(243,32): error TS2339: Property 'filter' does not exist on type 'unknown'.
+src/pages/Explore.jsx(268,11): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.
+src/pages/Explore.jsx(270,11): error TS2322: Type 'string' is not assignable to type 'number'.
+src/pages/Explore.jsx(285,38): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(419,13): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.
+src/pages/Explore.jsx(439,32): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(441,64): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(481,60): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(484,35): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(496,47): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(508,39): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/Explore.jsx(513,42): error TS2339: Property 'map' does not exist on type 'unknown'.
+src/pages/Explore.jsx(539,72): error TS2339: Property 'length' does not exist on type 'unknown'.
+src/pages/ForgotPassword.jsx(46,14): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ForgotPassword.jsx(50,17): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ForgotPassword.jsx(62,12): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Hub.jsx(115,24): error TS2741: Property 'onXPUpdate' is missing in type '{ userEmail: any; }' but required in type '{ userEmail: any; onXPUpdate: any; }'.
+src/pages/Login.jsx(131,14): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(136,14): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(160,16): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(163,24): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(171,18): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(178,24): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(185,14): error TS2322: Type '{ children: string | Element; type: string; disabled: boolean; className: string; style: { background: string; boxShadow: string; }; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Market.jsx(103,23): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'string'.
+src/pages/Market.jsx(107,36): error TS2741: Property 'onTap' is missing in type '{ key: any; listing: any; index: number; }' but required in type '{ listing: any; index?: number; onTap: any; }'.
+src/pages/Profile.jsx(277,24): error TS2741: Property 'onClick' is missing in type '{ badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; size: number; locked: false; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/pages/Profile.jsx(286,22): error TS2741: Property 'onClick' is missing in type '{ badge: { code: string; title: string; description: string; rarity: string; icon: string; material: string; colorScheme: string; check: (s: any) => any; progress: (s: any) => { current: number; target: number; }; }; size: number; locked: true; }' but required in type '{ badge: any; size?: number; locked?: boolean; showLabel?: boolean; onClick: any; className?: string; }'.
+src/pages/QuestDashboard.jsx(54,31): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/Register.jsx(95,12): error TS2322: Type '{ children: Element; maxLength: number; value: string; onChange: Dispatch<SetStateAction<string>>; autoFocus: true; autoComplete: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(96,14): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(97,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(98,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(99,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(100,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(101,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(102,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(106,10): error TS2322: Type '{ children: string | Element; className: string; style: { background: string; boxShadow: string; }; onClick: () => Promise<void>; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(147,8): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(156,8): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(182,12): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(186,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(199,12): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(203,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(215,12): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(219,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(230,10): error TS2322: Type '{ children: string | Element; type: string; className: string; style: { background: string; boxShadow: string; }; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(57,6): error TS2741: Property 'footer' is missing in type '{ children: Element[]; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/ResetPassword.jsx(69,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(73,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(86,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(90,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(101,10): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Scan.jsx(234,33): error TS2339: Property 'confidence' does not exist on type 'string | object'.
+  Property 'confidence' does not exist on type 'string'.
+src/pages/Scan.jsx(234,61): error TS2339: Property 'confidence' does not exist on type 'string | object'.
+  Property 'confidence' does not exist on type 'string'.
+src/pages/Scan.jsx(238,33): error TS2339: Property 'observed_features' does not exist on type 'string | object'.
+  Property 'observed_features' does not exist on type 'string'.
+src/pages/Scan.jsx(245,13): error TS2339: Property 'observed_features' does not exist on type 'string | object'.
+  Property 'observed_features' does not exist on type 'string'.
+src/pages/Scan.jsx(248,25): error TS2339: Property 'top_match' does not exist on type 'string | object'.
+  Property 'top_match' does not exist on type 'string'.
+src/pages/Scan.jsx(255,28): error TS2339: Property 'reasoning' does not exist on type 'string | object'.
+  Property 'reasoning' does not exist on type 'string'.
+src/pages/ScanResult.jsx(156,29): error TS2741: Property 'onSubmitCorrection' is missing in type '{ topCandidate: any; }' but required in type '{ topCandidate: any; onSubmitCorrection: any; }'.
+src/pages/Settings.jsx(128,8): error TS2741: Property 'onDismiss' is missing in type '{}' but required in type '{ onDismiss: any; }'.
+src/pages/Settings.jsx(177,12): error TS2739: Type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; }' is missing the following properties from type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }': subtitle, badge
+src/pages/Settings.jsx(201,12): error TS2741: Property 'badge' is missing in type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }'.
+src/pages/Settings.jsx(227,12): error TS2739: Type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; }' is missing the following properties from type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }': subtitle, badge
+src/pages/Settings.jsx(244,12): error TS2741: Property 'badge' is missing in type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }'.
+src/pages/Settings.jsx(260,12): error TS2741: Property 'badge' is missing in type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }'.
+src/pages/Settings.jsx(289,12): error TS2741: Property 'badge' is missing in type '{ icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; iconColor: string; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; iconColor?: string; badge: any; }'.

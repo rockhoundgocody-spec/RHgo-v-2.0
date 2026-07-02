@@ -84,11 +84,20 @@ export function lazyLoadImages(containerElement) {
  * Batch DOM updates (reduce thrashing)
  */
 export function batchDOMUpdates(updates) {
-  // Read all
-  const reads = updates.filter((u) => u.type === 'read').map((u) => u.fn());
+  const reads = [];
+  const writes = [];
 
-  // Write all
-  updates.filter((u) => u.type === 'write').forEach((u) => u.fn());
+  for (const u of updates) {
+    if (u.type === 'read') {
+      reads.push(u.fn());
+    } else if (u.type === 'write') {
+      writes.push(u);
+    }
+  }
+
+  for (const w of writes) {
+    w.fn();
+  }
 
   return reads;
 }

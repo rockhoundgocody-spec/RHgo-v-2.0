@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Star, Award, Share2 } from 'lucide-react';
+import { X, Zap, Star, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { RARITY_XP_MAP } from '@/lib/spawnEngine';
 

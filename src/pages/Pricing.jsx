@@ -17,8 +17,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Gem, Zap, Map, Shield, Star, Flame, Crown, Users, BookOpen, X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -27,10 +26,10 @@ import { useAuth } from '@/lib/AuthContext';
 // and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
 // in Base44 environment variables.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: null, label: 'Field Pro' },   // set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID
-  family:    { priceId: null, label: 'Family' },       // set STRIPE_FAMILY_MONTHLY_PRICE_ID
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || null, label: 'Field Pro' },   // set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID
+  family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || null, label: 'Family' },       // set STRIPE_FAMILY_MONTHLY_PRICE_ID
+  successUrl: import.meta.env.VITE_STRIPE_SUCCESS_URL || (typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : ''),
+  cancelUrl:  import.meta.env.VITE_STRIPE_CANCEL_URL || (typeof window !== 'undefined' ? `${window.location.origin}/pricing` : ''),
 };
 // ─────────────────────────────────────────────────────────────────────────
 

@@ -27,7 +27,6 @@ import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
-import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 

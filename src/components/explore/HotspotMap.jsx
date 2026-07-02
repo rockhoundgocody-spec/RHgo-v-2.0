@@ -5,8 +5,8 @@
  * - Badge-glow pulse on hotspots linked to earned badges
  * - Expedition route polyline
  */
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ActivityHeatLayer from '@/components/explore/ActivityHeatLayer.jsx';

@@ -1,13 +1,32 @@
 // Badge catalog + earning rules. Pure functions — no side effects.
 
-const uniqueMinerals  = (s) => new Set(s.map(x => (x.mineral_name || '').toLowerCase().trim()).filter(Boolean)).size;
-const uniqueLocations = (s) => new Set(s.map(x => (x.found_at || '').toLowerCase().trim()).filter(Boolean)).size;
+const uniqueMinerals = (s) => {
+  const set = new Set();
+  for (const x of s) {
+    const val = (x.mineral_name || '').toLowerCase().trim();
+    if (val) set.add(val);
+  }
+  return set.size;
+};
+const uniqueLocations = (s) => {
+  const set = new Set();
+  for (const x of s) {
+    const val = (x.found_at || '').toLowerCase().trim();
+    if (val) set.add(val);
+  }
+  return set.size;
+};
 const maxFindsAtSpot  = (s) => {
   const c = {}; for (const x of s) { const l = (x.found_at||'').toLowerCase().trim(); if (l) c[l]=(c[l]||0)+1; }
   return Math.max(0, ...Object.values(c));
 };
 const streakDays = (s) => {
-  const dates = [...new Set(s.map(x => (x.found_date||x.created_date||'').slice(0,10)).filter(Boolean))].sort();
+  const datesSet = new Set();
+  for (const x of s) {
+    const d = (x.found_date || x.created_date || '').slice(0, 10);
+    if (d) datesSet.add(d);
+  }
+  const dates = [...datesSet].sort();
   let best = 1, cur = 1;
   for (let i = 1; i < dates.length; i++) {
     const diff = (new Date(dates[i]) - new Date(dates[i-1])) / 86400000;

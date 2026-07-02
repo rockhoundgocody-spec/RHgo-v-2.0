@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
+import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
@@ -30,7 +30,7 @@ export default function OracleOverlay() {
   const handleVoiceResult = useCallback((transcript) => {
     setInput('');
     setTimeout(() => sendMessage(transcript), 50);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
   const handleInterim = useCallback((partial) => {
     setInput(partial);
@@ -60,7 +60,7 @@ export default function OracleOverlay() {
       const t = setTimeout(() => startListen(), 350);
       return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [open, autoLive, micSupported]);
 
   // Live conversation: when oracle finishes speaking, auto-resume listening

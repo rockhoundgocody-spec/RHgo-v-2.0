@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { fetchGeologyAt, formatGeologyContext } from '@/lib/macrostrat';
@@ -528,7 +528,7 @@ function StageStrip({ stage }) {
         const active = i === activeIdx;
         return (
           <React.Fragment key={s.id}>
-            {/* eslint-disable-next-line */}
+            { }
             <div
               className="text-[7px] font-mono uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-full"
               style={{
