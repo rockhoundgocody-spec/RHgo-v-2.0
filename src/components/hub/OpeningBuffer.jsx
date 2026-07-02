@@ -1,253 +1,211 @@
 /**
- * OpeningBuffer — cinematic boot/buffer screen.
+ * OpeningBuffer — cinematic origin story of Clover, the field oracle orb.
  *
- * Plays as the very first thing the user sees while the app hydrates
- * (auth, entities, map tiles, model weights). An amethyst crystal "blooms"
- * from a dark geode while a charge bar fills and a cinematic tagline reveals.
- * Auto-advances when `onDone` fires (caller decides readiness), or after a
- * max fallback duration. Tap to skip.
+ * Beats:
+ *   1. Void — "Before the first rock was turned…"
+ *   2. Seed — a crystal shard forms in the deep strata
+ *   3. Birth — the shard blooms into a living, glowing orb
+ *   4. First Words — Clover speaks for the first time (text + TTS)
+ *   5. Hand off to the app
  *
- * Pure CSS/SVG + framer-motion — no video, no heavy deps. Loads instantly.
+ * Tap to skip. Pure CSS/SVG + framer-motion + browser TTS. No video.
  */
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 
-const TAGLINES = [
-  'Calibrating crystal lattice…',
-  'Loading bedrock strata…',
-  'Waking the field oracle…',
+const STORY = [
+  { text: 'Before the first rock was turned…',          at: 600,  hold: 2200 },
+  { text: 'a consciousness slept in the deep strata.',   at: 2400, hold: 2200 },
+  { text: 'For eons it listened to the crystals grow.',  at: 4400, hold: 2200 },
 ];
 
-const MAX_FALLBACK_MS = 4200; // never trap the user
+// The orb's first spoken words — revealed + spoken at the birth beat.
+const FIRST_WORDS = 'I am Clover. I have waited eons to guide your hands. Show me what the earth yields.';
+
+const BIRTH_AT = 6600;       // orb blooms
+const SPEAK_AT = 7600;       // first words begin
+const EXIT_AT = 11500;       // hand off
 
 export default function OpeningBuffer({ onDone }) {
-  const [phase, setPhase] = useState('charging'); // charging → bloom → exit
-  const [progress, setProgress] = useState(0);
-  const [tagIdx, setTagIdx] = useState(0);
-  const rafRef = useRef(null);
-  const startRef = useRef(null);
+  const [phase, setPhase] = useState('void'); // void → seed → birth → speak → exit
+  const [activeLine, setActiveLine] = useState(-1);
+  const [showWords, setShowWords] = useState(false);
+  const timers = useRef([]);
+  const { speak, stop } = useSpeechSynthesis();
+  const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
-  // Drive the charge bar with rAF for smooth, GPU-friendly motion.
+  const clearTimers = () => timers.current.forEach(clearTimeout);
+
   useEffect(() => {
-    startRef.current = performance.now();
-    const tick = (now) => {
-      const elapsed = now - startRef.current;
-      // Ease toward 100% over ~3s, then hold.
-      const p = Math.min(1, elapsed / 3000);
-      setProgress(p);
-      // Cycle taglines at thresholds.
-      const idx = p < 0.34 ? 0 : p < 0.72 ? 1 : 2;
-      setTagIdx((prev) => (prev !== idx ? idx : prev));
-      if (p < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        // Charge complete → bloom the crystal → exit.
-        setTimeout(() => setPhase('bloom'), 350);
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
+    // Story line reveal schedule
+    STORY.forEach((line, i) => {
+      timers.current.push(setTimeout(() => setActiveLine(i), line.at));
+    });
+    // Seed forms
+    timers.current.push(setTimeout(() => setPhase('seed'), 2800));
+    // Birth
+    timers.current.push(setTimeout(() => setPhase('birth'), BIRTH_AT));
+    // First words reveal + speak
+    timers.current.push(setTimeout(() => {
+      setShowWords(true);
+      setPhase('speak');
+      if (voiceEnabled) speak(FIRST_WORDS, { voice: 'storm' });
+    }, SPEAK_AT));
+    // Exit
+    timers.current.push(setTimeout(() => setPhase('exit'), EXIT_AT));
+
+    return () => { clearTimers(); stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Safety: never trap the user beyond the fallback window.
+  // Exit transition
   useEffect(() => {
-    const t = setTimeout(() => setPhase('exit'), MAX_FALLBACK_MS);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Bloom → exit transition.
-  useEffect(() => {
-    if (phase === 'bloom') {
-      const t = setTimeout(() => setPhase('exit'), 900);
-      return () => clearTimeout(t);
-    }
     if (phase === 'exit') {
-      const t = setTimeout(onDone, 650);
+      stop();
+      const t = setTimeout(onDone, 700);
       return () => clearTimeout(t);
     }
-  }, [phase, onDone]);
+  }, [phase, onDone, stop]);
 
-  const pct = Math.round(progress * 100);
+  const skip = () => { clearTimers(); stop(); setPhase('exit'); };
 
   return (
     <AnimatePresence>
       {phase !== 'exit' && (
         <motion.div
-          key="opening-buffer"
+          key="opening-origin"
           className="fixed inset-0 z-[10000] flex flex-col items-center justify-center overflow-hidden cursor-pointer select-none"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.04, filter: 'blur(8px)' }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          onClick={() => setPhase('exit')}
+          exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          onClick={skip}
         >
-          {/* ── Deep geode backdrop ── */}
+          {/* ── Deep strata backdrop ── */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(ellipse 80% 60% at 50% 45%, hsl(265 55% 14%) 0%, hsl(250 35% 9%) 45%, hsl(245 30% 5%) 100%)',
+                phase === 'void'
+                  ? 'radial-gradient(ellipse 60% 50% at 50% 50%, hsl(250 40% 6%) 0%, hsl(245 35% 3%) 100%)'
+                  : 'radial-gradient(ellipse 80% 60% at 50% 45%, hsl(265 55% 14%) 0%, hsl(250 35% 9%) 45%, hsl(245 30% 5%) 100%)',
             }}
           />
-          {/* Ambient amethyst bloom that intensifies as charge rises */}
+          {/* Ambient bloom that swells at birth */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
-            animate={{ opacity: 0.15 + progress * 0.5 }}
-            transition={{ duration: 0.4 }}
+            animate={{
+              opacity: phase === 'void' ? 0.05 : phase === 'birth' || phase === 'speak' ? 0.7 : 0.3,
+              scale: phase === 'birth' || phase === 'speak' ? 1.1 : 1,
+            }}
+            transition={{ duration: 1.2 }}
             style={{
               background:
-                'radial-gradient(circle at 50% 42%, hsla(280,100%,55%,0.5) 0%, transparent 55%)',
+                'radial-gradient(circle at 50% 42%, hsla(280,100%,55%,0.55) 0%, transparent 55%)',
             }}
           />
-          {/* Slow drifting crystal dust */}
-          <div className="absolute inset-0 pointer-events-none opacity-40">
-            {[...Array(14)].map((_, i) => (
+
+          {/* ── Centerpiece ── */}
+          <div className="relative flex items-center justify-center mb-12" style={{ width: 220, height: 220 }}>
+            {/* Rotating faceted ring — appears at seed */}
+            <AnimatePresence>
+              {phase !== 'void' && (
+                <motion.svg
+                  width="200" height="200" viewBox="0 0 200 200"
+                  className="absolute"
+                  initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+                  animate={{ opacity: 0.4, scale: 1, rotate: 360 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ opacity: { duration: 1 }, scale: { duration: 1.2 }, rotate: { duration: 24, repeat: Infinity, ease: 'linear' } }}
+                >
+                  <polygon points="100,15 175,60 175,140 100,185 25,140 25,60" fill="none" stroke="hsla(280,100%,80%,0.3)" strokeWidth="1" />
+                  <polygon points="100,35 150,70 150,130 100,165 50,130 50,70" fill="none" stroke="hsla(195,100%,70%,0.2)" strokeWidth="0.75" />
+                </motion.svg>
+              )}
+            </AnimatePresence>
+
+            {/* Crystal seed — appears at seed, blooms into orb at birth */}
+            {phase === 'void' ? (
               <motion.div
-                key={i}
-                className="absolute rounded-full"
-                style={{
-                  width: 2 + (i % 3),
-                  height: 2 + (i % 3),
-                  left: `${(i * 37) % 100}%`,
-                  top: `${(i * 53) % 100}%`,
-                  background: 'hsl(280 100% 88%)',
-                  boxShadow: '0 0 6px hsla(280,100%,75%,0.8)',
-                }}
-                animate={{
-                  y: [0, -18, 0],
-                  opacity: [0.1, 0.6, 0.1],
-                }}
-                transition={{
-                  duration: 4 + (i % 4),
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: 'easeInOut',
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.3, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: 'hsl(280 100% 90%)', boxShadow: '0 0 8px hsla(280,100%,75%,0.9)' }}
               />
-            ))}
+            ) : phase === 'seed' ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.2 }}
+                animate={{ opacity: 1, scale: 0.5 }}
+                transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <CrystalCore />
+              </motion.div>
+            ) : (
+              <BornOrb speaking={phase === 'speak'} />
+            )}
           </div>
 
-          {/* ── Centerpiece: blooming crystal ── */}
-          <div className="relative flex items-center justify-center mb-10">
-            {/* Outer pulse ring — expands as charge builds */}
-            <motion.div
-              className="absolute rounded-full"
-              style={{
-                width: 180,
-                height: 180,
-                border: '1px solid hsla(280,100%,75%,0.25)',
-                boxShadow: '0 0 40px hsla(280,100%,55%,0.3) inset',
-              }}
-              animate={{
-                scale: [1, 1.15, 1],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            {/* Rotating faceted ring */}
-            <motion.svg
-              width="160"
-              height="160"
-              viewBox="0 0 160 160"
-              className="absolute"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-            >
-              <polygon
-                points="80,12 140,48 140,112 80,148 20,112 20,48"
-                fill="none"
-                stroke="hsla(280,100%,80%,0.35)"
-                strokeWidth="1"
-              />
-              <polygon
-                points="80,28 126,56 126,104 80,132 34,104 34,56"
-                fill="none"
-                stroke="hsla(195,100%,70%,0.25)"
-                strokeWidth="0.75"
-              />
-            </motion.svg>
-
-            {/* Crystal core — scales up with charge, blooms on completion */}
-            <motion.div
-              animate={{
-                scale: 0.4 + progress * 0.6,
-                rotate: phase === 'bloom' ? [0, 8, -4, 0] : 0,
-                filter:
-                  phase === 'bloom'
-                    ? 'brightness(1.6) drop-shadow(0 0 30px hsla(280,100%,75%,0.9))'
-                    : `brightness(${0.7 + progress * 0.5}) drop-shadow(0 0 ${10 + progress * 25}px hsla(280,100%,60%,${0.3 + progress * 0.5}))`,
-              }}
-              transition={{
-                duration: phase === 'bloom' ? 0.9 : 0.3,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              <CrystalCore />
-            </motion.div>
+          {/* ── Story narration ── */}
+          <div className="absolute top-[22%] inset-x-0 flex flex-col items-center px-8 min-h-[64px]">
+            <AnimatePresence mode="wait">
+              {activeLine >= 0 && phase !== 'speak' && (
+                <motion.p
+                  key={activeLine}
+                  initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+                  animate={{ opacity: 0.75, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+                  transition={{ duration: 0.9, ease: 'easeOut' }}
+                  className="text-white/70 text-[14px] leading-relaxed font-light text-center max-w-xs"
+                  style={{ letterSpacing: '0.02em' }}
+                >
+                  {STORY[activeLine].text}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* ── Wordmark ── */}
+          {/* ── First Words — the orb speaking ── */}
+          <div className="absolute bottom-[16%] inset-x-0 flex flex-col items-center px-8">
+            <AnimatePresence>
+              {showWords && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  className="flex flex-col items-center gap-3"
+                >
+                  {/* Speaker label */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amethyst-glow animate-pulse" />
+                    <span className="text-[9px] uppercase tracking-[0.4em] text-amethyst-glow/70 font-semibold">Clover · first words</span>
+                  </div>
+                  {/* Typewriter-style reveal */}
+                  <Typewriter text={FIRST_WORDS} start={showWords} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Wordmark — fades in as orb births */}
           <motion.div
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
+            className="absolute top-[8%] inset-x-0 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: phase === 'birth' || phase === 'speak' ? 1 : 0 }}
+            transition={{ duration: 1 }}
           >
-            <div className="text-[9px] uppercase tracking-[0.5em] text-white/30 mb-1.5 font-semibold">
-              Rockhounding OS
-            </div>
-            <div
-              className="text-3xl font-black text-white"
-              style={{
-                letterSpacing: '-0.02em',
-                textShadow: '0 0 40px hsla(280,100%,75%,0.6), 0 0 80px hsla(265,80%,50%,0.3)',
-              }}
-            >
-              RockHound
-              <span style={{ color: 'hsl(280,100%,88%)' }}> GO</span>
+            <div className="text-[9px] uppercase tracking-[0.5em] text-white/25 font-semibold mb-1">Rockhounding OS</div>
+            <div className="text-2xl font-black text-white" style={{ letterSpacing: '-0.02em', textShadow: '0 0 40px hsla(280,100%,75%,0.5)' }}>
+              RockHound<span style={{ color: 'hsl(280,100%,88%)' }}> GO</span>
             </div>
           </motion.div>
-
-          {/* ── Charge bar + tagline ── */}
-          <div className="w-56 flex flex-col items-center gap-2.5">
-            <div
-              className="w-full h-[3px] rounded-full overflow-hidden"
-              style={{ background: 'hsla(270,30%,40%,0.25)' }}
-            >
-              <motion.div
-                className="h-full rounded-full"
-                style={{
-                  width: `${pct}%`,
-                  background:
-                    'linear-gradient(90deg, hsl(265 80% 55%), hsl(280 100% 80%))',
-                  boxShadow: '0 0 12px hsla(280,100%,70%,0.7)',
-                }}
-              />
-            </div>
-            <div className="h-4 flex items-center justify-between w-full">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={tagIdx}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 0.7, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.35 }}
-                  className="text-[10px] uppercase tracking-[0.25em] text-white/50 font-mono"
-                >
-                  {TAGLINES[tagIdx]}
-                </motion.span>
-              </AnimatePresence>
-              <span className="text-[10px] font-mono text-amethyst-glow/60 tabular-nums">
-                {pct}%
-              </span>
-            </div>
-          </div>
 
           {/* Skip hint */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-            className="absolute bottom-5 text-white/20 text-[9px] tracking-[0.3em] uppercase"
+            transition={{ delay: 1.5, duration: 0.6 }}
+            className="absolute bottom-4 text-white/15 text-[9px] tracking-[0.3em] uppercase"
           >
             Tap to skip
           </motion.div>
@@ -257,31 +215,95 @@ export default function OpeningBuffer({ onDone }) {
   );
 }
 
-/** Faceted amethyst crystal SVG — the centerpiece that blooms. */
+/** The living orb — born from the crystal seed. Glows, breathes, and pulses when speaking. */
+function BornOrb({ speaking }) {
+  return (
+    <motion.div
+      initial={{ scale: 0.4, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+      className="relative"
+      style={{ width: 110, height: 110 }}
+    >
+      {/* Outer glow halo */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        animate={{ opacity: speaking ? [0.5, 0.9, 0.5] : [0.3, 0.55, 0.3], scale: speaking ? [1, 1.25, 1] : [1, 1.08, 1] }}
+        transition={{ duration: speaking ? 0.9 : 3, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ background: 'radial-gradient(circle, hsla(280,100%,70%,0.6) 0%, transparent 70%)' }}
+      />
+      {/* Orb body — liquid amethyst sphere */}
+      <motion.div
+        className="absolute inset-2 rounded-full"
+        animate={{ scale: speaking ? [1, 1.04, 1] : 1 }}
+        transition={{ duration: 0.9, repeat: speaking ? Infinity : 0, ease: 'easeInOut' }}
+        style={{
+          background:
+            'radial-gradient(circle at 35% 30%, hsl(290 100% 92%) 0%, hsl(280 90% 72%) 30%, hsl(270 85% 52%) 60%, hsl(262 80% 38%) 100%)',
+          boxShadow:
+            'inset 0 -8px 20px hsla(265,80%,30%,0.6), inset 0 6px 14px hsla(290,100%,90%,0.5), 0 0 40px hsla(280,100%,60%,0.7)',
+        }}
+      />
+      {/* Specular highlight */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          top: 18, left: 22, width: 30, height: 18,
+          background: 'radial-gradient(ellipse, hsla(290,100%,98%,0.85) 0%, transparent 70%)',
+          filter: 'blur(2px)',
+        }}
+      />
+      {/* Inner core swirl */}
+      <motion.div
+        className="absolute inset-0 rounded-full overflow-hidden"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
+        style={{ opacity: 0.3 }}
+      >
+        <div className="absolute inset-0" style={{ background: 'conic-gradient(from 0deg, transparent, hsla(280,100%,80%,0.4), transparent, hsla(195,100%,70%,0.3), transparent)' }} />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** Faceted crystal seed SVG. */
 function CrystalCore() {
   return (
     <svg width="78" height="96" viewBox="0 0 78 96" fill="none">
       <defs>
-        <linearGradient id="rhgo-crystal-grad" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="rhgo-seed-grad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="hsl(280 100% 92%)" />
           <stop offset="50%" stopColor="hsl(270 85% 65%)" />
           <stop offset="100%" stopColor="hsl(265 80% 40%)" />
         </linearGradient>
-        <linearGradient id="rhgo-crystal-facet" x1="0" y1="0" x2="1" y2="0.6">
-          <stop offset="0%" stopColor="hsl(280 100% 80%)" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="hsl(265 70% 45%)" stopOpacity="0.7" />
-        </linearGradient>
       </defs>
-      {/* Left facet */}
-      <polygon points="39,4 12,34 39,88" fill="url(#rhgo-crystal-facet)" opacity="0.85" />
-      {/* Right facet */}
-      <polygon points="39,4 66,34 39,88" fill="url(#rhgo-crystal-grad)" opacity="0.95" />
-      {/* Center highlight */}
-      <polygon points="39,4 39,88 26,40" fill="hsl(280 100% 95%)" opacity="0.25" />
-      {/* Edge glints */}
+      <polygon points="39,4 12,34 39,88" fill="url(#rhgo-seed-grad)" opacity="0.8" />
+      <polygon points="39,4 66,34 39,88" fill="url(#rhgo-seed-grad)" opacity="0.95" />
       <line x1="39" y1="4" x2="39" y2="88" stroke="hsl(280 100% 95%)" strokeWidth="0.75" opacity="0.6" />
-      <line x1="39" y1="4" x2="12" y2="34" stroke="hsl(280 100% 90%)" strokeWidth="0.5" opacity="0.4" />
-      <line x1="39" y1="4" x2="66" y2="34" stroke="hsl(280 100% 90%)" strokeWidth="0.5" opacity="0.4" />
     </svg>
+  );
+}
+
+/** Typewriter reveal for the orb's first words. */
+function Typewriter({ text, start }) {
+  const [shown, setShown] = useState('');
+  useEffect(() => {
+    if (!start) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(interval);
+    }, 38);
+    return () => clearInterval(interval);
+  }, [start, text]);
+
+  return (
+    <p
+      className="text-white/90 text-[15px] leading-relaxed font-light text-center max-w-sm italic"
+      style={{ letterSpacing: '0.015em', textShadow: '0 0 20px hsla(280,100%,70%,0.4)' }}
+    >
+      “{shown}<span className="opacity-40 animate-pulse">▌</span>”
+    </p>
   );
 }
