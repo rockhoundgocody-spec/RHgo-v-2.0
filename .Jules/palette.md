@@ -3,3 +3,6 @@
 ## 2024-03-25 - Missing ARIA Labels on Overlay Icon Buttons
 **Learning:** Absolute-positioned icon-only overlay buttons (like "Clear Search" in inputs or "Close" in floating sheets) frequently miss `aria-label`s and proper keyboard focus states. Since they overlay other content, standard focus indicators might be clipped or invisible, leading to poor keyboard accessibility.
 **Action:** Always verify that overlay icon buttons have an `aria-label` and explicit keyboard focus indicators like `focus-visible:ring-2`. Ensure border radii match for clean focus rings.
+## 2024-07-04 - AR Encounter Screen Accessibility
+**Learning:** Found a pattern of missing ARIA labels on icon-only dismiss/close buttons in floating modal contexts (like AREncounterScreen.jsx), along with missing keyboard focus indicators on custom rounded action buttons.
+**Action:** When adding close/dismiss buttons in AR or HUD overlays, always use semantic `<button>` tags with `aria-label="Close [context]"` and apply `focus-visible:ring-2 focus-visible:ring-amethyst-glow` for consistent keyboard navigation.

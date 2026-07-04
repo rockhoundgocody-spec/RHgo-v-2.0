@@ -168,7 +168,8 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
           <div className="text-xl font-black text-white">{spawn.mineral_name}</div>
         </div>
         <button onClick={onDismiss}
-          className="w-10 h-10 rounded-full flex items-center justify-center"
+          aria-label="Close encounter"
+          className="w-10 h-10 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           style={{ background: 'hsla(0,0%,0%,0.5)', border: '1px solid hsla(0,0%,100%,0.15)' }}>
           <X size={18} className="text-white/60" />
         </button>
