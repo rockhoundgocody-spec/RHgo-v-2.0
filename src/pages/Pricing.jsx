@@ -27,8 +27,8 @@ import { useAuth } from '@/lib/AuthContext';
 // and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
 // in Base44 environment variables.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: null, label: 'Field Pro' },   // set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID
-  family:    { priceId: null, label: 'Family' },       // set STRIPE_FAMILY_MONTHLY_PRICE_ID
+  fieldPro:  { priceId: 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
+  family:    { priceId: 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
   successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
   cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
 };
@@ -119,15 +119,9 @@ export default function Pricing() {
 
     const priceId = tier.id === 'field_pro' ? STRIPE_CONFIG.fieldPro.priceId : STRIPE_CONFIG.family.priceId;
 
-    // ─── Stripe not yet connected ───────────────────────────────────────
-    // Once your Stripe account is linked and price IDs are set, replace this
-    // block with a call to your createCheckoutSession backend function, e.g.:
-    //   const res = await base44.functions.invoke('createCheckoutSession', {
-    //     priceId, successUrl: STRIPE_CONFIG.successUrl, cancelUrl: STRIPE_CONFIG.cancelUrl,
-    //   });
-    //   window.location.href = res.data.url;
-    if (!priceId) {
-      alert('Checkout setup in progress — check back very soon!\n\nDeveloper note: set STRIPE_' + tier.id.toUpperCase() + '_MONTHLY_PRICE_ID in environment variables and wire up the createCheckoutSession backend function.');
+    // Checkout must run outside the Base44 preview iframe.
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      alert('Checkout only works from the published app — open it in a new tab to upgrade.');
       return;
     }
 
@@ -137,8 +131,12 @@ export default function Pricing() {
         priceId,
         successUrl: STRIPE_CONFIG.successUrl,
         cancelUrl: STRIPE_CONFIG.cancelUrl,
+        tier: tier.id,
+        customerEmail: user?.email || null,
       });
-      window.location.href = res.data.url;
+      const url = res?.data?.url;
+      if (!url) throw new Error('No checkout URL returned');
+      window.location.href = url;
     } catch {
       alert('Unable to start checkout — please try again shortly.');
     } finally {

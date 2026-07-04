@@ -116,7 +116,7 @@ export default function Settings() {
           <div className="text-sm font-black text-white">Field Pro Companion</div>
           <div className="ml-auto text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full"
             style={{ background: 'hsla(280,80%,55%,0.2)', color: 'hsl(280,100%,85%)', border: '1px solid hsla(280,70%,60%,0.3)' }}>
-            Coming Soon
+            Now Live
           </div>
         </div>
         <p className="text-white/45 text-xs leading-relaxed ml-7">
