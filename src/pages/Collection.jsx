@@ -41,22 +41,23 @@ export default function Collection() {
           </p>
         </div>
         {/* View toggle */}
-        <div className="flex gap-1 p-1 rounded-xl glass-panel">
-          <button onClick={() => setView('crystal')} className={`p-2 rounded-lg transition ${view === 'crystal' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Crystal view"><Sparkles size={16} /></button>
-          <button onClick={() => setView('gallery')} className={`p-2 rounded-lg transition ${view === 'gallery' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Gallery view"><Images size={16} /></button>
-          <button onClick={() => setView('grid')} className={`p-2 rounded-lg transition ${view === 'grid' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Grid view"><LayoutGrid size={16} /></button>
-          <button onClick={() => setView('map')} className={`p-2 rounded-lg transition ${view === 'map' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Map view"><Map size={16} /></button>
-          <button onClick={() => setView('dashboard')} className={`p-2 rounded-lg transition ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
+        <div className="flex gap-1 p-1 rounded-xl glass-panel" role="group" aria-label="Collection views">
+          <button onClick={() => setView('crystal')} aria-pressed={view === 'crystal'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'crystal' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Crystal view"><Sparkles size={16} /></button>
+          <button onClick={() => setView('gallery')} aria-pressed={view === 'gallery'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'gallery' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Gallery view"><Images size={16} /></button>
+          <button onClick={() => setView('grid')} aria-pressed={view === 'grid'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'grid' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Grid view"><LayoutGrid size={16} /></button>
+          <button onClick={() => setView('map')} aria-pressed={view === 'map'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'map' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Map view"><Map size={16} /></button>
+          <button onClick={() => setView('dashboard')} aria-pressed={view === 'dashboard'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
         </div>
       </div>
 
       {/* Rarity + verified filters */}
       {(view === 'crystal' || view === 'grid' || view === 'gallery') && (
         <div className="mb-4 space-y-2">
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filters">
             {RARITY_FILTERS.map(r => (
               <button key={r} onClick={() => setRarityFilter(r)}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
+                aria-pressed={rarityFilter === r}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95 focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
                 style={{
                   background: rarityFilter === r ? `${RARITY_COLORS[r]}20` : 'hsla(245,25%,12%,0.6)',
                   border: `1px solid ${rarityFilter === r ? `${RARITY_COLORS[r]}50` : 'hsla(270,20%,30%,0.2)'}`,
@@ -66,7 +67,8 @@ export default function Collection() {
               </button>
             ))}
             <button onClick={() => setVerifiedOnly(v => !v)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
+              aria-pressed={verifiedOnly}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition active:scale-95 focus-visible:ring-2 focus-visible:ring-[#34d399] focus-visible:outline-none"
               style={{
                 background: verifiedOnly ? 'hsla(160,70%,50%,0.15)' : 'hsla(245,25%,12%,0.6)',
                 border: `1px solid ${verifiedOnly ? 'hsla(160,70%,50%,0.4)' : 'hsla(270,20%,30%,0.2)'}`,

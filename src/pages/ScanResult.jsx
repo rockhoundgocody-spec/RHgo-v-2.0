@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { RotateCcw, Plus, Share2 } from 'lucide-react';
+import { RotateCcw, Plus, Share2, Loader2 } from 'lucide-react';
 import PipelineStatusPanel from '@/components/scan/PipelineStatusPanel.jsx';
 import ConfidenceBreakdown from '@/components/scan/ConfidenceBreakdown.jsx';
 import SimilarMinerals from '@/components/scan/SimilarMinerals.jsx';
@@ -169,9 +169,10 @@ export default function ScanResult() {
           <button
             onClick={handleAddToCollection}
             disabled={enriching}
+            aria-busy={enriching}
             className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-40 text-white font-bold text-base transition active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
           >
-            <Plus size={16} /> {enriching ? 'Adding...' : 'Add to Collection'}
+            {enriching ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} {enriching ? 'Adding...' : 'Add to Collection'}
           </button>
           <button aria-label="Share scan result" className="flex items-center justify-center gap-2 px-5 py-4 rounded-xl border border-white/15 text-white/50 hover:text-white transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none">
             <Share2 size={15} />
