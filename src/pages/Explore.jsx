@@ -128,7 +128,7 @@ export default function Explore() {
   const { data: hotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
   const { data: specimens = [] } = useQuery({
     queryKey: ['specimens-explore'],
-    queryFn: () => base44.entities.Specimen.list(),
+    queryFn: () => base44.entities.Specimen.list('-found_date', 500),
     initialData: [],
   });
   const { earnedCodes, pendingBadge, dismissPending } = useBadgeAwarder();

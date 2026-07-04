@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScanLine, Gem, Sparkles, Map, ChevronRight, Zap } from 'lucide-react';
+import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
 
 // ── AGATE AGE GATE ────────────────────────────────────────────────────────────
 // A secret behavioral test disguised as a fun quiz. Kids and pros answer
@@ -359,14 +360,7 @@ export default function Onboarding() {
               transition={{ duration: 2.5, repeat: Infinity }}
               className="mb-6"
             >
-              <div className="w-28 h-28 rounded-full flex items-center justify-center text-6xl"
-                style={{
-                  background: `radial-gradient(circle at 35% 35%, ${current.color}40, ${current.color}15)`,
-                  border: `2px solid ${current.color}40`,
-                  boxShadow: `0 0 50px ${current.color}40, inset 0 1px 0 ${current.color}50`,
-                }}>
-                {current.emoji}
-              </div>
+              <LiquidMetalOrb awakened size={112} />
             </motion.div>
 
             {Demo && (

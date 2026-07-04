@@ -61,9 +61,9 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { value: '250+', label: 'Minerals in Library' },
-  { value: '1,400+', label: 'Hotspots Mapped' },
-  { value: '98%', label: 'AI Accuracy' },
+  { value: '362', label: 'Minerals in Library' },
+  { value: '378', label: 'Hotspots Mapped' },
+  { value: '24/7', label: 'Clover Field AI' },
 ];
 
 // Floating crystal particle
@@ -138,7 +138,7 @@ export default function Landing() {
           </div>
 
           {/* SEO/brand headline */}
-          <div className="text-white/35 text-[10px] uppercase tracking-[0.4em] mb-3 font-semibold">Built by collectors · for collectors · Used in 47 states</div>
+          <div className="text-white/55 text-[10px] uppercase tracking-[0.4em] mb-3 font-semibold">Built by collectors · for collectors</div>
 
           <h1 className="text-white font-black text-[38px] leading-[1.05] mb-3" style={{ letterSpacing: '-0.02em', textShadow: '0 0 60px hsla(280,100%,70%,0.5)' }}>
             The only Rockhounding OS<br />
@@ -147,7 +147,7 @@ export default function Landing() {
           <p className="text-white/50 text-[14px] leading-relaxed mb-2 max-w-[290px]">
             AI mineral ID, geospatial hotspot maps, gamified GeoDex collection, and voice field intelligence — all in your pocket.
           </p>
-          <p className="text-white/25 text-[11px] mb-7 max-w-[260px]">Built in Illinois · 250+ minerals · 1,400+ hotspots mapped</p>
+          <p className="text-white/55 text-[11px] mb-7 max-w-[260px]">Built in Illinois · 362 minerals · 378 hotspots mapped</p>
 
           {/* 🔥 Guest Demo — primary CTA, no sign-up */}
           <Link
@@ -173,7 +173,7 @@ export default function Landing() {
             <Zap size={15} /> Start Free — Takes 8 Seconds
           </Link>
 
-          <p className="text-white/20 text-[11px] mt-1 mb-4">Free forever · No credit card · Works on any phone</p>
+          <p className="text-white/50 text-[11px] mt-1 mb-4">Free forever · No credit card · Works on any phone</p>
 
           {/* Login — bottom, de-emphasized */}
           <Link

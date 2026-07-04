@@ -16,6 +16,7 @@ import { AnimatePresence } from 'framer-motion';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
+import { useSubscription } from '@/lib/useSubscription';
 
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
@@ -75,6 +76,20 @@ export default function Scan() {
   // Read voice preference set in HeroOrb / Settings
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
+  // Free-tier scan gating: 5 AI IDs/day; paid tiers unlimited.
+  const [me, setMe] = useState(null);
+  const { isPaid, loading: subLoading } = useSubscription(me);
+  const FREE_SCAN_LIMIT = 5;
+  const todayKey = `rhgo_scans_${new Date().toISOString().slice(0, 10)}`;
+  const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(todayKey) || 0));
+  const canScan = isPaid || subLoading || scansUsed < FREE_SCAN_LIMIT;
+  const guardScan = () => {
+    if (canScan) return true;
+    navigate('/pricing');
+    return false;
+  };
+  useEffect(() => { base44.auth.me().then(setMe).catch(() => {}); }, []);
+
   // Auto-capture GPS as soon as the scan page loads
   React.useEffect(() => {
     if (!navigator.geolocation) return;
@@ -99,6 +114,7 @@ export default function Scan() {
   // Fallback if camera unavailable — single-image classic flow.
   const handleUploadFallback = async (file) => {
     if (!file) return;
+    if (!guardScan()) return;
     const blob = file;
     setAngles([{ key: 'front', label: 'Uploaded', captured: true, blob }]);
     setStage('reconstruct');
@@ -106,6 +122,7 @@ export default function Scan() {
   };
 
   const handleCaptureComplete = (capturedAngles) => {
+    if (!guardScan()) return;
     setAngles(capturedAngles);
     setStage('reconstruct');
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
@@ -265,6 +282,9 @@ export default function Scan() {
     setResult(r);
     setReasoningResult(rr || null);
     setStage('result');
+    if (!isPaid) {
+      setScansUsed(u => { const n = u + 1; localStorage.setItem(todayKey, String(n)); return n; });
+    }
 
     // Clover speaks the result
     if (voiceEnabled && r?.top_match) {
