@@ -21,6 +21,7 @@ import {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
   Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
+  Sprout, Trophy, Route, Atom, Leaf, Shield, PenLine, FlaskConical,
 } from 'lucide-react';
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ const ICON_MAP = {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
   Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
+  Sprout, Trophy, Route, Atom, Leaf, Shield, PenLine, FlaskConical,
 };
 
 // ── Color Schemes ─────────────────────────────────────────────────────────────

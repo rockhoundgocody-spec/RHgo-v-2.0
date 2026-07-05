@@ -189,6 +189,78 @@ export const BADGES = [
     check: s => maxFindsAtSpot(s) >= 10,
     progress: s => ({ current: Math.min(maxFindsAtSpot(s), 10), target: 10 }),
   },
+
+  // ── TIER 6: CATEGORY DRILLS (Collector / Explorer / Scientist / Steward) ──
+  {
+    code: 'first_five', title: 'First Five',
+    description: 'Identify 5 unique mineral types.',
+    rarity: 'common', icon: 'Sprout', material: 'natural_stone', colorScheme: 'jade',
+    check: s => uniqueMinerals(s) >= 5,
+    progress: s => ({ current: Math.min(uniqueMinerals(s), 5), target: 5 }),
+  },
+  {
+    code: 'half_century', title: 'Half Century',
+    description: 'Collect 50 specimens.',
+    rarity: 'uncommon', icon: 'Layers', material: 'metallic_inlay', colorScheme: 'copper',
+    check: s => s.length >= 50,
+    progress: s => ({ current: Math.min(s.length, 50), target: 50 }),
+  },
+  {
+    code: 'centurion', title: 'Centurion',
+    description: 'Collect 100 specimens.',
+    rarity: 'rare', icon: 'Trophy', material: 'crystal_core', colorScheme: 'gold',
+    check: s => s.length >= 100,
+    progress: s => ({ current: Math.min(s.length, 100), target: 100 }),
+  },
+  {
+    code: 'road_scholar', title: 'Road Scholar',
+    description: 'Explore 10 unique collecting sites.',
+    rarity: 'common', icon: 'Route', material: 'geo_topo', colorScheme: 'ocean',
+    check: s => uniqueLocations(s) >= 10,
+    progress: s => ({ current: Math.min(uniqueLocations(s), 10), target: 10 }),
+  },
+  {
+    code: 'quartz_queen', title: 'Quartz Queen',
+    description: 'Collect 10 quartz-family specimens.',
+    rarity: 'uncommon', icon: 'Gem', material: 'crystal_core', colorScheme: 'amethyst',
+    check: s => s.filter(x => /quartz/i.test(x.mineral_name || '')).length >= 10,
+    progress: s => ({ current: Math.min(s.filter(x => /quartz/i.test(x.mineral_name || '')).length, 10), target: 10 }),
+  },
+  {
+    code: 'calcite_clan', title: 'Calcite Clan',
+    description: 'Collect 10 calcite-family specimens.',
+    rarity: 'uncommon', icon: 'FlaskConical', material: 'liquid_glass', colorScheme: 'teal',
+    check: s => s.filter(x => /calcite/i.test(x.mineral_name || '')).length >= 10,
+    progress: s => ({ current: Math.min(s.filter(x => /calcite/i.test(x.mineral_name || '')).length, 10), target: 10 }),
+  },
+  {
+    code: 'twenty_ways', title: 'Twenty Ways',
+    description: 'Identify 20 unique mineral types.',
+    rarity: 'rare', icon: 'Atom', material: 'crystal_core', colorScheme: 'violet',
+    check: s => uniqueMinerals(s) >= 20,
+    progress: s => ({ current: Math.min(uniqueMinerals(s), 20), target: 20 }),
+  },
+  {
+    code: 'gentle_hands', title: 'Gentle Hands',
+    description: 'Leave 5 specimens in place — stewardship first.',
+    rarity: 'uncommon', icon: 'Leaf', material: 'natural_stone', colorScheme: 'jade',
+    check: s => s.filter(x => x.left_in_place === true).length >= 5,
+    progress: s => ({ current: Math.min(s.filter(x => x.left_in_place === true).length, 5), target: 5 }),
+  },
+  {
+    code: 'guardian_of_lode', title: 'Guardian of the Lode',
+    description: 'Leave 20 specimens in place for the next collector.',
+    rarity: 'rare', icon: 'Shield', material: 'metallic_inlay', colorScheme: 'jade',
+    check: s => s.filter(x => x.left_in_place === true).length >= 20,
+    progress: s => ({ current: Math.min(s.filter(x => x.left_in_place === true).length, 20), target: 20 }),
+  },
+  {
+    code: 'field_notebook', title: 'Field Notebook',
+    description: 'Write detailed notes (100+ chars) on 10 specimens.',
+    rarity: 'uncommon', icon: 'PenLine', material: 'natural_stone', colorScheme: 'slate',
+    check: s => s.filter(x => (x.notes || '').length > 100).length >= 10,
+    progress: s => ({ current: Math.min(s.filter(x => (x.notes || '').length > 100).length, 10), target: 10 }),
+  },
 ];
 
 export const getBadgeDefinition = code => BADGES.find(b => b.code === code);
