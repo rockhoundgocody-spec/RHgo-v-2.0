@@ -4,7 +4,8 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Star, Award, Share2 } from 'lucide-react';
+import { X, Zap, Star, Share2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { base44 } from '@/api/base44Client';
 import { RARITY_XP_MAP } from '@/lib/spawnEngine';
 
@@ -30,9 +31,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [throwCount, setThrowCount] = useState(0);
   const [orbScale, setOrbScale] = useState(1);
   const [particles, setParticles] = useState([]);
-  const [cameraStream, setCameraStream] = useState(null);
   const videoRef = useRef(null);
-  const orbRef = useRef(null);
   const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
   // Start camera for AR feel
@@ -41,7 +40,6 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     navigator.mediaDevices?.getUserMedia?.({ video: { facingMode: 'environment' } })
       .then(s => {
         stream = s;
-        setCameraStream(s);
         if (videoRef.current) {
           videoRef.current.srcObject = s;
           videoRef.current.play().catch(() => {});
@@ -99,6 +97,13 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     setPhase('result');
 
     if (outcome !== 'escape') {
+      confetti({
+        particleCount: outcome === 'critical' || outcome === 'shiny' ? 150 : 70,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: [theme.glow, theme.ring, '#ffffff'],
+        zIndex: 10000,
+      });
       spawnParticles(outcome === 'critical' || outcome === 'shiny' ? 28 : 14, theme.glow);
       const xp = RARITY_XP_MAP[spawn.rarity] * (outcome === 'shiny' || outcome === 'critical' ? 2 : 1);
       // Save to collection
@@ -181,10 +186,19 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
             <motion.div key="orb"
               animate={{ scale: orbScale, y: [0, -8, 0] }}
               transition={{ y: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' }, scale: { duration: 0.4 } }}
-              className="relative cursor-pointer select-none"
+              className="relative cursor-pointer select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 rounded-full"
               style={{ width: 160, height: 160 }}
               onClick={handleThrow}
               onTouchEnd={handleSwipe}
+              role="button"
+              tabIndex={0}
+              aria-label={`Catch ${spawn.mineral_name}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.key === ' ') e.preventDefault();
+                  handleThrow();
+                }
+              }}
             >
               {/* Glow rings */}
               {[1.8, 1.5, 1.25].map((scale, i) => (
