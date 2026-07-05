@@ -178,7 +178,7 @@ export default function Landing() {
           {/* Login — bottom, de-emphasized */}
           <Link
             to="/login"
-            className="text-white/30 text-xs hover:text-white/50 transition"
+            className="text-white/55 text-xs hover:text-white/80 transition"
           >
             Already a Rockhound? Sign in →
           </Link>
@@ -197,7 +197,7 @@ export default function Landing() {
             <div key={label} className="flex flex-col items-center py-4 rounded-2xl"
               style={{ background: 'hsla(265,40%,15%,0.5)', border: '1px solid hsla(280,40%,50%,0.15)', backdropFilter: 'blur(12px)' }}>
               <div className="text-xl font-black text-amethyst-glow" style={{ textShadow: '0 0 20px hsla(280,100%,70%,0.5)' }}>{value}</div>
-              <div className="text-white/35 text-[9px] uppercase tracking-[0.2em] mt-1 text-center leading-tight">{label}</div>
+              <div className="text-white/55 text-[9px] uppercase tracking-[0.2em] mt-1 text-center leading-tight">{label}</div>
             </div>
           ))}
         </div>
@@ -244,7 +244,7 @@ export default function Landing() {
         <div className="flex items-center gap-1">
           {[...Array(5)].map((_, i) => <Star key={i} size={12} className="text-yellow-400" fill="#facc15" />)}
         </div>
-        <p className="text-white/35 text-xs text-center max-w-[220px]">"Best rockhounding app I've used. Clover actually knows her minerals."</p>
+        <p className="text-white/55 text-xs text-center max-w-[220px]">"Best rockhounding app I've used. Clover actually knows her minerals."</p>
       </motion.div>
 
       {/* ── FINAL CTA ── */}

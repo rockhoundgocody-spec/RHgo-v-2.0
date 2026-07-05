@@ -111,7 +111,7 @@ function HotspotCard({ hotspot, active, hasGap, onClick }) {
           </div>
         )}
         <div className="flex items-center justify-between pt-1.5 border-t" style={{ borderColor: 'hsla(255,30%,30%,.15)' }}>
-          <span className="text-[9px] text-white/25">{hotspot.state||'—'}</span>
+          <span className="text-[9px] text-white/50">{hotspot.state||'—'}</span>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full"
               style={{ background: `hsl(${Math.round((hotspot.trust_score||.5)*120)},80%,55%)` }} />
@@ -481,7 +481,7 @@ export default function Explore() {
                       <h2 className="text-white font-bold text-sm">
                         {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Hotspots'}
                       </h2>
-                      <p className="text-white/30 text-[10px] uppercase tracking-[.2em]">
+                      <p className="text-white/50 text-[10px] uppercase tracking-[.2em]">
                         {hotspots.length} total · {publicCount} open
                       </p>
                     </div>
@@ -507,7 +507,7 @@ export default function Explore() {
                   <div ref={scrollRef} className="flex gap-3 px-4 pb-4 overflow-x-auto"
                     style={{ scrollSnapType: 'x mandatory' }}>
                     {filteredHotspots.length === 0 ? (
-                      <div className="flex-1 flex flex-col items-center justify-center py-8 text-white/30">
+                      <div className="flex-1 flex flex-col items-center justify-center py-8 text-white/50">
                         <Layers size={24} className="mb-2 opacity-40"/>
                         <p className="text-sm">No hotspots in this layer</p>
                       </div>
