@@ -30,6 +30,7 @@ import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
+import useKidMode from '@/lib/useKidMode';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -37,6 +38,7 @@ export default function Hub() {
   const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
+  const isKid = useKidMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
   const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: handleMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
@@ -78,6 +80,12 @@ export default function Hub() {
         <div className="w-full flex justify-end mb-2">
           <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} locked={chaosLocked} />
         </div>
+        {isKid && (
+          <div className="mb-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]"
+            style={{ background: 'hsla(45,90%,50%,0.2)', border: '1px solid hsla(45,90%,60%,0.4)', color: '#fbbf24' }}>
+            🌟 Explorer Mode
+          </div>
+        )}
         <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} size={141} />
 
         <div className="mt-3 select-none">
@@ -91,7 +99,7 @@ export default function Hub() {
           >
             GO
           </span>
-          <p className="mt-1 text-white/40 text-[11px] font-light tracking-[0.18em] uppercase">
+          <p className="mt-1 text-white/55 text-[11px] font-light tracking-[0.18em] uppercase">
             Discover · Identify · Collect
           </p>
         </div>
@@ -193,7 +201,7 @@ function QuickAction({ to, icon: Icon, label, color }) {
         strokeWidth={1.5}
         style={{ color: a.icon, filter: `drop-shadow(0 0 5px ${a.glow})` }}
       />
-      <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/40 transition-colors group-hover:text-white/65">
+      <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/55 transition-colors group-hover:text-white/85">
         {label}
       </span>
     </Link>

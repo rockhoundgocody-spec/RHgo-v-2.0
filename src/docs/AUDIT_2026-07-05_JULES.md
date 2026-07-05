@@ -35,3 +35,12 @@
 7. **[Later]** Publish an on-device MLModel + offline tile packs for field reliability.
 
 *Re-run after #1 + #2 to expect composite ~88–92; the remaining 3–7 points come from #3–#7.*
+
+## Session delta (2026-07-05, cont.)
+| Item | Status | Notes |
+|---|---|---|
+| #4 `rhgo_mode` kid layer | ✅ wired | New `useKidMode` hook consumed by CrystalNav (hides Market/trade tab for kids) + Hub (🌟 Explorer Mode badge). Flag no longer decorative. |
+| #6 a11y — Hub/Onboarding/Scan | ✅ contrast pass | Sub-AA `text-white/30`/`40` bumped to `/55` across Hub hero subtitle, QuickAction labels, Onboarding quiz subtitle/Skip/step-counter, Scan header subtitle. CrystalNav already had aria-labels. |
+| Leaderboard (real ranking) | ✅ new | `getLeaderboard` backend function aggregates unique minerals (Specimen by `created_by_id`) + total weight (CollectionWeight summed) across all collectors; `/leaderboard` page rebuilt with sort toggle + your-rank callout. Replaces fake seed board. |
+| #3 community seed | ◐ partial | 6 Clover educational posts seeded (target 10–15). Market listings intentionally not seeded (deceptive to real buyers) — empty-state CTA preferred. |
+| #1 public entry / #2 test checkout | ⛔ user/dashboard | Still requires owner action (flip app public, run 4242 checkout, claim Stripe). |

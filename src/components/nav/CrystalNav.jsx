@@ -6,6 +6,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Home, Map, Gem, Store, ScanLine } from 'lucide-react';
+import useKidMode from '@/lib/useKidMode';
 
 const NAV_TABS = [
   { to: '/', label: 'Home', Icon: Home },
@@ -16,6 +17,9 @@ const NAV_TABS = [
 ];
 
 export default function CrystalNav({ activeTab, onTabClick, pathname }) {
+  const isKid = useKidMode();
+  // Kids don't see the trade/market surface (peer commerce + money).
+  const tabs = isKid ? NAV_TABS.filter((t) => t.to !== '/market') : NAV_TABS;
   // Rendered into document.body via portal — escapes the app's internal
   // scroll container so Leaflet's composited map layers can never paint
   // over or hide the nav (iOS WebKit fixed-position bug).
@@ -37,7 +41,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
         gap: 4,
       }}
     >
-      {NAV_TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab.to === '/'
           ? pathname === '/'
           : pathname.startsWith(tab.to);

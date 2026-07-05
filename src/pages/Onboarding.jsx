@@ -87,7 +87,7 @@ function AgateAgeGate({ onComplete }) {
           {/* Secret header — looks like a fun quiz, not an age gate */}
           <div className="text-center mb-8">
             <div className="text-5xl mb-4">🪨</div>
-            <p className="text-white/40 text-[11px] uppercase tracking-[0.3em] mb-2">Quick crystal quiz</p>
+            <p className="text-white/55 text-[11px] uppercase tracking-[0.3em] mb-2">Quick crystal quiz</p>
             <h2 className="text-xl font-black text-white leading-snug">{current.q}</h2>
           </div>
 
@@ -326,7 +326,7 @@ export default function Onboarding() {
 
       {/* Skip */}
       {!isLast && (
-        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/40 text-sm hover:text-white/70 transition z-10">
+        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/55 text-sm hover:text-white/85 transition z-10">
           Skip
         </button>
       )}
@@ -397,7 +397,7 @@ export default function Onboarding() {
           {isLast ? <><Sparkles size={18} /> Start Rockhounding!</> : <>Next <ChevronRight size={18} /></>}
         </motion.button>
         {!isLast && (
-          <p className="text-center text-white/30 text-xs mt-4">{step + 1} of {STEPS.length}</p>
+          <p className="text-center text-white/55 text-xs mt-4">{step + 1} of {STEPS.length}</p>
         )}
       </div>
     </div>
