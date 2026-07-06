@@ -1,4 +1,4 @@
-/* eslint-disable */
+
 // deno-lint-ignore-file
 /**
  * awardCompanionXPOnCollection
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     }
 
     const {
-      specimen_id,
+      _specimen_id,
       mineral_name,
       rarity = 'common',
       confidence = 0.7,
