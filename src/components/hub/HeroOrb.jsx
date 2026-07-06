@@ -6,6 +6,7 @@
 import React, { useState, useRef } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
+import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import useCloverChat from './useCloverChat';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
@@ -38,6 +39,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const bottomRef    = useRef(null);
 
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem('rhgo_clover_voice') !== 'off');
+  const { getInteraction, injectTap } = useLiquidInteraction();
 
   const { sendMessage, loading } = useCloverChat({
     companion,
@@ -68,6 +70,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
 
   const handleOrbTap = async (e) => {
     addRipple(e);
+    injectTap(e.clientX, e.clientY);
     if (open) { setOpen(false); return; }
 
     // Open chat and send a greeting
@@ -144,7 +147,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOrbTap(e)}
           style={{ width: size, height: size }}
         >
-          <AmethystOrb size={size} orbState={orbState} level={companion?.level || 1} />
+          <AmethystOrb size={size} orbState={orbState} level={companion?.level || 1} getInteraction={getInteraction} />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples(rs => rs.filter(rp => rp.id !== r.id))} />
           ))}

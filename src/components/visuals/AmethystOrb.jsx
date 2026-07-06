@@ -41,6 +41,7 @@ export default function AmethystOrb({
   level = 1,               // companion level — drives visual evolution
   getAmplitude,
   getSpectrum,
+  getInteraction,          // liquid-metal response to screen interaction
 }) {
   const effectiveState = orbState !== 'idle' ? orbState : (speaking ? 'speaking' : 'idle');
   const tier = growthTier(level);
@@ -81,25 +82,73 @@ export default function AmethystOrb({
       const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
       const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
 
+      // ── Liquid-metal interaction layer ──────────────────────────────
+      // Always-on organic wobble (two offset sine waves) gives the orb a
+      // living, liquid quality even at rest. Interaction data from screen
+      // adds cursor lean, proximity glow, tap squish, and scroll drift.
+      const ix = getInteraction ? getInteraction() : null;
+      let leanX = 0, leanY = 0, proxBoost = 0, driftY = 0, squish = 0;
+
+      // Organic liquid wobble — always alive unless reduced-motion
+      const wobX = reduceMotion ? 0 : Math.sin(t * 0.7) * 0.006;
+      const wobY = reduceMotion ? 0 : Math.cos(t * 0.53) * 0.006;
+
+      if (ix && !reduceMotion) {
+        const rect = wrapRef.current?.getBoundingClientRect();
+        if (rect && rect.width > 0) {
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const radius = rect.width / 2;
+          const dx = ix.pointerX - cx;
+          const dy = ix.pointerY - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const proximity = Math.max(0, 1 - dist / (radius * 3.5));
+          proxBoost = proximity;
+
+          // Lean toward cursor — subtle, max ~5% of orb size
+          const maxLean = size * 0.05;
+          leanX = (dx / (radius * 3)) * maxLean * proximity;
+          leanY = (dy / (radius * 3)) * maxLean * proximity;
+
+          // Scroll parallax drift
+          driftY = ix.scrollV * size * 0.025;
+
+          // Tap squish — quick compress, decays exponentially
+          if (ix.tapImpulse > 0.001) {
+            squish = ix.tapImpulse * 0.07;
+            ix.tapImpulse *= 0.88;
+          }
+
+          // Decay velocity + scrollV so they don't linger
+          ix.velocity *= 0.92;
+          ix.scrollV *= 0.88;
+        }
+      }
+
+      const scaleBase = 1 + idlePulse + a * 0.06 + bass * 0.04;
+      const velShimmer = ix ? ix.velocity * 0.015 : 0;
+
       if (wrapRef.current) {
-        wrapRef.current.style.transform = `scale(${1 + idlePulse + a * 0.06 + bass * 0.04})`;
+        wrapRef.current.style.transform =
+          `translate(${leanX + wobX * size}px, ${leanY + wobY * size + driftY}px) ` +
+          `scale(${scaleBase - squish + velShimmer}, ${scaleBase - squish * 0.7 + velShimmer})`;
       }
       if (haloRef.current) {
-        haloRef.current.style.opacity = String(0.45 + idleAura + a * 0.45);
-        haloRef.current.style.transform = `scale(${1 + idlePulse * 2 + a * 0.18 + bass * 0.1})`;
+        haloRef.current.style.opacity = String(0.45 + idleAura + a * 0.45 + proxBoost * 0.22);
+        haloRef.current.style.transform = `scale(${1 + idlePulse * 2 + a * 0.18 + bass * 0.1 + proxBoost * 0.06})`;
       }
       if (auraRef.current) {
-        auraRef.current.style.opacity = String(0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2);
-        auraRef.current.style.transform = `scale(${1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06})`;
+        auraRef.current.style.opacity = String(0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2 + proxBoost * 0.3);
+        auraRef.current.style.transform = `scale(${1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06 + proxBoost * 0.04})`;
       }
       if (auraInnerRef.current) {
-        auraInnerRef.current.style.opacity = String(0.45 + idleAura + a * 0.45);
+        auraInnerRef.current.style.opacity = String(0.45 + idleAura + a * 0.45 + proxBoost * 0.15);
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [getAmplitude, getSpectrum, visible, effectiveState]);
+  }, [getAmplitude, getSpectrum, getInteraction, visible, effectiveState, reduceMotion, size]);
 
   const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
 
