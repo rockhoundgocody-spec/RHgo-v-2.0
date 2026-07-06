@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     // Page through all minerals
     const all = [];
     let skip = 0;
-    const pageSize = 100;
+    const pageSize = 5000;
     while (true) {
       const page = await base44.asServiceRole.entities.Mineral.list('created_date', pageSize, skip);
       all.push(...page);
@@ -42,15 +42,18 @@ Deno.serve(async (req) => {
 
     let deleted = 0;
     let failed = 0;
-    if (!dryRun) {
-      for (const d of toDelete) {
-        try {
-          await base44.asServiceRole.entities.Mineral.delete(d.id);
-          deleted++;
-        } catch {
-          failed++;
-        }
-        await new Promise((r) => setTimeout(r, 250));
+    if (!dryRun && toDelete.length > 0) {
+      // Use deleteMany with $in for bulk deletion to avoid N+1 and artificial delays
+      const ids = toDelete.map((d) => d.id);
+      try {
+        const result = await base44.asServiceRole.entities.Mineral.deleteMany({
+          id: { $in: ids },
+        });
+        deleted = result.deleted || 0;
+        failed = toDelete.length - deleted;
+      } catch (err) {
+        failed = toDelete.length;
+        console.error('Bulk delete failed:', err);
       }
     }
 
