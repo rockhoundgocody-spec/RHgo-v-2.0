@@ -43,14 +43,17 @@ Deno.serve(async (req) => {
     let deleted = 0;
     let failed = 0;
     if (!dryRun) {
-      for (const d of toDelete) {
-        try {
-          await base44.asServiceRole.entities.Mineral.delete(d.id);
-          deleted++;
-        } catch {
-          failed++;
-        }
-        await new Promise((r) => setTimeout(r, 250));
+      const concurrency = 5;
+      for (let i = 0; i < toDelete.length; i += concurrency) {
+        const chunk = toDelete.slice(i, i + concurrency);
+        await Promise.all(chunk.map(async (d) => {
+          try {
+            await base44.asServiceRole.entities.Mineral.delete(d.id);
+            deleted++;
+          } catch {
+            failed++;
+          }
+        }));
       }
     }
 
