@@ -45,6 +45,10 @@ const getAppParams = () => {
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
+		stripeFieldProPriceId: getAppParamValue("stripe_field_pro_monthly_price_id", { defaultValue: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID }),
+		stripeFamilyPriceId: getAppParamValue("stripe_family_monthly_price_id", { defaultValue: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID }),
+		stripeSuccessUrl: getAppParamValue("stripe_success_url", { defaultValue: import.meta.env.VITE_STRIPE_SUCCESS_URL || (isNode ? "" : `${window.location.origin}/settings?upgrade=success`) }),
+		stripeCancelUrl: getAppParamValue("stripe_cancel_url", { defaultValue: import.meta.env.VITE_STRIPE_CANCEL_URL || (isNode ? "" : `${window.location.origin}/pricing`) }),
 	}
 }
 

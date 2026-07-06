@@ -3,8 +3,8 @@
  * 2-column grid, rarity filter tabs, detail modal, unlock animation.
  */
 import React, { useState } from 'react';
-import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check, AlertCircle } from 'lucide-react';
-import { shareAchievement, buildSharePayload, executeShare } from '@/lib/shareAchievement';
+import { Award, Lock, CheckCircle2, X, Gem, Share2, Check, AlertCircle } from 'lucide-react';
+import { buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Calendar, Users, Share2, Edit, MapIcon, Gem } from 'lucide-react';
+import { Calendar, Users, Share2, Edit, MapIcon, Gem } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 /**
