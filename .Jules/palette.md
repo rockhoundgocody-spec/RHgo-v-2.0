@@ -7,3 +7,11 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+
+## 2025-05-22 - Reasoning Engine Testing
+ **Learning:** Pure functions with simple numeric thresholds like  are best tested with parameterized tests () to cover boundaries and edge cases efficiently.
+ **Action:** Implemented robust parameterized tests for  thresholds.
+
+## 2025-05-22 - Reasoning Engine Testing
+ **Learning:** Pure functions with simple numeric thresholds like `scoreToBand` are best tested with parameterized tests (`it.each`) to cover boundaries and edge cases efficiently.
+ **Action:** Implemented robust parameterized tests for `src/lib/reasoningEngine.js` thresholds.

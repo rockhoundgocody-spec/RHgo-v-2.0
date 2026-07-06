@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
   X, HardDrive, Map, Gem, BookOpen, Cloud, Zap,
-  Package, Lock, Smartphone, Laptop, Glasses,
-  ChevronRight, CheckCircle2, Circle, AlertCircle,
-  Folder, UploadCloud, GitBranch, Code2, Database,
+  Package, Lock, Smartphone,
+  ChevronRight, AlertCircle,
+  Folder, GitBranch, Code2,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 

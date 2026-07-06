@@ -16,7 +16,7 @@
 import React, { useMemo } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
-import { Gem, Sparkles, Diamond, Crown, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 // Milestone thresholds per tier (controls visual "power level")
 const MILESTONES = [1, 5, 25, 100];
