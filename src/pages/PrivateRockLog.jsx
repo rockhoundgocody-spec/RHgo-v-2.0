@@ -2,7 +2,7 @@
  * PrivateRockLog — personal, private map + list of rocks you've physically collected.
  * Coordinates and photos are visible only to you.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

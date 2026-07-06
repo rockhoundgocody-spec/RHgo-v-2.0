@@ -8,7 +8,7 @@
  * Unfired rules show what evidence would still improve confidence.
  */
 import React, { useState } from 'react';
-import { GitBranch, ChevronDown, ChevronUp, CheckCircle2, Circle, TrendingUp, TrendingDown } from 'lucide-react';
+import { GitBranch, ChevronDown, ChevronUp, Circle, TrendingUp, TrendingDown } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 export default function PsvProvenancePanel({ engine, revision }) {
