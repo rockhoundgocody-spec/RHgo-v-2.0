@@ -151,7 +151,7 @@ async function lowLevelExecute({ task, imageUrls, locality, features, notes }) {
 
 // ─── Halting Logic ────────────────────────────────────────────────────────────
 
-function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
+export function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
   if (needsMoreEvidence) return { halt: true, reason: 'insufficient_evidence' };
   if (isOffline) return { halt: true, reason: 'offline' };
   // High enough combined signal — stop iterating
