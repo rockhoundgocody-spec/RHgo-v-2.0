@@ -7,3 +7,6 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+## 2025-05-14 - Cleaning up database seeding logs
+ **Learning:** Trivial console.log statements in cloud functions can clutter logs and should be removed once the feature is stable.
+ **Action:** Removed phase-tracking logs from src/functions/seedGeologicalDatabase.js.
