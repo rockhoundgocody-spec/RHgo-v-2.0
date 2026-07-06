@@ -34,19 +34,38 @@ Deno.serve(async (req) => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
+    // Optimization: Batch fetch all specimens created today to avoid N+1 in the loop
+    // We fetch a reasonably large batch of recent specimens.
+    const allRecentSpecimens = await sdk.entities.Specimen.list('-created_date', 5000).catch(() => []);
+    const specimensByOwner = new Map();
+
+    for (const s of allRecentSpecimens) {
+      const d = new Date(s.created_date || 0);
+      if (d < startOfDay) break; // Since it's sorted by -created_date, we can stop
+
+      const owner = s.created_by;
+      if (!owner) continue;
+      specimensByOwner.set(owner, (specimensByOwner.get(owner) || 0) + 1);
+    }
+
+    // Optimization: Batch fetch today's existing logs to avoid N+1 check in the loop
+    const existingLogsToday = await sdk.entities.CompanionLog.filter({
+      log_date: date,
+    }).catch(() => []);
+    const logsTodayByOwner = new Map(existingLogsToday.map(l => [l.owner_email, l]));
+
+    const toCreate = [];
+    const toUpdate = [];
+
     for (const c of companions) {
       if (!c.owner_email) continue;
 
-      // Specimens this user logged today (best-effort; filter by created_by)
-      const specimensToday = await sdk.entities.Specimen.filter({
-        created_by: c.owner_email,
-      }).catch(() => []);
-      const specimens_today = (specimensToday || []).filter((s) => {
-        const d = new Date(s.created_date || 0);
-        return d >= startOfDay;
-      }).length;
+      const specimens_today = specimensByOwner.get(c.owner_email) || 0;
 
       // Find the previous log for delta calculation
+      // Note: This still performs an N+1 query. While we could batch fetch recent logs,
+      // finding the "last one before today" for every user is complex to do efficiently
+      // without a specialized aggregate query. We prioritize the specimens and today's logs first.
       const prior = await sdk.entities.CompanionLog.filter(
         { owner_email: c.owner_email },
         '-log_date',
@@ -54,12 +73,6 @@ Deno.serve(async (req) => {
       ).catch(() => []);
       const lastXp = prior?.[0]?.xp ?? 0;
       const xp_gained = Math.max(0, (c.xp ?? 0) - lastXp);
-
-      // Upsert today's row
-      const todays = await sdk.entities.CompanionLog.filter({
-        owner_email: c.owner_email,
-        log_date: date,
-      }).catch(() => []);
 
       const payload = {
         owner_email: c.owner_email,
@@ -73,12 +86,21 @@ Deno.serve(async (req) => {
         specimens_today,
       };
 
-      if (todays.length > 0) {
-        await sdk.entities.CompanionLog.update(todays[0].id, payload);
+      const existing = logsTodayByOwner.get(c.owner_email);
+      if (existing) {
+        toUpdate.push({ id: existing.id, ...payload });
       } else {
-        await sdk.entities.CompanionLog.create(payload);
+        toCreate.push(payload);
       }
-      written += 1;
+    }
+
+    if (toCreate.length > 0) {
+      await sdk.entities.CompanionLog.bulkCreate(toCreate);
+      written += toCreate.length;
+    }
+    if (toUpdate.length > 0) {
+      await sdk.entities.CompanionLog.bulkUpdate(toUpdate);
+      written += toUpdate.length;
     }
 
     return Response.json({ ok: true, written, date });
