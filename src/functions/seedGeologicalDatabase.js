@@ -1,4 +1,4 @@
-/* eslint-disable */
+
 // deno-lint-ignore-file
 /**
  * Seed RockHound-GO with geological reference data
@@ -271,7 +271,6 @@ Deno.serve(async (req) => {
 
     if (phase === 1 || !phase) {
       // Phase 1: Seed core minerals
-      console.log('Phase 1: Seeding core minerals...');
       const mineralResults = await base44.entities.Mineral.bulkCreate(CORE_MINERALS);
       result.phase1 = {
         status: 'success',
@@ -282,7 +281,6 @@ Deno.serve(async (req) => {
 
     if (phase === 2 || !phase) {
       // Phase 2: Seed hotspots
-      console.log('Phase 2: Seeding hotspots...');
       const hotspotResults = await base44.entities.Hotspot.bulkCreate(SAMPLE_HOTSPOTS);
       result.phase2 = {
         status: 'success',
@@ -293,7 +291,6 @@ Deno.serve(async (req) => {
 
     if (phase === 3 || !phase) {
       // Phase 3: Seed geological contexts
-      console.log('Phase 3: Seeding geological contexts...');
       const contextResults = await base44.entities.GeologicalContext.bulkCreate(GEOLOGICAL_CONTEXTS);
       result.phase3 = {
         status: 'success',
@@ -304,7 +301,6 @@ Deno.serve(async (req) => {
 
     if (phase === 4 || !phase) {
       // Phase 4: Create sample companion for testing
-      console.log('Phase 4: Creating test companion...');
       const companionResult = await base44.entities.Companion.create({
         owner_email: user.email,
         name: 'Amethyst',
