@@ -1,10 +1,27 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
+import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+// Detect intents like "log a specimen", "save this find", "record this rock"
+const detectLogIntent = (text) => {
+  const t = text.toLowerCase();
+  return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
+    || /\b(new specimen|log this|save this|record this)\b/.test(t);
+};
+
+const getCoords = () =>
+  new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve({});
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => resolve({}),
+      { timeout: 4000, maximumAge: 60000 }
+    );
+  });
+
 
 export default function OracleOverlay() {
   const { open, autoLive, closeOracle } = useOracle();
@@ -24,14 +41,14 @@ export default function OracleOverlay() {
   const [liveMode, setLiveMode] = useState(false);
   const scrollRef = useRef(null);
   const liveModeRef = useRef(false);
+  const autoStartDone = useRef(false);
   liveModeRef.current = liveMode;
 
   const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
   const handleVoiceResult = useCallback((transcript) => {
     setInput('');
     setTimeout(() => sendMessage(transcript), 50);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sendMessage]);
   const handleInterim = useCallback((partial) => {
     setInput(partial);
   }, []);
@@ -46,6 +63,7 @@ export default function OracleOverlay() {
 
   useEffect(() => {
     if (!open) {
+      autoStartDone.current = false;
       stopSpeak();
       stopListen();
       setLiveMode(false);
@@ -54,14 +72,14 @@ export default function OracleOverlay() {
 
   // Auto-start live conversation when opened with live=true (tap-to-talk)
   useEffect(() => {
-    if (open && autoLive && micSupported && !liveMode) {
+    if (open && autoLive && micSupported && !liveMode && !autoStartDone.current) {
       setLiveMode(true);
       setMuted(false);
+      autoStartDone.current = true;
       const t = setTimeout(() => startListen(), 350);
       return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, autoLive, micSupported]);
+  }, [open, autoLive, micSupported, liveMode, startListen]);
 
   // Live conversation: when oracle finishes speaking, auto-resume listening
   useEffect(() => {
@@ -74,24 +92,7 @@ export default function OracleOverlay() {
     }
   }, [liveMode, speaking, thinking, listening, startListen]);
 
-  // Detect intents like "log a specimen", "save this find", "record this rock"
-  const detectLogIntent = (text) => {
-    const t = text.toLowerCase();
-    return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
-      || /\b(new specimen|log this|save this|record this)\b/.test(t);
-  };
-
-  const getCoords = () =>
-    new Promise((resolve) => {
-      if (!navigator.geolocation) return resolve({});
-      navigator.geolocation.getCurrentPosition(
-        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => resolve({}),
-        { timeout: 4000, maximumAge: 60000 }
-      );
-    });
-
-  const handleDictation = async (transcript) => {
+  const handleDictation = useCallback(async (transcript) => {
     setThinking(true);
     const coords = await getCoords();
     const res = await base44.functions.invoke('parseSpecimenDictation', {
@@ -111,9 +112,9 @@ export default function OracleOverlay() {
     setDictationMode(false);
     setThinking(false);
     if (!muted) speak(summary);
-  };
+  }, [muted, speak]);
 
-  const sendMessage = async (textOverride) => {
+  const sendMessage = useCallback(async (textOverride) => {
     const text = (textOverride ?? input).trim();
     if (!text || thinking) return;
     const next = [...messages, { role: 'user', content: text }];
@@ -145,7 +146,7 @@ export default function OracleOverlay() {
     setMessages((m) => [...m, { role: 'assistant', content: replyText }]);
     setThinking(false);
     if (!muted) speak(replyText);
-  };
+  }, [input, thinking, messages, muted, speak, handleDictation]);
 
   if (!open) return null;
 
