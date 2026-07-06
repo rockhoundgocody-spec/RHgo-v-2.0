@@ -87,9 +87,6 @@ Deno.serve(async (req) => {
       last_check_in_date: new Date().toISOString().split('T')[0],
     });
 
-    // Log the award
-    console.log(`Companion XP Award: +${xpAward} XP (base: 10, rarity: ${rarityBonus[rarity] || 0}, confidence: ${confidence >= 0.9 ? 5 : 0}, first find: ${firstFindBonus})`);
-
     return Response.json({
       status: 'success',
       xp_awarded: xpAward,
