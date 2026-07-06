@@ -1,7 +1,8 @@
 /**
  * IntroCinematic — plays once on first app launch.
  * AI-generated crystal video background with animated text overlays.
- * Tap anywhere or wait for video to end to skip.
+ * Tap anywhere to skip. Otherwise waits for BOTH the video to finish
+ * AND the text timeline to complete before transitioning.
  */
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,14 +15,41 @@ const LINES = [
   { text: 'Your collection begins now.',      delay: 5.0,  duration: 2.4 },
 ];
 
+// Last moment of the text timeline (line delay + duration + fade buffer,
+// plus the app-name reveal at 6.2s + 0.9s).
+const APP_NAME_END = 6.2 + 0.9;
+const TEXT_DONE_MS = Math.max(
+  ...LINES.map((l) => l.delay + l.duration + 0.5),
+  APP_NAME_END
+) * 1000; // ≈ 7900ms
+
 export default function IntroCinematic({ onDone }) {
   const [phase, setPhase] = useState('intro');
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef(null);
+  const videoEndedRef = useRef(false);
+  const textDoneRef = useRef(false);
+  const outroStartedRef = useRef(false);
 
-  // Auto-advance fallback (in case video hangs or is slow)
+  const goOutro = () => {
+    if (outroStartedRef.current) return;
+    outroStartedRef.current = true;
+    setPhase('outro');
+  };
+
+  // Mark text timeline complete after the last line finishes,
+  // then advance if the video has already ended.
   useEffect(() => {
-    const t = setTimeout(() => setPhase('outro'), 9000);
+    const t = setTimeout(() => {
+      textDoneRef.current = true;
+      if (videoEndedRef.current) goOutro();
+    }, TEXT_DONE_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Hard safety fallback — only if the video hangs and never fires onEnded.
+  useEffect(() => {
+    const t = setTimeout(() => goOutro(), TEXT_DONE_MS + 8000);
     return () => clearTimeout(t);
   }, []);
 
@@ -32,7 +60,11 @@ export default function IntroCinematic({ onDone }) {
     }
   }, [phase, onDone]);
 
-  const handleVideoEnded = () => setPhase('outro');
+  const handleVideoEnded = () => {
+    videoEndedRef.current = true;
+    // Only advance once the text timeline has finished too.
+    if (textDoneRef.current) goOutro();
+  };
 
   return (
     <AnimatePresence>
@@ -43,7 +75,7 @@ export default function IntroCinematic({ onDone }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7, ease: 'easeInOut' }}
-          onClick={() => setPhase('outro')}
+          onClick={goOutro}
         >
           {/* Video background — covers full screen, object-cover */}
           <video
