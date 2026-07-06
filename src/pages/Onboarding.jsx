@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScanLine, Gem, Sparkles, Map, ChevronRight, Zap } from 'lucide-react';
+import { Sparkles, ChevronRight } from 'lucide-react';
 import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
 
 // ── AGATE AGE GATE ────────────────────────────────────────────────────────────

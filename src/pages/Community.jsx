@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Users, Wifi } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import PostCard from '@/components/community/PostCard.jsx';
 import PostComposer from '@/components/community/PostComposer.jsx';
 

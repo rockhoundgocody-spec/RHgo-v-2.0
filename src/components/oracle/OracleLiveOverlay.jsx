@@ -30,7 +30,7 @@ export default function OracleLiveOverlay() {
   const handleResult = useCallback((transcript) => {
     setInterim('');
     handleUserTurn(transcript);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
   const handleInterim = useCallback((p) => setInterim(p), []);
 

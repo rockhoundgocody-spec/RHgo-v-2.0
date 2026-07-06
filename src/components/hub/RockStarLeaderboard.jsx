@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import { Trophy, Crown, ChevronRight } from 'lucide-react';
+import { Crown, ChevronRight } from 'lucide-react';
 import { getRank } from './LiveStatStrip.jsx';
 
 // Static leaderboard to inspire competition — seeded with aspirational data

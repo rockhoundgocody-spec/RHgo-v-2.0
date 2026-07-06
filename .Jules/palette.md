@@ -1,9 +1,5 @@
-## 2024-03-24 - Missing ARIA Labels on Final Action Buttons\n**Learning:** The final summary/action card in Progressive Verification (PsvFinalCard) lacked aria-labels on its icon-only rescan button. This pattern often occurs in final 'action strips' where space is tight and icons replace text.\n**Action:** Add aria-label attributes to all icon-only action buttons in summary views.
+## 2025-05-22 - Batched Companion Log Optimization
 
-## 2024-03-25 - Missing ARIA Labels on Overlay Icon Buttons
-**Learning:** Absolute-positioned icon-only overlay buttons (like "Clear Search" in inputs or "Close" in floating sheets) frequently miss `aria-label`s and proper keyboard focus states. Since they overlay other content, standard focus indicators might be clipped or invisible, leading to poor keyboard accessibility.
-**Action:** Always verify that overlay icon buttons have an `aria-label` and explicit keyboard focus indicators like `focus-visible:ring-2`. Ensure border radii match for clean focus rings.
+**Learning:** Replacing per-iteration filters with batched queries using the `$in` operator significantly reduces SDK call overhead (from O(N) to O(1) calls for filters). Using `bulkCreate` and `bulkUpdate` further optimizes persistence.
 
-## 2024-07-06 - Keyboard accessibility in Progressive Verification
-**Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
-**Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+**Action:** When iterating over a collection to perform lookups on related entities, gather unique identifiers first and use a single batched filter query. Group results in-memory using maps for O(1) access inside the loop.
