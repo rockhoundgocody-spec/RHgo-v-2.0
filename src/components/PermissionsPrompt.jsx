@@ -2,40 +2,17 @@
  * PermissionsPrompt — requests push notifications, location, and PWA update in one card.
  * Dismisses permanently via localStorage once all are granted or skipped.
  */
-import React, { useEffect, useState } from 'react';
-import { Bell, MapPin, RefreshCw, CheckCircle2, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, MapPin, RefreshCw, X } from 'lucide-react';
+import { usePermissionState } from '../hooks/usePermissionState';
+import { useServiceWorkerUpdate } from '../hooks/useServiceWorkerUpdate';
+import PermissionItem from './PermissionItem';
 
-function usePermissionState(name) {
-  const [state, setState] = useState('prompt');
-  useEffect(() => {
-    if (!navigator.permissions) return;
-    navigator.permissions.query({ name }).then((s) => {
-      setState(s.state);
-      s.onchange = () => setState(s.state);
-    }).catch(() => {});
-  }, [name]);
-  return state;
-}
-
-export default function PermissionsPrompt({ onDismiss }) {
+export default function PermissionsPrompt({ onDismiss = undefined }) {
   const notifPerm = usePermissionState('notifications');
   const locationPerm = usePermissionState('geolocation');
-  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const { updateAvailable, applyUpdate } = useServiceWorkerUpdate();
   const [requesting, setRequesting] = useState({});
-
-  // Check for SW update
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg?.waiting) setUpdateAvailable(true);
-        if (reg) reg.addEventListener('updatefound', () => {
-          reg.installing?.addEventListener('statechange', (e) => {
-            if (e.target.state === 'installed' && navigator.serviceWorker.controller) setUpdateAvailable(true);
-          });
-        });
-      }).catch(() => {});
-    }
-  }, []);
 
   const requestNotifications = async () => {
     setRequesting((r) => ({ ...r, notif: true }));
@@ -47,15 +24,6 @@ export default function PermissionsPrompt({ onDismiss }) {
     setRequesting((r) => ({ ...r, loc: true }));
     await new Promise((res) => navigator.geolocation?.getCurrentPosition(res, res, { timeout: 8000 }));
     setRequesting((r) => ({ ...r, loc: false }));
-  };
-
-  const applyUpdate = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        reg?.waiting?.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      });
-    }
   };
 
   const items = [
@@ -114,58 +82,13 @@ export default function PermissionsPrompt({ onDismiss }) {
       </div>
 
       <div className="space-y-3">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const loading = requesting[item.key];
-          return (
-            <div key={item.key} className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: item.granted
-                    ? 'hsla(150,70%,30%,0.2)'
-                    : item.isUpdate
-                    ? 'hsla(38,90%,40%,0.2)'
-                    : 'hsla(265,50%,25%,0.3)',
-                  border: item.granted
-                    ? '1px solid hsla(150,70%,50%,0.35)'
-                    : item.isUpdate
-                    ? '1px solid hsla(38,90%,55%,0.4)'
-                    : '1px solid hsla(280,60%,55%,0.25)',
-                }}
-              >
-                {item.granted
-                  ? <CheckCircle2 size={16} className="text-emerald-400" />
-                  : <Icon size={16} style={{ color: item.isUpdate ? '#fbbf24' : 'hsl(280,85%,82%)' }} />
-                }
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-[12px] font-semibold leading-tight">{item.label}</div>
-                <div className="text-white/40 text-[10px] leading-snug">{item.desc}</div>
-              </div>
-
-              {!item.granted && (
-                <button
-                  onClick={item.onRequest}
-                  disabled={loading || item.denied}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold transition active:scale-95 disabled:opacity-40"
-                  style={{
-                    background: item.isUpdate
-                      ? 'hsla(38,90%,40%,0.25)'
-                      : 'hsla(280,60%,35%,0.35)',
-                    border: item.isUpdate
-                      ? '1px solid hsla(38,90%,55%,0.4)'
-                      : '1px solid hsla(280,60%,55%,0.35)',
-                    color: item.isUpdate ? '#fbbf24' : 'hsl(280,100%,88%)',
-                  }}
-                >
-                  {loading ? '…' : item.denied ? 'Blocked' : item.isUpdate ? 'Update' : 'Allow'}
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {items.map((item) => (
+          <PermissionItem
+            key={item.key}
+            item={item}
+            loading={requesting[item.key]}
+          />
+        ))}
       </div>
     </div>
   );
