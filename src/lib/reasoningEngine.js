@@ -162,7 +162,7 @@ function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffli
 
 // ─── Action Recommendation ────────────────────────────────────────────────────
 
-function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
+export function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
   if (isOffline || needsMoreEvidence) return 'rescan';
   if (band === 'low') return 'rescan';
   if (band === 'medium') return 'compare';

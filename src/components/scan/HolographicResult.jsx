@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import MineralStoryCard from './MineralStoryCard.jsx';
-import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
+import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, Shield, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
