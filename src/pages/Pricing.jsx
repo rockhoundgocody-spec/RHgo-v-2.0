@@ -1,11 +1,12 @@
 /**
- * Pricing.jsx — RockHound-GO Subscription Tiers
+ * Pricing — Plan selection for Field Pro and Family subscriptions.
  *
- * Stripe configuration (set these in environment variables / secrets):
- *   STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — e.g. price_1XxxxxFieldProMonthly
- *   STRIPE_FAMILY_MONTHLY_PRICE_ID     — e.g. price_1XxxxxFamilyMonthly
- *   STRIPE_SUCCESS_URL                 — e.g. https://rhgo.base44.app/settings?upgrade=success
- *   STRIPE_CANCEL_URL                  — e.g. https://rhgo.base44.app/pricing
+ * TODO: The placeholder price IDs below are defaults.
+ * For production, set these environment variables in your Base44 dashboard:
+ *   VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — e.g. price_1XxxxxFieldProMonthly
+ *   VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID     — e.g. price_1XxxxxFamilyMonthly
+ *   VITE_STRIPE_SUCCESS_URL                 — e.g. https://rhgo.base44.app/settings?upgrade=success
+ *   VITE_STRIPE_CANCEL_URL                  — e.g. https://rhgo.base44.app/pricing
  *
  * When Stripe is connected: replace the handleUpgrade placeholder below with
  *   a call to your createCheckoutSession backend function.
@@ -17,20 +18,23 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Gem, Zap, Map, Shield, Star, Flame, Crown, Users, BookOpen, X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
 // ─── STRIPE PRICE IDs ─────────────────────────────────────────────────────
-// TODO: replace these with your real Stripe price IDs from the Stripe dashboard
-// and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
-// in Base44 environment variables.
+// We prioritize VITE_ environment variables, falling back to legacy placeholders.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
-  family:    { priceId: 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  fieldPro:  {
+    priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb',
+    label: 'Field Pro'
+  },
+  family:    {
+    priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U',
+    label: 'Family'
+  },
+  successUrl: import.meta.env.VITE_STRIPE_SUCCESS_URL || (typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : ''),
+  cancelUrl:  import.meta.env.VITE_STRIPE_CANCEL_URL || (typeof window !== 'undefined' ? `${window.location.origin}/pricing` : ''),
 };
 // ─────────────────────────────────────────────────────────────────────────
 

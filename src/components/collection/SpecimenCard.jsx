@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, ChevronDown, ChevronUp, Gem } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
 
 const RARITY_CONFIG = {

@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Sword, CheckCircle2, Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass, Cpu,
+import { Clock, Sparkles, RefreshCw,
+  Flame, Zap, ChevronLeft, Trophy, Target, Star, Cpu,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
