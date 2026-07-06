@@ -7,3 +7,7 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+
+## 2024-07-06 - Component Decomposition for Cinematic UI
+**Learning:** Cinematic components with complex animation lifecycles (e.g., BadgeUnlockAnimation) are more maintainable when background effects, typography/headers, and interactive footers are extracted into sub-components. This prevents the main component from becoming a "mega-component" and simplifies state management for sub-features like material breakdowns or social sharing.
+**Action:** When building complex UI sequences, extract static or effect-heavy sections into focused sub-components to keep the main animation logic readable.

@@ -9,16 +9,14 @@
  */
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Share2, Copy, Check, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import LiquidMineralBadge, { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
-import BadgeMaterialPanel from './BadgeMaterialPanel.jsx';
+import StarField from './StarField.jsx';
+import BadgeUnlockHeader from './BadgeUnlockHeader.jsx';
+import BadgeUnlockFooter from './BadgeUnlockFooter.jsx';
 
 const PHASES  = ['initiate', 'charge', 'burst', 'reveal', 'complete'];
 const TIMINGS = { initiate: 900, charge: 1100, burst: 600, reveal: 1200, complete: Infinity };
-
-const RARITY_LABEL = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary',
-};
 
 // ── Dust motes (Phase 1) ──────────────────────────────────────────────────────
 function DustMotes({ color }) {
@@ -53,7 +51,6 @@ function DustMotes({ color }) {
 function ChargeRings({ scheme }) {
   return (
     <>
-      {/* Contracting rings */}
       {[0, 1, 2, 3].map((i) => (
         <motion.div key={i}
           className="absolute rounded-full pointer-events-none"
@@ -67,7 +64,6 @@ function ChargeRings({ scheme }) {
           transition={{ duration: 1.0, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
         />
       ))}
-      {/* Rotating conic energy sweep */}
       <motion.div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -78,7 +74,6 @@ function ChargeRings({ scheme }) {
         animate={{ rotate: 360 }}
         transition={{ duration: 0.9, ease: 'linear', repeat: Infinity }}
       />
-      {/* Central gathering orb */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -89,7 +84,6 @@ function ChargeRings({ scheme }) {
         animate={{ width: 72, height: 72, opacity: 1 }}
         transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
       />
-      {/* Vein sparks */}
       {Array.from({ length: 8 }).map((_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         return (
@@ -126,7 +120,6 @@ function CrystalBurst({ scheme }) {
 
   return (
     <>
-      {/* White flash core */}
       <motion.div
         className="absolute rounded-full"
         style={{ background: `radial-gradient(circle, white 0%, ${scheme.crystal} 30%, transparent 70%)` }}
@@ -134,7 +127,6 @@ function CrystalBurst({ scheme }) {
         animate={{ width: 400, height: 400, opacity: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       />
-      {/* Crystal shards */}
       {shards.map((s, i) => (
         <motion.div key={i}
           className="absolute"
@@ -159,7 +151,6 @@ function CrystalBurst({ scheme }) {
           transition={{ duration: 0.7, ease: 'easeOut', delay: s.delay }}
         />
       ))}
-      {/* Golden sparkle ring */}
       {Array.from({ length: 12 }).map((_, i) => {
         const a = (i / 12) * Math.PI * 2;
         const d = 90 + Math.random() * 40;
@@ -213,41 +204,14 @@ function SettlingParticles({ scheme, count = 16 }) {
   );
 }
 
-// ── Share row ─────────────────────────────────────────────────────────────────
-function ShareRow({ badge }) {
-  const [copied, setCopied] = useState(false);
-  const text = `🏆 I just unlocked the "${badge.title}" badge on RockHound-GO! (${badge.rarity})`;
-  const share = () => {
-    if (navigator.share) { navigator.share({ title: 'RockHound-GO Badge', text }); }
-    else { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-  };
-  const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  return (
-    <div className="flex gap-2">
-      <button onClick={share}
-        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95"
-        style={{ background: 'hsla(195,80%,14%,0.7)', border: '1px solid hsla(195,80%,55%,0.35)', color: 'hsl(195,100%,82%)' }}>
-        <Share2 size={12} /> Share
-      </button>
-      <button onClick={copy}
-        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95"
-        style={{ background: 'hsla(265,60%,14%,0.7)', border: '1px solid hsla(280,60%,55%,0.35)', color: 'hsl(280,100%,88%)' }}>
-        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
-      </button>
-    </div>
-  );
-}
-
 // ── Main Overlay ──────────────────────────────────────────────────────────────
 export default function BadgeUnlockAnimation({ badge, onClose }) {
-  const [phase, setPhase]           = useState('initiate');
-  const [showMaterials, setShowMaterials] = useState(false);
+  const [phase, setPhase] = useState('initiate');
   const timers = useRef([]);
 
   useEffect(() => {
     if (!badge) return;
     setPhase('initiate');
-    setShowMaterials(false);
     timers.current.forEach(clearTimeout);
     timers.current = [];
 
@@ -257,7 +221,6 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
       timers.current.push(setTimeout(() => setPhase(p), elapsed));
       elapsed += TIMINGS[p];
     });
-    // final complete
     timers.current.push(setTimeout(() => setPhase('complete'), elapsed));
 
     return () => timers.current.forEach(clearTimeout);
@@ -283,22 +246,8 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Star-field background dots */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <div key={i} className="absolute rounded-full bg-white"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: Math.random() * 1.5 + 0.5,
-                height: Math.random() * 1.5 + 0.5,
-                opacity: Math.random() * 0.25 + 0.05,
-              }}
-            />
-          ))}
-        </div>
+        <StarField />
 
-        {/* Close — only after complete */}
         {completed && (
           <motion.button onClick={onClose}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
@@ -312,8 +261,6 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
 
         {/* ── Centre Stage ── */}
         <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
-
-          {/* Phase 1: Initiate — gathering dust */}
           {phase === 'initiate' && (
             <>
               <motion.div className="absolute rounded-full"
@@ -326,13 +273,9 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             </>
           )}
 
-          {/* Phase 2: Charge */}
           {phase === 'charge' && <ChargeRings scheme={scheme} />}
-
-          {/* Phase 3: Burst */}
           {showBurst && <CrystalBurst scheme={scheme} />}
 
-          {/* Phase 4 + 5: Badge */}
           <AnimatePresence>
             {showBadge && (
               <motion.div
@@ -352,7 +295,6 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             )}
           </AnimatePresence>
 
-          {/* Ambient charge/burst glow */}
           {(phase === 'charge' || phase === 'burst') && (
             <motion.div className="absolute pointer-events-none"
               style={{
@@ -366,82 +308,17 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             />
           )}
 
-          {/* Settling particles on complete */}
           {completed && <SettlingParticles scheme={scheme} count={20} />}
         </div>
 
-        {/* ── Text: Reveal → Complete ── */}
         <AnimatePresence>
-          {showBadge && (
-            <motion.div
-              className="flex flex-col items-center text-center px-8 mt-2"
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="text-[10px] uppercase tracking-[0.5em] mb-2 flex items-center gap-2"
-                style={{ color: scheme.secondary }}>
-                <Sparkles size={10} /> Badge Unlocked <Sparkles size={10} />
-              </div>
-              <h2 className="text-white text-[26px] font-black tracking-wide mb-1.5 leading-tight"
-                style={{ textShadow: `0 0 24px ${scheme.glow}, 0 0 48px ${scheme.glow.replace('0.9','0.3')}` }}>
-                {badge.title}
-              </h2>
-              <p className="text-white/55 text-sm max-w-[280px] leading-relaxed">{badge.description}</p>
-              <div className="text-[9px] uppercase tracking-[0.35em] mt-3 px-4 py-1.5 rounded-full"
-                style={{
-                  background: `${scheme.primary.replace(')', ',0.16)')}`,
-                  border: `1px solid ${scheme.rim}`,
-                  color: scheme.secondary,
-                  boxShadow: `0 0 12px ${scheme.glow.replace('0.9','0.2')}`,
-                }}>
-                ✦ {RARITY_LABEL[badge.rarity] || badge.rarity} ✦
-              </div>
-            </motion.div>
-          )}
+          {showBadge && <BadgeUnlockHeader badge={badge} scheme={scheme} />}
         </AnimatePresence>
 
-        {/* ── Complete actions ── */}
         {completed && (
-          <motion.div
-            className="flex flex-col items-center gap-3 mt-5 w-full px-8"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65 }}
-          >
-            <ShareRow badge={badge} />
-
-            <button onClick={() => setShowMaterials(v => !v)}
-              className="text-[10px] uppercase tracking-wider text-white/28 hover:text-white/60 transition">
-              {showMaterials ? '▲ Hide' : '▼ View'} Material Breakdown
-            </button>
-
-            <AnimatePresence>
-              {showMaterials && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="w-full max-w-sm overflow-hidden"
-                >
-                  <BadgeMaterialPanel badge={badge} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <button onClick={onClose}
-              className="mt-1 px-12 py-3.5 rounded-full text-sm font-black tracking-widest transition active:scale-95"
-              style={{
-                background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`,
-                color: 'hsl(255,60%,10%)',
-                boxShadow: `0 0 28px ${scheme.glow.replace('0.9','0.55')}, 0 4px 16px hsla(255,60%,5%,0.4)`,
-              }}>
-              CONTINUE →
-            </button>
-          </motion.div>
+          <BadgeUnlockFooter badge={badge} scheme={scheme} onClose={onClose} />
         )}
 
-        {/* Phase label */}
         {!completed && (
           <div className="absolute bottom-8 text-[9px] uppercase tracking-[0.5em] text-white/12">
             {phase}…
