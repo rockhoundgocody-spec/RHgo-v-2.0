@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Zap, GraduationCap, Lock } from 'lucide-react';
+import React from 'react';
+import { GraduationCap, Lock } from 'lucide-react';
 
 const STORAGE_KEY = 'rhgo_chaos_mode';
 const PARENTAL_LOCK_KEY = 'rhgo_parental_lock_chaos';

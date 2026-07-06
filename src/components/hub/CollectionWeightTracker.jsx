@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Scale, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Scale, AlertTriangle } from 'lucide-react';
 
 const LIMIT_LBS = 25;
 const WARN_THRESHOLD = 0.8; // warn at 80% of limit

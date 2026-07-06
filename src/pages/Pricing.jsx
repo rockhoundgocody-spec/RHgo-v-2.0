@@ -17,8 +17,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Gem, Zap, Map, Shield, Star, Flame, Crown, Users, BookOpen, X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
