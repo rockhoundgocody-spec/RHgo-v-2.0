@@ -274,7 +274,7 @@ export async function reason(ctx) {
     recommendedAction: recommendAction({ band, task, isOffline, needsMoreEvidence: false }),
     reasoningSummary: rawData.reasoning || '',
     needsMoreEvidence: band === 'low',
-    isOfflineFallback: false,
+    isOfflineFallback: isOffline,
     rawData,
   };
 }
