@@ -1,4 +1,3 @@
-/* eslint-disable */
 // deno-lint-ignore-file
 /**
  * enhanceSpecimenPassport
@@ -17,18 +16,14 @@
  *     notes: 'User corrected AI classification based on color.'
  *   })
  */
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const {
       specimen_id,
       action,
@@ -39,26 +34,22 @@ Deno.serve(async (req) => {
       notes = '',
       ai_reasoning = null,
     } = await req.json();
-
     if (!specimen_id || !action) {
       return Response.json(
         { error: 'Missing specimen_id or action' },
         { status: 400 }
       );
     }
-
     // Fetch specimen to get owner
     const specimen = await base44.asServiceRole.entities.Specimen.get(specimen_id);
     if (!specimen) {
       return Response.json({ error: 'Specimen not found' }, { status: 404 });
     }
-
     // Check if passport exists
     let passport = await base44.asServiceRole.entities.SpecimenPassport.filter({
       specimen_id,
     });
     passport = passport?.[0];
-
     const actionEntry = {
       timestamp: new Date().toISOString(),
       action,
@@ -70,7 +61,6 @@ Deno.serve(async (req) => {
       ...(notes && { notes }),
       ...(ai_reasoning && { ai_reasoning }),
     };
-
     const confidenceEntry =
       confidence_after !== null
         ? {
@@ -80,14 +70,12 @@ Deno.serve(async (req) => {
             reason_for_change: action === 'corrected' ? notes : undefined,
           }
         : null;
-
     if (passport) {
       // Update existing passport
       const updated_log = [...(passport.action_log || []), actionEntry];
       const updated_confidence = confidenceEntry
         ? [...(passport.confidence_history || []), confidenceEntry]
         : passport.confidence_history || [];
-
       const updated = await base44.asServiceRole.entities.SpecimenPassport.update(
         passport.id,
         {

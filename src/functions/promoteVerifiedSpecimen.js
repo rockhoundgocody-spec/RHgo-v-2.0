@@ -1,22 +1,17 @@
-/* eslint-disable */
 // deno-lint-ignore-file
 /**
  * promoteVerifiedSpecimen
  * Converts a SpecimenDraft to a final Specimen record upon user confirmation.
  * Automatically awards Companion XP as part of the workflow.
  */
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const {
       draft_id,
       mineral_name,
@@ -28,7 +23,6 @@ Deno.serve(async (req) => {
       lng,
       notes = '',
     } = await req.json();
-
     // Create the final Specimen record
     const specimen = await base44.entities.Specimen.create({
       mineral_name,
@@ -43,7 +37,6 @@ Deno.serve(async (req) => {
       notes,
       created_by: user.email,
     });
-
     // Award Companion XP
     const xpResult = await base44.functions.invoke('awardCompanionXPOnCollection', {
       specimen_id: specimen.id,
@@ -51,13 +44,11 @@ Deno.serve(async (req) => {
       rarity,
       confidence,
     });
-
     // Optionally archive the draft
     if (draft_id) {
       // You could mark draft as "finalised" here if tracking that state
       console.log(`Specimen promoted from draft ${draft_id}`);
     }
-
     return Response.json({
       status: 'success',
       specimen_id: specimen.id,

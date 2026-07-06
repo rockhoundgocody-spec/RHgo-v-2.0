@@ -1,13 +1,10 @@
-/* eslint-disable */
 // deno-lint-ignore-file
 /**
  * Seed RockHound-GO with geological reference data
  * Sources: USGS MRDS, Mindat.org, USGS Commodity Summaries
  * Run via: base44.functions.invoke('seedGeologicalDatabase', { phase: 1-4 })
  */
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 // Core mineral reference data (10 minerals for MVP)
 const CORE_MINERALS = [
   {
@@ -141,7 +138,6 @@ const CORE_MINERALS = [
     category: 'carbonate',
   },
 ];
-
 // Sample hotspots for Colorado, Utah, California
 const SAMPLE_HOTSPOTS = [
   {
@@ -215,7 +211,6 @@ const SAMPLE_HOTSPOTS = [
     source: 'USGS MRDS',
   },
 ];
-
 // Geological context for each region
 const GEOLOGICAL_CONTEXTS = [
   {
@@ -255,20 +250,15 @@ const GEOLOGICAL_CONTEXTS = [
       'Tourmaline is a borosilicate mineral prized by collectors. It forms in pegmatites during slow magma cooling. Color variation (pleochroism) means color changes with viewing angle. Often found with quartz and feldspar in Colorado pegmatites.',
   },
 ];
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
-
     const { phase } = await req.json();
-
     let result = {};
-
     if (phase === 1 || !phase) {
       // Phase 1: Seed core minerals
       console.log('Phase 1: Seeding core minerals...');
@@ -279,7 +269,6 @@ Deno.serve(async (req) => {
         message: `Created ${mineralResults.length} core mineral records`,
       };
     }
-
     if (phase === 2 || !phase) {
       // Phase 2: Seed hotspots
       console.log('Phase 2: Seeding hotspots...');
@@ -290,7 +279,6 @@ Deno.serve(async (req) => {
         message: `Created ${hotspotResults.length} hotspot records`,
       };
     }
-
     if (phase === 3 || !phase) {
       // Phase 3: Seed geological contexts
       console.log('Phase 3: Seeding geological contexts...');
@@ -301,7 +289,6 @@ Deno.serve(async (req) => {
         message: `Created ${contextResults.length} geological context records`,
       };
     }
-
     if (phase === 4 || !phase) {
       // Phase 4: Create sample companion for testing
       console.log('Phase 4: Creating test companion...');
@@ -321,7 +308,6 @@ Deno.serve(async (req) => {
         message: 'Created sample Companion record',
       };
     }
-
     return Response.json({
       status: 'success',
       message: 'Database seeding complete',

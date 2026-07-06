@@ -1,4 +1,3 @@
-/* eslint-disable */
 // deno-lint-ignore-file
 /**
  * enhanceSpecimenWithReasoning
@@ -28,18 +27,14 @@
  *     uncertainty_factors: ['Poor lighting in original image', 'No size reference']
  *   })
  */
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const {
       specimen_id,
       primary_classification,
@@ -49,23 +44,19 @@ Deno.serve(async (req) => {
       reasoning = '',
       uncertainty_factors = [],
     } = await req.json();
-
     if (!specimen_id) {
       return Response.json({ error: 'Missing specimen_id' }, { status: 400 });
     }
-
     // Fetch specimen
     const specimen = await base44.asServiceRole.entities.Specimen.get(specimen_id);
     if (!specimen) {
       return Response.json({ error: 'Specimen not found' }, { status: 404 });
     }
-
     // Check for existing reasoning
     let existingReasoning = await base44.asServiceRole.entities.IdentificationReasoning.filter({
       specimen_id,
     });
     existingReasoning = existingReasoning?.[0];
-
     // Create or update IdentificationReasoning record
     const reasoningData = {
       specimen_id,
@@ -79,7 +70,6 @@ Deno.serve(async (req) => {
       created_by_system: true,
       timestamp: new Date().toISOString(),
     };
-
     let reasoningRecord;
     if (existingReasoning) {
       // Keep history; update only if newer and higher confidence
@@ -96,7 +86,6 @@ Deno.serve(async (req) => {
         reasoningData
       );
     }
-
     // Update specimen with new classification if confidence improved
     if (confidence > (specimen.ai_confidence || 0)) {
       await base44.asServiceRole.entities.Specimen.update(specimen_id, {
@@ -104,7 +93,6 @@ Deno.serve(async (req) => {
         ai_confidence: confidence,
       });
     }
-
     return Response.json({
       success: true,
       reasoning_record: reasoningRecord,
