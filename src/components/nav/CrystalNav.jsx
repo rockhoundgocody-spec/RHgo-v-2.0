@@ -61,7 +61,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
           <button
             key={tab.to}
             onClick={() => onTabClick(tab.to, isActive)}
-            className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center"
+            className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
             style={{
               color: isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
               background: isActive ? 'hsla(195,100%,60%,0.07)' : 'transparent',
@@ -98,7 +98,7 @@ function HeroScanButton({ isActive, onClick }) {
       <motion.button
         onClick={onClick}
         whileTap={{ scale: 0.92 }}
-        className="relative flex items-center justify-center cursor-pointer"
+        className="relative flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{
           width: 58,
           height: 58,

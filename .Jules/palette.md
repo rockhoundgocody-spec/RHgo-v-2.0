@@ -7,3 +7,7 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+
+## 2024-12-16 - Global HUD Navigation Focus States
+**Learning:** The application's custom "HUD" design system often suppressed default browser focus outlines without providing an accessible alternative. This made core navigation (CrystalNav) and common actions (Back buttons, Share buttons) inaccessible to keyboard-only users despite their high-contrast visual design.
+**Action:** When implementing custom-styled navigation or action buttons, explicitly use `focus-visible:ring-2` with a theme-appropriate color (e.g., `ring-hud-cyan`) to ensure focus states match the HUD aesthetic while maintaining accessibility.
