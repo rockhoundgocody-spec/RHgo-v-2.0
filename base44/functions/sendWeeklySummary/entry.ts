@@ -22,6 +22,36 @@ Deno.serve(async (req) => {
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const users = await base44.asServiceRole.entities.User.list();
+    const userEmails = users.map((u) => u.email).filter(Boolean) as string[];
+
+    // Optimization: Batch fetch specimens and companions to avoid N+1 queries
+    const [allSpecimens, allCompanions] = await Promise.all([
+      base44.asServiceRole.entities.Specimen.filter(
+        { created_by: { $in: userEmails }, created_date: { $gte: since } },
+        "-created_date",
+        10000,
+      ),
+      base44.asServiceRole.entities.Companion.filter(
+        { owner_email: { $in: userEmails } },
+        "-updated_date",
+        userEmails.length * 5,
+      ),
+    ]);
+
+    // Group specimens by user email
+    const specimensByEmail: Record<string, any[]> = {};
+    for (const s of allSpecimens) {
+      if (!specimensByEmail[s.created_by]) specimensByEmail[s.created_by] = [];
+      specimensByEmail[s.created_by].push(s);
+    }
+
+    // Group latest companion by user email
+    const companionByEmail: Record<string, any> = {};
+    for (const c of allCompanions) {
+      if (!companionByEmail[c.owner_email]) {
+        companionByEmail[c.owner_email] = c;
+      }
+    }
 
     let sent = 0;
     const errors = [];
@@ -29,13 +59,8 @@ Deno.serve(async (req) => {
     for (const user of users) {
       if (!user.email) continue;
       try {
-        const [specimens, companions] = await Promise.all([
-          base44.asServiceRole.entities.Specimen.filter({ created_by: user.email }, '-created_date', 200),
-          base44.asServiceRole.entities.Companion.filter({ owner_email: user.email }, '-updated_date', 1),
-        ]);
-
-        const recent = specimens.filter((s) => (s.created_date || '') >= since);
-        const companion = companions?.[0];
+        const recent = specimensByEmail[user.email] || [];
+        const companion = companionByEmail[user.email];
 
         // Skip users with no activity AND no companion at all
         if (recent.length === 0 && !companion) continue;
