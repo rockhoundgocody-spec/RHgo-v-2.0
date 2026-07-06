@@ -7,3 +7,6 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+## 2026-07-06 - Secure Sanitization for Dynamic CSS in React
+**Learning:** Using `dangerouslySetInnerHTML` to inject dynamic CSS variables from user-controlled configuration (e.g., chart colors, IDs) poses a Cross-Site Scripting (XSS) risk if the input is not sanitized. Malicious inputs can break out of the `<style>` tag or CSS context using characters like `;`, `{`, `}`, `<`, `>`, and backslashes.
+**Action:** Implement a robust `sanitize` helper function that strips these dangerous characters before interpolating variables into style blocks. For CSS identifiers and values, a whitelist approach or a restrictive blacklist (e.g., `/[;{}<>\\\[\]]/g`) is necessary.
