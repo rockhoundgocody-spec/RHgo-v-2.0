@@ -1,7 +1,4 @@
-/* eslint-disable */
-// deno-lint-ignore-file
 /**
- * awardCompanionXPOnCollection
  * Awards Companion XP upon successful specimen identification and collection.
  * Triggered when a specimen is promoted from SpecimenDraft → Specimen.
  *
@@ -24,7 +21,7 @@ Deno.serve(async (req) => {
     }
 
     const {
-      specimen_id,
+      _specimen_id,
       mineral_name,
       rarity = 'common',
       confidence = 0.7,

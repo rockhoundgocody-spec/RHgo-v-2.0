@@ -1,5 +1,3 @@
-/* eslint-disable */
-// deno-lint-ignore-file
 /**
  * promoteVerifiedSpecimen
  * Converts a SpecimenDraft to a final Specimen record upon user confirmation.

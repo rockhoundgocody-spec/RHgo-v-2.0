@@ -1,5 +1,4 @@
-/* eslint-disable */
-// deno-lint-ignore-file
+/**
 /**
  * enhanceSpecimenWithReasoning
  * 
