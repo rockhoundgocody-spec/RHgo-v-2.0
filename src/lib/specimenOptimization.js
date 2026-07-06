@@ -166,41 +166,46 @@ export async function processSyncQueue(base44, maxAttempts = 3) {
 
   const results = { synced: 0, failed: 0, queued: 0 };
 
-  for (const item of queue) {
+  const syncTasks = queue.map(async (item) => {
     if (item.attempt_count >= maxAttempts) {
-      await base44.entities.SyncQueue.update(item.id, { status: 'conflict' });
-      results.failed++;
-      continue;
+      await base44.entities.SyncQueue.update(item.id, { status: "conflict" });
+      return "failed";
     }
 
     try {
-      // Attempt to sync
       const entity = base44.entities[item.entity_type];
       
-      if (item.operation === 'create') {
+      if (item.operation === "create") {
         await entity.create(item.payload);
-      } else if (item.operation === 'update') {
+      } else if (item.operation === "update") {
         await entity.update(item.entity_id, item.payload);
-      } else if (item.operation === 'delete') {
+      } else if (item.operation === "delete") {
         await entity.delete(item.entity_id);
       }
 
-      // Mark synced
       await base44.entities.SyncQueue.update(item.id, {
-        status: 'synced',
+        status: "synced",
         attempt_count: item.attempt_count + 1,
       });
-      results.synced++;
+      return "synced";
     } catch (error) {
-      // Mark failed, increment attempt
       await base44.entities.SyncQueue.update(item.id, {
-        status: 'failed',
+        status: "failed",
         attempt_count: item.attempt_count + 1,
         error_message: error.message,
       });
-      results.queued++;
+      return "queued";
     }
-  }
+  });
 
+  const outcomes = await Promise.allSettled(syncTasks);
+
+  outcomes.forEach((outcome) => {
+    if (outcome.status === "fulfilled") {
+      results[outcome.value]++;
+    } else {
+      results.failed++;
+    }
+  });
   return results;
 }
