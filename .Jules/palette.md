@@ -3,3 +3,7 @@
 ## 2024-03-25 - Missing ARIA Labels on Overlay Icon Buttons
 **Learning:** Absolute-positioned icon-only overlay buttons (like "Clear Search" in inputs or "Close" in floating sheets) frequently miss `aria-label`s and proper keyboard focus states. Since they overlay other content, standard focus indicators might be clipped or invisible, leading to poor keyboard accessibility.
 **Action:** Always verify that overlay icon buttons have an `aria-label` and explicit keyboard focus indicators like `focus-visible:ring-2`. Ensure border radii match for clean focus rings.
+
+## 2024-07-06 - Keyboard accessibility in Progressive Verification
+**Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
+**Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.

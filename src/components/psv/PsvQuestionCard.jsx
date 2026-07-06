@@ -41,7 +41,7 @@ export default function PsvQuestionCard({ question, revisions, onAnswer, onSkip 
             <button
               key={i}
               onClick={() => onAnswer(key, opt)}
-              className="w-full text-left px-5 py-4 rounded-2xl border border-hud-cyan/20 bg-hud-cyan/5 text-white text-base font-medium hover:bg-hud-cyan/15 hover:border-hud-cyan/50 active:scale-[0.98] transition"
+              className="w-full text-left px-5 py-4 rounded-2xl border border-hud-cyan/20 bg-hud-cyan/5 text-white text-base font-medium hover:bg-hud-cyan/15 hover:border-hud-cyan/50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan transition"
             >
               {opt}
             </button>
@@ -64,7 +64,7 @@ export default function PsvQuestionCard({ question, revisions, onAnswer, onSkip 
           <button
             onClick={() => { if (textVal.trim()) { onAnswer(key, textVal.trim()); setTextVal(''); } }}
             disabled={!textVal.trim()}
-            className="w-full py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white font-bold text-base flex items-center justify-center gap-2 transition"
+            className="w-full py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white font-bold text-base flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow transition"
           >
             <Send size={16} /> Submit
           </button>
@@ -79,7 +79,7 @@ export default function PsvQuestionCard({ question, revisions, onAnswer, onSkip 
           <button
             onClick={() => fileRef.current?.click()}
             disabled={photoUploading}
-            className="w-full py-4 rounded-2xl border-2 border-dashed border-hud-cyan/30 text-hud-cyan/70 hover:border-hud-cyan/60 hover:text-hud-cyan flex items-center justify-center gap-2 text-base font-medium transition"
+            className="w-full py-4 rounded-2xl border-2 border-dashed border-hud-cyan/30 text-hud-cyan/70 hover:border-hud-cyan/60 hover:text-hud-cyan flex items-center justify-center gap-2 text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan transition"
           >
             <Camera size={18} />
             {photoUploading ? 'Uploading…' : 'Take close-up photo'}
@@ -90,7 +90,7 @@ export default function PsvQuestionCard({ question, revisions, onAnswer, onSkip 
       {/* Skip — prominent "I don't know" */}
       <button
         onClick={onSkip}
-        className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20 text-sm font-medium transition"
+        className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 transition"
       >
         <SkipForward size={14} /> I don't know / Not available
       </button>
