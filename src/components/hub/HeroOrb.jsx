@@ -144,7 +144,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOrbTap(e)}
           style={{ width: size, height: size }}
         >
-          <AmethystOrb size={size} orbState={orbState} />
+          <AmethystOrb size={size} orbState={orbState} level={companion?.level || 1} />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples(rs => rs.filter(rp => rp.id !== r.id))} />
           ))}

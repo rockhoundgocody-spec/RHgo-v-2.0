@@ -2,19 +2,42 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
 const XP_MILESTONES = [100, 250, 500, 1000, 2500, 5000, 10000];
+const COMPANION_CACHE_KEY = 'rhgo_clover_state';
 
 /**
  * useCompanion — fetches and exposes the user's Amethyst companion state.
  * Detects level-ups and XP milestones, fires onMilestone({ type, label, level?, xp? }).
+ *
+ * State is cached to localStorage so the orb's evolved personality + growth
+ * loads instantly on every app open — even offline — then syncs with the
+ * backend when the network is available.
  */
 export default function useCompanion({ onMilestone } = {}) {
-  const [companion, setCompanion] = useState(null);
+  const [companion, setCompanion] = useState(() => {
+    try {
+      const cached = localStorage.getItem(COMPANION_CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
   const [todaysSpecimenCount, setTodaysSpecimenCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    try { return !localStorage.getItem(COMPANION_CACHE_KEY); } catch { return true; }
+  });
   const prevRef = useRef(null);
   // Store onMilestone in a ref so it never causes refresh to re-create
   const onMilestoneRef = useRef(onMilestone);
   useEffect(() => { onMilestoneRef.current = onMilestone; }, [onMilestone]);
+
+  // Seed prevRef from cached state so growth since last session is detected
+  // on the first backend sync (e.g. leveled up between opens).
+  useEffect(() => {
+    if (prevRef.current === null) {
+      try {
+        const cached = localStorage.getItem(COMPANION_CACHE_KEY);
+        if (cached) prevRef.current = JSON.parse(cached);
+      } catch {}
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     const maxRetries = 3;
@@ -41,6 +64,10 @@ export default function useCompanion({ onMilestone } = {}) {
         setCompanion(next);
         setTodaysSpecimenCount(res?.data?.todays_specimens || 0);
         setLoading(false);
+        // Persist to device so the orb's evolved state loads instantly next open
+        if (next) {
+          try { localStorage.setItem(COMPANION_CACHE_KEY, JSON.stringify(next)); } catch {}
+        }
         return;
       } catch {
         if (attempt === maxRetries) {

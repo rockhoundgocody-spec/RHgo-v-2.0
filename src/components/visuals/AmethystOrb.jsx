@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
@@ -20,6 +21,16 @@ const STATE_CONFIG = {
   speaking:  { haloBase: 'hsla(145,90%,55%,0.5)',   auraBase: 'hsla(280,100%,55%,0.55)', innerBase: 'hsla(280,100%,58%,0.6)',  boxShadow: '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 60px hsla(265,90%,8%,0.6)', idlePulseScale: 2.0, idleAuraScale: 2.2 },
 };
 
+// Growth tiers — the orb visually evolves as the user's companion levels up.
+// Tier 1 (Sprout): base aura, no growth ring.
+// Tier 2 (Bloom): one orbiting growth ring, brighter halo.
+// Tier 3 (Radiant): two growth rings, richer colors, intensified glow.
+function growthTier(level) {
+  if (!level || level < 3) return 1;
+  if (level < 5) return 2;
+  return 3;
+}
+
 export default function AmethystOrb({
   size = 221,
   className = '',
@@ -27,10 +38,12 @@ export default function AmethystOrb({
   sublabel,
   orbState = 'idle',
   speaking = false,        // kept for backwards compat — derived from orbState if not set
+  level = 1,               // companion level — drives visual evolution
   getAmplitude,
   getSpectrum,
 }) {
   const effectiveState = orbState !== 'idle' ? orbState : (speaking ? 'speaking' : 'idle');
+  const tier = growthTier(level);
   // Drive CSS variables from amplitude + spectrum on each frame — physical pulse,
   // no React re-renders. Spectrum drives the hovering afterglow aura intensity.
   const wrapRef = useRef(null);
@@ -123,15 +136,41 @@ export default function AmethystOrb({
         }}
       />
 
-      {/* Outer ambient halo — iridescent, state-tinted */}
+      {/* Outer ambient halo — iridescent, state-tinted. Intensifies with growth tier. */}
       <div
         ref={haloRef}
         className="absolute inset-0 rounded-full blur-3xl transition-[background,opacity] duration-700 opacity-70"
         style={{
           willChange: 'transform, opacity',
+          opacity: 0.7 + tier * 0.08,
           background: `radial-gradient(circle, ${cfg.haloBase} 0%, hsla(195,100%,55%,0.2) 45%, hsla(330,90%,55%,0.12) 65%, transparent 80%)`,
         }}
       />
+
+      {/* Growth rings — orbiting faceted rings that appear as the companion levels up.
+          Tier 2: one ring. Tier 3: two counter-rotating rings. */}
+      {tier >= 2 && (
+        <motion.svg
+          width={size * 1.15} height={size * 1.15} viewBox="0 0 240 240"
+          className="absolute inset-0 pointer-events-none m-auto"
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
+          animate={{ rotate: 360 }} transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+        >
+          <polygon points="120,18 210,72 210,168 120,222 30,168 30,72" fill="none"
+            stroke={tier >= 3 ? 'hsla(45,90%,70%,0.4)' : 'hsla(280,100%,80%,0.3)'} strokeWidth="1" />
+        </motion.svg>
+      )}
+      {tier >= 3 && (
+        <motion.svg
+          width={size * 1.3} height={size * 1.3} viewBox="0 0 240 240"
+          className="absolute inset-0 pointer-events-none m-auto"
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
+          animate={{ rotate: -360 }} transition={{ duration: 36, repeat: Infinity, ease: 'linear' }}
+        >
+          <polygon points="120,8 218,66 218,174 120,232 22,174 22,66" fill="none"
+            stroke="hsla(195,100%,70%,0.25)" strokeWidth="0.6" />
+        </motion.svg>
+      )}
 
       <div
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
