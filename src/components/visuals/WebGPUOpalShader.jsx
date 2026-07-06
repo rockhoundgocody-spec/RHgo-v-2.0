@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three/webgpu';
 import {
-  Fn, vec2, vec3, vec4, float, uniform, uv, mix, sin, cos, fract,
-  dot, length, smoothstep, mx_noise_float, mx_fractal_noise_float,
-  positionLocal, time, abs, max,
+  Fn, vec2, vec3, vec4, float, uniform, uv, mix, sin, cos, fract, length, smoothstep, mx_fractal_noise_float, time, abs,
 } from 'three/tsl';
 
 /**

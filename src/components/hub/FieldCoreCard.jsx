@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrive, ChevronRight, AlertCircle } from 'lucide-react';
+import { HardDrive, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const StatusChip = ({ label, value, alert = false }) => (

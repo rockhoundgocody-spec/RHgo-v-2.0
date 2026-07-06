@@ -4,7 +4,7 @@
  * Geo Topo Lines, Ambient Particles — with percentage bars + description.
  */
 import React from 'react';
-import { MATERIAL_DEFS, COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
+import { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
 
 const MATERIAL_META = {
   liquid_glass:   { emoji: '🫧', label: 'Liquid Glass',    bar: 'hsla(196,100%,62%,0.85)', desc: 'Refractive subsurface flow' },

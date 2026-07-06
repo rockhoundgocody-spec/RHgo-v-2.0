@@ -1,6 +1,6 @@
 import React from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import { Flame, Zap, Star } from 'lucide-react';
+import { Flame, Zap } from 'lucide-react';
 
 const CHAIN_MILESTONES = [
   { days: 1,   label: '1 Day',    emoji: '🔥' },
