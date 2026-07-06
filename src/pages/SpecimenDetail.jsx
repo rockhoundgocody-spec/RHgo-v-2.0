@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
-  Calendar, MapPin, Star, Gem, Shield, FlaskConical,
-  Zap, TrendingUp, Share2, ChevronLeft, Lock, BookOpen,
-  PlusCircle, EyeOff, Beaker, Clock, AlertTriangle, CheckCircle2
+  Calendar, MapPin, Star, Gem,
+  Zap, TrendingUp, ChevronLeft, BookOpen
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 

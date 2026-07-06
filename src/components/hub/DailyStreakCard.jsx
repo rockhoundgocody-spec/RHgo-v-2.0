@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { Flame, Zap } from 'lucide-react';
 

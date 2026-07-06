@@ -6,7 +6,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Lock } from 'lucide-react';
 import LiquidMineralBadge from './LiquidMineralBadge.jsx';
-import { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 
 const RARITY_GLOW = {

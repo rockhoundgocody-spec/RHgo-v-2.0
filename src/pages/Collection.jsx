@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Gem, Loader2, GitCompareArrows, Map, LayoutGrid, BarChart2, Images, Sparkles } from 'lucide-react';
+import { Loader2, GitCompareArrows, Map, LayoutGrid, BarChart2, Images, Sparkles } from 'lucide-react';
 import GalleryGrid from '@/components/collection/GalleryGrid.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CrystalSystemInsights from '@/components/collection/CrystalSystemInsights.jsx';
