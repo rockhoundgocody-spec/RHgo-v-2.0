@@ -7,3 +7,7 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+
+## 2026-07-06 - Testing Badge Suggestion Logic
+**Learning:** Pure synchronous logic like `suggestBadgeTargets` can be effectively tested using simple object mocks for specimens. Covering edge cases like empty inputs and exact count thresholds (e.g., 2 vs 3) is crucial for logic that relies on collection counts.
+**Action:** Implemented unit tests for badge evolution suggestions with 100% logic coverage including negative filtering for completed badges.
