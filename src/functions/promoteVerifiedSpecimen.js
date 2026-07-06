@@ -1,4 +1,4 @@
-/* eslint-disable */
+
 // deno-lint-ignore-file
 /**
  * promoteVerifiedSpecimen
@@ -55,7 +55,6 @@ Deno.serve(async (req) => {
     // Optionally archive the draft
     if (draft_id) {
       // You could mark draft as "finalised" here if tracking that state
-      console.log(`Specimen promoted from draft ${draft_id}`);
     }
 
     return Response.json({
