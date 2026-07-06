@@ -5,7 +5,7 @@
  */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ScanLine, MapPin, Gem, Zap, Trophy, ArrowRight, Lock } from 'lucide-react';
+import { ScanLine, MapPin, Gem, Zap, ArrowRight, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MOCK_SPECIMENS = [

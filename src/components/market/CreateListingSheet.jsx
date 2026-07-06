@@ -3,7 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gem, DollarSign, ArrowRightLeft, MapPin, Check } from 'lucide-react';
+import { X, Gem, DollarSign, ArrowRightLeft, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const RARITY_CFG = {

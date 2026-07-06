@@ -7,3 +7,6 @@
 ## 2024-07-06 - Keyboard accessibility in Progressive Verification
 **Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
 **Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+## 2025-05-15 - Performance Optimization Cleanup
+**Learning:** Leftover console.log statements in performance monitoring utilities can clutter production logs and should be removed once the monitoring pattern is established.
+**Action:** Removed console.log from measureRenderTime in src/lib/performanceOptimization.js.

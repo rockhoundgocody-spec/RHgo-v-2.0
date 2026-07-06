@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
+import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
