@@ -141,30 +141,29 @@ export default function CommunityVerificationQueue({ userEmail }) {
                     placeholder="Suggest mineral name (optional)"
                     value={suggestion}
                     onChange={(e) => setSuggestion(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10"
-                    style={{ outline: 'none' }}
+                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10 focus:ring-1 focus:ring-hud-cyan/40 outline-none"
                   />
                   <input
                     type="text"
                     placeholder="Field tip for the community (optional)"
                     value={tip}
                     onChange={(e) => setTip(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10"
-                    style={{ outline: 'none' }}
+                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10 focus:ring-1 focus:ring-hud-cyan/40 outline-none"
                   />
                   <div className="flex gap-2">
                     <button onClick={() => handleVote(item, 'agree')}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-emerald-400"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-emerald-400 focus-visible:ring-2 focus-visible:ring-hud-cyan/50 outline-none"
                       style={{ background: 'hsla(145,70%,40%,0.15)', border: '1px solid hsla(145,70%,50%,0.3)' }}>
                       <ThumbsUp size={12} /> Agree
                     </button>
                     <button onClick={() => handleVote(item, 'disagree')}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-rose-400"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-rose-400 focus-visible:ring-2 focus-visible:ring-hud-cyan/50 outline-none"
                       style={{ background: 'hsla(0,70%,50%,0.12)', border: '1px solid hsla(0,70%,55%,0.3)' }}>
                       <ThumbsDown size={12} /> Disagree
                     </button>
                     <button onClick={() => handleVote(item, 'unsure')}
-                      className="flex items-center justify-center px-2.5 py-2 rounded-lg text-amber-400"
+                      aria-label="Unsure / Need more info"
+                      className="flex items-center justify-center px-2.5 py-2 rounded-lg text-amber-400 focus-visible:ring-2 focus-visible:ring-hud-cyan/50 outline-none"
                       style={{ background: 'hsla(40,80%,50%,0.12)', border: '1px solid hsla(40,80%,55%,0.3)' }}>
                       <HelpCircle size={12} />
                     </button>
@@ -173,7 +172,7 @@ export default function CommunityVerificationQueue({ userEmail }) {
               ) : (
                 <button
                   onClick={() => setActiveId(item.id)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-[0.18em] text-hud-cyan/70 hover:text-hud-cyan transition-colors"
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-[0.18em] text-hud-cyan/70 hover:text-hud-cyan transition-colors focus-visible:ring-2 focus-visible:ring-hud-cyan/50 outline-none"
                   style={{ background: 'hsla(195,80%,40%,0.1)', border: '1px solid hsla(195,100%,60%,0.15)' }}>
                   Vote on this find <ChevronRight size={11} />
                 </button>
