@@ -70,6 +70,9 @@ export default function Scan() {
   const [shareMapOpen, setShareMapOpen] = useState(false);
   const [choiceOpen, setChoiceOpen] = useState(false);
   const [rarePopup, setRarePopup] = useState(null); // { rarity, mineralName, badge }
+  const [scanMode, setScanMode] = useState('rock');
+  const [deepAnalysis, setDeepAnalysis] = useState(null);
+  const [deepLoading, setDeepLoading] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const navigate = useNavigate();
   const { speak, stop } = useSpeechSynthesis();
@@ -121,8 +124,9 @@ export default function Scan() {
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
   };
 
-  const handleCaptureComplete = (capturedAngles) => {
+  const handleCaptureComplete = (capturedAngles, mode) => {
     if (!guardScan()) return;
+    if (mode) setScanMode(mode);
     setAngles(capturedAngles);
     setStage('reconstruct');
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
@@ -160,10 +164,17 @@ export default function Scan() {
     }
 
     // Multi-image identification — explainable observational geology mode.
+    const modeContext = {
+      rock:    'The specimen is a bulk rock or hand specimen — focus on overall mineral composition, texture, and color.',
+      crystal: 'The specimen is an individual crystal — focus on crystal habit, faces, terminations, and intergrowths.',
+      fossil:  'The specimen may contain fossils or organic traces — look for imprints, replacement structures, and biological patterns.',
+      matrix:  'The specimen is embedded in mixed host rock matrix — identify both the embedded mineral and the host rock.',
+    };
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
         'You are an expert field geologist and mineralogist analyzing specimen photos. ' +
+        `${modeContext[scanMode] || modeContext.rock} ` +
         'Study every visual detail carefully: crystal habit, surface luster (vitreous/metallic/pearly/resinous), ' +
         'transparency, color zoning, cleavage planes, fracture type, crystal system geometry, surface texture, ' +
         'any matrix rock present, and weathering patterns. ' +
@@ -277,10 +288,30 @@ export default function Scan() {
     return { result: r, uploads, reasoningResult };
   }, []);
 
+  const handleDeepAnalysis = async () => {
+    if (deepLoading || deepAnalysis) return;
+    setDeepLoading(true);
+    try {
+      const res = await base44.functions.invoke('runDeepAnalysis', {
+        image_url: primaryUrl,
+        quick_result: result,
+        lat: gpsCoords?.lat,
+        lng: gpsCoords?.lng,
+      });
+      setDeepAnalysis(res?.data?.deep_analysis || null);
+    } catch (err) {
+      console.error('Deep analysis failed:', err);
+    } finally {
+      setDeepLoading(false);
+    }
+  };
+
   const handleReconstructed = ({ result: r, reasoningResult: rr }) => {
     setPrimaryUrl(primaryRef.current);
     setResult(r);
     setReasoningResult(rr || null);
+    setDeepAnalysis(null);
+    setDeepLoading(false);
     setStage('result');
     if (!isPaid) {
       setScansUsed(u => { const n = u + 1; localStorage.setItem(todayKey, String(n)); return n; });
@@ -430,6 +461,8 @@ export default function Scan() {
     setSavedId(null);
     setSavedSpecimen(null);
     setReasoningResult(null);
+    setDeepAnalysis(null);
+    setDeepLoading(false);
     setShareMapOpen(false);
     setChoiceOpen(false);
     setRarePopup(null);
@@ -459,7 +492,7 @@ export default function Scan() {
       <div className="flex-1 min-h-0">
         {stage === 'live' && (
           <LiveScanStage
-            onBeginCapture={() => setStage('capture')}
+            onBeginCapture={(mode) => { if (mode) setScanMode(mode); setStage('capture'); }}
             onUploadFallback={handleUploadFallback}
           />
         )}
@@ -494,6 +527,9 @@ export default function Scan() {
                 state: { scanImageUrl: primaryUrl, scanName: result.top_match },
               })
             }
+            onDeepAnalysis={handleDeepAnalysis}
+            deepAnalysis={deepAnalysis}
+            deepLoading={deepLoading}
           />
         )}
       </div>

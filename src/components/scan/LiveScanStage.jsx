@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import useCameraStream from './useCameraStream';
 import ScanReticle from './ScanReticle.jsx';
 import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
-import { Upload, ScanLine, Gem, Camera } from 'lucide-react';
+import ScanModeBar from './ScanModeBar.jsx';
+import { Upload, ScanLine, Gem, Camera, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STAGE_LABELS = {
@@ -18,6 +19,8 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
+  const [scanMode, setScanMode] = useState('rock');
+  const [scaleOn, setScaleOn] = useState(false);
   const signalRef = useRef(0);
   const scanStateRef = useRef('idle');
 
@@ -107,6 +110,18 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         </div>
       </div>
 
+      {/* ── SCAN MODE BAR (2B.1) ── */}
+      {!error && (
+        <div className="px-3 py-2" style={{ borderBottom: `1px solid ${col.border}`, background: 'hsla(265,50%,4%,0.5)' }}>
+          <ScanModeBar
+            mode={scanMode}
+            onModeChange={setScanMode}
+            scaleOn={scaleOn}
+            onScaleToggle={() => setScaleOn(s => !s)}
+          />
+        </div>
+      )}
+
       {/* ── MAIN VIEWPORT ── fills remaining height */}
       <div className="relative overflow-hidden flex-1 min-h-0">
 
@@ -186,6 +201,34 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 }} />
             )}
 
+            {/* Scale reference overlay */}
+            {scaleOn && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <div className="relative" style={{ width: '60%', maxWidth: 200 }}>
+                  {/* Ruler bar */}
+                  <div className="flex items-end justify-between" style={{ height: 24 }}>
+                    {[...Array(11)].map((_, i) => (
+                      <div key={i} style={{
+                        width: 1,
+                        height: i % 5 === 0 ? 24 : 12,
+                        background: 'hsla(195,100%,80%,0.6)',
+                      }} />
+                    ))}
+                  </div>
+                  {/* Scale labels */}
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[8px] font-mono text-hud-cyan">0</span>
+                    <span className="text-[8px] font-mono text-hud-cyan">5cm</span>
+                  </div>
+                  {/* Coin reference */}
+                  <div className="absolute -right-2 top-8 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ border: '1.5px dashed hsla(195,100%,80%,0.4)', background: 'hsla(195,100%,60%,0.05)' }}>
+                    <span className="text-[7px] text-hud-cyan/60">🪙</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Corner brackets */}
             <CornerBrackets color={col.accent} />
 
@@ -205,7 +248,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         <div className="p-4 space-y-2.5"
           style={{ borderTop: `1px solid ${col.border}`, background: 'hsla(265,50%,3%,0.8)', transition: 'border-color 0.5s' }}>
 
-          <Button onClick={onBeginCapture} disabled={!ready}
+          <Button onClick={() => onBeginCapture(scanMode)} disabled={!ready}
             className="w-full h-14 rounded-xl text-sm font-bold uppercase tracking-[0.18em] text-white disabled:opacity-35"
             style={{
               background: ready

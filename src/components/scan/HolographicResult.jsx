@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import MineralStoryCard from './MineralStoryCard.jsx';
-import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin } from 'lucide-react';
+import QuickIDStack from './QuickIDStack.jsx';
+import DeepAnalysisPanel from './DeepAnalysisPanel.jsx';
+import { Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2, Zap, FlaskConical, BookOpen, Star, ChevronDown, ChevronUp, Shield, Atom, MapPin, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
@@ -32,13 +34,16 @@ export default function HolographicResult({
   saved,
   savedId,
   modelVersion = 'gemini-flash',
+  onDeepAnalysis,
+  deepAnalysis,
+  deepLoading,
 }) {
   const tiltRef = useRef(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [claimPath, setClaimPath] = useState(null);
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState('id'); // id | tests | features | lore
+  const [activeTab, setActiveTab] = useState('quick'); // quick | deep | tests | features | lore
   const navigate = useNavigate();
 
   const handleClaimChoose = (path) => {
@@ -84,11 +89,11 @@ export default function HolographicResult({
   const lookalikes = result?.lookalikes || [];
 
   const TABS = [
-    { id: 'id',       icon: Sparkles,    label: 'ID' },
-    { id: 'science',  icon: Atom,        label: 'Science' },
+    { id: 'quick',    icon: Sparkles,     label: 'Quick ID' },
+    { id: 'deep',     icon: Cloud,        label: 'Deep' },
     { id: 'tests',    icon: FlaskConical, label: 'Tests' },
-    { id: 'features', icon: Zap,         label: 'Features' },
-    { id: 'lore',     icon: BookOpen,    label: 'Lore' },
+    { id: 'features', icon: Zap,          label: 'Features' },
+    { id: 'lore',     icon: BookOpen,     label: 'Lore' },
   ];
 
   return (
@@ -201,43 +206,21 @@ export default function HolographicResult({
       {/* ── TAB PANELS ── */}
       <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: 'hsla(220,40%,5%,0.7)', border: '1px solid hsla(270,30%,25%,0.3)' }}>
 
-        {/* ID TAB */}
-        {activeTab === 'id' && (
-          <div className="p-4 space-y-4">
-            {/* Reasoning */}
-            {result?.reasoning && (
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-white/30 mb-2 flex items-center gap-1.5">
-                  <Sparkles size={9} /> Why we think this
-                </div>
-                <p className="text-white/75 text-sm leading-relaxed">{result.reasoning}</p>
-              </div>
-            )}
+        {/* QUICK ID TAB (2B.2) */}
+        {activeTab === 'quick' && (
+          <div className="p-4">
+            <QuickIDStack
+              result={result}
+              candidates={candidates}
+              onDeepAnalysis={() => { setActiveTab('deep'); onDeepAnalysis?.(); }}
+              onCompare={onCompare}
+              deepLoading={deepLoading}
+              deepDone={!!deepAnalysis}
+            />
 
-            {/* Candidates */}
-            {candidates.length > 0 && (
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Other Candidates</div>
-                <div className="space-y-2">
-                  {candidates.map((c, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: 'hsla(220,30%,8%,0.6)', border: '1px solid hsla(270,20%,25%,0.3)' }}>
-                      <div className="text-[10px] font-mono text-white/30 w-4">{i + 1}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white/90 text-sm font-semibold">{c.name}</div>
-                        <div className="text-white/40 text-[10px] mt-0.5 line-clamp-1">{c.rationale || c.features}</div>
-                      </div>
-                      <div className="font-mono text-xs font-bold shrink-0" style={{ color: rc.color }}>
-                        {(c.confidence * 100).toFixed(0)}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Lookalikes */}
+            {/* Lookalikes — kept from original ID tab */}
             {lookalikes.length > 0 && (
-              <div>
+              <div className="mt-4">
                 <div className="text-[10px] uppercase tracking-widest text-white/30 mb-2 flex items-center gap-1.5">
                   <Shield size={9} /> Could be confused with
                 </div>
@@ -254,11 +237,44 @@ export default function HolographicResult({
 
             {/* Collection value */}
             {result?.collection_value && (
-              <div className="px-3 py-3 rounded-xl" style={{ background: `linear-gradient(135deg, ${rc.glow.replace('0.5', '0.08')}, transparent)`, border: `1px solid ${rc.border}` }}>
+              <div className="mt-4 px-3 py-3 rounded-xl" style={{ background: `linear-gradient(135deg, ${rc.glow.replace('0.5', '0.08')}, transparent)`, border: `1px solid ${rc.border}` }}>
                 <div className="text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1.5" style={{ color: rc.color }}>
                   <Star size={9} /> Collector's Note
                 </div>
                 <p className="text-white/70 text-xs">{result.collection_value}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DEEP ANALYSIS TAB (2B.3) */}
+        {activeTab === 'deep' && (
+          <div className="p-4">
+            {deepLoading || deepAnalysis ? (
+              <DeepAnalysisPanel analysis={deepAnalysis} loading={deepLoading} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
+                  style={{ background: 'hsla(195,80%,30%,0.2)', border: '1px solid hsla(195,80%,55%,0.3)' }}>
+                  <Cloud size={24} className="text-hud-cyan" />
+                </div>
+                <p className="text-white/60 text-sm font-semibold mb-1">Deep Analysis Ready</p>
+                <p className="text-white/35 text-xs mb-4 max-w-[220px]">
+                  Cloud-based deep identification with valuation, locality plausibility, lookalike elimination, and education resources.
+                </p>
+                <Button
+                  onClick={onDeepAnalysis}
+                  className="h-11 px-5 rounded-xl text-xs font-bold uppercase tracking-[0.15em]"
+                  style={{
+                    background: 'linear-gradient(135deg, hsla(195,80%,40%,0.5), hsla(215,70%,35%,0.4))',
+                    border: '1px solid hsla(195,80%,60%,0.4)',
+                    color: 'hsl(195,100%,85%)',
+                    boxShadow: '0 0 20px hsla(195,80%,50%,0.2)',
+                  }}
+                >
+                  <Cloud size={14} className="mr-2" />
+                  Run Deep Analysis
+                </Button>
               </div>
             )}
           </div>
