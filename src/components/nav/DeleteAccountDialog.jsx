@@ -49,7 +49,7 @@ export default function DeleteAccountDialog({ onClose }) {
                 <p className="text-white/40 text-xs">This cannot be undone</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/40 hover:text-white transition select-none">
+            <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white transition select-none">
               <X size={20} />
             </button>
           </div>

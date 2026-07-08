@@ -345,7 +345,7 @@ export default function ARRockBattle() {
                   <Swords size={16} className="text-red-400" />
                   <span className="text-white font-black text-sm uppercase tracking-[0.2em]">AR Rock Battle</span>
                 </div>
-                <button onClick={() => { setShowModal(false); reset(); }} className="text-white/40 hover:text-white/80 transition p-1">
+                <button onClick={() => { setShowModal(false); reset(); }} aria-label="Close" className="text-white/40 hover:text-white/80 transition p-1">
                   <X size={18} />
                 </button>
               </div>

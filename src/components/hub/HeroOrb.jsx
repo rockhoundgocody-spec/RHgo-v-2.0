@@ -182,7 +182,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
                 >
                   {voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
                 </button>
-                <button onClick={() => { stop(); setOpen(false); }} className="text-white/25 hover:text-white/60 transition">
+                <button onClick={() => { stop(); setOpen(false); }} aria-label="Close" className="text-white/25 hover:text-white/60 transition">
                   <X size={14} />
                 </button>
               </div>
