@@ -1,9 +1,3 @@
-## 2024-03-24 - Missing ARIA Labels on Final Action Buttons\n**Learning:** The final summary/action card in Progressive Verification (PsvFinalCard) lacked aria-labels on its icon-only rescan button. This pattern often occurs in final 'action strips' where space is tight and icons replace text.\n**Action:** Add aria-label attributes to all icon-only action buttons in summary views.
-
-## 2024-03-25 - Missing ARIA Labels on Overlay Icon Buttons
-**Learning:** Absolute-positioned icon-only overlay buttons (like "Clear Search" in inputs or "Close" in floating sheets) frequently miss `aria-label`s and proper keyboard focus states. Since they overlay other content, standard focus indicators might be clipped or invisible, leading to poor keyboard accessibility.
-**Action:** Always verify that overlay icon buttons have an `aria-label` and explicit keyboard focus indicators like `focus-visible:ring-2`. Ensure border radii match for clean focus rings.
-
-## 2024-07-06 - Keyboard accessibility in Progressive Verification
-**Learning:** The PSV mode (Progressive Verification) relies heavily on interactive HUD-like panels, but buttons (like options, take photo, and skip) lacked `focus-visible` styles, making keyboard navigation difficult.
-**Action:** Always add explicit `focus-visible:ring-2` styles to interactive `<button>` elements, especially those styled as full-width blocks or icon-only buttons, ensuring users can navigate the application via keyboard. Also, icon-only buttons need an `aria-label`.
+## 2024-07-09 - Ensure generic interactables receive focus styling and labelling
+**Learning:** Dismiss buttons implemented as simple unlabelled icons in modals/banners (`<X size={14} />`) without aria-labels or hover/focus states represent a frequent micro-UX accessibility gap that easily fails WCAG criteria (2.4.7 Focus Visible, 4.1.2 Name, Role, Value).
+**Action:** When inspecting interactable custom UI components, proactively add `aria-label` attributes to icon-only buttons and append `focus-visible:ring-2 focus-visible:outline-none` alongside appropriate theme ring colors to ensure they are keyboard navigable.
