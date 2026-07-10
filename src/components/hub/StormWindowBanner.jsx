@@ -125,7 +125,7 @@ export default function StormWindowBanner() {
             </div>
           </div>
 
-          <button onClick={dismiss} className="flex-shrink-0 text-white/20 hover:text-white/50 transition-colors mt-0.5">
+          <button onClick={dismiss} aria-label="Dismiss alert" className="flex-shrink-0 text-white/20 hover:text-white/50 transition-colors mt-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
             <X size={14} />
           </button>
         </div>
