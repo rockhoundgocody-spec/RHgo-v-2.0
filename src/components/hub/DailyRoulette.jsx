@@ -68,7 +68,7 @@ function MemeCard({ challenge, onClose }) {
         {/* Meme header */}
         <div className="relative px-6 pt-8 pb-4 text-center"
           style={{ background: 'linear-gradient(180deg, hsla(30,90%,50%,0.15) 0%, transparent 100%)' }}>
-          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition">
+          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none rounded-sm">
             <X size={16} />
           </button>
           <div className="text-6xl mb-3">{challenge.emoji}</div>
@@ -92,7 +92,7 @@ function MemeCard({ challenge, onClose }) {
         <div className="px-4 pb-6">
           <button
             onClick={handleShare}
-            className="w-full py-3 rounded-2xl font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="w-full py-3 rounded-2xl font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
             style={{ background: 'linear-gradient(135deg, hsl(280,80%,55%), hsl(30,90%,50%))', color: 'white', boxShadow: '0 4px 20px -4px hsla(280,80%,55%,0.5)' }}
           >
             <Share2 size={15} /> Share This Win!
@@ -216,13 +216,13 @@ export default function DailyRoulette() {
               <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-emerald-400 text-xs font-bold"
                 style={{ background: 'hsla(145,60%,15%,0.4)', border: '1px solid hsla(145,60%,40%,0.3)' }}>
                 <CheckCircle2 size={13} /> Challenge Claimed!
-                <button onClick={() => setShowMeme(true)} aria-label="Share" className="ml-1 text-white/40 hover:text-white/70 transition">
+                <button onClick={() => setShowMeme(true)} aria-label="Share" className="ml-1 text-white/40 hover:text-white/70 transition focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none rounded-sm">
                   <Share2 size={11} />
                 </button>
               </div>
             ) : (
               <button onClick={claim}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.2em] transition-all active:scale-95"
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.2em] transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:outline-none"
                 style={{ background: 'hsla(30,90%,45%,0.3)', border: '1px solid hsla(30,90%,55%,0.4)', color: '#fb923c' }}>
                 ✓ I Found It! Claim XP
               </button>
@@ -230,7 +230,8 @@ export default function DailyRoulette() {
             <button
               onClick={spin}
               disabled={spinning || claimed}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all active:scale-95 disabled:opacity-40"
+              aria-label="Spin for new challenge"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all active:scale-95 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:outline-none"
               style={{ background: 'hsla(270,60%,20%,0.4)', border: '1px solid hsla(270,60%,45%,0.3)', color: 'hsl(280,80%,75%)' }}>
               <Dices size={13} className={spinning ? 'animate-spin' : ''} />
             </button>

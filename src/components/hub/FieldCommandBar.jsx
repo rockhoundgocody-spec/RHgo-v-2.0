@@ -97,7 +97,8 @@ export default function FieldCommandBar({ collectionCount }) {
           <button
             onClick={() => submit()}
             disabled={loading || !command.trim()}
-            className="px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white transition flex items-center gap-1.5 text-sm font-medium shrink-0"
+            aria-label="Submit command"
+            className="px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white transition flex items-center gap-1.5 text-sm font-medium shrink-0 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:outline-none"
           >
             {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
           </button>
@@ -109,7 +110,7 @@ export default function FieldCommandBar({ collectionCount }) {
             <button
               key={i}
               onClick={() => { setCommand(ex); submit(ex); }}
-              className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-amethyst/30 transition"
+              className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-amethyst/30 transition focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:outline-none"
             >
               {ex}
             </button>
@@ -147,7 +148,7 @@ export default function FieldCommandBar({ collectionCount }) {
                 <button
                   onClick={() => setExpanded(p => !p)}
                   aria-label={expanded ? 'Collapse details' : 'Expand details'}
-                  className="text-white/30 hover:text-white/60 transition shrink-0 mt-0.5"
+                  className="text-white/30 hover:text-white/60 transition shrink-0 mt-0.5 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none rounded-sm"
                 >
                   {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
@@ -188,7 +189,7 @@ export default function FieldCommandBar({ collectionCount }) {
               {/* Navigate CTA */}
               <button
                 onClick={handleNavigate}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amethyst/30 text-amethyst/80 hover:text-white hover:bg-amethyst/10 text-xs font-medium uppercase tracking-[0.25em] transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amethyst/30 text-amethyst/80 hover:text-white hover:bg-amethyst/10 text-xs font-medium uppercase tracking-[0.25em] transition focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:outline-none"
               >
                 {INTENT_LABEL[result.intent] || 'Open'} <ArrowRight size={11} />
               </button>
