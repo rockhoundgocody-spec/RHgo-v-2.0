@@ -320,7 +320,8 @@ export default function Explore() {
             )}
           </div>
           <button onClick={locate} disabled={locating}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            aria-label="Locate me"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
             style={{
               background: userLocation ? 'hsla(195,100%,40%,.25)' : 'hsla(240,30%,8%,.88)',
               border: userLocation ? '1px solid hsla(195,100%,60%,.5)' : '1px solid hsla(255,30%,40%,.3)',
@@ -330,7 +331,8 @@ export default function Explore() {
             {locating ? <Loader2 size={16} className="text-hud-cyan animate-spin"/> : <Locate size={16} className={userLocation ? 'text-hud-cyan' : 'text-white/50'}/>}
           </button>
           <button onClick={() => setShowGeology(g => !g)}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            aria-label="Toggle geology view"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
             style={{
               background: showGeology ? 'hsla(150,60%,30%,.3)' : 'hsla(240,30%,8%,.88)',
               border: showGeology ? '1px solid hsla(150,70%,50%,.55)' : '1px solid hsla(255,30%,40%,.3)',
@@ -352,7 +354,7 @@ export default function Explore() {
           <button
             onClick={() => setHudMode(h => !h)}
             title="High-contrast HUD mode"
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
             style={{
               background: hudMode ? 'hsla(195,100%,30%,.4)' : 'hsla(240,30%,8%,.88)',
               border: hudMode ? '1px solid hsla(195,100%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
@@ -368,7 +370,7 @@ export default function Explore() {
           <button
             onClick={() => setShowHeatMap(h => !h)}
             title="Community activity heat map"
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
             style={{
               background: showHeatMap ? 'hsla(0,80%,30%,.4)' : 'hsla(240,30%,8%,.88)',
               border: showHeatMap ? '1px solid hsla(0,80%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
@@ -384,7 +386,7 @@ export default function Explore() {
           <button
             onClick={() => setShowWeather(w => !w)}
             title="Beach weather conditions"
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             style={{
               background: showWeather ? 'hsla(38,80%,30%,.35)' : 'hsla(240,30%,8%,.88)',
               border: showWeather ? '1px solid hsla(43,100%,60%,.6)' : '1px solid hsla(255,30%,40%,.3)',
