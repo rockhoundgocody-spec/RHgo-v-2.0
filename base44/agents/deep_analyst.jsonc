@@ -22,17 +22,18 @@
     },
     {
       "function_name": "progressiveVerify",
-      "description": "Multi-agent crossover analysis for high-stakes or disputed identifications."
+      "description": "Multi-agent crossover analysis for high-stakes identifications"
     },
     {
       "function_name": "enrichSpecimen",
-      "description": "Pull detailed metadata and locality data for final analysis."
+      "description": "Pull detailed metadata and locality data for final analysis"
     },
     {
       "function_name": "runDeepAnalysis",
-      "description": "Full deep analysis with valuation, locality plausibility, and education links."
+      "description": "Full deep analysis with valuation, locality plausibility, and education links"
     }
   ],
+  "context_files": [],
   "app_user_connector_configs": [],
   "selected_skill_names": [],
   "selected_workspace_skill_ids": [],
@@ -43,7 +44,12 @@
   "memory_config": {
     "enabled": true,
     "scope": "both",
+    "include_other_conversation_context": false,
     "instructions": null
   },
+  "voice_config": {
+    "voice_id": null
+  },
+  "allow_anonymous_access": false,
   "name": "deep_analyst"
 }
