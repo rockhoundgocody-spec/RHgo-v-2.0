@@ -1,0 +1,80 @@
+{
+  "name": "GeoDepletionRecord",
+  "type": "object",
+  "description": "Temporal-Depletion Engine \u2014 tracks mineral rarity decay per geologic unit. As specimens are discovered in a specific formation, rarity weight decays, steering explorers toward undiscovered territory. Temporal recovery allows rarity to regenerate over time as weathering re-exposes material.",
+  "properties": {
+    "mineral_name": {
+      "type": "string",
+      "description": "Mineral name (e.g. 'Quartz', 'Datolite')"
+    },
+    "geologic_unit": {
+      "type": "string",
+      "description": "Macrostrat stratigraphic unit name at the find location"
+    },
+    "geologic_unit_id": {
+      "type": "string",
+      "description": "Macrostrat unit ID if available"
+    },
+    "state": {
+      "type": "string",
+      "description": "US state for regional filtering"
+    },
+    "base_rarity_weight": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Starting rarity weight before any depletion (common=1, uncommon=2.5, rare=5, legendary=10)"
+    },
+    "current_rarity_weight": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Current decayed rarity weight after depletion + temporal recovery"
+    },
+    "discovery_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total specimens logged in this geologic unit for this mineral"
+    },
+    "last_discovery_date": {
+      "type": "string",
+      "format": "date",
+      "description": "YYYY-MM-DD of the most recent specimen logged here"
+    },
+    "depletion_factor": {
+      "type": "number",
+      "default": 0.05,
+      "description": "Fraction of base rarity weight lost per discovery (5%)"
+    },
+    "recovery_rate_per_day": {
+      "type": "number",
+      "default": 0.01,
+      "description": "Fraction of base rarity weight recovered per day since last discovery (1%/day)"
+    },
+    "entropy_contribution": {
+      "type": "number",
+      "default": 0,
+      "description": "Cumulative rarity weight drained from this record \u2014 feeds the Global Entropy Counter"
+    }
+  },
+  "required": [
+    "mineral_name",
+    "geologic_unit"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

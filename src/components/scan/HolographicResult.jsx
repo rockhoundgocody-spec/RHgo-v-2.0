@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import CorrectionModal from './CorrectionModal.jsx';
 import RarityFireworks from './RarityFireworks.jsx';
 import ClaimPathModal from './ClaimPathModal.jsx';
+import FieldRarityBadge from './FieldRarityBadge.jsx';
 
 const RARITY_CFG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.5)',  border: 'hsla(215,20%,55%,0.3)',  badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
@@ -37,6 +38,7 @@ export default function HolographicResult({
   onDeepAnalysis,
   deepAnalysis,
   deepLoading,
+  gpsCoords,
 }) {
   const tiltRef = useRef(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
@@ -132,10 +134,16 @@ export default function HolographicResult({
           </div>
 
           {/* Rarity badge — top left */}
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
             <span className={`text-[10px] font-bold uppercase tracking-[0.25em] px-2.5 py-1 rounded-full border ${rc.badge}`}>
               {rc.label}
             </span>
+            <FieldRarityBadge
+              mineralName={result?.top_match}
+              lat={gpsCoords?.lat}
+              lng={gpsCoords?.lng}
+              baseRarity={rarity}
+            />
           </div>
 
           {/* Confidence chip — top right */}

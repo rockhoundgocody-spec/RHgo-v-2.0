@@ -530,6 +530,7 @@ export default function Scan() {
             onDeepAnalysis={handleDeepAnalysis}
             deepAnalysis={deepAnalysis}
             deepLoading={deepLoading}
+            gpsCoords={gpsCoords}
           />
         )}
       </div>
