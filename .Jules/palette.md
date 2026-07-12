@@ -1,3 +1,3 @@
-## 2024-07-09 - Ensure generic interactables receive focus styling and labelling
-**Learning:** Dismiss buttons implemented as simple unlabelled icons in modals/banners (`<X size={14} />`) without aria-labels or hover/focus states represent a frequent micro-UX accessibility gap that easily fails WCAG criteria (2.4.7 Focus Visible, 4.1.2 Name, Role, Value).
-**Action:** When inspecting interactable custom UI components, proactively add `aria-label` attributes to icon-only buttons and append `focus-visible:ring-2 focus-visible:outline-none` alongside appropriate theme ring colors to ensure they are keyboard navigable.
+## 2026-07-11 - Explore HUD Button Accessibility
+**Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
+**Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.
