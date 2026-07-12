@@ -81,7 +81,7 @@ export default function useOfflineTiles() {
           // skip if already cached
           const existing = await cache.match(url);
           if (!existing) {
-            const res = await fetch(url, { mode: 'no-cors' });
+            const res = await fetch(url, { mode: 'cors' });
             await cache.put(url, res);
           }
           done++;
