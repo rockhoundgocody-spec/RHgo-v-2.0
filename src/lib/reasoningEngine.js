@@ -60,7 +60,7 @@ export function bandLabel(band) {
  *  - what would improve the result
  *  - whether offline fallback applies
  */
-function highLevelPlan({ task, imageUrls = [], locality = null, features = [], userTier = 'free', isOffline = false }) {
+export function highLevelPlan({ task, imageUrls = [], locality = null, features = [], userTier = 'free', isOffline = false }) {
   const evidenceList = [];
   let evidenceScore = 0;
 
@@ -151,7 +151,7 @@ async function lowLevelExecute({ task, imageUrls, locality, features, notes }) {
 
 // ─── Halting Logic ────────────────────────────────────────────────────────────
 
-function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
+export function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
   if (needsMoreEvidence) return { halt: true, reason: 'insufficient_evidence' };
   if (isOffline) return { halt: true, reason: 'offline' };
   // High enough combined signal — stop iterating
@@ -162,7 +162,7 @@ function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffli
 
 // ─── Action Recommendation ────────────────────────────────────────────────────
 
-function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
+export function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
   if (isOffline || needsMoreEvidence) return 'rescan';
   if (band === 'low') return 'rescan';
   if (band === 'medium') return 'compare';
