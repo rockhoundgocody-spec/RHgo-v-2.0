@@ -37,7 +37,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-full flex flex-col lg:flex-row overflow-y-auto">
 
       {/* ── LEFT HERO PANEL (desktop only) ── */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden"
@@ -87,7 +87,7 @@ export default function Login() {
       </div>
 
       {/* ── RIGHT FORM PANEL ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden"
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 relative"
         style={{ background: 'radial-gradient(ellipse at top, hsl(265,55%,30%) 0%, hsl(250,28%,18%) 50%, hsl(245,22%,12%) 100%)' }}>
 
         {/* Mobile logo */}
@@ -160,7 +160,7 @@ export default function Login() {
               <Label htmlFor="email" className="text-white/55 text-xs uppercase tracking-wider">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <Input id="email" type="email" autoComplete="email" autoFocus
+                <Input id="email" type="email" autoComplete="email"
                   placeholder="you@example.com" value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl" required />
