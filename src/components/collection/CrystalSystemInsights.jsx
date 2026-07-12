@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { Sparkles, Hexagon } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-import { useEntityList } from '@/lib/useEntityQuery';
+import { useEntityList } from '@/lib/useEntityQuery.js';
 
 // Amethyst-themed palette for the bars
 const PALETTE = [
@@ -15,18 +15,31 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// Global WeakMap cache to store name → crystal_system lookup Maps keyed by minerals array reference
+const crystalSystemLookupCache = new WeakMap();
+
+export function getCrystalSystemLookup(minerals) {
+  if (!minerals) return new Map();
+  if (crystalSystemLookupCache.has(minerals)) {
+    return crystalSystemLookupCache.get(minerals);
+  }
+  const lookup = new Map();
+  for (const m of minerals) {
+    if (m.name && m.crystal_system) {
+      lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+    }
+  }
+  crystalSystemLookupCache.set(minerals, lookup);
+  return lookup;
+}
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
-      }
-    }
+    // Build name → crystal_system lookup (case-insensitive) using cached lookup
+    const lookup = getCrystalSystemLookup(minerals);
 
     // Fallback table for common mineral families when not in DB
     // Maps a mineral name → { system, parent }
