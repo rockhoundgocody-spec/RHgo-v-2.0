@@ -6,6 +6,23 @@ import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 
+// Detect intents like "log a specimen", "save this find", "record this rock"
+const detectLogIntent = (text) => {
+  const t = text.toLowerCase();
+  return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
+    || /\b(new specimen|log this|save this|record this)\b/.test(t);
+};
+
+const getCoords = () =>
+  new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve({});
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => resolve({}),
+      { timeout: 4000, maximumAge: 60000 }
+    );
+  });
+
 export default function OracleOverlay() {
   const { open, autoLive, closeOracle } = useOracle();
   const [messages, setMessages] = useState([
@@ -26,72 +43,20 @@ export default function OracleOverlay() {
   const liveModeRef = useRef(false);
   liveModeRef.current = liveMode;
 
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  const thinkingRef = useRef(thinking);
+  thinkingRef.current = thinking;
+
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
+
+  const hasAutoStartedRef = useRef(false);
+
   const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
-  const handleVoiceResult = useCallback((transcript) => {
-    setInput('');
-    setTimeout(() => sendMessage(transcript), 50);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const handleInterim = useCallback((partial) => {
-    setInput(partial);
-  }, []);
-  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, thinking]);
-
-  useEffect(() => {
-    if (!open) {
-      stopSpeak();
-      stopListen();
-      setLiveMode(false);
-    }
-  }, [open, stopSpeak, stopListen]);
-
-  // Auto-start live conversation when opened with live=true (tap-to-talk)
-  useEffect(() => {
-    if (open && autoLive && micSupported && !liveMode) {
-      setLiveMode(true);
-      setMuted(false);
-      const t = setTimeout(() => startListen(), 350);
-      return () => clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, autoLive, micSupported]);
-
-  // Live conversation: when oracle finishes speaking, auto-resume listening
-  useEffect(() => {
-    if (!liveMode) return;
-    if (!speaking && !thinking && !listening) {
-      const t = setTimeout(() => {
-        if (liveModeRef.current && !speaking && !thinking) startListen();
-      }, 400);
-      return () => clearTimeout(t);
-    }
-  }, [liveMode, speaking, thinking, listening, startListen]);
-
-  // Detect intents like "log a specimen", "save this find", "record this rock"
-  const detectLogIntent = (text) => {
-    const t = text.toLowerCase();
-    return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
-      || /\b(new specimen|log this|save this|record this)\b/.test(t);
-  };
-
-  const getCoords = () =>
-    new Promise((resolve) => {
-      if (!navigator.geolocation) return resolve({});
-      navigator.geolocation.getCurrentPosition(
-        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => resolve({}),
-        { timeout: 4000, maximumAge: 60000 }
-      );
-    });
-
-  const handleDictation = async (transcript) => {
+  const handleDictation = useCallback(async (transcript) => {
     setThinking(true);
     const coords = await getCoords();
     const res = await base44.functions.invoke('parseSpecimenDictation', {
@@ -110,13 +75,13 @@ export default function OracleOverlay() {
     setMessages((m) => [...m, { role: 'assistant', content: summary }]);
     setDictationMode(false);
     setThinking(false);
-    if (!muted) speak(summary);
-  };
+    if (!mutedRef.current) speak(summary);
+  }, [speak]);
 
-  const sendMessage = async (textOverride) => {
+  const sendMessage = useCallback(async (textOverride) => {
     const text = (textOverride ?? input).trim();
-    if (!text || thinking) return;
-    const next = [...messages, { role: 'user', content: text }];
+    if (!text || thinkingRef.current) return;
+    const next = [...messagesRef.current, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
 
@@ -131,7 +96,7 @@ export default function OracleOverlay() {
       setDictationMode(true);
       const ask = "Yes — describe the specimen. Mineral name, where you found it, and any notes.";
       setMessages((m) => [...m, { role: 'assistant', content: ask }]);
-      if (!muted) speak(ask);
+      if (!mutedRef.current) speak(ask);
       return;
     }
 
@@ -144,8 +109,63 @@ export default function OracleOverlay() {
     const replyText = res?.data?.reply || "I'm here with you.";
     setMessages((m) => [...m, { role: 'assistant', content: replyText }]);
     setThinking(false);
-    if (!muted) speak(replyText);
-  };
+    if (!mutedRef.current) speak(replyText);
+  }, [input, handleDictation, speak]);
+
+  const handleVoiceResult = useCallback((transcript) => {
+    setInput('');
+    setTimeout(() => sendMessage(transcript), 50);
+  }, [sendMessage]);
+
+  const handleInterim = useCallback((partial) => {
+    setInput(partial);
+  }, []);
+
+  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
+    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, thinking]);
+
+  useEffect(() => {
+    if (!open) {
+      stopSpeak();
+      stopListen();
+      setLiveMode(false);
+    }
+  }, [open, stopSpeak, stopListen]);
+
+  // Reset auto start gate when oracle is closed
+  useEffect(() => {
+    if (!open) {
+      hasAutoStartedRef.current = false;
+    }
+  }, [open]);
+
+  // Auto-start live conversation when opened with live=true (tap-to-talk)
+  useEffect(() => {
+    if (open && autoLive && micSupported && !liveMode && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      setLiveMode(true);
+      setMuted(false);
+      const t = setTimeout(() => startListen(), 350);
+      return () => clearTimeout(t);
+    }
+  }, [open, autoLive, micSupported, liveMode, startListen]);
+
+  // Live conversation: when oracle finishes speaking, auto-resume listening
+  useEffect(() => {
+    if (!liveMode) return;
+    if (!speaking && !thinking && !listening) {
+      const t = setTimeout(() => {
+        if (liveModeRef.current && !speaking && !thinking) startListen();
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [liveMode, speaking, thinking, listening, startListen]);
 
   if (!open) return null;
 
