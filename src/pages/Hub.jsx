@@ -14,7 +14,7 @@ import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
 import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword, Heart, Trophy, Lock, Users } from 'lucide-react';
+import { Compass, ScanLine, Gem, Sword, Heart, Trophy, Lock, Users, Atom } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
 import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
@@ -115,6 +115,28 @@ export default function Hub() {
           <QuickAction to="/private-log" icon={Lock} label="My Finds" color="amethyst" />
           <QuickAction to="/community" icon={Users} label="Social" color="cyan" />
         </div>
+
+        {/* CHRONOLITH — the deep investigation portal */}
+        <Link to="/chronolith" className="mt-4 w-full flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-[0.98] group"
+          style={{
+            background: 'linear-gradient(135deg, hsla(270,60%,25%,0.4) 0%, hsla(220,40%,8%,0.7) 100%)',
+            border: '1px solid hsla(270,80%,60%,0.3)',
+            boxShadow: '0 0 30px -8px hsla(280,80%,50%,0.3), inset 0 1px 0 hsla(270,80%,90%,0.08)',
+            backdropFilter: 'blur(12px)',
+          }}>
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'hsla(270,70%,40%,0.3)', border: '1px solid hsla(270,80%,60%,0.3)' }}>
+            <Atom size={20} className="text-amethyst-glow" style={{ filter: 'drop-shadow(0 0 6px hsla(280,100%,65%,0.5))' }} />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-black text-white tracking-tight">CHRONOLITH</div>
+            <div className="text-[10px] text-white/45 italic">The planet that remembers — reconstruct how matter became itself</div>
+          </div>
+          <span className="text-[8px] font-mono uppercase tracking-widest px-2 py-1 rounded-full"
+            style={{ background: 'hsla(280,80%,30%,0.3)', color: 'hsl(280,85%,85%)', border: '1px solid hsla(280,80%,50%,0.3)' }}>
+            Deep
+          </span>
+        </Link>
       </section>
 
       {/* ── DASHBOARD FEED ── */}

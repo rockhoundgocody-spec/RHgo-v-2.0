@@ -1,0 +1,317 @@
+{
+  "name": "ChronolithCase",
+  "type": "object",
+  "description": "CHRONOLITH \u2014 a scientific court case for physical matter. Every scan becomes a case where competing causal histories are constructed, attacked for contradictions, and adjudicated by evidence. Stores the full hypothesis tournament, evidence ledger, contradiction ledger, optimal test selection, and reconstruction spec.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photos of the specimen under investigation"
+    },
+    "specimen_label": {
+      "type": "string",
+      "description": "What the user suspects it might be (optional, not authoritative)"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "geologic_unit": {
+      "type": "string",
+      "description": "Macrostrat bedrock unit at find location (Cartographer agent context)"
+    },
+    "field_observations": {
+      "type": "array",
+      "description": "User-provided field evidence \u2014 weight, magnetism, density, streak, hardness, test results",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "reliability": {
+            "type": "number"
+          },
+          "entered_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "opening_statement": {
+      "type": "string",
+      "description": "The sentence that opens the investigation \u2014 written for someone about to watch reality explain itself"
+    },
+    "specimen_summary": {
+      "type": "string"
+    },
+    "estimated_age_range": {
+      "type": "string"
+    },
+    "candidate_environments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "candidate_locations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "description": "Competing causal histories \u2014 the heart of the Reality Trial",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "extraterrestrial",
+              "industrial",
+              "terrestrial",
+              "composite",
+              "unknown"
+            ]
+          },
+          "probability": {
+            "type": "number",
+            "description": "Normalized 0-1, all hypotheses sum to 1"
+          },
+          "evidence_quality": {
+            "type": "number"
+          },
+          "contradiction_load": {
+            "type": "number"
+          },
+          "verification_depth": {
+            "type": "number"
+          },
+          "supporting_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contradictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "predictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "consequences_if_true": {
+            "type": "string"
+          },
+          "falsification_condition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "observation": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "reliability": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "contradiction_ledger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "hypotheses_affected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          }
+        }
+      }
+    },
+    "missing_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_test": {
+      "type": "object",
+      "description": "Optimal next test selected by information gain \u00d7 accessibility / (cost + time + risk)",
+      "properties": {
+        "test_name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "no_equipment",
+            "home",
+            "expert",
+            "laboratory",
+            "non_destructive"
+          ]
+        },
+        "expected_info_gain": {
+          "type": "number"
+        },
+        "cost": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "risk": {
+          "type": "string"
+        },
+        "accessibility": {
+          "type": "number"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "expected_outcome_leading": {
+          "type": "string"
+        },
+        "expected_outcome_alternative": {
+          "type": "string"
+        }
+      }
+    },
+    "confidence_sensitivity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "variable": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "uncertainty_statement": {
+      "type": "string"
+    },
+    "scientific_explanation": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "investigating",
+        "ready_to_reconstruct",
+        "reconstructed",
+        "closed"
+      ],
+      "default": "investigating"
+    }
+  },
+  "required": [
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
