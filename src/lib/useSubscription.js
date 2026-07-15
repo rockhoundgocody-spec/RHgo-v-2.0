@@ -15,6 +15,16 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 
+// Simple, synchronous DJB2 hash helper to obfuscate email in session storage key
+export function hashEmail(email) {
+  if (!email) return '';
+  let hash = 5381;
+  for (let i = 0; i < email.length; i++) {
+    hash = (hash * 33) ^ email.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(16);
+}
+
 export function useSubscription(user) {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,10 +32,11 @@ export function useSubscription(user) {
   useEffect(() => {
     if (!user?.email) { setLoading(false); return; }
     let cancelled = false;
+    const cacheKey = `sub_${hashEmail(user.email)}`;
 
     async function load() {
       try {
-        const cached = sessionStorage.getItem(`sub_${user.email}`);
+        const cached = sessionStorage.getItem(cacheKey);
         if (cached) {
           setSubscription(JSON.parse(cached));
           setLoading(false);
@@ -35,7 +46,7 @@ export function useSubscription(user) {
         const sub = rows?.[0] || { tier: 'free', status: 'active', owner_email: user.email };
         if (!cancelled) {
           setSubscription(sub);
-          sessionStorage.setItem(`sub_${user.email}`, JSON.stringify(sub));
+          sessionStorage.setItem(cacheKey, JSON.stringify(sub));
         }
       } catch {
         if (!cancelled) setSubscription({ tier: 'free', status: 'active' });
@@ -53,7 +64,10 @@ export function useSubscription(user) {
 
   // Call after Stripe webhook confirms payment to refresh locally
   const refresh = () => {
-    if (user?.email) sessionStorage.removeItem(`sub_${user.email}`);
+    if (user?.email) {
+      const cacheKey = `sub_${hashEmail(user.email)}`;
+      sessionStorage.removeItem(cacheKey);
+    }
     setLoading(true);
     setSubscription(null);
   };
