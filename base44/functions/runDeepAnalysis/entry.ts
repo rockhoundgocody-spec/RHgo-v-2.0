@@ -23,7 +23,9 @@ Deno.serve(async (req) => {
             .join('; ');
           geologyContext = ` Local bedrock geology at this location: ${units}.`;
         }
-      } catch {}
+      } catch {
+        // Macrostrat unavailable
+      }
     }
 
     const r = await base44.integrations.Core.InvokeLLM({

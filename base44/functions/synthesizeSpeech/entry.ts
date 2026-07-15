@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { text, voice = 'honey', rate = 0.92 } = await req.json();
+    const { text, voice = 'honey', rate: _rate = 0.92 } = await req.json();
 
     if (!text || typeof text !== 'string') {
       return Response.json({ error: 'Missing text' }, { status: 400 });

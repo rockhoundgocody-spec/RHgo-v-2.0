@@ -70,15 +70,6 @@ Return exactly 3 missions as JSON array.`;
 
     const missions = result?.missions || [];
 
-    // Save the missions to the Quest entity
-    function getExpiry(type) {
-      const d = new Date();
-      if (type === 'daily') d.setHours(d.getHours() + 24);
-      else if (type === 'weekly') d.setDate(d.getDate() + 7);
-      else d.setDate(d.getDate() + 30);
-      return d.toISOString();
-    }
-
     const created = await Promise.all(missions.map((m) =>
       base44.entities.Quest.create({
         owner_email: user.email,
@@ -101,3 +92,12 @@ Return exactly 3 missions as JSON array.`;
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+// Save the missions to the Quest entity
+function getExpiry(type) {
+  const d = new Date();
+  if (type === 'daily') d.setHours(d.getHours() + 24);
+  else if (type === 'weekly') d.setDate(d.getDate() + 7);
+  else d.setDate(d.getDate() + 30);
+  return d.toISOString();
+}

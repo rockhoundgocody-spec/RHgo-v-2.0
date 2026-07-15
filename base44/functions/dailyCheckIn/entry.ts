@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().slice(0, 10);
 
     const existing = await base44.entities.Companion.filter({ owner_email: user.email });
-    let companion =
+    const companion =
       existing[0] ||
       (await base44.entities.Companion.create({
         owner_email: user.email,

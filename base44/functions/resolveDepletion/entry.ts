@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     // 1. Fetch geologic unit from Macrostrat
     let geologicUnit = 'Unknown';
     let geologicUnitId: string | null = null;
-    let state = 'Unknown';
+    const state = 'Unknown';
     try {
       const geoRes = await fetch(
         `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&format=json`

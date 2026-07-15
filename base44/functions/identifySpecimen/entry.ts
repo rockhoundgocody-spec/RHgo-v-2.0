@@ -113,7 +113,9 @@ Deno.serve(async (req) => {
               ' Weight geologically plausible candidates higher.';
           }
         }
-      } catch {}
+      } catch {
+        // Macrostrat unavailable
+      }
     }
 
     // ── GREAT LAKES CONTEXT ───────────────────────────────────────────────────
