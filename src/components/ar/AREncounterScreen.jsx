@@ -30,7 +30,9 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [throwCount, setThrowCount] = useState(0);
   const [orbScale, setOrbScale] = useState(1);
   const [particles, setParticles] = useState([]);
+
   const videoRef = useRef(null);
+
   const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
   // Start camera for AR feel
