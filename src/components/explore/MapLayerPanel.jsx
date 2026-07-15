@@ -29,14 +29,17 @@ export default function MapLayerPanel({ activeLayer, onLayerChange }) {
             key={layer.id}
             whileTap={{ scale: 0.92 }}
             onClick={() => onLayerChange(layer.id)}
+            aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-widest border transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background'
             )}
             style={{
               background: active
                 ? `${layer.color}22`
                 : 'hsla(240,30%,8%,0.82)',
+              '--tw-ring-color': `${layer.color}88`,
               border: active
                 ? `1px solid ${layer.color}88`
                 : '1px solid hsla(270,30%,40%,0.25)',
