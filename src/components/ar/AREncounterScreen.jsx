@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Star, Award, Share2 } from 'lucide-react';
+import { X, Zap, Star, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { RARITY_XP_MAP } from '@/lib/spawnEngine';
 
@@ -30,9 +30,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [throwCount, setThrowCount] = useState(0);
   const [orbScale, setOrbScale] = useState(1);
   const [particles, setParticles] = useState([]);
-  const [cameraStream, setCameraStream] = useState(null);
   const videoRef = useRef(null);
-  const orbRef = useRef(null);
   const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
   // Start camera for AR feel
@@ -119,7 +117,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
             total_xp: (profiles[0].total_xp || 0) + xp,
           });
         }
-      } catch {}
+      } catch { /* no-op */ }
       onCatch?.(spawn, outcome);
     }
   }, [phase, spawn, throwCount, theme.glow, onCatch, spawnParticles]);
@@ -168,6 +166,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
           <div className="text-xl font-black text-white">{spawn.mineral_name}</div>
         </div>
         <button onClick={onDismiss}
+          type="button"
           className="w-10 h-10 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           aria-label="Close encounter"
           style={{ background: 'hsla(0,0%,0%,0.5)', border: '1px solid hsla(0,0%,100%,0.15)' }}>
@@ -262,6 +261,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
                 {result !== 'escape' ? (
                   <>
                     <button onClick={onDismiss}
+                      type="button"
                       className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                       style={{ background: 'hsla(255,20%,20%,0.7)', border: '1px solid hsla(255,20%,40%,0.3)' }}>
                       Continue
@@ -270,6 +270,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
                       const text = `I just caught a ${spawn.is_shiny ? '✨ SHINY ' : ''}${spawn.rarity} ${spawn.mineral_name} in RockHound-GO! +${xp} XP 🪨`;
                       navigator.share?.({ title: 'RockHound-GO Find!', text }) || navigator.clipboard?.writeText(text);
                     }}
+                      type="button"
                       className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                       style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
                       <Share2 size={14} /> Share
@@ -278,11 +279,13 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
                 ) : (
                   <>
                     <button onClick={() => { setPhase('encounter'); setResult(null); }}
+                      type="button"
                       className="flex-1 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                       style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
                       Try Again
                     </button>
                     <button onClick={onDismiss}
+                      type="button"
                       className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                       style={{ background: 'hsla(255,20%,15%,0.7)' }}>
                       Leave
