@@ -1,0 +1,14 @@
+{
+  "lint": {
+    "include": ["base44/"],
+    "rules": {
+      "exclude": [
+        "no-import-prefix",
+        "no-inner-declarations",
+        "prefer-const",
+        "no-unused-vars",
+        "no-empty"
+      ]
+    }
+  }
+}
