@@ -15,11 +15,11 @@ const LAYERS = [
 ];
 
 const ACTIVE_COLORS = {
-  all:    'border-amethyst/60 text-amethyst-glow bg-amethyst/10',
-  rare:   'border-sky-400/60 text-sky-300 bg-sky-500/10',
-  gaps:   'border-amber-400/60 text-amber-300 bg-amber-500/10',
-  public: 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10',
-  mine:   'border-hud-cyan/60 text-hud-cyan bg-hud-cyan/10',
+  all:    'border-amethyst/60 text-amethyst-glow bg-amethyst/10 focus-visible:ring-amethyst/50',
+  rare:   'border-sky-400/60 text-sky-300 bg-sky-500/10 focus-visible:ring-sky-400/50',
+  gaps:   'border-amber-400/60 text-amber-300 bg-amber-500/10 focus-visible:ring-amber-400/50',
+  public: 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10 focus-visible:ring-emerald-400/50',
+  mine:   'border-hud-cyan/60 text-hud-cyan bg-hud-cyan/10 focus-visible:ring-hud-cyan/50',
 };
 
 export default function MapLayerBar({ activeLayer = 'all', onChange }) {
@@ -39,9 +39,10 @@ export default function MapLayerBar({ activeLayer = 'all', onChange }) {
           <button
             key={id}
             onClick={() => onChange(id)}
+            aria-pressed={active}
             className={cn(
-              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all',
-              active ? ACTIVE_COLORS[id] : 'border-white/8 text-white/35 hover:text-white/60 hover:border-white/20'
+              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background',
+              active ? ACTIVE_COLORS[id] : 'border-white/8 text-white/35 hover:text-white/60 hover:border-white/20 focus-visible:ring-white/20'
             )}
           >
             <Icon size={10} />
