@@ -32,12 +32,15 @@ import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 import useKidMode from '@/lib/useKidMode';
 import DeferredSection from '@/components/DeferredSection.jsx';
+import PerformanceBaseline from '@/components/dev/PerformanceBaseline.jsx';
+import { Gauge } from 'lucide-react';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
+  const [showPerfBaseline, setShowPerfBaseline] = useState(false);
   const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
   const isKid = useKidMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
@@ -61,6 +64,26 @@ export default function Hub() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center pb-28">
+
+      {/* Performance baseline overlay — dev diagnostic */}
+      {showPerfBaseline && <PerformanceBaseline onClose={() => setShowPerfBaseline(false)} />}
+
+      {/* Floating perf-test trigger */}
+      {!showPerfBaseline && (
+        <button
+          onClick={() => setShowPerfBaseline(true)}
+          className="fixed top-3 right-3 z-[99] flex items-center gap-1.5 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] transition active:scale-90"
+          style={{
+            background: 'hsla(195, 70%, 18%, 0.9)',
+            border: '1px solid hsla(195, 100%, 60%, 0.4)',
+            color: 'hsl(195, 100%, 75%)',
+            boxShadow: '0 0 16px hsla(195, 100%, 50%, 0.25)',
+          }}
+          aria-label="Run performance baseline test"
+        >
+          <Gauge size={12} /> Perf
+        </button>
+      )}
       <NewUserTour />
       {/* Storm window alert — weather-based, near Great Lakes beaches */}
       <StormWindowBanner />
