@@ -4,14 +4,16 @@ import React, { useEffect, useRef } from 'react';
  * ScanReticle — animated targeting ring that reacts to scan state.
  * States: idle | scanning | processing | locked
  */
-export default function ScanReticle({ state = 'idle', signal = 0, size = 220 }) {
+export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
   const tRef = useRef(0);
   const stateRef = useRef(state);
-  const signalRef = useRef(signal);
+  // Use the shared ref from parent so the reticle reads live signal every frame
+  // without triggering React re-renders. Fall back to an internal ref for standalone use.
+  const internalSignalRef = useRef(0);
+  const liveSignalRef = signalRef || internalSignalRef;
   stateRef.current = state;
-  signalRef.current = signal;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,7 +38,7 @@ export default function ScanReticle({ state = 'idle', signal = 0, size = 220 }) 
       tRef.current = ts / 1000;
       const t = tRef.current;
       const s = stateRef.current;
-      const sig = signalRef.current;
+      const sig = liveSignalRef.current || 0;
       const col = COLORS[s] || COLORS.idle;
 
       ctx.clearRect(0, 0, size, size);

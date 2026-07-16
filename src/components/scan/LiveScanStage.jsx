@@ -15,7 +15,6 @@ const STAGE_LABELS = {
 
 export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const { videoRef, ready, error } = useCameraStream({ active: true });
-  const [signal, setSignal] = useState(0);
   const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
@@ -23,8 +22,12 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const [scaleOn, setScaleOn] = useState(false);
   const signalRef = useRef(0);
   const scanStateRef = useRef('idle');
+  const signalBarRef = useRef(null);
+  const signalTextRef = useRef(null);
 
-  // Simulate signal build-up while camera is ready
+  // Simulate signal build-up while camera is ready.
+  // Signal value + bar width are driven via refs (no per-frame setState)
+  // so the entire overlay tree doesn't re-render 60×/sec — that was the glitch.
   useEffect(() => {
     if (!ready) return;
     let raf;
@@ -34,9 +37,13 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
       const target = 0.45 + Math.sin(t * 0.5) * 0.3 + Math.sin(t * 1.3) * 0.15;
       const next = signalRef.current + (target - signalRef.current) * 0.03;
       signalRef.current = next;
-      setSignal(next);
 
-      // Drive scan state from signal
+      // Drive the signal bar width + text directly via refs — zero React re-renders
+      const pct = Math.round(next * 100);
+      if (signalBarRef.current) signalBarRef.current.style.width = pct + '%';
+      if (signalTextRef.current) signalTextRef.current.textContent = pct + '%';
+
+      // Drive scan state from signal (only transitions when crossing thresholds)
       const newState = next > 0.78 ? 'locked' : next > 0.55 ? 'scanning' : 'idle';
       if (newState !== scanStateRef.current) {
         scanStateRef.current = newState;
@@ -167,7 +174,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
 
             {/* RETICLE — centered */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <ScanReticle state={scanState} signal={signal} size={200} />
+              <ScanReticle state={scanState} signalRef={signalRef} size={200} />
             </div>
 
             {/* Live identification labels */}
@@ -235,7 +242,7 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
             {/* Bottom telemetry */}
             <div className="absolute bottom-0 inset-x-0 px-4 pb-3 pt-8 pointer-events-none"
               style={{ background: 'linear-gradient(0deg, hsla(265,60%,3%,0.9) 0%, transparent 100%)' }}>
-              <SignalBar value={signal} color={col.bar} state={scanState} />
+              <SignalBar barRef={signalBarRef} textRef={signalTextRef} color={col.bar} state={scanState} />
             </div>
           </>
         )}
@@ -277,17 +284,16 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
 }
 
 /* ── Signal bar ── */
-function SignalBar({ value, color, state }) {
-  const pct = Math.round(value * 100);
+function SignalBar({ barRef, textRef, color, state }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.25em] text-white/30">
         <span>{state === 'processing' ? '⬟ AI Processing…' : state === 'locked' ? '⬟ Locked on target' : '⬞ Align specimen'}</span>
-        <span>{pct}%</span>
+        <span ref={textRef}>0%</span>
       </div>
       <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-300"
-          style={{ width: `${pct}%`, background: color, boxShadow: `0 0 8px ${color}` }} />
+        <div ref={barRef} className="h-full rounded-full transition-all duration-300"
+          style={{ width: '0%', background: color, boxShadow: `0 0 8px ${color}` }} />
       </div>
     </div>
   );
