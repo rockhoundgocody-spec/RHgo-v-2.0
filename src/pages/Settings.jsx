@@ -4,6 +4,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
 import PermissionsPrompt from '@/components/PermissionsPrompt.jsx';
+import { dumpAllCaches } from '@/lib/dumpCache.js';
 
 const DEFAULT_VOICE = { rate: 0.92, pitch: 1.18, volume: 0.95 };
 
@@ -57,6 +58,20 @@ export default function Settings() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [voice, setVoice] = useState(loadVoice);
   const [voiceSaved, setVoiceSaved] = useState(false);
+  const [cacheDumping, setCacheDumping] = useState(false);
+  const [cacheDumped, setCacheDumped] = useState(false);
+
+  const handleDumpCache = async () => {
+    if (cacheDumping) return;
+    setCacheDumping(true);
+    await dumpAllCaches();
+    setCacheDumping(false);
+    setCacheDumped(true);
+    setTimeout(() => {
+      setCacheDumped(false);
+      window.location.reload();
+    }, 900);
+  };
 
   const saveVoice = () => {
     localStorage.setItem('clover_voice', JSON.stringify(voice));
@@ -233,7 +248,13 @@ export default function Settings() {
             <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
               <div className="h-full rounded-full" style={{ width: '65%', background: 'linear-gradient(90deg, hsl(270,80%,55%), hsl(280,100%,70%))' }} />
             </div>
-            <button className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition">Clear cache</button>
+            <button
+              onClick={handleDumpCache}
+              disabled={cacheDumping}
+              className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition disabled:opacity-50"
+            >
+              {cacheDumping ? 'Dumping…' : cacheDumped ? '✓ Dumped — reloading' : 'Clear cache'}
+            </button>
           </div>
         </GlassPanel>
       </div>
