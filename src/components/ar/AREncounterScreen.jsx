@@ -41,7 +41,6 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     navigator.mediaDevices?.getUserMedia?.({ video: { facingMode: 'environment' } })
       .then(s => {
         stream = s;
-        setCameraStream(s);
         if (videoRef.current) {
           videoRef.current.srcObject = s;
           videoRef.current.play().catch(() => {});

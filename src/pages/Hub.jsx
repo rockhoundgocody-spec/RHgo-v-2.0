@@ -31,6 +31,7 @@ import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 import useKidMode from '@/lib/useKidMode';
+import DeferredSection from '@/components/DeferredSection.jsx';
 
 export default function Hub() {
   const [milestone, setMilestone] = useState(null);
@@ -139,59 +140,101 @@ export default function Hub() {
         </Link>
       </section>
 
-      {/* ── DASHBOARD FEED ── */}
+      {/* ── DASHBOARD FEED ── deferred: components mount only when scrolled into view */}
       <div className="w-full max-w-md mt-6 px-4 space-y-4">
 
         {/* Player Legend — persistent XP, level, avatar */}
-        {userEmail && <PlayerLegend userEmail={userEmail} />}
+        {userEmail && (
+          <DeferredSection minHeight={70}>
+            <PlayerLegend userEmail={userEmail} />
+          </DeferredSection>
+        )}
 
         {/* Live stats wired to real data */}
-        <LiveStatStrip />
+        <DeferredSection minHeight={60}>
+          <LiveStatStrip />
+        </DeferredSection>
 
         {/* Daily discovery trend chart */}
-        <DiscoveryTrendChart />
+        <DeferredSection minHeight={180}>
+          <DiscoveryTrendChart />
+        </DeferredSection>
 
         {/* Michigan annual weight tracker */}
-        {userEmail && <CollectionWeightTracker userEmail={userEmail} />}
+        {userEmail && (
+          <DeferredSection minHeight={90}>
+            <CollectionWeightTracker userEmail={userEmail} />
+          </DeferredSection>
+        )}
 
         {/* Community verification queue */}
-        {userEmail && <CommunityVerificationQueue userEmail={userEmail} />}
+        {userEmail && (
+          <DeferredSection minHeight={120}>
+            <CommunityVerificationQueue userEmail={userEmail} />
+          </DeferredSection>
+        )}
 
         {/* Companion Progress Dashboard */}
-        <CompanionProgressDashboard companion={companion} />
+        <DeferredSection minHeight={140}>
+          <CompanionProgressDashboard companion={companion} />
+        </DeferredSection>
 
         {/* Daily Rock Roulette — Chaos mode only */}
-        {chaos && <DailyRoulette />}
+        {chaos && (
+          <DeferredSection minHeight={120}>
+            <DailyRoulette />
+          </DeferredSection>
+        )}
 
         {/* Intention Roulette — Randonautica-style wildcard, always visible */}
-        <IntentionRoulette />
+        <DeferredSection minHeight={120}>
+          <IntentionRoulette />
+        </DeferredSection>
 
         {/* AR Rock Battle — always visible */}
-        <ARRockBattle />
+        <DeferredSection minHeight={80}>
+          <ARRockBattle />
+        </DeferredSection>
 
         {/* Quests */}
-        {userEmail && <QuestEngine userEmail={userEmail} />}
+        {userEmail && (
+          <DeferredSection minHeight={120}>
+            <QuestEngine userEmail={userEmail} />
+          </DeferredSection>
+        )}
 
         {/* Mystery mineral of the day */}
-        <DailyStreakCard companion={companion} />
+        <DeferredSection minHeight={120}>
+          <DailyStreakCard companion={companion} />
+        </DeferredSection>
 
         {/* Specimen type chart */}
-        <SpecimenTypeChart />
+        <DeferredSection minHeight={200}>
+          <SpecimenTypeChart />
+        </DeferredSection>
 
         {/* Active geological season */}
-        <SeasonBanner />
+        <DeferredSection minHeight={80}>
+          <SeasonBanner />
+        </DeferredSection>
 
         {/* Discovery chain / streak */}
-        <DiscoveryChain streak={companion?.streak_days || 0} />
+        <DeferredSection minHeight={80}>
+          <DiscoveryChain streak={companion?.streak_days || 0} />
+        </DeferredSection>
 
         {/* Geological Atlas — community contribution map */}
-        <GeologicalAtlas userSpecimens={specimens} />
+        <DeferredSection minHeight={130}>
+          <GeologicalAtlas userSpecimens={specimens} />
+        </DeferredSection>
 
         {/* Rock Star leaderboard */}
-        <RockStarLeaderboard
-          userFinds={specimens.length}
-          userEmail={userEmail || ''}
-        />
+        <DeferredSection minHeight={160}>
+          <RockStarLeaderboard
+            userFinds={specimens.length}
+            userEmail={userEmail || ''}
+          />
+        </DeferredSection>
 
       </div>
 
