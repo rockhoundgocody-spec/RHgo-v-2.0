@@ -3,14 +3,14 @@
  * Uses the free cloverChat backend (InvokeLLM) — no paid xAI WebSocket.
  * Tap to open a text chat sheet; Clover replies in bubbles.
  */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import useCloverChat from './useCloverChat';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
-import { Gem, Send, X, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Gem, Send, X, Loader2, Volume2, VolumeX, Target } from 'lucide-react';
 
 const GREETINGS = (c, name) => {
   const hour = new Date().getHours();
@@ -39,6 +39,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const bottomRef    = useRef(null);
 
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem('rhgo_clover_voice') !== 'off');
+  const [suggestions, setSuggestions] = useState(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
   const { getInteraction, injectTap } = useLiquidInteraction();
 
   const { sendMessage, loading } = useCloverChat({
@@ -51,6 +53,19 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   });
 
   const { speak, stop, speaking } = useSpeechSynthesis();
+
+  // Capture GPS once for distance-aware hunt suggestions
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    if (sessionStorage.getItem('rhgo_last_gps')) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        sessionStorage.setItem('rhgo_last_gps', JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
+      },
+      () => {},
+      { timeout: 8000 }
+    );
+  }, []);
 
   const toggleVoice = () => {
     setVoiceOn((prev) => {
@@ -108,6 +123,29 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       captured = "I couldn't connect just now — try again?";
     }
     return captured;
+  };
+
+  const handleSuggestHunt = async () => {
+    if (suggestLoading) return;
+    setSuggestLoading(true);
+    try {
+      // Use last known GPS from session if available
+      const cached = sessionStorage.getItem('rhgo_last_gps');
+      const gps = cached ? JSON.parse(cached) : {};
+      const res = await base44.functions.invoke('suggestNextFinds', {
+        lat: gps.lat ?? null,
+        lng: gps.lng ?? null,
+      });
+      const data = res?.data;
+      if (data?.suggestions?.length) {
+        setSuggestions(data);
+        if (voiceOn) speak(data.clover_intro);
+      }
+    } catch (err) {
+      console.error('suggestNextFinds failed:', err);
+    } finally {
+      setSuggestLoading(false);
+    }
   };
 
   const handleSend = async () => {
@@ -174,7 +212,16 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
               <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide flex items-center gap-1">
                 Clover 🍀 {speaking && <span className="inline-block w-1 h-1 rounded-full bg-amethyst-glow animate-pulse" />}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={handleSuggestHunt}
+                  disabled={suggestLoading}
+                  className="flex items-center gap-1 text-[10px] font-semibold transition text-amethyst-glow disabled:opacity-40 active:scale-90"
+                  aria-label="Get hunt suggestions"
+                >
+                  {suggestLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
+                  <span>Hunt</span>
+                </button>
                 <button
                   onClick={toggleVoice}
                   className={`transition ${voiceOn ? 'text-amethyst-glow' : 'text-white/25 hover:text-white/50'}`}
@@ -205,6 +252,45 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
                   </div>
                 </div>
               ))}
+              {/* Hunt suggestions card */}
+              {suggestions && (
+                <div className="rounded-xl overflow-hidden"
+                  style={{ background: 'hsla(270,40%,20%,0.35)', border: '1px solid hsla(280,80%,60%,0.3)' }}>
+                  <div className="px-3 py-2 text-[10px] font-bold text-amethyst-glow tracking-wide"
+                    style={{ borderBottom: '1px solid hsla(280,80%,60%,0.2)', background: 'hsla(270,60%,30%,0.25)' }}>
+                    🎯 Hunt Next — {suggestions.collection_size} in collection
+                  </div>
+                  <div className="space-y-2 p-2">
+                    {suggestions.clover_intro && (
+                      <p className="text-[10px] text-white/70 italic px-1">{suggestions.clover_intro}</p>
+                    )}
+                    {suggestions.suggestions.map((s, i) => (
+                      <div key={i} className="rounded-lg p-2"
+                        style={{ background: 'hsla(255,30%,14%,0.6)', border: '1px solid hsla(280,60%,50%,0.18)' }}>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-[11px] font-bold text-amethyst-glow flex items-center gap-1">
+                            <Gem size={9} /> {s.mineral_name}
+                          </span>
+                          {s.distance_mi != null && (
+                            <span className="text-[8px] font-mono text-hud-cyan/70">{s.distance_mi}mi</span>
+                          )}
+                        </div>
+                        {s.hotspot_name && (
+                          <p className="text-[9px] text-hud-cyan/80 mb-1">📍 {s.hotspot_name}</p>
+                        )}
+                        <p className="text-[9px] text-white/65 leading-relaxed mb-1">{s.what_to_look_for}</p>
+                        <p className="text-[9px] text-white/40 italic leading-relaxed">{s.why}</p>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setSuggestions(null)}
+                      className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
 
