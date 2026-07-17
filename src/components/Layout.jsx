@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
@@ -88,7 +88,7 @@ export default function Layout() {
                     to={to}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-2 px-3 py-1.5 text-xs uppercase tracking-wider rounded-md border select-none',
+                        'flex items-center gap-2 px-3 py-1.5 text-xs uppercase tracking-wider rounded-md border select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background',
                         isActive
                           ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
                           : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
@@ -113,7 +113,7 @@ export default function Layout() {
           >
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1"
+              className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background rounded-md"
               aria-label="Go back"
             >
               <ChevronLeft size={22} />

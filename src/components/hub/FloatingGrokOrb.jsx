@@ -144,7 +144,7 @@ export default function FloatingGrokOrb() {
           : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
         }
         whileTap={{ scale: 0.85 }}
-        className="relative w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer"
+        className="relative w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
         style={{
           background: style.bg,
           boxShadow: `0 0 20px ${style.glow}, 0 0 42px hsla(265,80%,45%,0.22), inset 0 1.5px 0 hsla(290,100%,90%,0.28)`,
