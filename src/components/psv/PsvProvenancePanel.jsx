@@ -22,7 +22,8 @@ export default function PsvProvenancePanel({ engine, revision }) {
     <GlassPanel variant="hud" className="p-4">
       <button
         onClick={() => setOpen(p => !p)}
-        className="w-full flex items-center justify-between gap-2"
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
       >
         <div className="flex items-center gap-2">
           <GitBranch size={13} className="text-hud-cyan" />

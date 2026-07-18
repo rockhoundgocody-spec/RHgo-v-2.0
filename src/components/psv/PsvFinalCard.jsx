@@ -90,7 +90,8 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
           <div className="mb-4">
             <button
               onClick={() => setShowLookalikes(p => !p)}
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2"
+              aria-expanded={showLookalikes}
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               Ruled-out lookalikes {showLookalikes ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
             </button>
@@ -127,7 +128,8 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         <GlassPanel className="p-4">
           <button
             onClick={() => setShowReviewers(p => !p)}
-            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition"
+            aria-expanded={showReviewers}
+            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <span>6 Specialist Reviewers</span>
             {showReviewers ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
