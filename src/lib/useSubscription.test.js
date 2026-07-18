@@ -20,7 +20,7 @@ vi.mock('@/api/base44Client', () => ({
   }
 }));
 
-import { hashEmail } from './useSubscription';
+import { hashEmail } from './useSubscription.js';
 
 describe('hashEmail', () => {
   it('should return empty string for null, undefined, or empty email', () => {
