@@ -4,3 +4,6 @@
 ## 2024-07-15 - AR Accessibility Focus Styles
 **Learning:** Found that custom highly-styled animated modals like the AR Encounter screen often miss `focus-visible` ring indicators, making keyboard interactions invisible. These elements typically use custom inline styles or heavily customized Tailwind that strip default browser rings.
 **Action:** Always ensure that custom animated buttons (especially those dismissing modals or changing encounter states) explicitly include `focus-visible:outline-none focus-visible:ring-2` to restore keyboard usability without affecting touch/mouse visual design.
+## 2024-07-23 - Interactive List Cards Accessibility
+**Learning:** Gamified interactive list cards (like Quest/Mission cards) that act as accordions often use generic `<div>` tags with `onClick` handlers, which entirely block screen reader and keyboard access to expanded state details and descriptions.
+**Action:** Always ensure that interactive cards acting as accordions are assigned `role="button"`, `tabIndex={0}`, an appropriate `aria-expanded` state, and include an `onKeyDown` handler (listening for 'Enter' and 'Space') to restore full accessibility and usability for keyboard users.

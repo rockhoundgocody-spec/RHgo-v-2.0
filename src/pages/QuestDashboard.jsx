@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Sword, CheckCircle2, Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass, Cpu,
+import { Clock, Sparkles, RefreshCw,
+  Flame, Zap, ChevronLeft, Trophy, Target, Star, Cpu,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
@@ -60,9 +59,18 @@ function QuestCard({ q }) {
 
   return (
     <div
-      className="rounded-2xl p-4 transition-all cursor-pointer select-none"
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      className="rounded-2xl p-4 transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
       style={{ background: bg, border: `1px solid ${border}`, opacity: done ? 0.7 : 1 }}
       onClick={() => setExpanded(e => !e)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setExpanded(e => !e);
+        }
+      }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -253,7 +261,8 @@ export default function QuestDashboard() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/')}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition"
+          aria-label="Go back"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.1)' }}>
           <ChevronLeft size={16} />
         </button>
@@ -324,10 +333,12 @@ export default function QuestDashboard() {
       </GlassPanel>
 
       {/* ── FILTER TABS ── */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4" role="tablist">
         {['all', 'daily', 'weekly', 'monthly'].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.2em] transition-all"
+            role="tab"
+            aria-selected={filter === f}
+            className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.2em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             style={{
               background: filter === f ? TYPE_BG[f] || 'hsla(270,40%,20%,0.5)' : 'hsla(0,0%,100%,0.04)',
               border: `1px solid ${filter === f ? (TYPE_BORDER[f] || 'hsla(270,60%,55%,0.4)') : 'hsla(0,0%,100%,0.08)'}`,
