@@ -53,6 +53,8 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={onClearAll}
+        aria-pressed={allActive}
+        aria-label="Show all minerals"
         className={cn(
           'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
           'text-[10px] font-bold uppercase tracking-widest border transition-all',
@@ -77,6 +79,8 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
             key={mineral}
             whileTap={{ scale: 0.92 }}
             onClick={() => onToggle(mineral)}
+            aria-pressed={active}
+            aria-label={`Toggle filter for ${mineral}`}
             className={cn(
               'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-wider border transition-all capitalize',
