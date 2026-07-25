@@ -8,7 +8,8 @@ export default function PsvDeltaLog({ log = [] }) {
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden">
       <button onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition">
+        aria-expanded={open}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
         <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
           Revision log · {log.length - 1} update{log.length > 2 ? 's' : ''}
         </span>

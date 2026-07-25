@@ -8,7 +8,7 @@
  * Unfired rules show what evidence would still improve confidence.
  */
 import React, { useState } from 'react';
-import { GitBranch, ChevronDown, ChevronUp, CheckCircle2, Circle, TrendingUp, TrendingDown } from 'lucide-react';
+import { GitBranch, ChevronDown, ChevronUp, Circle, TrendingUp, TrendingDown } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 export default function PsvProvenancePanel({ engine, revision }) {
@@ -22,7 +22,8 @@ export default function PsvProvenancePanel({ engine, revision }) {
     <GlassPanel variant="hud" className="p-4">
       <button
         onClick={() => setOpen(p => !p)}
-        className="w-full flex items-center justify-between gap-2"
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan rounded-md"
       >
         <div className="flex items-center gap-2">
           <GitBranch size={13} className="text-hud-cyan" />

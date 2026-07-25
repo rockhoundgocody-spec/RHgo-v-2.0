@@ -90,7 +90,8 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
           <div className="mb-4">
             <button
               onClick={() => setShowLookalikes(p => !p)}
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2"
+              aria-expanded={showLookalikes}
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
             >
               Ruled-out lookalikes {showLookalikes ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
             </button>
@@ -108,14 +109,14 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         <div className="flex gap-2.5">
           <button
             onClick={onSave}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-bold text-base active:scale-[0.98] transition"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-bold text-base active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           >
             <Save size={16} /> Save to Collection
           </button>
           <button
             onClick={onRescan}
             aria-label="Rescan"
-            className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition text-sm"
+            className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <RotateCcw size={15} />
           </button>
@@ -127,7 +128,8 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         <GlassPanel className="p-4">
           <button
             onClick={() => setShowReviewers(p => !p)}
-            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition"
+            aria-expanded={showReviewers}
+            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
           >
             <span>6 Specialist Reviewers</span>
             {showReviewers ? <ChevronUp size={12} /> : <ChevronDown size={12} />}

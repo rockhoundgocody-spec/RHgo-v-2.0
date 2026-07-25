@@ -87,7 +87,8 @@ export default function PsvDraftCard({ draft, revisions, confidencePct }) {
       {(draft.verification_plan?.length > 0) && (
         <button
           onClick={() => setShowDetails(p => !p)}
-          className="mt-3 w-full flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-white/30 hover:text-white/50 transition py-1"
+          aria-expanded={showDetails}
+          className="mt-3 w-full flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-white/30 hover:text-white/50 transition py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded-sm"
         >
           <span>Verification plan · {draft.verification_plan.length} tests</span>
           {showDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
