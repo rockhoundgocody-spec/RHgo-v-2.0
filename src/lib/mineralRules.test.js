@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldHalt } from './mineralRules';
+import { shouldHalt } from './mineralRules.js';
 
 describe('shouldHalt', () => {
   it('should return true if final_score is >= 0.82', () => {
