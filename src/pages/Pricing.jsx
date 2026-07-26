@@ -27,10 +27,16 @@ import { useAuth } from '@/lib/AuthContext';
 // and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
 // in Base44 environment variables.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
-  family:    { priceId: 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  fieldPro:  {
+    priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb',
+    label: 'Field Pro'
+  },
+  family:    {
+    priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U',
+    label: 'Family'
+  },
+  successUrl: import.meta.env.VITE_STRIPE_SUCCESS_URL || (typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : ''),
+  cancelUrl:  import.meta.env.VITE_STRIPE_CANCEL_URL || (typeof window !== 'undefined' ? `${window.location.origin}/pricing` : ''),
 };
 // ─────────────────────────────────────────────────────────────────────────
 
