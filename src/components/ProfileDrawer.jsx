@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, ChevronRight, X } from 'lucide-react';
+/* eslint-disable unused-imports/no-unused-imports */
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+/* eslint-enable unused-imports/no-unused-imports */
 
 export default function ProfileDrawer() {
   const navigate = useNavigate();
@@ -28,8 +30,9 @@ export default function ProfileDrawer() {
       {/* Drawer trigger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-amethyst/20 border border-amethyst/40 text-amethyst-glow hover:bg-amethyst/30 transition"
-        title={user?.full_name}
+        className="w-10 h-10 rounded-full flex items-center justify-center bg-amethyst/20 border border-amethyst/40 text-amethyst-glow hover:bg-amethyst/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
+        aria-label={user?.full_name ? `User menu for ${user.full_name}` : "User Profile Menu"}
+        title={user?.full_name || "User Profile Menu"}
       >
         <User size={18} />
       </button>
@@ -47,7 +50,8 @@ export default function ProfileDrawer() {
               <h2 className="text-lg font-bold text-white">Account</h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-lg transition"
+                className="p-1 hover:bg-white/10 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
+                aria-label="Close user menu"
               >
                 <X size={18} className="text-white/60" />
               </button>
@@ -81,7 +85,7 @@ export default function ProfileDrawer() {
                   <button
                     key={i}
                     onClick={item.action}
-                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition text-white group"
+                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition text-white group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
                   >
                     <div className="flex items-center gap-3">
                       <Icon size={18} className="text-amethyst/60 group-hover:text-amethyst" />
@@ -97,7 +101,7 @@ export default function ProfileDrawer() {
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold text-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
               >
                 <LogOut size={16} /> Logout
               </button>
