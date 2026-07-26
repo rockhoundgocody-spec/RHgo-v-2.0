@@ -17,8 +17,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Gem, Zap, Map, Shield, Star, Flame, Crown, Users, BookOpen, X, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -27,8 +26,8 @@ import { useAuth } from '@/lib/AuthContext';
 // and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
 // in Base44 environment variables.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
-  family:    { priceId: 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
+  fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
+  family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
   successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
   cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
 };
