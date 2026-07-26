@@ -10,5 +10,8 @@
         "no-empty"
       ]
     }
+  },
+  "test": {
+    "include": ["base44/"]
   }
 }
