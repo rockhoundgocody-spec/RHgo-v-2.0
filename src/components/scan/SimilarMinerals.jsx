@@ -13,14 +13,16 @@ export default function SimilarMinerals({ candidates = [], topCandidateId = '' }
     <GlassPanel className="p-5">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between py-2 mb-2"
+        aria-expanded={expanded}
+        aria-controls="similar-minerals-list"
+        className="w-full flex items-center justify-between py-2 mb-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst"
       >
         <span className="text-sm font-bold text-white">Look-Alike Minerals</span>
         {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
 
       {expanded && (
-        <div className="space-y-2">
+        <div id="similar-minerals-list" className="space-y-2">
           {similars.map((mineral, i) => (
             <div key={i} className="p-3 rounded-lg border border-white/10 bg-white/5">
               <div className="flex items-center justify-between mb-1">
