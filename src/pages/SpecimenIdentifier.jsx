@@ -122,13 +122,13 @@ export default function SpecimenIdentifier() {
         <div className="flex gap-3">
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-hud-cyan/10 border border-hud-cyan/25 text-hud-cyan hover:bg-hud-cyan/20 transition font-semibold"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-hud-cyan/10 border border-hud-cyan/25 text-hud-cyan hover:bg-hud-cyan/20 transition font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
           >
             <Camera size={16} /> Take Photo
           </button>
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/20 transition font-semibold"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/20 transition font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <Upload size={16} /> Upload
           </button>
@@ -136,14 +136,15 @@ export default function SpecimenIdentifier() {
 
         {/* User notes */}
         <GlassPanel className="p-4">
-          <label className="block text-xs text-white/60 uppercase tracking-[0.2em] font-mono mb-2">
+          <label htmlFor="user-notes" className="block text-xs text-white/60 uppercase tracking-[0.2em] font-mono mb-2">
             Field Notes (Optional)
           </label>
           <textarea
+            id="user-notes"
             value={userNotes}
             onChange={(e) => setUserNotes(e.target.value)}
             placeholder="Luster, color, hardness, location details…"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/40 focus:outline-none focus:border-amethyst/50 h-20 resize-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/40 focus:outline-none focus:border-amethyst/50 h-20 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst"
           />
         </GlassPanel>
 
@@ -151,7 +152,7 @@ export default function SpecimenIdentifier() {
         <GlassPanel className="p-4">
           <button
             onClick={handleGetLocation}
-            className="w-full py-2 text-xs text-white/60 hover:text-white transition"
+            className="w-full py-2 text-xs text-white/60 hover:text-white transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
           >
             {userLocation
               ? `📍 Location: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`
@@ -163,7 +164,7 @@ export default function SpecimenIdentifier() {
         <button
           onClick={handleIdentify}
           disabled={!imageFile || identifying}
-          className="w-full py-4 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-40 text-white font-bold text-base flex items-center justify-center gap-2 transition active:scale-[0.98]"
+          className="w-full py-4 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-40 text-white font-bold text-base flex items-center justify-center gap-2 transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst"
         >
           {identifying ? (
             <>
