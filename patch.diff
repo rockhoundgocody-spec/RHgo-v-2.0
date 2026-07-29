@@ -1,0 +1,5 @@
+<<<<<<< SEARCH
+import { shouldHalt } from './mineralRules';
+=======
+import { shouldHalt } from './mineralRules.js';
+>>>>>>> REPLACE
