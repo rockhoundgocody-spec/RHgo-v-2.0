@@ -32,7 +32,8 @@ export default function NearbyPlacesPanel({ lat, lng }) {
               <button
                 key={c.type}
                 onClick={() => setActive(c.type)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] uppercase tracking-wider border transition ${
+                aria-pressed={isActive}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] uppercase tracking-wider border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background ${
                   isActive
                     ? 'bg-hud-cyan/25 border-hud-cyan/60 text-hud glow-hud'
                     : 'bg-black/40 border-white/10 text-white/70 hover:text-white'

@@ -39,8 +39,9 @@ export default function MapLayerBar({ activeLayer = 'all', onChange }) {
           <button
             key={id}
             onClick={() => onChange(id)}
+            aria-pressed={active}
             className={cn(
-              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all',
+              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background',
               active ? ACTIVE_COLORS[id] : 'border-white/8 text-white/35 hover:text-white/60 hover:border-white/20'
             )}
           >
