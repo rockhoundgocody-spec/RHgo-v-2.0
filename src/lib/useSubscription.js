@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '../api/base44Client.js';
 
 // Simple, synchronous DJB2 hash helper to obfuscate email in session storage key
 export function hashEmail(email) {
