@@ -28,7 +28,9 @@ export default function EmptyState({ icon = '🪨', title, body, ctaLabel, ctaTo
           boxShadow: 'inset 0 1px 0 hsla(280,80%,95%,0.15)',
         }}
       >
-        {icon}
+        {(typeof icon === 'function' || (icon && typeof icon === 'object' && !React.isValidElement(icon)))
+          ? React.createElement(icon, { size: 36, className: 'text-amethyst-glow' })
+          : icon}
       </motion.div>
 
       <h3 className="text-white/80 font-bold text-lg mb-2 leading-snug">{title}</h3>
