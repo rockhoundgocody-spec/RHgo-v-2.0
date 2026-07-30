@@ -60,6 +60,9 @@ export default function AmethystOrb({
   );
   // Smooth state transitions — lerp current config toward target
   const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
+  // Eased transform values — the orb glides toward its target pose each frame
+  // instead of snapping, giving the liquid-metal its buttery follow-through.
+  const poseRef = useRef({ tx: 0, ty: 0, scale: 1, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
 
   useEffect(() => {
     if (!visible) return;
@@ -102,13 +105,20 @@ export default function AmethystOrb({
           const dx = ix.pointerX - cx;
           const dy = ix.pointerY - cy;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const proximity = Math.max(0, 1 - dist / (radius * 3.5));
+          // Wider proximity field so dragging anywhere on screen still nudges the orb
+          const proximity = Math.max(0, 1 - dist / (radius * 5));
           proxBoost = proximity;
 
-          // Lean toward cursor — subtle, max ~5% of orb size
-          const maxLean = size * 0.05;
-          leanX = (dx / (radius * 3)) * maxLean * proximity;
-          leanY = (dy / (radius * 3)) * maxLean * proximity;
+          // Lean toward cursor — now responds across the whole screen, not just near the orb
+          const maxLean = size * 0.06;
+          leanX = (dx / (radius * 4)) * maxLean * Math.max(0.15, proximity);
+
+          // Velocity-driven momentum lean — dragging across the screen pushes
+          // the orb in the gesture direction with smooth follow-through.
+          const velLean = ix.velocity * size * 0.035;
+          leanX += (ix.dragX || 0) * velLean;
+          leanY += (dy / (radius * 4)) * maxLean * Math.max(0.15, proximity)
+                 + (ix.dragY || 0) * velLean;
 
           // Scroll parallax drift
           driftY = ix.scrollV * size * 0.025;
@@ -119,30 +129,58 @@ export default function AmethystOrb({
             ix.tapImpulse *= 0.88;
           }
 
-          // Decay velocity + scrollV so they don't linger
-          ix.velocity *= 0.92;
+          // Slower velocity decay so momentum glides instead of cutting off
+          ix.velocity *= 0.95;
           ix.scrollV *= 0.88;
         }
       }
 
       const scaleBase = 1 + idlePulse + a * 0.06 + bass * 0.04;
-      const velShimmer = ix ? ix.velocity * 0.015 : 0;
+      const velShimmer = ix ? ix.velocity * 0.025 : 0;
+
+      // Target pose for this frame
+      const targetTx = leanX + wobX * size;
+      const targetTy = leanY + wobY * size + driftY;
+      const targetScale = scaleBase - squish + velShimmer;
+      const targetScaleY = scaleBase - squish * 0.7 + velShimmer;
+
+      // Ease the actual applied transform toward the target — this lerp is
+      // what makes the orb feel liquid: it trails the finger with momentum
+      // and settles back softly instead of snapping to each new position.
+      const p = poseRef.current;
+      p.tx += (targetTx - p.tx) * 0.18;
+      p.ty += (targetTy - p.ty) * 0.18;
+      p.scale += (targetScale - p.scale) * 0.22;
+      const pScaleY = p.scale + (targetScaleY - targetScale) * 0.5;
 
       if (wrapRef.current) {
         wrapRef.current.style.transform =
-          `translate(${leanX + wobX * size}px, ${leanY + wobY * size + driftY}px) ` +
-          `scale(${scaleBase - squish + velShimmer}, ${scaleBase - squish * 0.7 + velShimmer})`;
+          `translate(${p.tx}px, ${p.ty}px) scale(${p.scale}, ${pScaleY})`;
       }
+
+      // Halo + aura also ease for a cohesive liquid follow
+      const tHaloO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.22;
+      const tHaloS = 1 + idlePulse * 2 + a * 0.18 + bass * 0.1 + proxBoost * 0.06;
+      const tAuraO = 0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2 + proxBoost * 0.3;
+      const tAuraS = 1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06 + proxBoost * 0.04;
+      const tAuraIO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.15;
+
+      p.haloO += (tHaloO - p.haloO) * 0.15;
+      p.haloS += (tHaloS - p.haloS) * 0.15;
+      p.auraO += (tAuraO - p.auraO) * 0.15;
+      p.auraS += (tAuraS - p.auraS) * 0.15;
+      p.auraIO += (tAuraIO - p.auraIO) * 0.15;
+
       if (haloRef.current) {
-        haloRef.current.style.opacity = String(0.45 + idleAura + a * 0.45 + proxBoost * 0.22);
-        haloRef.current.style.transform = `scale(${1 + idlePulse * 2 + a * 0.18 + bass * 0.1 + proxBoost * 0.06})`;
+        haloRef.current.style.opacity = String(p.haloO);
+        haloRef.current.style.transform = `scale(${p.haloS})`;
       }
       if (auraRef.current) {
-        auraRef.current.style.opacity = String(0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2 + proxBoost * 0.3);
-        auraRef.current.style.transform = `scale(${1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06 + proxBoost * 0.04})`;
+        auraRef.current.style.opacity = String(p.auraO);
+        auraRef.current.style.transform = `scale(${p.auraS})`;
       }
       if (auraInnerRef.current) {
-        auraInnerRef.current.style.opacity = String(0.45 + idleAura + a * 0.45 + proxBoost * 0.15);
+        auraInnerRef.current.style.opacity = String(p.auraIO);
       }
       raf = requestAnimationFrame(tick);
     };

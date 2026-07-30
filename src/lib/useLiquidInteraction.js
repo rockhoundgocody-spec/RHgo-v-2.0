@@ -16,6 +16,8 @@ export default function useLiquidInteraction() {
     pointerX: typeof window !== 'undefined' ? window.innerWidth / 2 : 0,
     pointerY: typeof window !== 'undefined' ? window.innerHeight / 2 : 0,
     velocity: 0,
+    dragX: 0,
+    dragY: 0,
     scrollV: 0,
     tapImpulse: 0,
     tapClientX: 0,
@@ -31,7 +33,16 @@ export default function useLiquidInteraction() {
       const ddx = e.clientX - lastPointer.current.x;
       const ddy = e.clientY - lastPointer.current.y;
       const speed = (Math.sqrt(ddx * ddx + ddy * ddy) / dt) * 16;
-      state.current.velocity = Math.min(1, speed / 15);
+      // More sensitive to normal drag speeds, then smoothed so velocity
+      // ramps up and glides down instead of snapping on/off.
+      const targetVel = Math.min(1, speed / 9);
+      state.current.velocity += (targetVel - state.current.velocity) * 0.3;
+      // Smoothed drag direction so the orb can lean into the gesture
+      const mag = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+      const tdx = ddx / mag;
+      const tdy = ddy / mag;
+      state.current.dragX += (tdx - state.current.dragX) * 0.25;
+      state.current.dragY += (tdy - state.current.dragY) * 0.25;
       state.current.pointerX = e.clientX;
       state.current.pointerY = e.clientY;
       lastPointer.current = { x: e.clientX, y: e.clientY, t: now };
