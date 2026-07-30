@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Sword, CheckCircle2, Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star, Compass, Cpu,
+  Clock, Sparkles, RefreshCw,
+  Flame, Zap, ChevronLeft, Trophy, Target, Star, Cpu,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
@@ -253,7 +253,8 @@ export default function QuestDashboard() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/')}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition"
+          aria-label="Back to Hub"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.1)' }}>
           <ChevronLeft size={16} />
         </button>
@@ -262,7 +263,8 @@ export default function QuestDashboard() {
           <p className="text-white/35 text-[11px]">Challenges · XP · Expedition Streak</p>
         </div>
         <button onClick={generateQuests} disabled={generating || activeQuests.length > 0}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition disabled:opacity-40"
+          aria-label={generating ? 'Generating AI missions' : quests.length === 0 ? 'Generate new missions' : 'Missions are active'}
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
           style={{ background: 'hsla(280,80%,35%,0.5)', border: '1px solid hsla(280,80%,55%,0.3)', color: 'hsl(280,80%,80%)' }}>
           {generating ? <Cpu size={10} className="animate-pulse" /> : <RefreshCw size={10} />}
           {generating ? 'AI…' : quests.length === 0 ? 'New Mission' : 'Active'}
@@ -324,10 +326,11 @@ export default function QuestDashboard() {
       </GlassPanel>
 
       {/* ── FILTER TABS ── */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4" role="group" aria-label="Quest filters">
         {['all', 'daily', 'weekly', 'monthly'].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.2em] transition-all"
+            aria-pressed={filter === f}
+            className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.2em] transition-all focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
             style={{
               background: filter === f ? TYPE_BG[f] || 'hsla(270,40%,20%,0.5)' : 'hsla(0,0%,100%,0.04)',
               border: `1px solid ${filter === f ? (TYPE_BORDER[f] || 'hsla(270,60%,55%,0.4)') : 'hsla(0,0%,100%,0.08)'}`,
@@ -352,7 +355,8 @@ export default function QuestDashboard() {
           </p>
           {activeQuests.length === 0 && (
             <button onClick={generateQuests} disabled={generating}
-              className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40 flex items-center gap-2 mx-auto"
+              aria-label={generating ? 'Generating AI missions' : 'Generate AI Field Missions'}
+              className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-white transition disabled:opacity-40 flex items-center gap-2 mx-auto focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
               style={{ background: 'hsla(280,80%,30%,0.4)', border: '1px solid hsla(280,80%,55%,0.3)' }}>
               {generating ? <Cpu size={11} className="animate-pulse" /> : <Sparkles size={11} />}
               {generating ? 'Clover is building your missions…' : 'Generate AI Field Missions'}
