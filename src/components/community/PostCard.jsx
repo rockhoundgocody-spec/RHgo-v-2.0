@@ -17,6 +17,15 @@ const RARITY_COLORS = {
   legendary: 'hsl(45,100%,62%)',
 };
 
+// Posts may embed machine tags like §topic:crystalsystem§ — never show them raw.
+const TOPIC_RE = /§topic:([\w-]+)§/gi;
+function parseBody(body) {
+  if (!body) return { text: '', topics: [] };
+  const topics = [];
+  const text = body.replace(TOPIC_RE, (_, t) => { topics.push(t); return ''; }).replace(/\s{2,}/g, ' ').trim();
+  return { text, topics };
+}
+
 function timeAgo(dateStr) {
   const d = new Date(dateStr);
   const diff = (Date.now() - d.getTime()) / 1000;
@@ -81,6 +90,7 @@ export default function PostCard({ post, myEmail }) {
 
   const isFind = post.post_type === 'find_share';
   const rarityColor = RARITY_COLORS[post.rarity] || RARITY_COLORS.common;
+  const { text: bodyText, topics } = parseBody(post.body);
 
   return (
     <GlassPanel className="p-0 overflow-hidden">
@@ -104,8 +114,19 @@ export default function PostCard({ post, myEmail }) {
         )}
       </div>
 
-      {post.body && (
-        <p className="px-4 pb-3 text-sm text-white/75 leading-relaxed whitespace-pre-wrap">{post.body}</p>
+      {bodyText && (
+        <p className="px-4 pb-3 text-sm text-white/75 leading-relaxed whitespace-pre-wrap">{bodyText}</p>
+      )}
+
+      {topics.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+          {topics.map((t) => (
+            <span key={t} className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-1 rounded-full"
+              style={{ color: 'hsl(195,100%,75%)', background: 'hsla(195,80%,40%,0.12)', border: '1px solid hsla(195,80%,55%,0.25)' }}>
+              #{t}
+            </span>
+          ))}
+        </div>
       )}
 
       {post.image_url && (

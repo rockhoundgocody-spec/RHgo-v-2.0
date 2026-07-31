@@ -7,7 +7,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
-import useCloverChat from './useCloverChat';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import { base44 } from '@/api/base44Client';
 import { Gem, Send, X, Loader2, Volume2, VolumeX, Target } from 'lucide-react';
@@ -43,14 +42,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const [suggestLoading, setSuggestLoading] = useState(false);
   const { getInteraction, injectTap } = useLiquidInteraction();
 
-  const { sendMessage, loading } = useCloverChat({
-    companion,
-    todaysFinds: todaysSpecimens,
-    onFindLogged: (name) => {
-      setLoggedFind(name);
-      setTimeout(() => setLoggedFind(null), 4000);
-    },
-  });
+  const [sending, setSending] = useState(false);
 
   const { speak, stop, speaking } = useSpeechSynthesis();
 
@@ -104,8 +96,11 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   // Returns reply text
   const doSend = async (text, isGreeting = false) => {
     let captured = '';
-    // Patch sendMessage to capture reply
-    const fakeOnFindLogged = (n) => setLoggedFind(n);
+    const fakeOnFindLogged = (n) => {
+      setLoggedFind(n);
+      setTimeout(() => setLoggedFind(null), 4000);
+    };
+    setSending(true);
     try {
       const res = await base44.functions.invoke('cloverChat', {
         history: messages.filter(m => !m.loading).slice(-8).map(m => ({ role: m.role, content: m.content })),
@@ -121,6 +116,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
       }
     } catch {
       captured = "I couldn't connect just now — try again?";
+    } finally {
+      setSending(false);
     }
     return captured;
   };
@@ -150,7 +147,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || sending) return;
     setInput('');
 
     const userMsg = { role: 'user', content: text };
@@ -168,7 +165,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
-  const orbState = open ? (loading ? 'thinking' : 'listening') : 'idle';
+  const orbState = open ? (sending ? 'thinking' : 'listening') : 'idle';
 
   return (
     <div className="relative w-full flex justify-center">
@@ -302,15 +299,15 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Tell Clover what you found…"
-                disabled={loading}
+                disabled={sending}
                 className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none"
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || sending}
                 className="text-amethyst-glow disabled:opacity-25 transition active:scale-90"
               >
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               </button>
             </div>
           </div>

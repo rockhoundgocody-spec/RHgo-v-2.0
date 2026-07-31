@@ -63,11 +63,11 @@ export default function StreakReminderBanner() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: -80, opacity: 0 }}
+          initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -80, opacity: 0 }}
+          exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-          className="fixed top-3 inset-x-3 z-[9000] rounded-2xl flex items-center gap-3 px-4 py-3 shadow-xl"
+          className="fixed bottom-24 inset-x-3 z-[9000] rounded-2xl flex items-center gap-3 px-4 py-3 shadow-xl"
           style={{
             background: 'linear-gradient(135deg, hsla(25,100%,28%,0.97) 0%, hsla(15,90%,22%,0.99) 100%)',
             border: '1px solid hsla(30,100%,55%,0.45)',

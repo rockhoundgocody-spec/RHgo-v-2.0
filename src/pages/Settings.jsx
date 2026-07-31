@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
@@ -49,12 +49,20 @@ function SectionHeader({ icon: Icon, title, subtitle, iconColor = 'text-white/60
 }
 
 export default function Settings() {
-  const [settings, setSettings] = useState({
-    notifications: true,
-    locationTracking: false,
-    offlineMode: true,
-    privacyLevel: 'friends'
+  const [settings, setSettings] = useState(() => {
+    const defaults = {
+      notifications: true,
+      collectionUpdates: true,
+      marketplaceActivity: true,
+      locationTracking: false,
+      offlineMode: true,
+      privacyLevel: 'friends',
+    };
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem('rhgo_settings') || '{}') }; }
+    catch { return defaults; }
   });
+  const [settingsSaved, setSettingsSaved] = useState(false);
+  const [storageEstimate, setStorageEstimate] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [voice, setVoice] = useState(loadVoice);
   const [voiceSaved, setVoiceSaved] = useState(false);
@@ -88,6 +96,19 @@ export default function Settings() {
   const resetVoice = () => setVoice(DEFAULT_VOICE);
   const handleToggle = (key) => setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   const handleChange = (key, value) => setSettings((prev) => ({ ...prev, [key]: value }));
+
+  const saveSettings = () => {
+    localStorage.setItem('rhgo_settings', JSON.stringify(settings));
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
+  };
+
+  // Real device storage usage — no fabricated numbers
+  useEffect(() => {
+    if (navigator.storage?.estimate) {
+      navigator.storage.estimate().then(setStorageEstimate).catch(() => {});
+    }
+  }, []);
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 max-w-2xl mx-auto">
@@ -192,15 +213,15 @@ export default function Settings() {
           <SectionHeader icon={Bell} iconColor="text-hud-cyan" title="Notifications" />
           <div className="space-y-2 ml-9">
             {[
-              { label: 'Scan results ready', key: 'notifications', checked: settings.notifications },
-              { label: 'Collection updates', key: null, defaultChecked: true },
-              { label: 'Marketplace activity', key: null, defaultChecked: true },
-            ].map(({ label, key, checked, defaultChecked }, i) => (
-              <label key={i} className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
+              { label: 'Scan results ready', key: 'notifications' },
+              { label: 'Collection updates', key: 'collectionUpdates' },
+              { label: 'Marketplace activity', key: 'marketplaceActivity' },
+            ].map(({ label, key }) => (
+              <label key={key} className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
                 <input
                   type="checkbox"
-                  checked={key ? checked : defaultChecked}
-                  onChange={key ? () => handleToggle(key) : undefined}
+                  checked={!!settings[key]}
+                  onChange={() => handleToggle(key)}
                   className="w-4 h-4 rounded border-white/30 accent-amethyst"
                 />
                 {label}
@@ -243,10 +264,15 @@ export default function Settings() {
           <div className="ml-9 space-y-2">
             <div className="flex items-center justify-between text-sm text-white/60">
               <span>Local cache</span>
-              <span className="font-mono">245 MB</span>
+              <span className="font-mono">
+                {storageEstimate ? `${Math.round((storageEstimate.usage || 0) / 1048576)} MB` : '—'}
+              </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: '65%', background: 'linear-gradient(90deg, hsl(270,80%,55%), hsl(280,100%,70%))' }} />
+              <div className="h-full rounded-full" style={{
+                width: storageEstimate?.quota ? `${Math.min(100, Math.round(((storageEstimate.usage || 0) / storageEstimate.quota) * 100))}%` : '0%',
+                background: 'linear-gradient(90deg, hsl(270,80%,55%), hsl(280,100%,70%))',
+              }} />
             </div>
             <button
               onClick={handleDumpCache}
@@ -263,14 +289,9 @@ export default function Settings() {
       <div className="mb-6">
         <GlassPanel className="p-4">
           <SectionHeader icon={MapPin} iconColor="text-rose-300" title="Saved Site Packs" subtitle="Offline map packs for field-ready exploration without data." />
-          <div className="ml-9 space-y-2 text-sm text-white/60">
-            {[{ label: 'Colorado hotspots', size: '42 MB' }, { label: 'Utah field regions', size: '38 MB' }].map((p) => (
-              <div key={p.label} className="flex items-center justify-between p-2.5 rounded-xl transition"
-                style={{ background: 'hsla(255,20%,12%,0.5)', border: '1px solid hsla(255,20%,30%,0.15)' }}>
-                <span>{p.label}</span>
-                <span className="text-xs text-white/35 font-mono">{p.size}</span>
-              </div>
-            ))}
+          <div className="ml-9 text-sm text-white/40 p-2.5 rounded-xl"
+            style={{ background: 'hsla(255,20%,12%,0.5)', border: '1px solid hsla(255,20%,30%,0.15)' }}>
+            No offline packs saved yet — download map areas from the Explore page to use them without signal.
           </div>
         </GlassPanel>
       </div>
@@ -299,9 +320,10 @@ export default function Settings() {
       </div>
 
       {/* Save button */}
-      <button className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none"
+      <button onClick={saveSettings}
+        className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none"
         style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))', boxShadow: '0 6px 28px -6px hsla(270,80%,60%,0.5)' }}>
-        Save Settings
+        {settingsSaved ? '✓ Settings Saved' : 'Save Settings'}
       </button>
 
       {/* Danger zone */}

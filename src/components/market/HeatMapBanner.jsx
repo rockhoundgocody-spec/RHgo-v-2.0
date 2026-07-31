@@ -76,15 +76,17 @@ export default function HeatMapBanner() {
     <div className="rounded-2xl overflow-hidden mb-4 relative"
       style={{ background: 'hsla(265,30%,8%,0.8)', border: '1px solid hsla(270,40%,35%,0.2)' }}>
       <canvas ref={canvasRef} width={400} height={56} className="w-full" style={{ height: 56 }} />
-      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-        <div className="flex items-center gap-2">
+      <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full"
+          style={{ background: 'hsla(265,40%,6%,0.8)', backdropFilter: 'blur(6px)', border: '1px solid hsla(270,40%,35%,0.2)' }}>
           <Flame size={13} className="text-orange-400" />
-          <span className="text-[11px] font-bold text-white/70">Live Trade Activity</span>
-          {hotMineral && <span className="text-[10px] text-amethyst-glow/70">· {hotMineral} trending</span>}
+          <span className="text-[11px] font-bold text-white/80">Live Trade Activity</span>
+          {hotMineral && <span className="text-[10px] text-amethyst-glow/80">· {hotMineral} trending</span>}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{ background: 'hsla(265,40%,6%,0.8)', backdropFilter: 'blur(6px)', border: '1px solid hsla(270,40%,35%,0.2)' }}>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-white/40">{recentCount} listings</span>
+          <span className="text-[10px] text-white/60">{recentCount} listings</span>
         </div>
       </div>
     </div>

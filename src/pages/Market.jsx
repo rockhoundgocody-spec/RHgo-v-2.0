@@ -113,7 +113,7 @@ export default function Market() {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={() => setCreateOpen(true)}
-        className="fixed right-4 bottom-24 z-40 flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm"
+        className="fixed right-4 bottom-44 z-40 flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm"
         style={{
           background: 'linear-gradient(135deg, hsla(270,60%,35%,0.8), hsla(195,70%,30%,0.7))',
           border: '1px solid hsla(270,60%,55%,0.4)',

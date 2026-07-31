@@ -128,6 +128,23 @@ Deno.serve(async (req) => {
       ? buildGreatLakesContext({ beachName: beach_name, wetDry: wet_dry, postStorm: post_storm, season })
       : '';
 
+    // ── SELF-IMPROVEMENT LOOP ─────────────────────────────────────────────────
+    // Feed verified community corrections back into the model as priors, so the
+    // identifier learns from every confirmed mistake without retraining.
+    let learnedContext = '';
+    try {
+      const corrections = await base44.asServiceRole.entities.TrainingCandidate.filter(
+        { status: 'accepted' }, '-created_date', 15
+      );
+      const lessons = corrections
+        .filter((c) => c.user_label && c.predicted_label && c.user_label !== c.predicted_label)
+        .map((c) => `previously misidentified "${c.user_label}" as "${c.predicted_label}"${c.user_notes ? ` — ${c.user_notes}` : ''}`);
+      if (lessons.length) {
+        learnedContext = ' LEARNED CORRECTIONS (verified user feedback — weigh these as priors and avoid repeating them): ' +
+          lessons.join('; ') + '.';
+      }
+    } catch { /* learning context is best-effort */ }
+
     // ── VISION IDENTIFICATION ─────────────────────────────────────────────────
     let identification = prefilled_result;
     if (!identification) {
@@ -139,7 +156,7 @@ Deno.serve(async (req) => {
           'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
           'Never refuse — always give best attempt with calibrated confidence. ' +
           handbookPromptBlock() +
-          glContext + geologyContext,
+          glContext + geologyContext + learnedContext,
         file_urls: [image_url],
         response_json_schema: {
           type: 'object',
