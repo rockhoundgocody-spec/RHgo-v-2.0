@@ -6,6 +6,8 @@
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
+import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 
 // ── Great Lakes 30-class list (inline — no local imports in Deno) ────────────
 const GL_30 = [
@@ -135,7 +137,8 @@ Deno.serve(async (req) => {
           'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
           'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
           'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
-          'Never refuse — always give best attempt with calibrated confidence.' +
+          'Never refuse — always give best attempt with calibrated confidence. ' +
+          handbookPromptBlock() +
           glContext + geologyContext,
         file_urls: [image_url],
         response_json_schema: {
@@ -187,6 +190,19 @@ Deno.serve(async (req) => {
 
     if (!identification) return Response.json({ error: 'Identification failed' }, { status: 500 });
 
+    // ── CONTEXT INTEGRITY + OPERATING HANDBOOK ENFORCEMENT ────────────────────
+    const contextIntegrity = computeContextIntegrity({
+      imageCount: 1,
+      imageQualityScore: identification.image_quality_score ?? null,
+      hasGps: lat != null && lng != null,
+      geologyUnitCount: localGeology ? localGeology.length : 0,
+      hasLocality: !!beach_name,
+      fieldTestCount: 0,
+      conditionKnown: !!wet_dry,
+      contradictionCount: 0,
+    });
+    const { enforcement } = applyHandbook(identification, contextIntegrity);
+
     // ── OPTIONAL SAVE ─────────────────────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
@@ -220,10 +236,15 @@ Deno.serve(async (req) => {
       });
 
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
-      base44.asServiceRole.functions.invoke('awardXP', { xp: xpMap[identification.rarity] || 10 }).catch(() => {});
+      // Idempotent: keyed to the specimen — retries can never double-award
+      base44.functions.invoke('awardXP', {
+        amount: xpMap[identification.rarity] || 10,
+        reason: `Logged ${identification.top_match}`,
+        idempotency_key: `specimen:${savedSpecimen.id}`,
+      }).catch(() => {});
 
-      // Queue low-confidence finds for community verification
-      if ((identification.confidence || 0) < 0.8) {
+      // Queue for community verification when the handbook requires review
+      if (enforcement.expert_review_required) {
         base44.asServiceRole.entities.SpecimenVerification.create({
           specimen_id: savedSpecimen.id,
           specimen_image_url: image_url,
@@ -271,6 +292,8 @@ Deno.serve(async (req) => {
       identification,
       saved_specimen_id: savedSpecimen?.id || null,
       hotspot_contribution: hotspotContribution,
+      context_integrity: contextIntegrity,
+      handbook: enforcement,
       local_geology: localGeology,
       great_lakes_mode: isGreatLakes,
       meta: { model: 'gemini_3_flash', user_email: user.email, timestamp: new Date().toISOString() },

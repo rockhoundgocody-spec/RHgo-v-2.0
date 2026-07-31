@@ -1,0 +1,57 @@
+{
+  "name": "XPAward",
+  "type": "object",
+  "description": "Idempotency ledger for XP awards. Every award records a unique idempotency key so retries, duplicate requests, and interrupted flows can never grant XP twice for the same event.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "User who received the XP"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Unique key for the awarding event, e.g. 'specimen:<id>' or 'quest:<id>:complete'"
+    },
+    "amount": {
+      "type": "integer",
+      "description": "XP granted"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the award"
+    }
+  },
+  "required": [
+    "owner_email",
+    "idempotency_key",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
