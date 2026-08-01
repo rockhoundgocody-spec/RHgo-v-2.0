@@ -63,6 +63,7 @@ export default function LiquidGlassShader({ hue = 0.78, intensity = 1.0, speed =
 
         void main() {
           vec2 uv = vUv - 0.5;
+          uv.x *= u_resolution.x / u_resolution.y;
           float d = length(uv);
 
           // counter-rotating swirl — flows opposite to the main opal layer
