@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import useCameraStream from './useCameraStream';
-import ScanReticle from './ScanReticle.jsx';
 import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
+import TorchButton from './TorchButton.jsx';
 import ScanModeBar from './ScanModeBar.jsx';
 import { Upload, ScanLine, Gem, Camera, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ const STAGE_LABELS = {
 };
 
 export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
-  const { videoRef, ready, error } = useCameraStream({ active: true });
+  const { videoRef, ready, error, torchSupported, torchOn, toggleTorch } = useCameraStream({ active: true });
   const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
@@ -138,7 +138,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
           </>
         ) : (
           <>
-            <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+            {/* object-contain so a sideways (landscape) frame is fully visible
+                and framed exactly as it will be captured — no crop */}
+            <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-contain" />
 
             {/* Dark vignette */}
             <div className="absolute inset-0 pointer-events-none"
@@ -172,9 +174,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 }} />
             </div>
 
-            {/* RETICLE — centered */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <ScanReticle state={scanState} signalRef={signalRef} size={200} />
+            {/* Flashlight — bottom-left, clear of brackets and the specimen view */}
+            <div className="absolute bottom-[76px] left-1/2 -translate-x-1/2 z-20">
+              <TorchButton supported={torchSupported} on={torchOn} onToggle={toggleTorch} />
             </div>
 
             {/* Live identification labels */}

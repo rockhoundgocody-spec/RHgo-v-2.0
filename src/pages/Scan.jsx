@@ -160,6 +160,13 @@ export default function Scan() {
     const primary = uploads[0]?.file_url;
     primaryRef.current = primary;
 
+    // Background removal — runs alongside identification. The AI still reads the
+    // untouched originals; only the photo we show and save gets the cut-out.
+    const cutoutPromise = base44.functions
+      .invoke('removeSpecimenBackground', { image_url: primary })
+      .then((res) => res?.data?.cutout_url || null)
+      .catch(() => null);
+
     // Local bedrock geology context (Macrostrat) — improves ID plausibility
     let geologyContext = '';
     if (gpsRef.current) {
@@ -308,6 +315,10 @@ export default function Scan() {
       needsMoreEvidence: band === 'low',
       isOfflineFallback: false,
     };
+
+    // Swap in the background-free cut-out for display + saving (best-effort)
+    const cutoutUrl = await cutoutPromise;
+    if (cutoutUrl) primaryRef.current = cutoutUrl;
 
     return { result: r, uploads, reasoningResult };
   }, []);

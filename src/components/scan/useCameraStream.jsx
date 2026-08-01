@@ -10,6 +10,8 @@ export default function useCameraStream({ active = true } = {}) {
   const streamRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -30,6 +32,10 @@ export default function useCameraStream({ active = true } = {}) {
           return;
         }
         streamRef.current = stream;
+        // Torch (flashlight) is only controllable on some devices/browsers
+        const track = stream.getVideoTracks()[0];
+        const caps = track?.getCapabilities?.();
+        setTorchSupported(!!caps && 'torch' in caps);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
@@ -49,8 +55,22 @@ export default function useCameraStream({ active = true } = {}) {
         streamRef.current = null;
       }
       setReady(false);
+      setTorchOn(false);
+      setTorchSupported(false);
     };
   }, [active]);
+
+  const toggleTorch = async () => {
+    const track = streamRef.current?.getVideoTracks?.()[0];
+    if (!track) return;
+    const next = !torchOn;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: next }] });
+      setTorchOn(next);
+    } catch {
+      setTorchSupported(false);
+    }
+  };
 
   const capture = () => new Promise((resolve) => {
     const v = videoRef.current;
@@ -71,5 +91,5 @@ export default function useCameraStream({ active = true } = {}) {
     setReady(false);
   };
 
-  return { videoRef, ready, error, capture, stop };
+  return { videoRef, ready, error, capture, stop, torchSupported, torchOn, toggleTorch };
 }

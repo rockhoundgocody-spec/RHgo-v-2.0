@@ -3,6 +3,7 @@ import useCameraStream from './useCameraStream';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import AngleGuide from './AngleGuide.jsx';
 import { Button } from '@/components/ui/button';
+import TorchButton from './TorchButton.jsx';
 import { Camera, Check } from 'lucide-react';
 
 const ANGLES = [
@@ -17,7 +18,7 @@ const ANGLES = [
  * for 3D reconstruction. Calls onComplete(blobs[]) when all angles captured.
  */
 export default function MultiAngleCapture({ onComplete, onCancel }) {
-  const { videoRef, ready, capture } = useCameraStream({ active: true });
+  const { videoRef, ready, capture, torchSupported, torchOn, toggleTorch } = useCameraStream({ active: true });
   const [angles, setAngles] = useState(ANGLES.map((a) => ({ ...a, captured: false, blob: null })));
   const [index, setIndex] = useState(0);
   const [flash, setFlash] = useState(false);
@@ -43,12 +44,14 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
 
   return (
     <HudFrame label={`Multi-Angle Capture · ${completed}/${angles.length}`}>
-      <div className="relative aspect-square w-full rounded-md overflow-hidden hud-grid-bg">
+      {/* 4:3 viewport with object-contain — holding the phone sideways shows
+          (and captures) the whole landscape frame instead of cropping it */}
+      <div className="relative aspect-[4/3] w-full rounded-md overflow-hidden hud-grid-bg">
         <video
           ref={videoRef}
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
         />
         <div
           className="absolute inset-0 pointer-events-none"
@@ -58,15 +61,9 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
           }}
         />
 
-        {/* ghost wireframe target */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div
-            className="w-3/5 aspect-square rounded-full border-2 border-dashed"
-            style={{
-              borderColor: 'hsla(280,100%,75%,0.45)',
-              boxShadow: '0 0 32px hsla(280,100%,60%,0.35), inset 0 0 24px hsla(280,100%,60%,0.25)',
-            }}
-          />
+        {/* Flashlight */}
+        <div className="absolute bottom-2 right-2 z-20">
+          <TorchButton supported={torchSupported} on={torchOn} onToggle={toggleTorch} />
         </div>
 
         {/* flash on capture */}
