@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Zap, GraduationCap, Lock } from 'lucide-react';
+import React from 'react';
+import { GraduationCap, Lock } from 'lucide-react';
 
 const STORAGE_KEY = 'rhgo_chaos_mode';
 const PARENTAL_LOCK_KEY = 'rhgo_parental_lock_chaos';
@@ -51,7 +51,7 @@ export default function ChaosModeToggle({ chaos, onToggle, locked }) {
     <button
       onClick={onToggle}
       disabled={locked}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95 select-none disabled:cursor-not-allowed"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95 select-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
       style={{
         background: locked
           ? 'hsla(0,0%,15%,0.5)'

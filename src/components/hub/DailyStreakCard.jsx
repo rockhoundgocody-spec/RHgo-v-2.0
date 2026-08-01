@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { Flame, Zap } from 'lucide-react';
 
@@ -64,7 +63,7 @@ export default function DailyStreakCard({ companion }) {
         {!revealed ? (
           <button
             onClick={() => setRevealed(true)}
-            className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-all"
+            className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 ring-offset-background"
             style={{ borderColor: `${color}40`, background: `${color}08` }}
           >
             <div className="text-4xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300">

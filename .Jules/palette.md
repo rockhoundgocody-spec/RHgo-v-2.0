@@ -4,3 +4,7 @@
 ## 2024-07-15 - AR Accessibility Focus Styles
 **Learning:** Found that custom highly-styled animated modals like the AR Encounter screen often miss `focus-visible` ring indicators, making keyboard interactions invisible. These elements typically use custom inline styles or heavily customized Tailwind that strip default browser rings.
 **Action:** Always ensure that custom animated buttons (especially those dismissing modals or changing encounter states) explicitly include `focus-visible:outline-none focus-visible:ring-2` to restore keyboard usability without affecting touch/mouse visual design.
+
+## 2026-08-01 - Bottom Navigation and HUD Interactive Focus Rings
+**Learning:** Bottom navigation tabs (such as CrystalNav) and key HUD interaction cards/toggles require explicit theme-aware `focus-visible:ring-offset-2 ring-offset-background` styling to ensure they remain highly visible during keyboard navigation. Using color-coded themed focus rings (such as HUD-cyan for navigation tabs and Amethyst for hero scan actions) preserves the immersive design style of the app while offering outstanding user accessibility.
+**Action:** Apply `focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background` using specific themed colors corresponding to the interaction role (HUD-cyan, amethyst, or orange) for any global menus or toggles.
