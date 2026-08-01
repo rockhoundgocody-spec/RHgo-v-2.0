@@ -8,6 +8,16 @@ import { Shuffle, MapPin, Loader2, Navigation, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 
+const getSecureRandomIndex = (max) => {
+  if (max <= 0) return 0;
+  if (typeof window !== "undefined" && window.crypto && typeof window.crypto.getRandomValues === "function") {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+  return Math.floor(Math.random() * max);
+};
+
 const SAMPLE_INTENTIONS = [
   'find something purple',
   'discover a crystal',
@@ -26,7 +36,7 @@ export default function IntentionRoulette() {
     setError(null);
     setResult(null);
 
-    const intentionText = intention.trim() || SAMPLE_INTENTIONS[Math.floor(Math.random() * SAMPLE_INTENTIONS.length)];
+    const intentionText = intention.trim() || SAMPLE_INTENTIONS[getSecureRandomIndex(SAMPLE_INTENTIONS.length)];
 
     setLoading(true);
     try {
@@ -53,7 +63,7 @@ export default function IntentionRoulette() {
     }
   };
 
-  const randomPlaceholder = SAMPLE_INTENTIONS[Math.floor(Math.random() * SAMPLE_INTENTIONS.length)];
+  const randomPlaceholder = SAMPLE_INTENTIONS[getSecureRandomIndex(SAMPLE_INTENTIONS.length)];
 
   return (
     <div
