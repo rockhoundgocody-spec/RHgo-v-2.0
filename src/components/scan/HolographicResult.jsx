@@ -10,6 +10,7 @@ import CorrectionModal from './CorrectionModal.jsx';
 import RarityFireworks from './RarityFireworks.jsx';
 import ClaimPathModal from './ClaimPathModal.jsx';
 import FieldRarityBadge from './FieldRarityBadge.jsx';
+import ContextIntegrityCard from './ContextIntegrityCard.jsx';
 
 const RARITY_CFG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.5)',  border: 'hsla(215,20%,55%,0.3)',  badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
@@ -224,6 +225,14 @@ export default function HolographicResult({
               onCompare={onCompare}
               deepLoading={deepLoading}
               deepDone={!!deepAnalysis}
+            />
+
+            {/* Evidence integrity grade + handbook disclaimers + Tier 2 trigger */}
+            <ContextIntegrityCard
+              integrity={result?.context_integrity}
+              handbook={result?.handbook}
+              essence={result?.essence}
+              onRunTests={() => setActiveTab('tests')}
             />
 
             {/* Lookalikes — kept from original ID tab */}

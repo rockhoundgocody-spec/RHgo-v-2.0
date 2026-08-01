@@ -8,6 +8,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
+import { computeEssence } from '../../shared/essence.ts';
 
 // ── Great Lakes 30-class list (inline — no local imports in Deno) ────────────
 const GL_30 = [
@@ -220,6 +221,19 @@ Deno.serve(async (req) => {
     });
     const { enforcement } = applyHandbook(identification, contextIntegrity);
 
+    // ── ESSENCE ALGORITHM: Bayesian posterior + entropy Tier 2 trigger ───────
+    const candList = [...(identification.candidates || [])];
+    if (identification.top_match && !candList.some((c) => c.name === identification.top_match)) {
+      candList.unshift({ name: identification.top_match, confidence: identification.confidence });
+    }
+    // Spatial likelihood P(L|M): boost minerals known at this beach/locality
+    const locationLikelihoods: Record<string, number> = {};
+    const beachKey = Object.keys(BEACH_PRIORS).find((k) => (beach_name || '').toLowerCase().includes(k));
+    if (beachKey) {
+      for (const m of BEACH_PRIORS[beachKey]) locationLikelihoods[m] = 1.5;
+    }
+    const essence = computeEssence({ candidates: candList, locationLikelihoods });
+
     // ── OPTIONAL SAVE ─────────────────────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
@@ -311,6 +325,7 @@ Deno.serve(async (req) => {
       hotspot_contribution: hotspotContribution,
       context_integrity: contextIntegrity,
       handbook: enforcement,
+      essence,
       local_geology: localGeology,
       great_lakes_mode: isGreatLakes,
       meta: { model: 'gemini_3_flash', user_email: user.email, timestamp: new Date().toISOString() },

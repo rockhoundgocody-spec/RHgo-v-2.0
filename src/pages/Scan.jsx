@@ -138,6 +138,10 @@ export default function Scan() {
   anglesRef.current = angles;
   const gpsRef = useRef(gpsCoords);
   gpsRef.current = gpsCoords;
+  const wetDryRef = useRef(wetDry);
+  wetDryRef.current = wetDry;
+  const beachRef = useRef(beachName);
+  beachRef.current = beachName;
   const primaryRef = useRef(null);
 
   const runner = useCallback(async () => {
@@ -257,6 +261,26 @@ export default function Scan() {
         },
       },
     });
+
+    // Canonical enforcement pass — the backend applies the Operating Handbook,
+    // Context Integrity grading, and Essence entropy math to this result
+    // (prefilled_result skips the LLM, so this is fast and free).
+    try {
+      const veri = await base44.functions.invoke('identifySpecimen', {
+        image_url: primary,
+        lat: gpsRef.current?.lat,
+        lng: gpsRef.current?.lng,
+        save: false,
+        prefilled_result: r,
+        wet_dry: wetDryRef.current,
+        beach_name: beachRef.current,
+      });
+      const d = veri?.data;
+      if (d?.context_integrity) r.context_integrity = d.context_integrity;
+      if (d?.handbook) r.handbook = d.handbook;
+      if (d?.essence) r.essence = d.essence;
+      if (typeof d?.identification?.confidence === 'number') r.confidence = d.identification.confidence;
+    } catch { /* enforcement is best-effort — result still renders */ }
 
     // Build HRM-style reasoning result from the LLM output.
     const modelConf = typeof r?.confidence === 'number' ? r.confidence : 0.5;
