@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { getSafeRedirectUrl } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,9 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('redirect') || params.get('from_url') || '/';
+      window.location.href = getSafeRedirectUrl(target, '/');
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -129,12 +132,20 @@ export default function Login() {
           {/* OAuth buttons */}
           <div className="space-y-3 mb-6">
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("google", "/")}>
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                const target = params.get('redirect') || params.get('from_url') || '/';
+                base44.auth.loginWithProvider("google", getSafeRedirectUrl(target, '/'));
+              }}>
               <GoogleIcon className="w-4 h-4 mr-2" />
               Continue with Google
             </Button>
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("facebook", "/")}>
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                const target = params.get('redirect') || params.get('from_url') || '/';
+                base44.auth.loginWithProvider("facebook", getSafeRedirectUrl(target, '/'));
+              }}>
               <FacebookIcon className="w-4 h-4 mr-2" />
               Continue with Facebook
             </Button>

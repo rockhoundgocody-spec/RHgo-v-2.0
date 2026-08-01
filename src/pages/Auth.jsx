@@ -12,6 +12,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { getSafeRedirectUrl } from '@/lib/app-params';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,9 @@ export default function Auth() {
     setError(''); setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = '/';
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('redirect') || params.get('from_url') || '/';
+      window.location.href = getSafeRedirectUrl(target, '/');
     } catch (err) {
       setError(err.message || 'Invalid email or password');
     } finally { setLoading(false); }
@@ -73,7 +76,9 @@ export default function Auth() {
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) base44.auth.setToken(result.access_token);
-      window.location.href = '/onboarding';
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('redirect') || params.get('from_url') || '/onboarding';
+      window.location.href = getSafeRedirectUrl(target, '/onboarding');
     } catch (err) {
       setError(err.message || 'Invalid code — check your email');
     } finally { setLoading(false); }
@@ -85,14 +90,21 @@ export default function Auth() {
     catch (err) { setError(err.message || 'Failed to resend'); }
   };
 
-  const GoogleBtn = ({ label }) => (
-    <Button variant="outline"
-      className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-      onClick={() => base44.auth.loginWithProvider('google', '/')}>
-      <GoogleIcon className="w-4 h-4 mr-2" />
-      {label}
-    </Button>
-  );
+  const GoogleBtn = ({ label }) => {
+    const handleGoogleLogin = () => {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('redirect') || params.get('from_url') || '/';
+      base44.auth.loginWithProvider('google', getSafeRedirectUrl(target, '/'));
+    };
+    return (
+      <Button variant="outline"
+        className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
+        onClick={handleGoogleLogin}>
+        <GoogleIcon className="w-4 h-4 mr-2" />
+        {label}
+      </Button>
+    );
+  };
 
   const Divider = () => (
     <div className="relative my-5">
@@ -163,7 +175,7 @@ export default function Auth() {
                 style={{ background: 'hsla(255,30%,14%,0.7)', border: '1px solid hsla(270,40%,40%,0.2)' }}>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'hsla(280,70%,50%,0.2)', border: '1px solid hsla(280,70%,55%,0.3)' }}>
-                  <Icon size={14} style={{ color: 'hsl(280,85%,78%)' }} />
+                  <Icon size={14} style={{ color: 'hsl(280,85%,82%)' }} />
                 </div>
                 <div>
                   <div className="text-white font-semibold text-xs">{label}</div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { getSafeRedirectUrl } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +51,9 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = "/onboarding";
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('redirect') || params.get('from_url') || '/onboarding';
+      window.location.href = getSafeRedirectUrl(target, '/onboarding');
     } catch (err) {
       setError(err.message || "Invalid code — check your email and try again");
     } finally {
@@ -69,7 +72,9 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    const params = new URLSearchParams(window.location.search);
+    const target = params.get('redirect') || params.get('from_url') || '/';
+    base44.auth.loginWithProvider("google", getSafeRedirectUrl(target, '/'));
   };
 
   if (showOtp) {
@@ -156,7 +161,11 @@ export default function Register() {
       <Button
         variant="outline"
         className="w-full h-11 text-sm font-semibold mb-5 -mt-2 border-white/15 bg-white/5 hover:bg-white/10 text-white"
-        onClick={() => base44.auth.loginWithProvider("facebook", "/")}
+        onClick={() => {
+          const params = new URLSearchParams(window.location.search);
+          const target = params.get('redirect') || params.get('from_url') || '/';
+          base44.auth.loginWithProvider("facebook", getSafeRedirectUrl(target, '/'));
+        }}
       >
         <FacebookIcon className="w-4 h-4 mr-2" />
         Sign up with Facebook
