@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, ChevronDown, ChevronUp, Gem } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
 
 const RARITY_CONFIG = {
@@ -118,9 +118,18 @@ export default function SpecimenCard({ specimen, index }) {
 
         {/* Stats row */}
         <div className="grid grid-cols-3 text-center gap-1">
-          <StatCell label="AI ID" value={purity ? `${purity}%` : '—'} color={confColor} />
-          <StatCell label="Score" value={collectionScore !== '—' ? `${collectionScore}★` : '—'} color={rarity.color} />
-          <StatCell label="Stage" value={evoLabel.split(' ')[0]} color={rarity.color} />
+          <div className="rounded px-1 py-1.5" style={{ background: 'hsla(220,40%,8%,0.6)' }}>
+            <div className="text-[10px] font-bold" style={{ color: confColor }}>{purity ? `${purity}%` : '—'}</div>
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/30 mt-0.5">AI ID</div>
+          </div>
+          <div className="rounded px-1 py-1.5" style={{ background: 'hsla(220,40%,8%,0.6)' }}>
+            <div className="text-[10px] font-bold" style={{ color: rarity.color }}>{collectionScore !== '—' ? `${collectionScore}★` : '—'}</div>
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/30 mt-0.5">Score</div>
+          </div>
+          <div className="rounded px-1 py-1.5" style={{ background: 'hsla(220,40%,8%,0.6)' }}>
+            <div className="text-[10px] font-bold" style={{ color: rarity.color }}>{evoLabel.split(' ')[0]}</div>
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/30 mt-0.5">Stage</div>
+          </div>
         </div>
         {/* Honest confidence label */}
         {confLabel && (
@@ -172,14 +181,5 @@ export default function SpecimenCard({ specimen, index }) {
         )}
       </div>
     </Link>
-  );
-}
-
-function StatCell({ label, value, color }) {
-  return (
-    <div className="rounded px-1 py-1.5" style={{ background: 'hsla(220,40%,8%,0.6)' }}>
-      <div className="text-[10px] font-bold" style={{ color }}>{value}</div>
-      <div className="text-[8px] uppercase tracking-[0.2em] text-white/30 mt-0.5">{label}</div>
-    </div>
   );
 }
