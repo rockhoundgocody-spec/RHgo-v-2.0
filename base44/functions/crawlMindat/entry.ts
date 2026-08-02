@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * crawlMindat — admin-only crawler that pulls mineral species from mindat.org
@@ -124,7 +124,10 @@ Deno.serve(async (req) => {
       totalFound: candidates.length,
     });
   } catch (error) {
-    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
+    // Never return a stack trace to the client — it leaks internal paths and
+    // module layout. Log it server-side instead.
+    console.error('crawlMindat error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.next/
+.out/
+venv/
+.env*
+public/assets/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.ico
+*.pdf
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
