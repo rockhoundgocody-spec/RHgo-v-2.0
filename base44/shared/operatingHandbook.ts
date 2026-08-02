@@ -57,17 +57,31 @@ export function handbookPromptBlock() {
   ].join(' ');
 }
 
+export interface Identification {
+  confidence?: number;
+  value_estimate?: string | null;
+  top_match?: string;
+  scientific_name?: string;
+  description?: string;
+  chemical_formula?: string;
+}
+
+export interface ContextIntegrity {
+  confidence_cap: number;
+  score: number;
+}
+
 /**
  * Enforce handbook rules on a raw identification result.
  * Returns { identification, enforcement } — identification is adjusted
  * in place (confidence caps, value withheld), enforcement is the audit
  * record of every rule applied.
  */
-export function applyHandbook(identification, contextIntegrity) {
+export function applyHandbook(identification: Identification, contextIntegrity?: ContextIntegrity | null) {
   const enforcement = {
     handbook_version: HANDBOOK_VERSION,
-    rules_applied: [],
-    disclaimers: [DISCLAIMERS.identification, DISCLAIMERS.legal],
+    rules_applied: [] as string[],
+    disclaimers: [DISCLAIMERS.identification, DISCLAIMERS.legal] as string[],
     confidence_original: identification.confidence ?? null,
     expert_review_required: false,
     safety_flag: false,
