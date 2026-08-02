@@ -44,7 +44,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getAppParamValue("from_url", { defaultValue: isNode ? '' : window.location.href }),
+		fromUrl: getAppParamValue("from_url", { defaultValue: typeof window !== 'undefined' && window.location ? window.location.href : '' }),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: env.VITE_BASE44_APP_BASE_URL }),
 	}
