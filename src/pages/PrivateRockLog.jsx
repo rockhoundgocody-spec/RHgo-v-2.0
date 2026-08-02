@@ -2,7 +2,7 @@
  * PrivateRockLog — personal, private map + list of rocks you've physically collected.
  * Coordinates and photos are visible only to you.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,7 +54,7 @@ export default function PrivateRockLog() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
           style={{
             background: 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))',
             boxShadow: '0 4px 16px hsla(280,80%,50%,0.35)',
@@ -120,7 +120,12 @@ function LogCard({ log, onDelete }) {
             <p className="text-white font-semibold text-sm truncate">{log.mineral_name}</p>
             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{log.rarity}</span>
           </div>
-          <button onClick={() => onDelete(log.id)} className="text-white/20 hover:text-rose-400 transition shrink-0">
+          <button
+            onClick={() => onDelete(log.id)}
+            className="text-white/20 hover:text-rose-400 transition shrink-0 focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:outline-none rounded-sm"
+            aria-label="Delete log"
+            title="Delete log"
+          >
             <Trash2 size={14} />
           </button>
         </div>
@@ -263,8 +268,10 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
             <button
               onClick={getLocation}
               disabled={locating}
-              className="px-3 rounded-xl text-xs font-semibold text-white transition"
+              className="px-3 rounded-xl text-xs font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:outline-none"
               style={{ background: 'hsla(195,80%,55%,0.15)', border: '1px solid hsla(195,80%,55%,0.3)' }}
+              aria-label="Get current location"
+              title="Get current location"
             >
               {locating ? '…' : <MapPin size={14} />}
             </button>
@@ -288,7 +295,7 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
 
         {/* Photo upload */}
         <Field label="Photo">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer focus-within:ring-2 focus-within:ring-amethyst-glow/50 focus-within:outline-none w-fit rounded-xl">
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white/50 transition"
               style={{ background: 'hsla(255,20%,18%,0.6)', border: '1px solid hsla(255,20%,30%,0.3)' }}
@@ -296,19 +303,19 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
               <Image size={14} />
               {uploading ? 'Uploading…' : form.image_url ? '✓ Photo added' : 'Choose photo'}
             </div>
-            <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
+            <input type="file" accept="image/*" onChange={handleImage} className="sr-only" />
           </label>
           {form.image_url && <img src={form.image_url} alt="preview" className="mt-2 w-20 h-20 rounded-xl object-cover" />}
         </Field>
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!form.mineral_name.trim() || saving}
-            className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition"
+            className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
             style={{ background: 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))', boxShadow: '0 4px 20px hsla(280,80%,50%,0.3)' }}
           >
             {saving ? 'Saving…' : 'Save Log'}

@@ -10,7 +10,7 @@ globalThis.window = {
 };
 
 // Mock base44 client
-vi.mock('@/api/base44Client', () => ({
+vi.mock('../api/base44Client', () => ({
   base44: {
     entities: {
       Subscription: {
