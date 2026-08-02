@@ -1,6 +1,8 @@
 {
   "lint": {
-    "include": ["base44/"],
+    "include": [
+      "base44/"
+    ],
     "rules": {
       "exclude": [
         "no-import-prefix",
@@ -10,5 +12,10 @@
         "no-empty"
       ]
     }
+  },
+  "test": {
+    "include": [
+      "base44/"
+    ]
   }
 }
