@@ -23,13 +23,23 @@ function loadQueue() {
 }
 
 function saveQueue(items) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  } catch {
-    // storage full — drop oldest
-    if (items.length > 1) saveQueue(items.slice(-50));
+  // Storage full → shed the oldest entries until it fits. Halving guarantees
+  // progress; the previous slice(-50) recursed on an identical array whenever
+  // the queue was already <= 50 items and silently dropped the write.
+  let batch = items;
+  while (batch.length > 0) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(batch));
+      return;
+    } catch {
+      batch = batch.slice(Math.ceil(batch.length / 2));
+    }
   }
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* nothing more we can do */ }
 }
+
+// A single poisoned write must never block every later find behind it.
+const MAX_ATTEMPTS = 5;
 
 let flushing = false;
 
@@ -56,8 +66,20 @@ export async function flushQueue() {
         flushed += 1;
         queue.shift();
         saveQueue(queue);
-      } catch {
-        // Stop on first failure — preserves order, retry later.
+      } catch (err) {
+        // Client errors (4xx) will never succeed on retry — evict so the rest
+        // of the queue can drain instead of stalling behind a poison item.
+        const status = err?.status ?? err?.response?.status;
+        const attempts = (next.attempts || 0) + 1;
+        if ((status && status >= 400 && status < 500) || attempts >= MAX_ATTEMPTS) {
+          console.warn('offlineQueue: dropping unsendable write', next.entity, next.op, status);
+          queue.shift();
+          saveQueue(queue);
+          continue;
+        }
+        // Transient failure — record the attempt and retry later, order intact.
+        queue[0] = { ...next, attempts };
+        saveQueue(queue);
         break;
       }
     }

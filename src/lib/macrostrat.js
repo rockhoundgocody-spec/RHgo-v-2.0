@@ -5,9 +5,17 @@
 
 /** Fetch geologic map units at a point. Returns array of units (may be empty). */
 export async function fetchGeologyAt(lat, lng) {
-  const res = await fetch(
-    `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}`
-  );
+  // Bounded: this sits on the critical path of every scan — a hung upstream
+  // request must not stall identification.
+  let res;
+  try {
+    res = await fetch(
+      `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+  } catch {
+    return [];
+  }
   if (!res.ok) return [];
   const json = await res.json();
   return json?.success?.data || [];
