@@ -21,6 +21,20 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
+    // Derive tier SERVER-SIDE from the price's product — never trust the
+    // client-supplied `tier` (a caller could buy the cheap price but claim
+    // the 'family' entitlement in the webhook otherwise).
+    const PRODUCT_TIERS: Record<string, string> = {
+      'prod_UoyNC9AKOB5ZDh': 'field_pro',
+      'prod_UoyNPk13OVCr11': 'family',
+    };
+    const price = await stripe.prices.retrieve(priceId);
+    const productId = typeof price.product === 'string' ? price.product : price.product?.id;
+    const resolvedTier = PRODUCT_TIERS[productId] || 'field_pro';
+    if (tier && tier !== resolvedTier) {
+      console.warn(`createCheckoutSession: client tier '${tier}' ignored; price maps to '${resolvedTier}'`);
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
@@ -28,7 +42,14 @@ Deno.serve(async (req) => {
       cancel_url: cancelUrl,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
-        tier: tier || 'field_pro',
+        tier: resolvedTier,
+      },
+      // Propagate tier onto the SUBSCRIPTION object too — without this,
+      // customer.subscription.updated events carry no metadata.tier and the
+      // webhook silently downgrades 'family' subscribers to the default tier
+      // on every renewal/update.
+      subscription_data: {
+        metadata: { tier: resolvedTier },
       },
       ...(customerEmail ? { customer_email: customerEmail } : {}),
       allow_promotion_codes: true,
