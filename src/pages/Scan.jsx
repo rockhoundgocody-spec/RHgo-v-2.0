@@ -17,6 +17,7 @@ import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { useSubscription } from '@/lib/useSubscription';
+import { stripExif } from '@/lib/stripExif';
 
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
@@ -151,7 +152,10 @@ export default function Scan() {
       current
         .filter((a) => a.blob)
         .map(async (a) => {
-          const file = new File([a.blob], `${a.key}.jpg`, { type: 'image/jpeg' });
+          // Re-encode first: drops EXIF GPS so a photo can never carry exact
+          // find coordinates past the user's geo-privacy choice.
+          const clean = await stripExif(a.blob);
+          const file = new File([clean], `${a.key}.jpg`, { type: 'image/jpeg' });
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           return { ...a, file_url };
         })

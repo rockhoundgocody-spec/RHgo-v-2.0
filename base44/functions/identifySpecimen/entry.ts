@@ -304,15 +304,19 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Hotspot.update(found.id, { minerals });
         hotspotContribution = { type: 'updated', id: found.id };
       } else {
+        // Hotspot has public read — everything written here is world-visible.
+        // Snap to a ~1.1km grid so sharing a find never publishes a dig site,
+        // and never write the reporter's email or the AI's free-text notes.
         const newHotspot = await base44.asServiceRole.entities.Hotspot.create({
           name: `${identification.top_match} Site (User Find)`,
-          lat, lng,
+          lat: Math.round(lat * 100) / 100,
+          lng: Math.round(lng * 100) / 100,
           minerals: [identification.top_match],
           land_type: 'unknown',
           difficulty: 'moderate',
           trust_score: 0.4,
-          source: `user:${user.email}`,
-          description: `User-reported find: ${identification.description}`,
+          source: 'user_contribution',
+          description: `User-reported ${identification.top_match} in this area.`,
         });
         hotspotContribution = { type: 'created', id: newHotspot.id };
       }
