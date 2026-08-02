@@ -56,7 +56,7 @@ export default function QuickPinButton({ userLocation }) {
         onClick={handlePin}
         whileTap={{ scale: 0.88 }}
         disabled={state === 'saving'}
-        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         style={{
           background: state === 'saved'
             ? 'hsla(142,70%,30%,.35)'
