@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc -p ./jsconfig.json",
+    "typecheck": "tsc -p ./tsconfig.typecheck.json --noEmit --skipLibCheck --noResolve",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -81,7 +81,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.13.5",
+    "@types/punycode": "^2.1.4",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.3.4",
