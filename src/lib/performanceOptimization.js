@@ -141,7 +141,7 @@ export class VirtualScroller {
     const { start, end } = this.visibleRange;
     const visibleItems = this.items.slice(start, end);
 
-    this.container.innerHTML = '';
+    this.container.replaceChildren();
 
     visibleItems.forEach((item, i) => {
       const el = this.renderItem(item, start + i);
@@ -190,16 +190,19 @@ export class ResponseCache {
 export function offloadWork(workerScript, data) {
   return new Promise((resolve, reject) => {
     const blob = new Blob([workerScript], { type: 'application/javascript' });
-    const worker = new Worker(URL.createObjectURL(blob));
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
 
     worker.onmessage = (e) => {
       resolve(e.data);
       worker.terminate();
+      URL.revokeObjectURL(url);
     };
 
     worker.onerror = (e) => {
       reject(e);
       worker.terminate();
+      URL.revokeObjectURL(url);
     };
 
     worker.postMessage(data);
@@ -230,6 +233,7 @@ export function detectMemoryLeaks() {
  * Network information API (adaptive quality)
  */
 export function getNetworkInfo() {
+  if (typeof navigator === 'undefined') return null;
   const connection =
     navigator.connection ||
     navigator.mozConnection ||
