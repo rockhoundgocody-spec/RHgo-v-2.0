@@ -4,6 +4,7 @@ import BlackOpalShader from './BlackOpalShader.jsx';
 import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
+import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
@@ -233,6 +234,11 @@ export default function AmethystOrb({
           background: `radial-gradient(circle, ${cfg.haloBase} 0%, hsla(195,100%,55%,0.2) 45%, hsla(330,90%,55%,0.12) 65%, transparent 80%)`,
         }}
       />
+
+      {/* Drifting glow motes — soft, organic particle field that breathes with her voice */}
+      {!reduceMotion && (
+        <OrbParticles size={size} getAmplitude={getAmplitude} />
+      )}
 
       {/* Growth rings — orbiting faceted rings that appear as the companion levels up.
           Tier 2: one ring. Tier 3: two counter-rotating rings. */}

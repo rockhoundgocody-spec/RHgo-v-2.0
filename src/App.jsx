@@ -41,6 +41,7 @@ const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries
 const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
 const Chronolith = lazy(() => import('@/pages/Chronolith'));
 const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
 const Badges = lazy(() => import('@/pages/Badges.jsx'));
 const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
           <Route path="/specimen/:id" element={<SpecimenDetail />} />
           <Route path="/chronolith" element={<Chronolith />} />
           <Route path="/quests" element={<QuestDashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/badges" element={<Badges />} />
           <Route path="/companion" element={<CompanionDashboard />} />
