@@ -76,9 +76,7 @@ export function useSpeechSynthesis() {
     try {
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
-        voice: 'en-US-Neural2-F',
-        rate:  0.92,
-        pitch: 0.0,
+        voice: 'honey', // warm, soft — her field-companion voice
       });
 
       const b64 = res?.data?.audioContent;
@@ -102,6 +100,8 @@ export function useSpeechSynthesis() {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
+      // Slightly slower playback — unhurried, relaxed trail-companion pacing
+      source.playbackRate.value = 0.95;
       source.connect(analyser);
       analyser.connect(ctx.destination);
       sourceRef.current = source;
@@ -143,7 +143,7 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop) {
   const _speak = () => {
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
-    utter.rate     = 0.90;
+    utter.rate     = 0.88;
     utter.pitch    = 1.05;
     utter.volume   = 1.0;
     const voices   = window.speechSynthesis.getVoices();
