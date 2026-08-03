@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc -p ./tsconfig.typecheck.json --noEmit --skipLibCheck --noResolve",
+    "typecheck": "tsc -p ./jsconfig.json --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -86,6 +86,7 @@
     "@types/punycode": "^2.1.4",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/three": "^0.185.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "baseline-browser-mapping": "^2.8.32",
