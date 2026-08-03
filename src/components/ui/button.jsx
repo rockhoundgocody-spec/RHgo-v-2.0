@@ -42,7 +42,7 @@ const Button = /** @type {any} */ (React.forwardRef(({ className, variant, size,
       ref={ref}
       {...props} />)
   );
-})
+}));
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
