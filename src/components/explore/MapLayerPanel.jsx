@@ -15,6 +15,14 @@ const LAYERS = [
   { id: 'expedition', label: 'Route',     icon: Route,   color: '#f59e0b' },
 ];
 
+const FOCUS_RINGS = {
+  all:        'focus-visible:ring-hud-cyan/50',
+  rare:       'focus-visible:ring-sky-400/50',
+  gaps:       'focus-visible:ring-amber-400/50',
+  public:     'focus-visible:ring-emerald-400/50',
+  expedition: 'focus-visible:ring-orange-400/50',
+};
+
 export default function MapLayerPanel({ activeLayer, onLayerChange }) {
   return (
     <div
@@ -29,9 +37,12 @@ export default function MapLayerPanel({ activeLayer, onLayerChange }) {
             key={layer.id}
             whileTap={{ scale: 0.92 }}
             onClick={() => onLayerChange(layer.id)}
+            aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-widest border transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background',
+              FOCUS_RINGS[layer.id]
             )}
             style={{
               background: active
