@@ -17,14 +17,21 @@ const WEIGHTS = {
   condition: 0.05,       // wet/dry condition known
 };
 
+interface Evidence {
+  imageCount?: number;
+  imageQualityScore?: number | null;
+  hasGps?: boolean;
+  geologyUnitCount?: number;
+  hasLocality?: boolean;
+  fieldTestCount?: number;
+  conditionKnown?: boolean;
+  contradictionCount?: number;
+}
+
 /**
- * evidence = {
- *   imageCount, imageQualityScore (0-10), hasGps, geologyUnitCount,
- *   hasLocality, fieldTestCount, conditionKnown, contradictionCount
- * }
  * Returns { score, grade, confidence_cap, factors, missing_evidence }
  */
-export function computeContextIntegrity(evidence = {}) {
+export function computeContextIntegrity(evidence: Evidence = {}) {
   const {
     imageCount = 1,
     imageQualityScore = null,
@@ -47,7 +54,7 @@ export function computeContextIntegrity(evidence = {}) {
   };
 
   let score = 0;
-  for (const [key, weight] of Object.entries(WEIGHTS)) {
+  for (const [key, weight] of Object.entries(WEIGHTS) as [keyof typeof WEIGHTS, number][]) {
     score += factors[key] * weight;
   }
   // Each unresolved contradiction drains the score

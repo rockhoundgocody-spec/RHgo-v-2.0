@@ -115,10 +115,10 @@ export default function PostComposer({ onPosted }) {
       )}
 
       <div className="flex items-center gap-2">
-        <label className="cursor-pointer p-2 rounded-lg transition hover:bg-white/5"
+        <label className="cursor-pointer p-2 rounded-lg transition hover:bg-white/5 focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none"
           style={{ background: 'hsla(255,20%,20%,0.5)' }}>
           <ImagePlus size={16} className="text-white/50" />
-          <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
+          <input type="file" accept="image/*" className="sr-only" onChange={handleImage} aria-label="Upload image" />
         </label>
         <button onClick={() => setShowFinds(s => !s)} disabled={specimens.length === 0}
           className="px-3 py-2 rounded-lg text-[11px] font-semibold text-white/60 transition hover:bg-white/5 disabled:opacity-30"
