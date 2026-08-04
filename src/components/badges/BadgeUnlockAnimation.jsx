@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share2, Copy, Check, Sparkles } from 'lucide-react';
 import LiquidMineralBadge, { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
 import BadgeMaterialPanel from './BadgeMaterialPanel.jsx';
+import AmethystParticleField from './AmethystParticleField.jsx';
 
 const PHASES  = ['initiate', 'charge', 'burst', 'reveal', 'complete'];
 const TIMINGS = { initiate: 900, charge: 1100, burst: 600, reveal: 1200, complete: Infinity };
@@ -329,10 +330,16 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
           {/* Phase 2: Charge */}
           {phase === 'charge' && <ChargeRings scheme={scheme} />}
 
-          {/* Phase 3: Burst */}
-          {showBurst && <CrystalBurst scheme={scheme} />}
+          {/* Phase 3: Burst — crystal explosion + amethyst particle bloom */}
+          {showBurst && (
+            <>
+              <CrystalBurst scheme={scheme} />
+              <AmethystParticleField intensity={1.5} size={320} />
+            </>
+          )}
 
-          {/* Phase 4 + 5: Badge */}
+          {/* Phase 4 + 5: Badge + amethyst particle aura */}
+          {showBadge && <AmethystParticleField intensity={1} size={300} />}
           <AnimatePresence>
             {showBadge && (
               <motion.div
@@ -366,8 +373,13 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             />
           )}
 
-          {/* Settling particles on complete */}
-          {completed && <SettlingParticles scheme={scheme} count={20} />}
+          {/* Settling particles + amethyst aura on complete */}
+          {completed && (
+            <>
+              <SettlingParticles scheme={scheme} count={20} />
+              <AmethystParticleField intensity={1.2} size={360} />
+            </>
+          )}
         </div>
 
         {/* ── Text: Reveal → Complete ── */}
