@@ -26,6 +26,17 @@ const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or 
 - Pseudomorphic Agate: silica preserving external crystal geometry of replaced aragonite, anhydrite, or calcite.
 - Polyhedroid Agate: flat-faced geometric multi-sided nodules constrained by volcanic crystal faces.
 - Shadow/Parallax Agate: alternating transparent and opaque bands creating 3D chatoyant shadow effect.
+- Blue Lace Agate: pale blue and white delicate lace-like swirling banding, Namibia.
+- Botswana Agate: small nodules, fine tightly packed purple/pink/black/grey/white bands, Botswana.
+- Crazy Lace Agate: chaotic twisting lace patterns in white/red/yellow/grey, Mexico.
+- Brazilian Agate: large nodules, pale yellow/gray/colorless fine concentric banding (often dyed commercially), Brazil.
+- Condor Agate: bright red and yellow fortification banding, sometimes mossy/sagenitic inclusions, Argentina.
+- Dugway Geode: light grey/blue thunder eggs with hollow drusy quartz cavities, Utah USA.
+- Priday Blue Bed Thunder Egg: blue and white level-banded agate in dark brown shell, Oregon USA.
+- Laguna Agate: ultra-tight vivid fortification banding (50+ bands/cm) in scarlet/orange/yellow/pink/purple, Chihuahua Mexico.
+- Turritella Agate: dark chert packed with silicified freshwater gastropod fossils (Elimia tenera), Wyoming USA.
+- Dendritic Agate: fern/tree-like manganese or iron oxide dendrites on or between bands, worldwide.
+- Sagenitic Agate: radiating needle sprays (goethite, rutile, aragonite, anhydrite) in translucent chalcedony.
 Use the banding pattern, inclusion type, color spectrum, and locality to determine the variety.`;
 
 // ── Great Lakes 30-class list (inline — no local imports in Deno) ────────────

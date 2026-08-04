@@ -191,6 +191,114 @@ export const AGATE_VARIETIES = [
     characteristics: 'Contains trapped liquid inclusions and mobile air bubbles within sealed cavities — ancient groundwater encapsulated during silica precipitation. Shaking the stone can make the bubble move visibly.',
     image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Enhydros.jpg/800px-Enhydros.jpg',
   },
+  {
+    name: 'Blue Lace Agate',
+    region: 'Africa',
+    rarity: 'uncommon',
+    age: 'Jurassic',
+    setting: 'Ysterputz Mine, Namibia; also Malawi, Kenya, Turkey, Georgia, Zambia',
+    characteristics: 'Delicate pale blue and white lace-like banding in swirling, convoluted patterns. One of the most popular ornamental agates, prized for its soft, calming color palette and intricate vein-style banding.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Blue_Lace_Agate.jpg/800px-Blue_Lace_Agate.jpg',
+  },
+  {
+    name: 'Botswana Agate',
+    region: 'Africa',
+    rarity: 'uncommon',
+    age: 'Permian (Karoo Series)',
+    setting: 'Bobonong, Botswana; volcanic basalts',
+    characteristics: 'Small nodules (2.5–5cm) with extraordinarily fine, tightly packed contrasting bands of purple, pink, black, grey, and white. Renowned for subtle, elegant color layering and occasional "eye" formations.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Agat_-_Bobonong%2C_Botswana.jpg/800px-Agat_-_Bobonong%2C_Botswana.jpg',
+  },
+  {
+    name: 'Crazy Lace Agate',
+    region: 'North America',
+    rarity: 'common',
+    age: 'Late Cretaceous',
+    setting: 'Chihuahua, Mexico; sedimentary deposits',
+    characteristics: 'Chaotic, twisting "lace-like" patterns in bright white, red, yellow, and grey. Also called "Laughter Stone" or "Mexican Lace Agate." Its wildly convoluted, decorative banding makes each piece entirely unique.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Crazy_Lace_Agate_-_Macro_Panorama.jpg/800px-Crazy_Lace_Agate_-_Macro_Panorama.jpg',
+  },
+  {
+    name: 'Brazilian Agate',
+    region: 'South America',
+    rarity: 'common',
+    age: 'Late Permian',
+    setting: 'Rio Grande do Sul, Brazil; decomposed volcanic ash and basalt',
+    characteristics: 'Often massive nodules up to 0.9m diameter. Natural specimens are pale yellow, gray, or colorless with fine concentric banding. Widely commercially dyed in bright colors — natural specimens have subtle, high-quality banding.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Brazilian_agate_section_%28detail%29_%28cropped%29.JPG/800px-Brazilian_agate_section_%28detail%29_%28cropped%29.JPG',
+  },
+  {
+    name: 'Condor Agate',
+    region: 'South America',
+    rarity: 'rare',
+    age: 'Tertiary',
+    setting: 'Mendoza Province, Argentina',
+    characteristics: 'Bright red and yellow fortification banding with exceptional color saturation. May contain mossy or sagenitic inclusions. One of the most sought-after Argentine agates for its vivid, warm color palette.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Argentina001_%28cropped%29.jpg/800px-Argentina001_%28cropped%29.jpg',
+  },
+  {
+    name: 'Dugway Geode',
+    region: 'North America',
+    rarity: 'uncommon',
+    age: 'Tertiary',
+    setting: 'Juab County, Utah, USA; volcanic geode beds',
+    characteristics: 'Light grey to blue chalcedony nodules (thunder eggs) often containing hollow cavities lined with sparkling drusy quartz crystals. Popular for collecting as the geodes can be cracked open to reveal crystal-lined interiors.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Dugway_Geode_%28Juab_County%2C_Utah%2C_USA%29_2_%2834581522545%29.jpg/800px-Dugway_Geode_%28Juab_County%2C_Utah%2C_USA%29_2_%2834581522545%29.jpg',
+  },
+  {
+    name: 'Priday Blue Bed Thunder Egg',
+    region: 'North America',
+    rarity: 'uncommon',
+    age: 'Miocene (John Day Formation)',
+    setting: 'Richardson Ranch, near Madras, Oregon, USA; rhyolitic volcanic ash',
+    characteristics: 'Blue and white level-banded agate filling thunder egg nodules with a dark brown shell. The famous "Blue Bed" at Pony Butte produces distinctive blue-tinted agate sought by collectors worldwide.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Thunder_Egg_Agate_%28Priday_Blue_Bed%2C_John_Day_Formation%2C_Miocene%3B_near_Madras%2C_Oregon%2C_USA%29_3_%2833992544563%29.jpg/800px-Thunder_Egg_Agate_%28Priday_Blue_Bed%2C_John_Day_Formation%2C_Miocene%3B_near_Madras%2C_Oregon%2C_USA%29_3_%2833992544563%29.jpg',
+  },
+  {
+    name: 'Antarctica Agate',
+    region: 'Antarctica',
+    rarity: 'rare',
+    age: 'Tertiary',
+    setting: 'King George Island, South Shetland Islands, Antarctica',
+    characteristics: 'White and clear banded nodular agate from one of the most remote localities on Earth. Collected near Bellingshausen Station. Extremely rare due to the inaccessibility of the source.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Agate_%28Tertiary%3B_Agate_Bay%2C_King_George_Island%2C_South_Shetland_Islands%29_1.jpg/800px-Agate_%28Tertiary%3B_Agate_Bay%2C_King_George_Island%2C_South_Shetland_Islands%29_1.jpg',
+  },
+  {
+    name: 'Sagenitic Agate',
+    region: 'Structural Variety',
+    rarity: 'uncommon',
+    age: 'Varies',
+    setting: 'Worldwide; notable in Brazil, Nipomo CA, Texas Trans-Pecos, Bulgaria',
+    characteristics: 'Contains acicular (needle-shaped) mineral inclusions — anhydrite, aragonite, goethite, rutile, or zeolite — that form radiating needle sprays within translucent chalcedony. Chalcedony often forms tubes around these crystals, sometimes replacing the original mineral as a pseudomorph.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Agate_Rio_Grande_do_Sul_Caillois_Donation_MNHN_n24.jpg/800px-Agate_Rio_Grande_do_Sul_Caillois_Donation_MNHN_n24.jpg',
+  },
+  {
+    name: 'Dendritic Agate',
+    region: 'Structural Variety',
+    rarity: 'uncommon',
+    age: 'Varies',
+    setting: 'Worldwide; notable in India, Brazil, USA, Kazakhstan',
+    characteristics: 'Features dark-colored, fern-patterned or tree-like inclusions (dendrites) of manganese oxides or iron oxides on agate surfaces or between bands. Despite plant-like appearance, the dendrites are entirely mineral — a fractal growth pattern of oxide crystallization.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Dendritic_agate_6.jpg/800px-Dendritic_agate_6.jpg',
+  },
+  {
+    name: 'Laguna Agate',
+    region: 'North America',
+    rarity: 'rare',
+    age: 'Tertiary',
+    setting: 'Ojo Laguna, Chihuahua, Mexico; rhyolitic ash-flow tuffs',
+    characteristics: 'Considered one of the finest agates in the world. Exceptionally tight, vivid fortification banding in scarlet red, orange, yellow, pink, and purple. Known for "strawberry" color zones and incredible band count — up to 50+ bands per centimeter.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/LagunaAgateFromMexico_%28cropped%29.jpg/800px-LagunaAgateFromMexico_%28cropped%29.jpg',
+  },
+  {
+    name: 'Turritella Agate',
+    region: 'North America',
+    rarity: 'uncommon',
+    age: 'Eocene (Green River Formation)',
+    setting: 'Wyoming, USA; lacustrine fossiliferous limestone',
+    characteristics: 'Dark chert packed with fossilized freshwater gastropod shells (Elimia tenera, misidentified as Turritella). The snail shells are silicified — replaced by chalcedony — creating a distinctive dark matrix with light spiral fossils throughout. A fossil agatization variety.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Elimia_fossils_Wyoming.jpg',
+  },
 ];
 
 // ── AI Prompt Enrichment Block ─────────────────────────────────────────────
@@ -211,4 +319,15 @@ export const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an ag
 - Pseudomorphic Agate: silica preserving external crystal geometry of replaced aragonite, anhydrite, or calcite.
 - Polyhedroid Agate: flat-faced geometric multi-sided nodules constrained by volcanic crystal faces.
 - Shadow/Parallax Agate: alternating transparent and opaque bands creating 3D chatoyant shadow effect.
+- Blue Lace Agate: pale blue and white delicate lace-like swirling banding, Namibia.
+- Botswana Agate: small nodules, fine tightly packed purple/pink/black/grey/white bands, Botswana.
+- Crazy Lace Agate: chaotic twisting lace patterns in white/red/yellow/grey, Mexico.
+- Brazilian Agate: large nodules, pale yellow/gray/colorless fine concentric banding (often dyed commercially), Brazil.
+- Condor Agate: bright red and yellow fortification banding, sometimes mossy/sagenitic inclusions, Argentina.
+- Dugway Geode: light grey/blue thunder eggs with hollow drusy quartz cavities, Utah USA.
+- Priday Blue Bed Thunder Egg: blue and white level-banded agate in dark brown shell, Oregon USA.
+- Laguna Agate: ultra-tight vivid fortification banding (50+ bands/cm) in scarlet/orange/yellow/pink/purple, Chihuahua Mexico.
+- Turritella Agate: dark chert packed with silicified freshwater gastropod fossils (Elimia tenera), Wyoming USA.
+- Dendritic Agate: fern/tree-like manganese or iron oxide dendrites on or between bands, worldwide.
+- Sagenitic Agate: radiating needle sprays (goethite, rutile, aragonite, anhydrite) in translucent chalcedony.
 Use the banding pattern, inclusion type, color spectrum, and locality to determine the variety.`;
