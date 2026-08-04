@@ -156,18 +156,20 @@ export default function QuickIDStack({
           {deepLoading ? 'Analyzing…' : deepDone ? 'Deep Analysis Done ✓' : 'Run Deep Analysis'}
         </button>
 
-        <button
-          onClick={onCompare}
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.97]"
-          style={{
-            background: 'hsla(255,30%,12%,0.6)',
-            border: '1px solid hsla(270,20%,30%,0.3)',
-            color: 'hsla(0,0%,100%,0.6)',
-          }}
-        >
-          <GitCompare size={13} />
-          Compare
-        </button>
+        {onCompare && (
+          <button
+            onClick={onCompare}
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.97]"
+            style={{
+              background: 'hsla(255,30%,12%,0.6)',
+              border: '1px solid hsla(270,20%,30%,0.3)',
+              color: 'hsla(0,0%,100%,0.6)',
+            }}
+          >
+            <GitCompare size={13} />
+            Compare
+          </button>
+        )}
       </div>
 
       {/* Field tests quick link */}

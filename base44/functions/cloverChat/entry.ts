@@ -94,10 +94,15 @@ ${stateBits}`;
       }
     }
 
+    // Models sometimes emit the literal string "null" — normalise it so the
+    // client never tries to log a find called "null".
+    const details = parsed?.find_details;
+    const cleanDetails = details && String(details).trim().toLowerCase() !== 'null' ? String(details) : null;
+
     return Response.json({
       reply: String(parsed?.reply || `Hey ${name}! What did you find today?`).trim(),
-      log_find: !!parsed?.log_find,
-      find_details: parsed?.find_details || null,
+      log_find: !!parsed?.log_find && !!cleanDetails,
+      find_details: cleanDetails,
     });
   } catch (error) {
     console.error('cloverChat error:', error);

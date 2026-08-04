@@ -22,6 +22,10 @@ export default async function (req) {
     if (amount == null || Number.isNaN(Number(amount))) {
       return Response.json({ error: 'Missing amount' }, { status: 400 });
     }
+    // Server-side bounds — a client can call this endpoint directly, so never
+    // trust the requested amount: positive integers only, capped per award.
+    const MAX_AWARD = 500;
+    const safeAmount = Math.min(Math.max(Math.round(Number(amount)), 1), MAX_AWARD);
 
     // ── Idempotency check: never award twice for the same event ──
     if (idempotency_key) {
@@ -60,12 +64,12 @@ export default async function (req) {
       await base44.asServiceRole.entities.XPAward.create({
         owner_email: user.email,
         idempotency_key,
-        amount: Math.round(Number(amount)),
+        amount: safeAmount,
         reason: reason || null,
       });
     }
 
-    const newXP = (profile.total_xp || 0) + Number(amount);
+    const newXP = (profile.total_xp || 0) + safeAmount;
     const newLevel = Math.min(Math.floor(newXP / XP_PER_LEVEL) + 1, MAX_LEVEL);
     const leveledUp = newLevel > (profile.level || 1);
 
