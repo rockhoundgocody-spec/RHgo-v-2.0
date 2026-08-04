@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mountain, Sparkles, Waves, Atom, MapPin, ChevronRight } from 'lucide-react';
+import { Mountain, Sparkles, Waves, Atom, MapPin, ChevronRight, Search } from 'lucide-react';
 import {
   AGATE_GENESIS,
   AGATE_TRACE_COLORS,
@@ -18,6 +18,21 @@ const RARITY_STYLES = {
 
 export default function AgateGuide() {
   const [selected, setSelected] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [rarityFilter, setRarityFilter] = useState('all');
+
+  const filteredVarieties = AGATE_VARIETIES.filter((v) => {
+    const matchesRarity = rarityFilter === 'all' || v.rarity === rarityFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      v.name.toLowerCase().includes(q) ||
+      v.region.toLowerCase().includes(q) ||
+      v.setting.toLowerCase().includes(q) ||
+      v.characteristics.toLowerCase().includes(q) ||
+      v.age.toLowerCase().includes(q);
+    return matchesRarity && matchesSearch;
+  });
 
   return (
     <div className="min-h-full pb-20">
@@ -126,8 +141,51 @@ export default function AgateGuide() {
 
       {/* Global Taxonomy */}
       <Section icon={<MapPin size={14} />} title="Global Geographic Taxonomy">
+        {/* Field search + rarity filter */}
+        <div className="sticky top-2 z-20 mb-4 space-y-2.5">
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, region, color, or age…"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
+              style={{
+                background: 'hsla(255,30%,12%,0.85)',
+                border: '1px solid hsla(270,40%,35%,0.3)',
+                backdropFilter: 'blur(12px)',
+              }}
+            />
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+            {['all', 'common', 'uncommon', 'rare', 'legendary'].map((r) => {
+              const rs = r === 'all' ? null : RARITY_STYLES[r];
+              const active = rarityFilter === r;
+              return (
+                <button
+                  key={r}
+                  onClick={() => setRarityFilter(r)}
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition"
+                  style={{
+                    background: active
+                      ? rs ? rs.bg : 'hsla(280,50%,30%,0.5)'
+                      : 'hsla(255,30%,10%,0.5)',
+                    color: active ? (rs ? rs.color : 'hsl(280 100% 90%)') : 'hsla(0,0%,100%,0.35)',
+                    border: `1px solid ${active ? (rs ? rs.color : 'hsl(280 80% 70%)') + '44' : 'hsla(0,0%,100%,0.08)'}`,
+                  }}
+                >
+                  {r === 'all' ? 'All' : rs?.label || r}
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-[10px] text-white/30">
+            {filteredVarieties.length} {filteredVarieties.length === 1 ? 'variety' : 'varieties'}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {AGATE_VARIETIES.map((v, i) => {
+          {filteredVarieties.map((v, i) => {
             const rs = RARITY_STYLES[v.rarity] || RARITY_STYLES.common;
             return (
               <motion.button
@@ -177,6 +235,14 @@ export default function AgateGuide() {
             );
           })}
         </div>
+
+        {filteredVarieties.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Search size={32} className="text-white/15 mb-3" />
+            <p className="text-white/40 text-sm font-semibold">No varieties match your search</p>
+            <p className="text-white/25 text-xs mt-1">Try a different name or clear the filters</p>
+          </div>
+        )}
       </Section>
 
       {/* Detail Modal */}
