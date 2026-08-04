@@ -19,13 +19,13 @@ const GREETINGS = (c, name) => {
   const pool = [];
   const streak = c?.streak_days || 0;
   const mood = c?.mood || 'calm';
-  if (streak >= 7) pool.push(`Seven days running. Nice. What's the plan this ${time}?`);
-  if (streak >= 3) pool.push(`Day ${streak + 1}. How's it going out there?`);
+  if (streak >= 7) pool.push(`Seven days in a row, huh? That's lovely. Any plans this ${time}?`);
+  if (streak >= 3) pool.push(`Hey, day ${streak + 1} together. How's it going out there?`);
   if (mood === 'radiant') pool.push('You sound like you\'re having a good one. What happened?');
   if (mood === 'drowsy') pool.push('Hey. No pressure today — I\'m just glad you\'re here.');
-  pool.push(`Good ${time}, ${name}. What are you looking at?`);
-  pool.push('Hey, I\'m here. Talk to me.');
-  pool.push('Alright, I\'m listening. What did you find?');
+  pool.push(`Good ${time}, ${name}. Whatcha looking at?`);
+  pool.push('Hey there. I\'m around if you want to chat.');
+  pool.push('Oh hey. Find anything fun, or just wandering?');
   return pool;
 };
 

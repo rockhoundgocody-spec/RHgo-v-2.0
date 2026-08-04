@@ -73,7 +73,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     historyRef.current = [...historyRef.current, { role: 'user', content: text }].slice(-8);
     setPhase('thinking');
 
-    let reply = "I didn't catch that — say it again?";
+    let reply = "Sorry, I missed that — one more time?";
     try {
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,

@@ -22,31 +22,31 @@ import { stripExif } from '@/lib/stripExif';
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
   analyzing: [
-    "Got it — analyzing the crystal structure now.",
-    "Nice find. Running it through the mineral database.",
-    "Interesting specimen. Let me take a closer look.",
-    "On it. Cross-referencing the visual features now.",
+    "Ooh, let me take a look at this one.",
+    "Nice — give me just a second here.",
+    "Hmm, interesting. Let me see what we've got.",
+    "Oh, I like this one already. One sec.",
   ],
   result_high: (name) => [
-    `That's ${name}! Strong match — I'm pretty confident on this one.`,
-    `Looks like ${name} to me. The luster and structure are a solid giveaway.`,
-    `${name} — nice! Good confidence on this identification.`,
+    `Oh nice — that's ${name}. I'm pretty sure about this one.`,
+    `Y'know, that looks like ${name} to me. The luster kind of gives it away.`,
+    `That's ${name}, I'd say. Good eye finding that.`,
   ],
   result_medium: (name) => [
-    `Best guess is ${name}, though I'd run a scratch test to confirm.`,
-    `Probably ${name}. Try the streak test on a tile to be sure.`,
-    `I'm leaning ${name} — the features line up, but grab a second angle if you can.`,
+    `I'm thinking ${name}, though a little scratch test would settle it.`,
+    `Probably ${name}? A streak test on a tile would tell us for sure, if you're curious.`,
+    `Feels like ${name} to me — another angle might help me be sure, no rush.`,
   ],
   result_low: [
-    "Hard to call this one from the photo alone. Try a different angle or wipe it down.",
-    "Low confidence — the lighting or angle is making this tricky. Give it another shot.",
-    "I need a cleaner shot to nail this down. Try wiping the surface and re-scanning.",
+    "Hmm, this one's tricky from the photo alone. Maybe a different angle sometime?",
+    "Hard to say, honestly — the lighting's making it tough. We can always try again.",
+    "I can't quite make it out. Wiping it down might help if you feel like another go.",
   ],
   error: [
-    "Couldn't get a read on that one. Try again with better lighting.",
-    "Something went wrong on my end. Give it another try.",
+    "Hm, that one didn't quite come through. Want to try again?",
+    "Oops, something hiccuped on my end. No worries — one more try?",
   ],
-  rare: (name) => `Wait — ${name}?! That could be a rare one. Definitely save that location.`,
+  rare: (name) => `Oh wow — ${name}? That might actually be a rare one. Worth remembering this spot.`,
 };
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
