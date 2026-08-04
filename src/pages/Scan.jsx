@@ -18,6 +18,7 @@ import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
+import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
 
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
@@ -214,7 +215,8 @@ export default function Scan() {
         'fun_fact (one surprising geological fact about this mineral — formation age, unusual property, famous deposit, cultural history), ' +
         'collection_value (brief note on what makes this specimen collectible or valuable — quality, locality, size, perfection), ' +
         'and up to 3 ranked candidates each with confidence, key distinguishing features, and one-sentence rationale. ' +
-        'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence.' +
+        'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence. ' +
+        AGATE_PROMPT_BLOCK +
         geologyContext,
       file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {

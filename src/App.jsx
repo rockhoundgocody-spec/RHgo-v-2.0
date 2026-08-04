@@ -46,6 +46,7 @@ const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
 const Badges = lazy(() => import('@/pages/Badges.jsx'));
 const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 const PrivateRockLog = lazy(() => import('@/pages/PrivateRockLog'));
+const AgateGuide = lazy(() => import('@/pages/AgateGuide'));
 
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
@@ -130,6 +131,7 @@ const AuthenticatedApp = () => {
           <Route path="/badges" element={<Badges />} />
           <Route path="/companion" element={<CompanionDashboard />} />
           <Route path="/private-log" element={<PrivateRockLog />} />
+          <Route path="/agate-guide" element={<AgateGuide />} />
 
           {/* USER ROUTES */}
           <Route path="/profile" element={<Profile />} />

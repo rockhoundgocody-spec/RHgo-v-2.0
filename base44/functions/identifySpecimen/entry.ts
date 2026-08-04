@@ -10,6 +10,24 @@ import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbo
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 import { computeEssence } from '../../shared/essence.ts';
 
+// ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
+const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
+- Lake Superior Agate: razor-sharp fortification banding, brick-red/orange/carnelian, water-worn, Great Lakes region.
+- Fairburn Agate: needle-point "holly leaf" fortification, extreme color contrast (crimson/pink/yellow/cream), chert rind, Black Hills SD.
+- Montana Moss Agate: clear/translucent chalcedony, black MnO2 + reddish Fe-oxide dendrites forming landscape/foliage motifs, Yellowstone River MT.
+- Ellensburg Blue: sky-blue to royal-blue, Rayleigh scattering, high hardness (7.5), Central Washington. Very rare.
+- Coyamito Agate: ultra-fine fortification in magenta/pink/yellow/purple, pseudomorphs of aragonite/calcite sprays, Chihuahua Mexico.
+- Fire Agate: botryoidal habit, iridescent thin-film goethite/limonite layers, Schiller effect, SW USA/Mexico.
+- Iris Agate: ultra-fine periodic banding that diffracts light into rainbow spectrum when backlit.
+- Plume Agate: 3D feather/cloud/shrub inclusions of iron/manganese oxides or marcasite.
+- Sagenite Agate: radiating needle sprays (goethite, rutile, aragonite) in translucent chalcedony.
+- Dendritic/Moss Agate: branching moss-like or tree-like inclusions (chlorite, celadonite, pyrolusite).
+- Enhydro Agate: trapped liquid + mobile air bubbles in sealed cavities.
+- Pseudomorphic Agate: silica preserving external crystal geometry of replaced aragonite, anhydrite, or calcite.
+- Polyhedroid Agate: flat-faced geometric multi-sided nodules constrained by volcanic crystal faces.
+- Shadow/Parallax Agate: alternating transparent and opaque bands creating 3D chatoyant shadow effect.
+Use the banding pattern, inclusion type, color spectrum, and locality to determine the variety.`;
+
 // ── Great Lakes 30-class list (inline — no local imports in Deno) ────────────
 const GL_30 = [
   'Lake Superior Agate', 'Petoskey Stone', 'Charlevoix Stone', 'Leland Blue',
@@ -156,6 +174,7 @@ Deno.serve(async (req) => {
           'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
           'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
           'Never refuse — always give best attempt with calibrated confidence. ' +
+          AGATE_PROMPT_BLOCK + ' ' +
           handbookPromptBlock() +
           glContext + geologyContext + learnedContext,
         file_urls: [image_url],
