@@ -24,7 +24,7 @@ export default function HelpTip({ tip, size = 13 }) {
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(v => !v); }}
-        className="ml-1 text-white/30 hover:text-amethyst transition-colors focus:outline-none"
+        className="ml-1 text-white/30 hover:text-amethyst transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 rounded-full"
         aria-label="Help"
         style={{ lineHeight: 1 }}
       >

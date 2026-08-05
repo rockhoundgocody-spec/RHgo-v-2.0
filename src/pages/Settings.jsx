@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
+import { Bell, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
@@ -23,7 +23,7 @@ function VoiceSlider({ label, hint, min, max, step, value, onChange }) {
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer"
+        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50"
       />
       <p className="text-[11px] text-white/35">{hint}</p>
     </div>
@@ -222,7 +222,7 @@ export default function Settings() {
                   type="checkbox"
                   checked={!!settings[key]}
                   onChange={() => handleToggle(key)}
-                  className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                  className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:outline-none focus-visible:ring-offset-2 ring-offset-background"
                 />
                 {label}
               </label>
@@ -246,7 +246,7 @@ export default function Settings() {
                 type="checkbox"
                 checked={settings.offlineMode}
                 onChange={() => handleToggle('offlineMode')}
-                className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:outline-none focus-visible:ring-offset-2 ring-offset-background"
               />
               Offline mode enabled
             </label>
