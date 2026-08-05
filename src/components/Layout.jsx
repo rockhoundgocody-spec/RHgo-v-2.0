@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
@@ -113,7 +113,7 @@ export default function Layout() {
           >
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1"
+              className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none rounded-md"
               aria-label="Go back"
             >
               <ChevronLeft size={22} />
