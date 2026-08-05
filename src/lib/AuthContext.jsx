@@ -71,14 +71,9 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+      // Public app: a failed auth check just means the visitor isn't logged in.
+      // Don't block them from entering — let the main app routes render, and
+      // individual pages can prompt login only when a protected action is taken.
     }
   };
 
