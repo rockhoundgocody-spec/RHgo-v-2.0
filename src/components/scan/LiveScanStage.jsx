@@ -272,13 +272,13 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
           </Button>
 
           <label htmlFor="gallery-upload-input"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none"
             style={{ border: '1px solid hsla(280,30%,25%,0.3)' }}>
             <Upload size={13} />
             Upload from Gallery
+            <input id="gallery-upload-input" type="file" accept="image/*" className="sr-only"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadFallback?.(f); }} />
           </label>
-          <input id="gallery-upload-input" type="file" accept="image/*" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadFallback?.(f); }} />
         </div>
       )}
     </div>

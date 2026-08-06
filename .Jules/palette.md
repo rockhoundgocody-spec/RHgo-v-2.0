@@ -11,3 +11,7 @@
 ## 2024-08-01 - Post Composer Image Upload Accessibility
 **Learning:** Found that custom file upload buttons in the community post composer often use `className="hidden"` on the `<input type="file">`, which completely removes them from the accessibility tree, making them invisible to screen readers and keyboard users.
 **Action:** Replace `className="hidden"` with `className="sr-only"` on hidden file inputs and apply `focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none` to the parent `<label>` wrapper so that keyboard focus is visually indicated when the input receives focus.
+
+## 2024-08-05 - Keyboard Focus Overlays for Avatar Uploads
+**Learning:** When custom file uploads use overlay indicators (like a camera icon showing only on hover over an avatar), keyboard-only users will miss the indicator unless `group-focus-visible:opacity-100` or `focus-visible:opacity-100` is also added to the overlay.
+**Action:** When styling custom file uploads or avatar controls with interactive hover overlays, always pair pointer hover states (like `group-hover:opacity-100`) with keyboard focus states (such as `group-focus-visible:opacity-100` or `focus-within:opacity-100`) to guarantee equivalent visual feedback across all devices.
