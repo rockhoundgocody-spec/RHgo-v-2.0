@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Atom, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -11,6 +11,7 @@ const bandColor = (pct) => {
 export default function PsvDraftCard({ draft, revisions, confidencePct }) {
   const bc = bandColor(confidencePct);
   const [showDetails, setShowDetails] = useState(false);
+  const contentId = useId();
   const observedTraits = draft.review_results?._observed_traits || [];
   const uncertaintyFlags = draft.review_results?._uncertainty_flags || [];
 
@@ -87,6 +88,8 @@ export default function PsvDraftCard({ draft, revisions, confidencePct }) {
       {(draft.verification_plan?.length > 0) && (
         <button
           onClick={() => setShowDetails(p => !p)}
+          aria-expanded={showDetails}
+          aria-controls={contentId}
           className="mt-3 w-full flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-white/30 hover:text-white/50 transition py-1"
         >
           <span>Verification plan · {draft.verification_plan.length} tests</span>
@@ -94,7 +97,7 @@ export default function PsvDraftCard({ draft, revisions, confidencePct }) {
         </button>
       )}
       {showDetails && draft.verification_plan?.length > 0 && (
-        <div className="mt-2 space-y-1.5">
+        <div id={contentId} className="mt-2 space-y-1.5">
           {draft.verification_plan.slice(0, 5).map((t, i) => (
             <div key={i} className="flex items-start gap-2 text-xs">
               <span className="text-amethyst/40 font-mono shrink-0">{t.priority ?? i + 1}.</span>

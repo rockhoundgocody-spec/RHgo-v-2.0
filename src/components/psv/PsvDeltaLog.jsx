@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 export default function PsvDeltaLog({ log = [] }) {
   const [open, setOpen] = useState(false);
+  const contentId = useId();
   if (log.length <= 1) return null;
 
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden">
       <button onClick={() => setOpen((p) => !p)}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition">
         <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
           Revision log · {log.length - 1} update{log.length > 2 ? 's' : ''}
@@ -15,7 +18,7 @@ export default function PsvDeltaLog({ log = [] }) {
         {open ? <ChevronUp size={12} className="text-white/30" /> : <ChevronDown size={12} className="text-white/30" />}
       </button>
       {open && (
-        <div className="divide-y divide-white/5">
+        <div id={contentId} className="divide-y divide-white/5">
           {log.slice(1).map((entry, i) => {
             const delta = entry.confidence_after - entry.confidence_before;
             const Icon = delta > 0.01 ? TrendingUp : delta < -0.01 ? TrendingDown : Minus;

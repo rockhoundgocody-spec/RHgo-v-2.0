@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, ChevronDown, ChevronUp, Gem } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
 
 const RARITY_CONFIG = {
@@ -34,6 +34,7 @@ function buildLore(specimen) {
 
 export default function SpecimenCard({ specimen, index }) {
   const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
   const rarity = RARITY_CONFIG[specimen.rarity] || RARITY_CONFIG.common;
   const evoLevel = getEvolutionLevel(specimen);
   const evoLabel = EVOLUTION_LABELS[evoLevel];
@@ -151,6 +152,8 @@ export default function SpecimenCard({ specimen, index }) {
           <ShareSpecimenButton specimen={specimen} className="flex-1" />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
+            aria-expanded={expanded}
+            aria-controls={contentId}
             className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8"
           >
             {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
@@ -158,7 +161,7 @@ export default function SpecimenCard({ specimen, index }) {
         </div>
 
         {expanded && (
-          <div className="space-y-2 border-t border-white/5 pt-2">
+          <div id={contentId} className="space-y-2 border-t border-white/5 pt-2">
             <p className="text-[10px] text-white/50 leading-relaxed italic">
               {buildLore(specimen)}
             </p>

@@ -11,3 +11,6 @@
 ## 2024-08-01 - Post Composer Image Upload Accessibility
 **Learning:** Found that custom file upload buttons in the community post composer often use `className="hidden"` on the `<input type="file">`, which completely removes them from the accessibility tree, making them invisible to screen readers and keyboard users.
 **Action:** Replace `className="hidden"` with `className="sr-only"` on hidden file inputs and apply `focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none` to the parent `<label>` wrapper so that keyboard focus is visually indicated when the input receives focus.
+## 2024-08-07 - Accessible Collapsible Sections
+**Learning:** Found a systemic pattern in `psv` (Progressive Verification) and collection UI components where accordion/expandable sections used custom `<div>` structures toggled via `<button>` without providing `aria-expanded` or `aria-controls`. This makes it impossible for screen reader users to know if the section is open or closed, or what content the button controls.
+**Action:** Always ensure that custom expand/collapse toggles include `aria-expanded={isOpen}` and an `aria-controls="[content-id]"` attribute that points to the ID of the expandable container.
