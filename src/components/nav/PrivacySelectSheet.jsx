@@ -17,7 +17,7 @@ export default function PrivacySelectSheet({ value, onChange }) {
       {/* Trigger row */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white text-sm select-none"
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:ring-offset-2 ring-offset-background"
       >
         <span>{current.label}</span>
         <ChevronRight size={14} className="text-white/40" />

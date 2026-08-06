@@ -14,16 +14,18 @@ function loadVoice() {
 }
 
 function VoiceSlider({ label, hint, min, max, step, value, onChange }) {
+  const inputId = `voice-slider-${label.toLowerCase().replace(/\s+/g, '-')}`;
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-white/70">{label}</span>
+        <label htmlFor={inputId} className="text-sm text-white/70 cursor-pointer">{label}</label>
         <span className="text-xs font-mono text-hud-cyan">{value.toFixed(2)}</span>
       </div>
       <input
+        id={inputId}
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer"
+        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:ring-offset-2 ring-offset-background"
       />
       <p className="text-[11px] text-white/35">{hint}</p>
     </div>
@@ -217,12 +219,12 @@ export default function Settings() {
               { label: 'Collection updates', key: 'collectionUpdates' },
               { label: 'Marketplace activity', key: 'marketplaceActivity' },
             ].map(({ label, key }) => (
-              <label key={key} className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
+              <label key={key} className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1 focus-within:text-white transition">
                 <input
                   type="checkbox"
                   checked={!!settings[key]}
                   onChange={() => handleToggle(key)}
-                  className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                  className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
                 />
                 {label}
               </label>
@@ -241,12 +243,12 @@ export default function Settings() {
             subtitle="Optimised for weak signal and bright outdoor conditions. Keeps scans and maps functional when off-grid."
           />
           <div className="space-y-2 ml-9">
-            <label className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1">
+            <label className="flex items-center gap-3 text-sm text-white/60 cursor-pointer py-1 focus-within:text-white transition">
               <input
                 type="checkbox"
                 checked={settings.offlineMode}
                 onChange={() => handleToggle('offlineMode')}
-                className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:ring-offset-2 ring-offset-background"
               />
               Offline mode enabled
             </label>
@@ -277,7 +279,7 @@ export default function Settings() {
             <button
               onClick={handleDumpCache}
               disabled={cacheDumping}
-              className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition disabled:opacity-50"
+              className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background rounded-sm"
             >
               {cacheDumping ? 'Dumping…' : cacheDumped ? '✓ Dumped — reloading' : 'Clear cache'}
             </button>
@@ -306,12 +308,12 @@ export default function Settings() {
             <VoiceSlider label="Volume" hint="0.5 = quiet · 1.0 = full" min={0.5} max={1.0} step={0.01} value={voice.volume} onChange={(v) => setVoice((p) => ({ ...p, volume: v }))} />
             <div className="flex gap-3 pt-1">
               <button onClick={saveVoice}
-                className="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition active:scale-95 select-none"
+                className="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:ring-offset-2 ring-offset-background"
                 style={{ background: 'hsla(270,60%,30%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)' }}>
                 {voiceSaved ? '✓ Saved!' : 'Preview & Save'}
               </button>
               <button onClick={resetVoice}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none">
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 ring-offset-background">
                 Reset
               </button>
             </div>
@@ -321,7 +323,7 @@ export default function Settings() {
 
       {/* Save button */}
       <button onClick={saveSettings}
-        className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none"
+        className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow focus-visible:ring-offset-2 ring-offset-background"
         style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))', boxShadow: '0 6px 28px -6px hsla(270,80%,60%,0.5)' }}>
         {settingsSaved ? '✓ Settings Saved' : 'Save Settings'}
       </button>
@@ -331,7 +333,7 @@ export default function Settings() {
         <GlassPanel className="p-4" style={{ borderColor: 'hsla(0,80%,50%,0.15)' }}>
           <SectionHeader icon={Trash2} iconColor="text-rose-400" title="Danger Zone" subtitle="Permanently delete your account and all associated field data. This action cannot be undone." />
           <button onClick={() => setShowDeleteDialog(true)}
-            className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none"
+            className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
             style={{ background: 'hsla(0,80%,50%,0.08)', border: '1px solid hsla(0,80%,50%,0.22)' }}>
             Delete Account
           </button>
