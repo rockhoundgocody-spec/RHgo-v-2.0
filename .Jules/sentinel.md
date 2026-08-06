@@ -1,0 +1,4 @@
+## 2026-08-06 - Preventing Open Redirect vulnerabilities in routing parameters
+**Vulnerability:** Open Redirect vulnerability in URL-controlled redirect parameters (e.g. `from_url` or `redirect`).
+**Learning:** Accepting unvalidated redirect targets from query parameters allows attackers to construct links that redirect users to malicious domains, potentially leading to phishing or credential theft. Statically defined environment checks (like `isNode`) at the module-level can prevent proper mock-overrides in testing environments, causing unit tests to fail on Node-based runtimes.
+**Prevention:** Always validate redirect targets dynamically inside execution guards using a robust helper like `getSafeRedirectUrl` that filters out protocol-relative bypasses (such as `//`, `\\`, `/\`, or `///`) and checks parsed origins against `window.location.origin` or validates relative paths starting with a single `/`.

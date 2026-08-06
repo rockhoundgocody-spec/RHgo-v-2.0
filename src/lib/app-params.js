@@ -7,7 +7,7 @@ const toSnakeCase = (str) => {
 }
 
 const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
-	if (isNode) {
+	if (typeof window === 'undefined') {
 		return defaultValue;
 	}
 	const storageKey = `base44_${toSnakeCase(paramName)}`;
@@ -34,6 +34,35 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 	return null;
 }
 
+export const getSafeRedirectUrl = (url, fallback = '/') => {
+	if (typeof window === 'undefined' || !url) {
+		return fallback;
+	}
+	const trimmed = url.trim();
+	// Check for common bypass sequences (e.g., '//', '\\', '/\', '///', '\\/') at the beginning
+	if (
+		trimmed.startsWith('//') ||
+		trimmed.startsWith('\\') ||
+		trimmed.startsWith('/\\') ||
+		trimmed.startsWith('\\/') ||
+		/^\/([\\/])/.test(trimmed)
+	) {
+		return fallback;
+	}
+	try {
+		const parsed = new URL(trimmed);
+		if (parsed.origin === window.location.origin) {
+			return trimmed;
+		}
+		return fallback;
+	} catch (e) {
+		if (trimmed.startsWith('/')) {
+			return trimmed;
+		}
+		return fallback;
+	}
+};
+
 const getAppParams = () => {
 	if (getAppParamValue("clear_access_token") === 'true') {
 		storage.removeItem('base44_access_token');
@@ -42,7 +71,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
+		fromUrl: getSafeRedirectUrl(getAppParamValue("from_url", { defaultValue: typeof window === 'undefined' ? '/' : window.location.href }), typeof window === 'undefined' ? '/' : window.location.href),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}
