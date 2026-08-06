@@ -15,17 +15,27 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// WeakMap cache to store pre-computed mineral lookup Map objects.
+// Since database records are referentially stable arrays (provided by React Query),
+// caching their lookup Map prevents expensive rebuild iterations on every component render.
+const mineralLookupCache = new WeakMap();
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+
+    // Check if we have already built the lookup Map for this minerals array reference
+    let lookup = mineralLookupCache.get(minerals);
+    if (!lookup) {
+      lookup = new Map();
+      for (const m of minerals) {
+        if (m.name && m.crystal_system) {
+          lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+        }
       }
+      mineralLookupCache.set(minerals, lookup);
     }
 
     // Fallback table for common mineral families when not in DB
