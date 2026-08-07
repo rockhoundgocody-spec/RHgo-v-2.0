@@ -14,3 +14,6 @@
 ## 2024-06-25 - Avoid unintended scope creep with dependencies during visual verification
 **Learning:** During visual verification of micro-UX improvements in specific components (e.g. `AgateGuide.jsx`), broken dev servers due to missing dependencies in other areas of the application (like `leaflet.css` in `HotspotMap.jsx`) can prompt agents to unintentionally fix unrelated issues by installing new packages or creating debug routes.
 **Action:** When a dev server fails due to a missing dependency outside the scope of the targeted micro-UX change, NEVER add the dependency to package.json. Rely on static checks (linting/unit tests) for verification, and do not introduce unauthorized routing changes purely for visual verification. Always ensure the PR only contains changes strictly related to the assigned micro-UX task.
+## 2026-10-31 - File Input Focus Interaction inside Labels
+**Learning:** Replacing `className="hidden"` with `className="sr-only"` on file inputs inside `<label>` elements allows the parent `<label>` to correctly reflect keyboard focus via `focus-within` styles without changing visual layout.
+**Action:** When making custom file upload inputs keyboard accessible, use `sr-only` on the `<input>`, wrap it within the `<label>`, and use `focus-within` on the label to visually indicate focus state.
