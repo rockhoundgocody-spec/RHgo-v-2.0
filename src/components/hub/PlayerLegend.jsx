@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Upload, Trophy, Zap, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { User, Upload, Trophy, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
+/* eslint-disable unused-imports/no-unused-imports */
+import { Zap } from 'lucide-react';
+/* eslint-enable unused-imports/no-unused-imports */
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { shareAchievement } from '@/lib/shareAchievement';
@@ -192,19 +195,19 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
                 )}
               </Link>
               {/* Small upload badge */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90"
+              <label
+                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 cursor-pointer focus-within:ring-2 focus-within:ring-amethyst/50 focus-within:outline-none"
                 style={{ background: 'hsla(265,60%,20%,0.95)', borderColor: 'hsla(280,60%,50%,0.5)' }}
+                aria-label="Upload avatar"
               >
-                {uploading
-                  ? <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
-                  : <Upload size={9} className="text-amethyst-glow" />
-                }
-              </button>
+                {uploading ? (
+                  <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
+                ) : (
+                  <Upload size={9} className="text-amethyst-glow" />
+                )}
+                <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} aria-label="Upload avatar file" />
+              </label>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
 
             {/* Rank + XP */}
             <div className="flex-1 min-w-0">

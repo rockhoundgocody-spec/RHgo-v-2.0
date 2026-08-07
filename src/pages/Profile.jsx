@@ -5,7 +5,9 @@ import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
+/* eslint-disable unused-imports/no-unused-imports */
 import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
+/* eslint-enable unused-imports/no-unused-imports */
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
@@ -92,10 +94,8 @@ export default function Profile() {
         <GlassPanel className="p-5 flex items-center gap-4">
           {/* Avatar with upload */}
           <div className="relative flex-shrink-0">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group"
+            <label
+              className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group cursor-pointer focus-within:ring-2 focus-within:ring-amethyst/50 focus-within:ring-offset-2 ring-offset-background focus-within:outline-none transition"
               aria-label="Upload avatar"
             >
               {avatarUrl ? (
@@ -103,20 +103,20 @@ export default function Profile() {
               ) : (
                 <User size={24} className="text-amethyst-glow" />
               )}
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition">
                 {uploading
                   ? <Loader2 size={16} className="animate-spin text-white" />
                   : <Camera size={16} className="text-white" />}
               </div>
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} aria-label="Avatar file input" />
+              <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} aria-label="Avatar file input" />
+            </label>
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>
             <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition"
+              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow focus-visible:text-amethyst-glow focus-visible:outline-none focus-visible:underline mt-1 transition"
             >
               {uploading ? 'Uploading…' : 'Change avatar'}
             </button>
@@ -130,7 +130,14 @@ export default function Profile() {
           <div className="text-3xl font-bold text-amethyst-glow tabular-nums">{stats.findings}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Finds</div>
         </GlassPanel>
-        <GlassPanel className="p-5 text-center cursor-pointer hover:bg-white/5 transition" onClick={() => navigate('/badges')}>
+        <GlassPanel
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/badges')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/badges'); } }}
+          className="p-5 text-center cursor-pointer hover:bg-white/5 focus-visible:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 transition"
+          aria-label="View earned badges"
+        >
           <div className="text-3xl font-bold text-emerald-400 tabular-nums">{stats.badges}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Badges</div>
         </GlassPanel>
