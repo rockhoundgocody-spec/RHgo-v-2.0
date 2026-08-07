@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mountain, Sparkles, Waves, Atom, MapPin, ChevronRight, Search } from 'lucide-react';
+import { Mountain, Sparkles, Waves, Atom, MapPin, Search } from 'lucide-react';
 import {
   AGATE_GENESIS,
   AGATE_TRACE_COLORS,
@@ -165,7 +165,8 @@ export default function AgateGuide() {
                 <button
                   key={r}
                   onClick={() => setRarityFilter(r)}
-                  className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition"
+                  aria-pressed={active}
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
                   style={{
                     background: active
                       ? rs ? rs.bg : 'hsla(280,50%,30%,0.5)'
@@ -194,7 +195,7 @@ export default function AgateGuide() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => setSelected(v)}
-                className="text-left rounded-2xl overflow-hidden group"
+                className="text-left rounded-2xl overflow-hidden group focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none"
                 style={{
                   background: 'hsla(270,25%,14%,0.5)',
                   border: '1px solid hsla(270,30%,30%,0.2)',
@@ -276,7 +277,8 @@ export default function AgateGuide() {
               />
               <button
                 onClick={() => setSelected(null)}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white/70"
+                aria-label="Close details"
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:bg-white/10 transition focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
                 style={{ background: 'hsla(0,0%,0%,0.4)' }}
               >
                 ✕
