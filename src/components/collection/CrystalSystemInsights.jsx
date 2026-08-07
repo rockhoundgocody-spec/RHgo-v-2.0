@@ -15,18 +15,31 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// Performance Optimization: Cache pre-computed lookup Map keyed by referentially stable minerals list
+const mineralLookupCache = new WeakMap();
+
+function getMineralLookup(minerals) {
+  if (!minerals) return new Map();
+  if (mineralLookupCache.has(minerals)) {
+    return mineralLookupCache.get(minerals);
+  }
+  const lookup = new Map();
+  for (const m of minerals) {
+    if (m.name && m.crystal_system) {
+      lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+    }
+  }
+  mineralLookupCache.set(minerals, lookup);
+  return lookup;
+}
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
-      }
-    }
+    // Performance Optimization: Use pre-computed, cached lookup Map to eliminate O(N) loop iteration per re-evaluation
+    const lookup = getMineralLookup(minerals);
 
     // Fallback table for common mineral families when not in DB
     // Maps a mineral name → { system, parent }
