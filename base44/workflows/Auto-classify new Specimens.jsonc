@@ -1,0 +1,34 @@
+{
+  "name": "Auto-classify new Specimens",
+  "description": "Runs the active MLModel (cloud Gemini fallback today) on every newly created Specimen photo and writes back mineral_name, ai_confidence, ai_candidates, and rarity. Skips if the user already set a real mineral_name.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Specimen"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_classify_new_specimens",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "autoClassifySpecimen",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

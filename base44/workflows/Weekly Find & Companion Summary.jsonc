@@ -1,0 +1,41 @@
+{
+  "name": "Weekly Find & Companion Summary",
+  "description": "Every Monday 9am \u2014 emails each user a digest of their new specimens from the past week and their companion's current level/XP/streak/mood/energy.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 14 * * 1",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "weekly_find_companion_summary",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendWeeklySummary",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

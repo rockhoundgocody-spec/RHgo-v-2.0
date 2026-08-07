@@ -1,0 +1,34 @@
+{
+  "name": "Enrich Specimen on Create",
+  "description": "Auto-fetches weather (Open-Meteo) and lunar phase whenever a new specimen is logged.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Specimen"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "enrich_specimen_on_create",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "enrichSpecimen",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

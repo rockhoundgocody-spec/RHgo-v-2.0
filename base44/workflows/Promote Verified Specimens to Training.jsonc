@@ -1,0 +1,35 @@
+{
+  "name": "Promote Verified Specimens to Training",
+  "description": "When a Specimen is verified=true (on create, or when 'verified' flips on update), creates an accepted TrainingCandidate so the labeled specimen feeds the next training run.",
+  "trigger": {
+    "condition": "${ (.trigger.data.verified == true) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "Specimen"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "promote_verified_specimens_to_training",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "promoteVerifiedSpecimen",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

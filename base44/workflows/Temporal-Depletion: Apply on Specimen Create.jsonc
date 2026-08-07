@@ -1,0 +1,34 @@
+{
+  "name": "Temporal-Depletion: Apply on Specimen Create",
+  "description": "When a new specimen is logged, perturb the Temporal-Depletion Fabric \u2014 decrement the rarity weight for that mineral in its geologic unit, steering future explorers toward undiscovered territory.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Specimen"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "temporal_depletion_apply_on_specimen_create",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "resolveDepletion",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Seed Specimen Training Images",
+  "description": "Fetches wet + dry field specimen images for minerals that need more training data",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 60,
+      "interval_unit": "minutes",
+      "interval_anchor": "2026-06-20T01:10:39.091000",
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "seed_specimen_training_images",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "seedSpecimenImages",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}
