@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState } from 'react';
 import { Download, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
 import useOfflineTiles from '@/lib/useOfflineTiles';
@@ -28,7 +29,7 @@ export default function OfflineTilePackButton({ userLocation }) {
     return (
       <button
         onClick={clear}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-emerald-500/40 text-emerald-400 hover:border-rose-400/50 hover:text-rose-300 transition"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-emerald-500/40 text-emerald-400 hover:border-rose-400/50 hover:text-rose-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
         title="Clear cached tiles"
       >
         <CheckCircle2 size={12} />
@@ -52,13 +53,13 @@ export default function OfflineTilePackButton({ userLocation }) {
         <span className="text-[11px] text-white/60">Cache 40-mile tile pack?</span>
         <button
           onClick={handleDownload}
-          className="px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-hud-cyan/20 border-hud-cyan/60 text-hud hover:bg-hud-cyan/30 transition"
+          className="px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-hud-cyan/20 border-hud-cyan/60 text-hud hover:bg-hud-cyan/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
         >
           Yes
         </button>
         <button
           onClick={() => setShowConfirm(false)}
-          className="px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-white/10 text-white/50 hover:text-white transition"
+          className="px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-white/10 text-white/50 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
         >
           No
         </button>
@@ -69,7 +70,7 @@ export default function OfflineTilePackButton({ userLocation }) {
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-white/10 text-white/70 hover:text-white hover:border-hud-cyan/40 transition"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] uppercase tracking-wider border bg-black/40 border-white/10 text-white/70 hover:text-white hover:border-hud-cyan/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
       title="Download offline tile pack for this area"
     >
       <Download size={12} />

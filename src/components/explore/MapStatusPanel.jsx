@@ -31,7 +31,11 @@ export default function MapStatusPanel({ items = [] }) {
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 px-3 py-2"
+        aria-expanded={expanded}
+        className={cn(
+          "w-full flex items-center justify-between gap-3 px-3 py-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background rounded-md"
+        )}
       >
         <div className="flex items-center gap-2">
           <StateIcon

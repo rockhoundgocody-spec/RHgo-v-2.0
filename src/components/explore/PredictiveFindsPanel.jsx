@@ -80,7 +80,7 @@ Based on regional geology, predict 4-6 minerals the rockhound is REALISTICALLY l
             type="button"
             onClick={predict}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 min-h-[44px] rounded-lg border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 disabled:opacity-50 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition"
+            className="w-full flex items-center justify-center gap-2 min-h-[44px] rounded-lg border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 disabled:opacity-50 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
           >
             {loading ? (
               <>
