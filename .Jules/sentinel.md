@@ -1,0 +1,10 @@
+## 2025-02-12 - Prevent Open Redirects and Sensitive Token Leakage in Application Parameter Management
+**Vulnerability:** The application was vulnerable to Open Redirect attacks because redirect targets, such as the `from_url` query parameter, were accepted from url parameters and used in routing or logout scenarios without validation. Additionally, sensitive user authentication tokens (`access_token`, `token`) were persistently stored in the browser's persistent `localStorage`, exposing them to potential lingering token leakage or XSS attacks after user sessions ended.
+
+**Learning:** Client-side helpers frequently initialize state from URL query parameters and store them in persistent browser storage for ease of state restoration across page navigation. However, statically binding sensitive variables to `localStorage` can lead to long-term exposure. Furthermore, neglecting to validate redirect target query parameters allows attackers to construct links that redirect users to arbitrary external domains (Open Redirects). When implementing mock window objects in Node-based testing (e.g., Vitest), static checks (like evaluating `typeof window` at import time) will run prior to global mock setup, throwing ReferenceErrors or causing initialization logic to misbehave.
+
+**Prevention:**
+1. Always route sensitive authentication tokens dynamically to `sessionStorage` instead of `localStorage` to ensure they are cleaned up on tab/session close.
+2. Proactively purge legacy keys (e.g., `base44_access_token` and `base44_token`) from `localStorage` on module initialization to prevent lingering token leakage.
+3. Validate all redirect targets using a standard `getSafeRedirectUrl` helper, ensuring they are either relative paths starting with a single `/` (rejecting bypasses like `//`, `\\`, `/\`, or `///`) or same-origin absolute URLs.
+4. Resolve environment checks (like `typeof window`) dynamically within functions or guards rather than evaluating them statically at import/module load time, enabling safe overrides in testing environments (using `vi.hoisted` to define mock globals before module execution).
