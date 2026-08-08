@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
@@ -136,7 +137,7 @@ export default function Chronolith() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
-            className="w-full aspect-[4/5] rounded-3xl flex flex-col items-center justify-center gap-4 transition active:scale-[0.98] disabled:opacity-60"
+            className="w-full aspect-[4/5] rounded-3xl flex flex-col items-center justify-center gap-4 transition active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
             style={{
               background: 'radial-gradient(ellipse at center, hsla(270,50%,20%,0.3) 0%, hsla(220,40%,5%,0.6) 70%)',
               border: '1px dashed hsla(270,60%,60%,0.3)',

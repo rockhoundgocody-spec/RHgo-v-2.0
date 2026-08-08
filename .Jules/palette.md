@@ -1,3 +1,7 @@
+## 2026-07-15 - Programmatic File Input Ghost Focus Pattern
+**Learning:** Converting a hidden programmatic `<input type="file" />` element to `sr-only` is an accessibility regression if it is paired with an already natively-focusable visible trigger button. The `sr-only` input gets included in the keyboard tab sequence, causing a "ghost focus" (tab trap) with no visual feedback.
+**Action:** Keep the programmatically triggered input fully hidden using the `hidden` class (or use `tabIndex={-1}`) to prevent keyboard focus on invisible elements, and apply robust `focus-visible` styles and overlay feedback directly to the visible triggering button.
+
 ## 2026-07-11 - Explore HUD Button Accessibility
 **Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
 **Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.
