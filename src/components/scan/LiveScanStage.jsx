@@ -272,13 +272,13 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
           </Button>
 
           <label htmlFor="gallery-upload-input"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35 hover:text-white/60 transition-colors cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-hud-cyan"
             style={{ border: '1px solid hsla(280,30%,25%,0.3)' }}>
             <Upload size={13} />
             Upload from Gallery
+            <input id="gallery-upload-input" type="file" accept="image/*" className="sr-only"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadFallback?.(f); }} />
           </label>
-          <input id="gallery-upload-input" type="file" accept="image/*" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadFallback?.(f); }} />
         </div>
       )}
     </div>
@@ -331,22 +331,22 @@ function ErrorView({ error, onUpload }) {
       {/* Use a label wrapping the input for reliable file picking without JS .click() */}
       <label
         htmlFor="error-upload-input"
-        className="cursor-pointer rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm flex items-center justify-center"
+        className="cursor-pointer rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm flex items-center justify-center focus-within:outline-none focus-within:ring-2 focus-within:ring-hud-cyan"
         style={{ background: 'linear-gradient(135deg, hsla(270,80%,38%,0.9), hsla(280,100%,52%,0.7))', border: '1px solid hsla(280,80%,55%,0.4)' }}
       >
         <Upload size={14} className="mr-2" />
         Upload a Photo to Identify
+        <input
+          id="error-upload-input"
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onUpload(file);
+          }}
+        />
       </label>
-      <input
-        id="error-upload-input"
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) onUpload(file);
-        }}
-      />
     </div>
   );
 }
