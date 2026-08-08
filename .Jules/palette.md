@@ -1,3 +1,7 @@
+## 2026-07-16 - Theme-Aware Focus States in HUD Widgets
+**Learning:** Interactive widgets in dark HUD dashboards (like PlayerLegend and DailyRoulette) can look disjointed when using default focus outlines. Applying custom theme-aware rings (e.g., `focus-visible:ring-amethyst/50` for Amethyst widgets, `focus-visible:ring-orange-400/50` for Orange widgets) coupled with `focus-visible:ring-offset-2 ring-offset-background` preserves visual harmony while delivering high-visibility accessibility support for keyboard users.
+**Action:** Always match the focus ring color to the active theme/mode of the containing HUD card or widget (amethyst for companion/legend features, orange for daily challenges) to maintain high contrast and design cohesion.
+
 ## 2026-07-11 - Explore HUD Button Accessibility
 **Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
 **Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.

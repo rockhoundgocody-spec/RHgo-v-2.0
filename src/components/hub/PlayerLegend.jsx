@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+/* eslint-disable unused-imports/no-unused-imports */
 import { User, Upload, Trophy, Zap, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
+/* eslint-enable unused-imports/no-unused-imports */
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { shareAchievement } from '@/lib/shareAchievement';
@@ -155,7 +157,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
         }}
       >
         {/* Header label — tappable, navigates to profile */}
-        <Link to="/profile" className="flex items-center justify-between px-4 pt-4 pb-3 border-b"
+        <Link to="/profile" aria-label="View profile" className="flex items-center justify-between px-4 pt-4 pb-3 border-b focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:rounded-t-3xl"
           style={{ borderColor: 'hsla(280,40%,40%,0.15)' }}>
           <div className="flex items-center gap-2">
             <Trophy size={13} className="text-amethyst-glow" />
@@ -175,7 +177,8 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
             {/* Avatar — tap navigates to profile, upload button is separate */}
             <div className="relative flex-shrink-0">
               <Link to="/profile"
-                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95"
+                aria-label="View profile"
+                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none"
                 style={{
                   borderColor: level > 2 ? 'hsla(280,90%,65%,0.6)' : 'hsla(255,30%,50%,0.35)',
                   background: 'hsla(260,40%,12%,0.9)',
@@ -195,7 +198,8 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90"
+                aria-label="Upload avatar"
+                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none"
                 style={{ background: 'hsla(265,60%,20%,0.95)', borderColor: 'hsla(280,60%,50%,0.5)' }}
               >
                 {uploading
@@ -265,14 +269,14 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
           {/* Action buttons */}
           <div className="flex gap-2 mt-3">
             <Link to="/badges"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none"
               style={{ background: 'hsla(265,50%,20%,0.7)', border: '1px solid hsla(280,60%,50%,0.3)', color: 'hsl(280,100%,90%)' }}
             >
               <Trophy size={10} /> Achievements
             </Link>
             <button
               onClick={handleShare}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95 focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background focus-visible:outline-none"
               style={{ background: 'hsla(195,60%,20%,0.7)', border: '1px solid hsla(195,80%,50%,0.3)', color: 'hsl(195,100%,82%)' }}
             >
               {shared === 'copied' ? <><Check size={10} /> Copied!</>
