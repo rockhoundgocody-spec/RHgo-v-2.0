@@ -1,0 +1,5 @@
+# Bolt's Journal
+
+## 2026-07-20 - Global WeakMap Cache for Stable Entity Arrays
+**Learning:** React components (like `CrystalSystemInsights`) that build lookup Maps or iterate heavily over stable arrays (like the `minerals` list fetched via `useEntityList`) can suffer from redundant computation on every single re-render. Since the `minerals` array itself is referentially stable across re-renders (thanks to React Query caching), a module-level global `WeakMap` cache keyed by this array is extremely efficient. It completely avoids rebuilding the lookup map from scratch on every re-render (even when `specimens` or other props/state changes), lowering rendering overhead from O(M) to O(1) for the lookup map recreation.
+**Action:** Always check if a loop-heavy computation inside a React component uses referentially stable lists from standard hook queries. If so, introduce a module-level `WeakMap` cache using the query result array as the key to store the pre-computed map or results, completely bypassing the recreation loop.

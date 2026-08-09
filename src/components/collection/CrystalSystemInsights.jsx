@@ -15,17 +15,27 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// Global WeakMap cache to store pre-computed mineral lookup maps
+// keyed by referentially stable 'minerals' arrays fetched via useEntityList.
+// This completely avoids rebuilding the lookup Map from scratch on re-renders.
+const mineralLookupCache = new WeakMap();
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+
+    // Retrieve or build the name → crystal_system lookup map (case-insensitive)
+    let lookup = mineralLookupCache.get(minerals);
+    if (!lookup) {
+      lookup = new Map();
+      for (const m of minerals) {
+        if (m.name && m.crystal_system) {
+          lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+        }
       }
+      mineralLookupCache.set(minerals, lookup);
     }
 
     // Fallback table for common mineral families when not in DB
