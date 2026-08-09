@@ -17,3 +17,6 @@
 ## 2026-10-31 - File Input Focus Interaction inside Labels
 **Learning:** Replacing `className="hidden"` with `className="sr-only"` on file inputs inside `<label>` elements allows the parent `<label>` to correctly reflect keyboard focus via `focus-within` styles without changing visual layout.
 **Action:** When making custom file upload inputs keyboard accessible, use `sr-only` on the `<input>`, wrap it within the `<label>`, and use `focus-within` on the label to visually indicate focus state.
+## 2024-11-20 - Navigable Cards and Nested Interactive Elements
+**Learning:** Navigable cards (like `<Link>` containers) often contain nested interactive elements (like expand/collapse buttons or share buttons). If the parent container does not have focus styles, keyboard users cannot tell which card they are on. Furthermore, expand/collapse toggles require `aria-expanded` attributes to properly communicate their state to screen readers.
+**Action:** Ensure parent navigable cards have `focus-visible` styles to indicate focus. Add `aria-expanded` to nested expand/collapse buttons and ensure all nested interactive elements have consistent `focus-visible` styles that match the theme of the card.

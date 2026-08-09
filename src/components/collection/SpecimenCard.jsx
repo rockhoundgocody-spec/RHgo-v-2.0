@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, ChevronDown, ChevronUp, Gem } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
 
 const RARITY_CONFIG = {
@@ -59,7 +59,7 @@ export default function SpecimenCard({ specimen, index }) {
   return (
     <Link
       to={`/specimen/${specimen.id}`}
-      className={`relative rounded-2xl overflow-hidden border ${rarity.border} ${rarity.bg} transition-all duration-200 active:scale-[0.97] block`}
+      className={`relative rounded-2xl overflow-hidden border ${rarity.border} ${rarity.bg} transition-all duration-200 active:scale-[0.97] block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}
       style={{ boxShadow: `0 0 24px -8px ${rarity.glow}` }}
     >
       {/* Card header strip */}
@@ -151,7 +151,8 @@ export default function SpecimenCard({ specimen, index }) {
           <ShareSpecimenButton specimen={specimen} className="flex-1" />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
-            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8"
+            aria-expanded={expanded}
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
           </button>
