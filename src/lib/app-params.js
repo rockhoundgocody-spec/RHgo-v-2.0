@@ -6,6 +6,51 @@ const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 }
 
+export const getSafeRedirectUrl = (url) => {
+	if (isNode) {
+		return '/';
+	}
+	if (!url || typeof url !== 'string') {
+		return '/';
+	}
+
+	const trimmed = url.trim();
+
+	// Check for bypass attempts starting with relative/protocol-relative slashes/backslashes
+	if (
+		trimmed.startsWith('//') ||
+		trimmed.startsWith('\\\\') ||
+		trimmed.startsWith('/\\') ||
+		trimmed.startsWith('\\/') ||
+		trimmed.startsWith('///')
+	) {
+		return '/';
+	}
+
+	// Must either be same-origin absolute URL, or a safe relative path starting with a single '/'
+	if (trimmed.startsWith('/')) {
+		if (trimmed.length > 1 && (trimmed[1] === '/' || trimmed[1] === '\\')) {
+			return '/';
+		}
+		return trimmed;
+	}
+
+	if (trimmed.startsWith('\\')) {
+		return '/';
+	}
+
+	try {
+		const parsed = new URL(trimmed);
+		if (parsed.origin === window.location.origin) {
+			return trimmed;
+		}
+	} catch (e) {
+		// Not a valid absolute URL, or parse failed
+	}
+
+	return '/';
+};
+
 const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
 	if (isNode) {
 		return defaultValue;
@@ -42,7 +87,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
+		fromUrl: getSafeRedirectUrl(getAppParamValue("from_url", { defaultValue: window.location.href })),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}

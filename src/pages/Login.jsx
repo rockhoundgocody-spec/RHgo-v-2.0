@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2, Gem, Compass, Zap, Flame } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { motion } from "framer-motion";
+import { appParams } from "@/lib/app-params";
 
 const FEATURES = [
   { icon: Gem,     label: 'AI Mineral ID',   desc: 'Instant identification' },
@@ -28,7 +29,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      window.location.href = appParams.fromUrl;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -129,12 +130,12 @@ export default function Login() {
           {/* OAuth buttons */}
           <div className="space-y-3 mb-6">
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("google", "/")}>
+              onClick={() => base44.auth.loginWithProvider("google", appParams.fromUrl)}>
               <GoogleIcon className="w-4 h-4 mr-2" />
               Continue with Google
             </Button>
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("facebook", "/")}>
+              onClick={() => base44.auth.loginWithProvider("facebook", appParams.fromUrl)}>
               <FacebookIcon className="w-4 h-4 mr-2" />
               Continue with Facebook
             </Button>

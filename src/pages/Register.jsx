@@ -10,6 +10,7 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { toast } from "@/components/ui/use-toast";
+import { appParams } from "@/lib/app-params";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -69,7 +70,7 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", appParams.fromUrl);
   };
 
   if (showOtp) {
@@ -156,7 +157,7 @@ export default function Register() {
       <Button
         variant="outline"
         className="w-full h-11 text-sm font-semibold mb-5 -mt-2 border-white/15 bg-white/5 hover:bg-white/10 text-white"
-        onClick={() => base44.auth.loginWithProvider("facebook", "/")}
+        onClick={() => base44.auth.loginWithProvider("facebook", appParams.fromUrl)}
       >
         <FacebookIcon className="w-4 h-4 mr-2" />
         Sign up with Facebook

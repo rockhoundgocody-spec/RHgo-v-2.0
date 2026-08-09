@@ -19,6 +19,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Mail, Lock, Loader2, Gem, Map, Zap, Shield } from 'lucide-react';
 import GoogleIcon from '@/components/GoogleIcon';
 import { motion } from 'framer-motion';
+import { appParams } from '@/lib/app-params';
 
 const PERKS = [
   { icon: Gem,    label: 'Your finds are saved forever', desc: 'Collection, pins & badges survive any device' },
@@ -48,7 +49,7 @@ export default function Auth() {
     setError(''); setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = '/';
+      window.location.href = appParams.fromUrl;
     } catch (err) {
       setError(err.message || 'Invalid email or password');
     } finally { setLoading(false); }
@@ -88,7 +89,7 @@ export default function Auth() {
   const GoogleBtn = ({ label }) => (
     <Button variant="outline"
       className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-      onClick={() => base44.auth.loginWithProvider('google', '/')}>
+      onClick={() => base44.auth.loginWithProvider('google', appParams.fromUrl)}>
       <GoogleIcon className="w-4 h-4 mr-2" />
       {label}
     </Button>
