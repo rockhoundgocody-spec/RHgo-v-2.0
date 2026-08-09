@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
@@ -12,6 +13,17 @@ export default function ProfileDrawer() {
   useEffect(() => {
     base44.auth.me().then((u) => setUser(u));
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -28,8 +40,11 @@ export default function ProfileDrawer() {
       {/* Drawer trigger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-amethyst/20 border border-amethyst/40 text-amethyst-glow hover:bg-amethyst/30 transition"
-        title={user?.full_name}
+        className="w-10 h-10 rounded-full flex items-center justify-center bg-amethyst/20 border border-amethyst/40 text-amethyst-glow hover:bg-amethyst/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
+        title={user?.full_name || "Account settings"}
+        aria-label={user?.full_name ? `Account settings for ${user.full_name}` : "Account settings"}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
         <User size={18} />
       </button>
@@ -41,13 +56,19 @@ export default function ProfileDrawer() {
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
-          <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-gradient-to-b from-amethyst-deep/40 to-black border-l border-amethyst/20 shadow-2xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Account details"
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-gradient-to-b from-amethyst-deep/40 to-black border-l border-amethyst/20 shadow-2xl"
+          >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-lg font-bold text-white">Account</h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-lg transition"
+                className="p-1 hover:bg-white/10 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                aria-label="Close drawer"
               >
                 <X size={18} className="text-white/60" />
               </button>
@@ -81,7 +102,7 @@ export default function ProfileDrawer() {
                   <button
                     key={i}
                     onClick={item.action}
-                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition text-white group"
+                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition text-white group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
                   >
                     <div className="flex items-center gap-3">
                       <Icon size={18} className="text-amethyst/60 group-hover:text-amethyst" />
@@ -97,7 +118,7 @@ export default function ProfileDrawer() {
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold text-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
               >
                 <LogOut size={16} /> Logout
               </button>

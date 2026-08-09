@@ -122,7 +122,8 @@ function SkillCard({ skill }) {
   return (
     <button
       onClick={() => setOpen(o => !o)}
-      className="w-full text-left rounded-xl overflow-hidden transition-all"
+      aria-expanded={open}
+      className="w-full text-left rounded-xl overflow-hidden transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
       style={{
         background: `hsla(265,40%,5%,0.7)`,
         border: `1px solid ${skill.color}28`,
