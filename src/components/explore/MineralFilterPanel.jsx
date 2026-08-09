@@ -39,6 +39,20 @@ function metaFor(mineral) {
   return match ? MINERAL_META[match] : { emoji: '💎', color: '#c084fc' };
 }
 
+function getFocusRingClass(mineral) {
+  const name = mineral.toLowerCase().trim();
+  if (['sapphire', 'emerald', 'ruby', 'tourmaline', 'topaz', 'fluorite', 'petoskey', 'fossil'].includes(name)) {
+    return 'focus-visible:ring-sky-400/50';
+  }
+  if (['amethyst', 'quartz'].includes(name)) {
+    return 'focus-visible:ring-amethyst/50';
+  }
+  if (['jasper', 'garnet', 'copper', 'gold', 'pyrite'].includes(name)) {
+    return 'focus-visible:ring-orange-400/50';
+  }
+  return 'focus-visible:ring-hud-cyan/50';
+}
+
 export default function MineralFilterPanel({ minerals = [], selected, onToggle, onClearAll }) {
   if (minerals.length === 0) return null;
 
@@ -53,9 +67,11 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={onClearAll}
+        aria-pressed={allActive}
         className={cn(
           'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
           'text-[10px] font-bold uppercase tracking-widest border transition-all',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background focus-visible:ring-hud-cyan/50',
         )}
         style={{
           background: allActive ? 'hsla(280,80%,60%,0.22)' : 'hsla(240,30%,8%,0.82)',
@@ -77,9 +93,12 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
             key={mineral}
             whileTap={{ scale: 0.92 }}
             onClick={() => onToggle(mineral)}
+            aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-wider border transition-all capitalize',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background',
+              getFocusRingClass(mineral),
             )}
             style={{
               background: active ? `${m.color}22` : 'hsla(240,30%,8%,0.82)',

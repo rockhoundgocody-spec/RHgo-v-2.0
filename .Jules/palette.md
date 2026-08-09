@@ -1,3 +1,7 @@
+## 2026-07-15 - Themed Focus Rings and Toggle States
+**Learning:** For tabbed or scrollable filtering components (like Map Layers and Mineral Filter chips) in a highly dark HUD theme, relying purely on opacity changes and custom border colors for selection is not enough for screen readers. Adding `aria-pressed={active}` provides proper semantic cues, while mapping categories to specific colored focus-rings (e.g. `focus-visible:ring-sky-400/50` for rare, `focus-visible:ring-amethyst/50` for amethyst/quartz, and `focus-visible:ring-hud-cyan/50` for general HUD) makes keyboard focusing look beautifully tailored.
+**Action:** Always include `aria-pressed` on filter toggles and maps, and use custom theme-aware focus ring colors matching the targeted active/category color instead of standard styling.
+
 ## 2026-07-11 - Explore HUD Button Accessibility
 **Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
 **Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.

@@ -29,9 +29,16 @@ export default function MapLayerPanel({ activeLayer, onLayerChange }) {
             key={layer.id}
             whileTap={{ scale: 0.92 }}
             onClick={() => onLayerChange(layer.id)}
+            aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-widest border transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background',
+              layer.id === 'all' && 'focus-visible:ring-hud-cyan/50',
+              layer.id === 'rare' && 'focus-visible:ring-sky-400/50',
+              layer.id === 'gaps' && 'focus-visible:ring-amber-400/50',
+              layer.id === 'public' && 'focus-visible:ring-emerald-400/50',
+              layer.id === 'expedition' && 'focus-visible:ring-hud-cyan/50',
             )}
             style={{
               background: active
