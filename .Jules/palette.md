@@ -1,3 +1,7 @@
+## 2026-07-12 - Focus Parity for Interactive Overlays
+**Learning:** Custom interactive triggers with nested visual overlays (such as a camera icon overlay displayed over an avatar image button) often rely exclusively on mouse-hover states, completely leaving keyboard and non-pointer users without visual feedback. Utilizing responsive utility classes like `group-focus-visible:opacity-100` coupled with themed focus-visible rings ensures focus parity across all modes.
+**Action:** When designing buttons containing hover-triggered child element overlays, always pair `group-hover:opacity-100` with `group-focus-visible:opacity-100` or `focus-visible:opacity-100` on the child overlays, and ensure the parent button has clear, distinct focus rings.
+
 ## 2026-07-11 - Explore HUD Button Accessibility
 **Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
 **Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.

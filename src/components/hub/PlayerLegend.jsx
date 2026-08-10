@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Upload, Trophy, Zap, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
@@ -175,7 +176,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
             {/* Avatar — tap navigates to profile, upload button is separate */}
             <div className="relative flex-shrink-0">
               <Link to="/profile"
-                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95"
+                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-offset-2 ring-offset-background"
                 style={{
                   borderColor: level > 2 ? 'hsla(280,90%,65%,0.6)' : 'hsla(255,30%,50%,0.35)',
                   background: 'hsla(260,40%,12%,0.9)',
@@ -195,8 +196,9 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90"
+                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-offset-1 ring-offset-background"
                 style={{ background: 'hsla(265,60%,20%,0.95)', borderColor: 'hsla(280,60%,50%,0.5)' }}
+                aria-label="Upload avatar"
               >
                 {uploading
                   ? <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
