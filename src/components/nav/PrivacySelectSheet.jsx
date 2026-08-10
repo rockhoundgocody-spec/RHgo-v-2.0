@@ -8,7 +8,7 @@ const OPTIONS = [
   { value: 'community', label: 'Community visible', description: 'Visible to all rockhounds' },
 ];
 
-export default function PrivacySelectSheet({ value, onChange }) {
+export default function PrivacySelectSheet({ value, onChange, id }) {
   const [open, setOpen] = useState(false);
   const current = OPTIONS.find((o) => o.value === value) || OPTIONS[0];
 
@@ -16,8 +16,9 @@ export default function PrivacySelectSheet({ value, onChange }) {
     <>
       {/* Trigger row */}
       <button
+        id={id}
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white text-sm select-none"
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
       >
         <span>{current.label}</span>
         <ChevronRight size={14} className="text-white/40" />
@@ -50,7 +51,7 @@ export default function PrivacySelectSheet({ value, onChange }) {
                     key={opt.value}
                     onClick={() => { onChange(opt.value); setOpen(false); }}
                     className={cn(
-                      'w-full flex items-center justify-between px-4 py-3 rounded-xl transition select-none',
+                      'w-full flex items-center justify-between px-4 py-3 rounded-xl transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background',
                       value === opt.value
                         ? 'bg-amethyst/20 border border-amethyst/40'
                         : 'hover:bg-white/5 border border-transparent'
@@ -69,7 +70,7 @@ export default function PrivacySelectSheet({ value, onChange }) {
             <div className="px-4 pb-8 pt-3">
               <button
                 onClick={() => setOpen(false)}
-                className="w-full py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none"
+                className="w-full py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
               >
                 Cancel
               </button>

@@ -49,7 +49,7 @@ export default function DeleteAccountDialog({ onClose }) {
                 <p className="text-white/40 text-xs">This cannot be undone</p>
               </div>
             </div>
-            <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white transition select-none">
+            <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background rounded-sm">
               <X size={20} />
             </button>
           </div>
@@ -74,13 +74,13 @@ export default function DeleteAccountDialog({ onClose }) {
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-semibold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
                 >
                   Continue
                 </button>
@@ -98,20 +98,20 @@ export default function DeleteAccountDialog({ onClose }) {
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 focus:outline-none focus:border-rose-500/60 mb-4 text-sm"
+                className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/60 mb-4 text-sm"
                 autoFocus
               />
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={confirmText !== 'DELETE' || confirming}
-                  className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 ring-offset-background"
                 >
                   {confirming ? 'Deleting…' : 'Delete My Account'}
                 </button>

@@ -1,6 +1,7 @@
 ## 2026-07-11 - Explore HUD Button Accessibility
 **Learning:** Icon-only buttons in complex mapping interfaces often rely solely on spatial layout for context, completely breaking the experience for screen readers and keyboard users. Applying themed focus states (e.g. `focus-visible:ring-hud-cyan`) ensures that the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
 **Action:** When adding `focus-visible` to interactive elements within a specific themed UI (like the dark/cyan HUD mode), intentionally match the focus ring color to the active/theme state of the button (e.g., emerald for geology, cyan for HUD/location) rather than defaulting to standard blue rings.
+
 ## 2024-07-15 - AR Accessibility Focus Styles
 **Learning:** Found that custom highly-styled animated modals like the AR Encounter screen often miss `focus-visible` ring indicators, making keyboard interactions invisible. These elements typically use custom inline styles or heavily customized Tailwind that strip default browser rings.
 **Action:** Always ensure that custom animated buttons (especially those dismissing modals or changing encounter states) explicitly include `focus-visible:outline-none focus-visible:ring-2` to restore keyboard usability without affecting touch/mouse visual design.
@@ -8,18 +9,27 @@
 ## 2023-10-27 - File Input Accessibility Pattern
 **Learning:** Using `className="hidden"` on `<input type="file">` removes it from the tab sequence completely, making custom upload buttons inaccessible to keyboard users.
 **Action:** Always use `className="sr-only"` on the hidden file input and apply `focus-within` styles (like `focus-within:ring-2`) to the visible parent `<label>` wrapper so visual feedback is provided when the hidden input receives focus.
+
 ## 2024-08-01 - Post Composer Image Upload Accessibility
 **Learning:** Found that custom file upload buttons in the community post composer often use `className="hidden"` on the `<input type="file">`, which completely removes them from the accessibility tree, making them invisible to screen readers and keyboard users.
 **Action:** Replace `className="hidden"` with `className="sr-only"` on hidden file inputs and apply `focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none` to the parent `<label>` wrapper so that keyboard focus is visually indicated when the input receives focus.
+
 ## 2024-06-25 - Avoid unintended scope creep with dependencies during visual verification
 **Learning:** During visual verification of micro-UX improvements in specific components (e.g. `AgateGuide.jsx`), broken dev servers due to missing dependencies in other areas of the application (like `leaflet.css` in `HotspotMap.jsx`) can prompt agents to unintentionally fix unrelated issues by installing new packages or creating debug routes.
 **Action:** When a dev server fails due to a missing dependency outside the scope of the targeted micro-UX change, NEVER add the dependency to package.json. Rely on static checks (linting/unit tests) for verification, and do not introduce unauthorized routing changes purely for visual verification. Always ensure the PR only contains changes strictly related to the assigned micro-UX task.
+
 ## 2026-10-31 - File Input Focus Interaction inside Labels
 **Learning:** Replacing `className="hidden"` with `className="sr-only"` on file inputs inside `<label>` elements allows the parent `<label>` to correctly reflect keyboard focus via `focus-within` styles without changing visual layout.
 **Action:** When making custom file upload inputs keyboard accessible, use `sr-only` on the `<input>`, wrap it within the `<label>`, and use `focus-within` on the label to visually indicate focus state.
+
 ## 2024-11-20 - Navigable Cards and Nested Interactive Elements
 **Learning:** Navigable cards (like `<Link>` containers) often contain nested interactive elements (like expand/collapse buttons or share buttons). If the parent container does not have focus styles, keyboard users cannot tell which card they are on. Furthermore, expand/collapse toggles require `aria-expanded` attributes to properly communicate their state to screen readers.
 **Action:** Ensure parent navigable cards have `focus-visible` styles to indicate focus. Add `aria-expanded` to nested expand/collapse buttons and ensure all nested interactive elements have consistent `focus-visible` styles that match the theme of the card.
+
 ## 2024-03-01 - HUD Scan Overlay Accessibility
 **Learning:** Found that custom highly-styled action bars and toggles within immersive AR/Scan HUDs often lack visual focus indicators. This severely impairs keyboard navigability in complex multi-angle capture or toggling interfaces.
 **Action:** When working on complex immersive HUD components (like Torch buttons or Wet/Dry context toggles), explicitly add `focus-visible:outline-none focus-visible:ring-2` combined with a complementary theme color (e.g. `focus-visible:ring-yellow-500/50` or `focus-visible:ring-hud-cyan/50`) to ensure the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
+
+## 2026-08-10 - Accessibility for Custom Range Sliders & Dialogue Triggers in Theme-Aware Interfaces
+**Learning:** Custom-styled range input components (such as Voice sliders) and customized dropdown select triggers can bypass or obscure native browser outline styles. This makes keyboard-based navigation across the settings suite entirely non-visual and disorienting.
+**Action:** Always provide explicit, unique `aria-label` tags for custom voice/pitch/volume range sliders and pair them with customized focus states matching the active brand context (e.g., `focus-visible:ring-amethyst/50 focus-visible:outline-none` for core settings, `focus-visible:ring-rose-500/50` for destructive danger zones). Connect text-based options explicitly using matched `htmlFor` and `id` properties.
