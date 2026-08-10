@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrive, ChevronRight, AlertCircle } from 'lucide-react';
+import { HardDrive, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const StatusChip = ({ label, value, alert = false }) => (
@@ -16,7 +16,18 @@ const StatusChip = ({ label, value, alert = false }) => (
 export default function FieldCoreCard({ onOpen }) {
   return (
     <GlassPanel variant="amethyst" className="p-5 cursor-pointer hover:shadow-[0_0_80px_-20px_hsla(280,80%,55%,0.5)] transition-shadow">
-      <div onClick={onOpen} className="space-y-4">
+      <div
+        onClick={onOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className="space-y-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded-xl"
+      >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">

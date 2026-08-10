@@ -23,3 +23,6 @@
 ## 2024-03-01 - HUD Scan Overlay Accessibility
 **Learning:** Found that custom highly-styled action bars and toggles within immersive AR/Scan HUDs often lack visual focus indicators. This severely impairs keyboard navigability in complex multi-angle capture or toggling interfaces.
 **Action:** When working on complex immersive HUD components (like Torch buttons or Wet/Dry context toggles), explicitly add `focus-visible:outline-none focus-visible:ring-2` combined with a complementary theme color (e.g. `focus-visible:ring-yellow-500/50` or `focus-visible:ring-hud-cyan/50`) to ensure the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
+## 2024-06-25 - Navigable Components Missing Focus
+**Learning:** Found that custom layout components (like the `FieldCoreCard`) that act as a button and open an interactive view can lack standard accessibility states because they are implemented as `<div onClick={onOpen}>`. This renders them completely hidden to keyboard-only users navigating through options.
+**Action:** Always ensure that structural UI elements functioning as large clickable zones have `tabIndex={0}`, `role="button"`, proper `onKeyDown` handlers for activation via Enter/Space, and a `focus-visible` ring.
