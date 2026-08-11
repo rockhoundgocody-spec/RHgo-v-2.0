@@ -51,7 +51,14 @@ export default function ChaosModeToggle({ chaos, onToggle, locked }) {
     <button
       onClick={onToggle}
       disabled={locked}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95 select-none disabled:cursor-not-allowed"
+      aria-pressed={!locked ? chaos : undefined}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95 select-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background ${
+        locked
+          ? 'focus-visible:ring-white/30'
+          : chaos
+            ? 'focus-visible:ring-orange-400/50'
+            : 'focus-visible:ring-hud-cyan/50'
+      }`}
       style={{
         background: locked
           ? 'hsla(0,0%,15%,0.5)'

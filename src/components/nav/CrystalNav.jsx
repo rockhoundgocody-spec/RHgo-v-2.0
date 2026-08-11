@@ -61,12 +61,13 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
           <button
             key={tab.to}
             onClick={() => onTabClick(tab.to, isActive)}
-            className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center"
+            className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 focus-visible:ring-offset-2 ring-offset-background"
             style={{
               color: isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
               background: isActive ? 'hsla(195,100%,60%,0.07)' : 'transparent',
             }}
             aria-label={tab.label}
+            aria-pressed={isActive}
           >
             <div style={{ filter: isActive ? 'drop-shadow(0 0 6px hsla(195,100%,60%,0.6))' : 'none' }}>
               <Icon size={19} strokeWidth={isActive ? 2 : 1.6} />
@@ -98,7 +99,7 @@ function HeroScanButton({ isActive, onClick }) {
       <motion.button
         onClick={onClick}
         whileTap={{ scale: 0.92 }}
-        className="relative flex items-center justify-center cursor-pointer"
+        className="relative flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 ring-offset-background"
         style={{
           width: 58,
           height: 58,
@@ -112,6 +113,7 @@ function HeroScanButton({ isActive, onClick }) {
             : '0 6px 24px hsla(250,60%,4%,0.7), inset 0 1px 0 hsla(260,60%,85%,0.1)',
         }}
         aria-label="Scan"
+        aria-pressed={isActive}
       >
         <ScanLine
           size={24}
