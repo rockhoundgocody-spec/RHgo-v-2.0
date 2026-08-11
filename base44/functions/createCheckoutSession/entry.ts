@@ -11,6 +11,26 @@ import Stripe from 'npm:stripe@14.25.0';
  * metadata.tier is propagated to the subscription so the webhook can sync the
  * Subscription entity without needing a price-id→tier map.
  */
+function isValidRedirectTarget(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+    const hostname = parsed.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return true;
+    }
+    if (hostname === 'rhgo.base44.app' || hostname === 'rhgo2.base44.app' || hostname.endsWith('.base44.app')) {
+      return true;
+    }
+    return false;
+  } catch (_e) {
+    // Fail securely
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
@@ -18,6 +38,11 @@ Deno.serve(async (req) => {
 
     if (!priceId) return Response.json({ error: 'priceId is required' }, { status: 400 });
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
+
+    // Validate redirect targets to prevent Open Redirect vulnerabilities
+    if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
+      return Response.json({ error: 'Invalid redirect URL origin' }, { status: 400 });
+    }
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 

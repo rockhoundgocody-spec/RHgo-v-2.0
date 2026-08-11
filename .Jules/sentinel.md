@@ -1,0 +1,4 @@
+## 2025-02-15 - Open Redirect and Insecure Storage Mitigation
+**Vulnerability:** The application was exposed to Open Redirect vulnerabilities via unsanitized query parameters (`from_url`, `redirect`) and stored sensitive access tokens persistently in persistent `localStorage` which is prone to leakage and XSS extraction.
+**Learning:** Overreliance on default `localStorage` for authentication tokens leaves session data permanently on disk. Failing to sanitize incoming target redirects allowing any arbitrary host allows attackers to construct phishing links targeting users of the application.
+**Prevention:** Always route sensitive authentication tokens to temporary `sessionStorage` and proactively purge any legacy tokens. Use a robust validation function (`getSafeRedirectUrl`) to filter all incoming URL-based redirection targets to guarantee same-origin absolute or single-slash relative targets only.
