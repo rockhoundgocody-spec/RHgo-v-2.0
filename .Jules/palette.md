@@ -23,3 +23,6 @@
 ## 2024-03-01 - HUD Scan Overlay Accessibility
 **Learning:** Found that custom highly-styled action bars and toggles within immersive AR/Scan HUDs often lack visual focus indicators. This severely impairs keyboard navigability in complex multi-angle capture or toggling interfaces.
 **Action:** When working on complex immersive HUD components (like Torch buttons or Wet/Dry context toggles), explicitly add `focus-visible:outline-none focus-visible:ring-2` combined with a complementary theme color (e.g. `focus-visible:ring-yellow-500/50` or `focus-visible:ring-hud-cyan/50`) to ensure the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
+## 2024-03-05 - Toggle Button Accessibility State
+**Learning:** Toggle buttons (like map layer controls) often change visual style when active, but fail to programmatically communicate this state to screen readers.
+**Action:** When implementing toggle buttons or chips, always include `aria-pressed={active}` so assistive technologies can announce the current state.
