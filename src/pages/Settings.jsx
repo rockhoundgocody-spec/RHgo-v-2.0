@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
+import { Bell, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
@@ -23,7 +23,8 @@ function VoiceSlider({ label, hint, min, max, step, value, onChange }) {
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer"
+        className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={label}
       />
       <p className="text-[11px] text-white/35">{hint}</p>
     </div>
@@ -122,7 +123,7 @@ export default function Settings() {
 
       {/* Pricing / upgrade CTA */}
       <a href="/pricing"
-        className="block mb-6 rounded-2xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-transform no-underline"
+        className="block mb-6 rounded-2xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.99] transition-transform no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{
           background: 'linear-gradient(135deg, hsla(270,60%,20%,0.55), hsla(280,80%,15%,0.65))',
           border: '1px solid hsla(280,70%,60%,0.22)',
@@ -222,7 +223,7 @@ export default function Settings() {
                   type="checkbox"
                   checked={!!settings[key]}
                   onChange={() => handleToggle(key)}
-                  className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                  className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 />
                 {label}
               </label>
@@ -246,7 +247,7 @@ export default function Settings() {
                 type="checkbox"
                 checked={settings.offlineMode}
                 onChange={() => handleToggle('offlineMode')}
-                className="w-4 h-4 rounded border-white/30 accent-amethyst"
+                className="w-4 h-4 rounded border-white/30 accent-amethyst focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               />
               Offline mode enabled
             </label>
@@ -277,7 +278,7 @@ export default function Settings() {
             <button
               onClick={handleDumpCache}
               disabled={cacheDumping}
-              className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition disabled:opacity-50"
+              className="text-xs text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
             >
               {cacheDumping ? 'Dumping…' : cacheDumped ? '✓ Dumped — reloading' : 'Clear cache'}
             </button>
@@ -306,12 +307,12 @@ export default function Settings() {
             <VoiceSlider label="Volume" hint="0.5 = quiet · 1.0 = full" min={0.5} max={1.0} step={0.01} value={voice.volume} onChange={(v) => setVoice((p) => ({ ...p, volume: v }))} />
             <div className="flex gap-3 pt-1">
               <button onClick={saveVoice}
-                className="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition active:scale-95 select-none"
+                className="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 style={{ background: 'hsla(270,60%,30%,0.5)', border: '1px solid hsla(280,60%,55%,0.35)' }}>
                 {voiceSaved ? '✓ Saved!' : 'Preview & Save'}
               </button>
               <button onClick={resetVoice}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none">
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-sm transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 Reset
               </button>
             </div>
@@ -321,7 +322,7 @@ export default function Settings() {
 
       {/* Save button */}
       <button onClick={saveSettings}
-        className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none"
+        className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))', boxShadow: '0 6px 28px -6px hsla(270,80%,60%,0.5)' }}>
         {settingsSaved ? '✓ Settings Saved' : 'Save Settings'}
       </button>
@@ -331,7 +332,7 @@ export default function Settings() {
         <GlassPanel className="p-4" style={{ borderColor: 'hsla(0,80%,50%,0.15)' }}>
           <SectionHeader icon={Trash2} iconColor="text-rose-400" title="Danger Zone" subtitle="Permanently delete your account and all associated field data. This action cannot be undone." />
           <button onClick={() => setShowDeleteDialog(true)}
-            className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none"
+            className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             style={{ background: 'hsla(0,80%,50%,0.08)', border: '1px solid hsla(0,80%,50%,0.22)' }}>
             Delete Account
           </button>
