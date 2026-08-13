@@ -1,6 +1,27 @@
 import Stripe from 'npm:stripe@14.25.0';
 
 /**
+ * Validates that redirect destinations belong strictly to permitted origins
+ */
+function isValidRedirectTarget(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    const hostname = url.hostname;
+    // Permitted origins: localhost, 127.0.0.1, rhgo.base44.app, rhgo2.base44.app, or domains ending in .base44.app
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === 'rhgo.base44.app' ||
+      hostname === 'rhgo2.base44.app' ||
+      hostname.endsWith('.base44.app')
+    );
+  } catch (_e) {
+    // Return false if URL parsing fails
+    return false;
+  }
+}
+
+/**
  * createCheckoutSession — starts a Stripe Checkout (subscription mode) for a
  * RockHound-GO tier. Public app (no login required), so we do NOT call
  * base44.auth.me(); the caller may pass an optional customerEmail.
@@ -18,6 +39,10 @@ Deno.serve(async (req) => {
 
     if (!priceId) return Response.json({ error: 'priceId is required' }, { status: 400 });
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
+
+    if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
+      return Response.json({ error: 'Invalid redirect target for successUrl or cancelUrl' }, { status: 400 });
+    }
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
