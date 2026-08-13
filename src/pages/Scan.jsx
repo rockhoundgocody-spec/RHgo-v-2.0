@@ -530,7 +530,7 @@ export default function Scan() {
       </div>
 
       {/* Main content — fills remaining height */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto -webkit-overflow-scrolling-touch">
         {stage === 'live' && (
           <LiveScanStage
             onBeginCapture={(mode) => { if (mode) setScanMode(mode); setStage('capture'); }}
