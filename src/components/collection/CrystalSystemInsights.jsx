@@ -15,17 +15,27 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// Module-level cache keyed by referentially stable minerals list array from useEntityList
+const mineralLookupCache = new WeakMap();
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+
+    // Performance Optimization: Check if we have a cached lookup Map for this minerals array.
+    // Since the minerals array from React Query/useEntityList is referentially stable,
+    // we can avoid expensive O(N) rebuild loops on every re-render or specimen list update.
+    let lookup = mineralLookupCache.get(minerals);
+    if (!lookup) {
+      lookup = new Map();
+      for (const m of minerals) {
+        if (m.name && m.crystal_system) {
+          lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
+        }
       }
+      mineralLookupCache.set(minerals, lookup);
     }
 
     // Fallback table for common mineral families when not in DB
