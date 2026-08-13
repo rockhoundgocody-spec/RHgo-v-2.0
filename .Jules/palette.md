@@ -23,3 +23,7 @@
 ## 2024-03-01 - HUD Scan Overlay Accessibility
 **Learning:** Found that custom highly-styled action bars and toggles within immersive AR/Scan HUDs often lack visual focus indicators. This severely impairs keyboard navigability in complex multi-angle capture or toggling interfaces.
 **Action:** When working on complex immersive HUD components (like Torch buttons or Wet/Dry context toggles), explicitly add `focus-visible:outline-none focus-visible:ring-2` combined with a complementary theme color (e.g. `focus-visible:ring-yellow-500/50` or `focus-visible:ring-hud-cyan/50`) to ensure the accessibility focus ring blends seamlessly with the existing design language without looking like an afterthought.
+
+## 2024-08-13 - [DailyCheckIn Accessibility Enhancement]
+**Learning:** Decorative emojis in custom button groups (like mood selectors) can cause screen reader clutter, and custom active states (like picking a mood) aren't announced by default.
+**Action:** When building custom option selectors with emojis, always wrap the emoji in `<span aria-hidden="true">` and use `aria-pressed={isActive}` on the `<button>` so the screen reader properly announces state changes without reading the decorative icon.
