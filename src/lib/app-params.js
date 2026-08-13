@@ -34,6 +34,33 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 	return null;
 }
 
+export const getSafeRedirectUrl = (url, defaultUrl = '/') => {
+	if (!url) return defaultUrl;
+	try {
+		// Absolute URLs check: if it starts with http:// or https:// or equivalent
+		if (/^(https?:)?\/\//i.test(url)) {
+			const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+			if (typeof window !== 'undefined' && parsed.origin === window.location.origin) {
+				return url;
+			}
+			return defaultUrl;
+		}
+
+		// Relative paths starting with a single '/'
+		if (url.startsWith('/')) {
+			// Ensure it doesn't match bypass attempts like //, \\, /\, or /// or starting with multiple slashes
+			if (url.startsWith('//') || url.startsWith('\\\\') || url.startsWith('/\\') || url.startsWith('\\/') || /^\/{3,}/.test(url) || url.startsWith('/%5C') || url.startsWith('/%5c')) {
+				return defaultUrl;
+			}
+			return url;
+		}
+
+		return defaultUrl;
+	} catch (e) {
+		return defaultUrl;
+	}
+};
+
 const getAppParams = () => {
 	if (getAppParamValue("clear_access_token") === 'true') {
 		storage.removeItem('base44_access_token');
@@ -42,7 +69,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
+		fromUrl: getSafeRedirectUrl(getAppParamValue("from_url", { defaultValue: typeof window === 'undefined' ? '/' : window.location.href })),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}
