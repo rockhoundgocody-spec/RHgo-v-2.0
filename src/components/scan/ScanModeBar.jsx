@@ -4,7 +4,7 @@
  * lighting tips panel, and scale reference toggle.
  */
 import React, { useState } from 'react';
-import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, ChevronDown, X } from 'lucide-react';
+import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MODES = [
