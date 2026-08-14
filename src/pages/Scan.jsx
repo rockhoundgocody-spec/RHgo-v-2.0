@@ -52,6 +52,62 @@ const SCAN_LINES = {
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+
+async function saveSpecimenFallback(result, primaryUrl, lat, lng) {
+  const richNotes = [
+    result.description,
+    result.scientific_name ? `Scientific name: ${result.scientific_name}` : null,
+    result.chemical_formula ? `Formula: ${result.chemical_formula}` : null,
+    result.crystal_system ? `Crystal system: ${result.crystal_system}` : null,
+    result.hardness_mohs != null ? `Hardness: ${result.hardness_mohs} Mohs` : null,
+    result.formation ? `Formation: ${result.formation}` : null,
+    result.value_estimate ? `Value: ${result.value_estimate}` : null,
+    result.fun_fact ? `Fun fact: ${result.fun_fact}` : null,
+  ].filter(Boolean).join('\n\n');
+
+  return await base44.entities.Specimen.create({
+    mineral_name:  result.top_match,
+    common_name:   result.scientific_name || result.top_match,
+    image_url:     primaryUrl,
+    ai_confidence: result.confidence,
+    ai_candidates: result.candidates,
+    notes:         richNotes,
+    rarity:        result.rarity,
+    found_date:    new Date().toISOString().split('T')[0],
+    ...(lat != null ? { lat, lng } : {}),
+  });
+}
+
+async function awardPlayerXP(disposition, xp) {
+  const me = await base44.auth.me();
+  const cat = disposition === 'left_in_place' ? 'steward' : 'collector';
+  const emptyCats = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
+  const profs = await base44.entities.PlayerProfile.filter({ owner_email: me.email });
+
+  if (profs[0]) {
+    const cats = { ...emptyCats, ...(profs[0].xp_categories || {}) };
+    cats[cat] += xp;
+    await base44.entities.PlayerProfile.update(profs[0].id, {
+      xp_categories: cats,
+      total_xp: (profs[0].total_xp || 0) + xp,
+    });
+  } else {
+    await base44.entities.PlayerProfile.create({
+      owner_email: me.email,
+      total_xp: xp,
+      xp_categories: { ...emptyCats, [cat]: xp },
+    });
+  }
+}
+
+function applyGeoPrivacy(lat, lng, geoPrivacy) {
+  if (geoPrivacy === 'private') return { lat: null, lng: null };
+  if (geoPrivacy === 'approximate' && lat != null) {
+    return { lat: Math.round(lat * 100) / 100, lng: Math.round(lng * 100) / 100 };
+  }
+  return { lat, lng };
+}
+
 /**
  * Scan — combined flow:
  *   live  →  capture (multi-angle)  →  reconstruct (upload + AI)  →  result
@@ -385,14 +441,7 @@ export default function Scan() {
   const saveWithChoice = async (choice) => {
     setChoiceOpen(false);
     if (!result || !primaryUrl) return;
-    // Geo privacy controls — exact, approximate (~1km), or private (no coords)
-    let lat = gpsCoords?.lat ?? null;
-    let lng = gpsCoords?.lng ?? null;
-    if (choice.geoPrivacy === 'private') { lat = null; lng = null; }
-    else if (choice.geoPrivacy === 'approximate' && lat != null) {
-      lat = Math.round(lat * 100) / 100;
-      lng = Math.round(lng * 100) / 100;
-    }
+    const { lat, lng } = applyGeoPrivacy(gpsCoords?.lat ?? null, gpsCoords?.lng ?? null, choice.geoPrivacy);
     const rarityWeight = { common: 1, uncommon: 2, rare: 3, legendary: 5 }[result.rarity] || 1;
     const rqs = Math.round(rarityWeight * (result.confidence || 0.5) * 20);
     const xp = choice.disposition === 'left_in_place' ? 40 : 25;
@@ -412,28 +461,7 @@ export default function Scan() {
     let specimenId = res?.data?.saved_specimen_id;
     let specimenObj = null;
     if (!specimenId) {
-      // Fallback: save directly with full metadata from result
-      const richNotes = [
-        result.description,
-        result.scientific_name ? `Scientific name: ${result.scientific_name}` : null,
-        result.chemical_formula ? `Formula: ${result.chemical_formula}` : null,
-        result.crystal_system ? `Crystal system: ${result.crystal_system}` : null,
-        result.hardness_mohs != null ? `Hardness: ${result.hardness_mohs} Mohs` : null,
-        result.formation ? `Formation: ${result.formation}` : null,
-        result.value_estimate ? `Value: ${result.value_estimate}` : null,
-        result.fun_fact ? `Fun fact: ${result.fun_fact}` : null,
-      ].filter(Boolean).join('\n\n');
-      const created = await base44.entities.Specimen.create({
-        mineral_name:  result.top_match,
-        common_name:   result.scientific_name || result.top_match,
-        image_url:     primaryUrl,
-        ai_confidence: result.confidence,
-        ai_candidates: result.candidates,
-        notes:         richNotes,
-        rarity:        result.rarity,
-        found_date:    new Date().toISOString().split('T')[0],
-        ...(lat != null ? { lat, lng } : {}),
-      });
+      const created = await saveSpecimenFallback(result, primaryUrl, lat, lng);
       specimenId = created.id;
       specimenObj = created;
     } else {
@@ -452,25 +480,7 @@ export default function Scan() {
       xp_awarded: xp,
     });
 
-    // Award category XP — Collector for collecting, Steward for leaving in place
-    const me = await base44.auth.me();
-    const cat = choice.disposition === 'left_in_place' ? 'steward' : 'collector';
-    const emptyCats = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
-    const profs = await base44.entities.PlayerProfile.filter({ owner_email: me.email });
-    if (profs[0]) {
-      const cats = { ...emptyCats, ...(profs[0].xp_categories || {}) };
-      cats[cat] += xp;
-      await base44.entities.PlayerProfile.update(profs[0].id, {
-        xp_categories: cats,
-        total_xp: (profs[0].total_xp || 0) + xp,
-      });
-    } else {
-      await base44.entities.PlayerProfile.create({
-        owner_email: me.email,
-        total_xp: xp,
-        xp_categories: { ...emptyCats, [cat]: xp },
-      });
-    }
+    await awardPlayerXP(choice.disposition, xp);
 
     // Track collected weight for Michigan legal limit
     if (choice.disposition === 'collected') {
