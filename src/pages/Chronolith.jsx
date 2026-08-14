@@ -39,11 +39,11 @@ export default function Chronolith() {
     setLoading(true);
     setError('');
     try {
-      const urls = [];
-      for (const file of files.slice(0, 3)) {
+      const uploadPromises = files.slice(0, 3).map(async (file) => {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        urls.push(file_url);
-      }
+        return file_url;
+      });
+      const urls = await Promise.all(uploadPromises);
       setImageUrls(urls);
       await runInvestigation(urls);
     } catch (err) {
