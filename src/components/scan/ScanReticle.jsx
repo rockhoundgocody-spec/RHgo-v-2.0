@@ -4,6 +4,127 @@ import React, { useEffect, useRef } from 'react';
  * ScanReticle — animated targeting ring that reacts to scan state.
  * States: idle | scanning | processing | locked
  */
+
+function drawOuterSpinningDashes({ ctx, cx, cy, R1, t, s, col }) {
+  if (s === 'idle' || s === 'scanning') {
+    const speed = s === 'scanning' ? 1.2 : 0.4;
+    const dashCount = 24;
+    const gap = (Math.PI * 2) / dashCount;
+    ctx.save();
+    ctx.strokeStyle = col.main;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < dashCount; i++) {
+      const a = i * gap + t * speed;
+      const alpha = 0.3 + 0.5 * Math.abs(Math.sin(i * 0.9 + t * 2));
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R1, a, a + gap * 0.4);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+}
+
+function drawProcessingArcs({ ctx, cx, cy, R1, t, col, s }) {
+  if (s === 'processing') {
+    for (let arc = 0; arc < 3; arc++) {
+      const offset = (arc / 3) * Math.PI * 2;
+      const arcLen = 0.6 + 0.3 * Math.sin(t * 1.5 + arc);
+      const start = t * (1.5 + arc * 0.3) + offset;
+      const grad = ctx.createLinearGradient(
+        cx + Math.cos(start) * R1, cy + Math.sin(start) * R1,
+        cx + Math.cos(start + arcLen) * R1, cy + Math.sin(start + arcLen) * R1
+      );
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.5, col.arc);
+      grad.addColorStop(1, 'transparent');
+      ctx.save();
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = col.glow;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R1, start, start + arcLen);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
+function drawLockedRing({ ctx, cx, cy, R1, t, col, s }) {
+  if (s === 'locked') {
+    const pulse = 0.75 + 0.25 * Math.sin(t * 3);
+    ctx.save();
+    ctx.strokeStyle = col.arc;
+    ctx.lineWidth = 2.5;
+    ctx.globalAlpha = pulse;
+    ctx.shadowColor = col.glow;
+    ctx.shadowBlur = 16;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawProgressArc({ ctx, cx, cy, R2, sig, col }) {
+  const fillAngle = sig * Math.PI * 2;
+  ctx.save();
+  ctx.strokeStyle = col.arc;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = col.glow;
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R2, -Math.PI / 2, -Math.PI / 2 + fillAngle);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTrackRing({ ctx, cx, cy, R2 }) {
+  ctx.save();
+  ctx.strokeStyle = 'hsla(270,40%,50%,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCornerTickMarks({ ctx, cx, cy, R1, col }) {
+  const corners = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+  corners.forEach((angle) => {
+    const ax = cx + Math.cos(angle) * R1;
+    const ay = cy + Math.sin(angle) * R1;
+    const bx = cx + Math.cos(angle) * (R1 + 10);
+    const by = cy + Math.sin(angle) * (R1 + 10);
+    ctx.save();
+    ctx.strokeStyle = col.main;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = col.glow;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawCoreDot({ ctx, cx, cy, R3, t, col, s }) {
+  const coreR = R3 * (0.5 + 0.15 * Math.sin(t * (s === 'processing' ? 4 : 2)));
+  ctx.save();
+  ctx.fillStyle = col.main;
+  ctx.shadowColor = col.glow;
+  ctx.shadowBlur = 20;
+  ctx.globalAlpha = s === 'idle' ? 0.5 : 0.85;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
@@ -47,118 +168,14 @@ export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
       const R2 = size * 0.30; // inner ring
       const R3 = size * 0.18; // core
 
-      // ── Outer spinning dashes (idle + scanning) ──
-      if (s === 'idle' || s === 'scanning') {
-        const speed = s === 'scanning' ? 1.2 : 0.4;
-        const dashCount = 24;
-        const gap = (Math.PI * 2) / dashCount;
-        ctx.save();
-        ctx.strokeStyle = col.main;
-        ctx.lineWidth = 1.5;
-        ctx.lineCap = 'round';
-        for (let i = 0; i < dashCount; i++) {
-          const a = i * gap + t * speed;
-          const alpha = 0.3 + 0.5 * Math.abs(Math.sin(i * 0.9 + t * 2));
-          ctx.globalAlpha = alpha;
-          ctx.beginPath();
-          ctx.arc(cx, cy, R1, a, a + gap * 0.4);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-        ctx.restore();
-      }
 
-      // ── Processing: spinning arcs ──
-      if (s === 'processing') {
-        for (let arc = 0; arc < 3; arc++) {
-          const offset = (arc / 3) * Math.PI * 2;
-          const arcLen = 0.6 + 0.3 * Math.sin(t * 1.5 + arc);
-          const start = t * (1.5 + arc * 0.3) + offset;
-          const grad = ctx.createLinearGradient(
-            cx + Math.cos(start) * R1, cy + Math.sin(start) * R1,
-            cx + Math.cos(start + arcLen) * R1, cy + Math.sin(start + arcLen) * R1
-          );
-          grad.addColorStop(0, 'transparent');
-          grad.addColorStop(0.5, col.arc);
-          grad.addColorStop(1, 'transparent');
-          ctx.save();
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = 2.5;
-          ctx.shadowColor = col.glow;
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.arc(cx, cy, R1, start, start + arcLen);
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
-
-      // ── Locked: full glowing ring ──
-      if (s === 'locked') {
-        const pulse = 0.75 + 0.25 * Math.sin(t * 3);
-        ctx.save();
-        ctx.strokeStyle = col.arc;
-        ctx.lineWidth = 2.5;
-        ctx.globalAlpha = pulse;
-        ctx.shadowColor = col.glow;
-        ctx.shadowBlur = 16;
-        ctx.beginPath();
-        ctx.arc(cx, cy, R1, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // ── Progress arc (signal fill) ──
-      const fillAngle = sig * Math.PI * 2;
-      ctx.save();
-      ctx.strokeStyle = col.arc;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = col.glow;
-      ctx.shadowBlur = 12;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R2, -Math.PI / 2, -Math.PI / 2 + fillAngle);
-      ctx.stroke();
-      ctx.restore();
-
-      // ── Track ring (always) ──
-      ctx.save();
-      ctx.strokeStyle = 'hsla(270,40%,50%,0.2)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // ── Corner tick marks at 4 cardinal positions ──
-      const corners = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
-      corners.forEach((angle) => {
-        const ax = cx + Math.cos(angle) * R1;
-        const ay = cy + Math.sin(angle) * R1;
-        const bx = cx + Math.cos(angle) * (R1 + 10);
-        const by = cy + Math.sin(angle) * (R1 + 10);
-        ctx.save();
-        ctx.strokeStyle = col.main;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = col.glow;
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
-        ctx.stroke();
-        ctx.restore();
-      });
-
-      // ── Core dot ──
-      const coreR = R3 * (0.5 + 0.15 * Math.sin(t * (s === 'processing' ? 4 : 2)));
-      ctx.save();
-      ctx.fillStyle = col.main;
-      ctx.shadowColor = col.glow;
-      ctx.shadowBlur = 20;
-      ctx.globalAlpha = s === 'idle' ? 0.5 : 0.85;
-      ctx.beginPath();
-      ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      drawOuterSpinningDashes({ ctx, cx, cy, R1, t, s, col });
+      drawProcessingArcs({ ctx, cx, cy, R1, t, s, col });
+      drawLockedRing({ ctx, cx, cy, R1, t, s, col });
+      drawProgressArc({ ctx, cx, cy, R2, sig, col });
+      drawTrackRing({ ctx, cx, cy, R2 });
+      drawCornerTickMarks({ ctx, cx, cy, R1, col });
+      drawCoreDot({ ctx, cx, cy, R3, t, s, col });
 
       frameRef.current = requestAnimationFrame(draw);
     };
