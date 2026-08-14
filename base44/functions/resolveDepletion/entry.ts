@@ -146,6 +146,19 @@ Deno.serve(async (req) => {
         last_discovery_date: lastDiscoveryDate,
         entropy_contribution: entropyContribution,
       });
+
+      // Update the Global Entropy singleton
+      const globalRecords = await base44.asServiceRole.entities.GlobalEntropy.filter({});
+      if (globalRecords.length > 0) {
+        const globalRecord = globalRecords[0];
+        await base44.asServiceRole.entities.GlobalEntropy.update(globalRecord.id, {
+          total_entropy: (globalRecord.total_entropy || 0) + depletionAmount,
+        });
+      } else {
+        await base44.asServiceRole.entities.GlobalEntropy.create({
+          total_entropy: depletionAmount,
+        });
+      }
     } else if (Math.abs(currentWeight - record.current_rarity_weight) > 0.001) {
       // Read-only call: persist the recovered weight (lazy evaluation)
       await base44.asServiceRole.entities.GeoDepletionRecord.update(record.id, {
