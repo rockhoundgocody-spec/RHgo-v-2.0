@@ -92,12 +92,11 @@ export default function Profile() {
         <GlassPanel className="p-5 flex items-center gap-4">
           {/* Avatar with upload */}
           <div className="relative flex-shrink-0">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group"
+            <label
+              className={`w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               aria-label="Upload avatar"
             >
+              <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} aria-label="Avatar file input" disabled={uploading} />
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
               ) : (
@@ -108,8 +107,7 @@ export default function Profile() {
                   ? <Loader2 size={16} className="animate-spin text-white" />
                   : <Camera size={16} className="text-white" />}
               </div>
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} aria-label="Avatar file input" />
+            </label>
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>

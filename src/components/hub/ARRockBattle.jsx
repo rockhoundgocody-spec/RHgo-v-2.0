@@ -116,13 +116,12 @@ function AvatarUpload({ avatarUrl, onUpload }) {
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amethyst/40 hover:border-amethyst/70 transition flex-shrink-0"
+      <label
+        className={`relative w-10 h-10 rounded-full overflow-hidden border-2 border-amethyst/40 hover:border-amethyst/70 transition flex-shrink-0 focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         style={{ background: 'hsla(265,60%,15%,0.8)' }}
         title="Upload avatar"
       >
+        <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFile} disabled={uploading} />
         {avatarUrl ? (
           <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
         ) : uploading ? (
@@ -130,11 +129,10 @@ function AvatarUpload({ avatarUrl, onUpload }) {
         ) : (
           <Camera size={14} className="absolute inset-0 m-auto text-amethyst/60" />
         )}
-      </button>
+      </label>
       <span className="text-[9px] text-white/35">
         {avatarUrl ? 'Tap to change avatar' : 'Add avatar'}
       </span>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   );
 }
