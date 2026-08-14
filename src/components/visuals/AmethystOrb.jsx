@@ -81,15 +81,9 @@ export default function AmethystOrb({
       lerpedState.current.auraScale  += (cfg.idleAuraScale  - lerpedState.current.auraScale)  * 0.04;
       const { pulseScale, auraScale } = lerpedState.current;
 
-      // Breathing speed varies by state
-      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.7;
-      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
-      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
+      const { idlePulse, idleAura } = calculateBreathing(t, effectiveState, pulseScale, auraScale);
 
       // ── Liquid-metal interaction layer ──────────────────────────────
-      // Always-on organic wobble (two offset sine waves) gives the orb a
-      // living, liquid quality even at rest. Interaction data from screen
-      // adds cursor lean, proximity glow, tap squish, and scroll drift.
       const ix = getInteraction ? getInteraction() : null;
       let leanX = 0, leanY = 0, proxBoost = 0, driftY = 0, squish = 0;
 
@@ -99,41 +93,7 @@ export default function AmethystOrb({
 
       if (ix && !reduceMotion) {
         const rect = wrapRef.current?.getBoundingClientRect();
-        if (rect && rect.width > 0) {
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const radius = rect.width / 2;
-          const dx = ix.pointerX - cx;
-          const dy = ix.pointerY - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          // Wider proximity field so dragging anywhere on screen still nudges the orb
-          const proximity = Math.max(0, 1 - dist / (radius * 5));
-          proxBoost = proximity;
-
-          // Lean toward cursor — now responds across the whole screen, not just near the orb
-          const maxLean = size * 0.06;
-          leanX = (dx / (radius * 4)) * maxLean * Math.max(0.15, proximity);
-
-          // Velocity-driven momentum lean — dragging across the screen pushes
-          // the orb in the gesture direction with smooth follow-through.
-          const velLean = ix.velocity * size * 0.035;
-          leanX += (ix.dragX || 0) * velLean;
-          leanY += (dy / (radius * 4)) * maxLean * Math.max(0.15, proximity)
-                 + (ix.dragY || 0) * velLean;
-
-          // Scroll parallax drift
-          driftY = ix.scrollV * size * 0.025;
-
-          // Tap squish — quick compress, decays exponentially
-          if (ix.tapImpulse > 0.001) {
-            squish = ix.tapImpulse * 0.07;
-            ix.tapImpulse *= 0.88;
-          }
-
-          // Slower velocity decay so momentum glides instead of cutting off
-          ix.velocity *= 0.95;
-          ix.scrollV *= 0.88;
-        }
+        ({ leanX, leanY, proxBoost, driftY, squish } = calculateInteractionOffsets(ix, rect, size));
       }
 
       const scaleBase = 1 + idlePulse + a * 0.06 + bass * 0.04;
@@ -349,4 +309,51 @@ function detectInitialReduce() {
   const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4;
   const lowCores = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
   return !!(lowMem || lowCores);
+}
+function calculateBreathing(t, effectiveState, pulseScale, auraScale) {
+  const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.7;
+  const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
+  const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
+  return { idlePulse, idleAura };
+}
+
+function calculateInteractionOffsets(ix, rect, size) {
+  let leanX = 0, leanY = 0, proxBoost = 0, driftY = 0, squish = 0;
+
+  if (ix && rect && rect.width > 0) {
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = rect.width / 2;
+    const dx = ix.pointerX - cx;
+    const dy = ix.pointerY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    // Wider proximity field so dragging anywhere on screen still nudges the orb
+    const proximity = Math.max(0, 1 - dist / (radius * 5));
+    proxBoost = proximity;
+
+    // Lean toward cursor
+    const maxLean = size * 0.06;
+    leanX = (dx / (radius * 4)) * maxLean * Math.max(0.15, proximity);
+
+    // Velocity-driven momentum lean
+    const velLean = ix.velocity * size * 0.035;
+    leanX += (ix.dragX || 0) * velLean;
+    leanY += (dy / (radius * 4)) * maxLean * Math.max(0.15, proximity)
+           + (ix.dragY || 0) * velLean;
+
+    // Scroll parallax drift
+    driftY = ix.scrollV * size * 0.025;
+
+    // Tap squish — quick compress, decays exponentially
+    if (ix.tapImpulse > 0.001) {
+      squish = ix.tapImpulse * 0.07;
+      ix.tapImpulse *= 0.88;
+    }
+
+    // Slower velocity decay so momentum glides instead of cutting off
+    ix.velocity *= 0.95;
+    ix.scrollV *= 0.88;
+  }
+
+  return { leanX, leanY, proxBoost, driftY, squish };
 }
