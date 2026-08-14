@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
+import { Download, CheckCircle2, Loader2 } from 'lucide-react';
 import useOfflineTiles from '@/lib/useOfflineTiles';
 import { cn } from '@/lib/utils';
 
