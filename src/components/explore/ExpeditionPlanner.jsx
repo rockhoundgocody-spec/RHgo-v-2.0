@@ -3,7 +3,7 @@
  * Suggests an ordered list of hotspots to visit for missing minerals.
  */
 import React, { useMemo, useState } from 'react';
-import { Route, Zap, ChevronRight, MapPin, X, Sparkles } from 'lucide-react';
+import { Route, Zap, ChevronRight, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
