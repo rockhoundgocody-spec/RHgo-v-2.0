@@ -22,12 +22,14 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
 // ─── STRIPE PRICE IDs ─────────────────────────────────────────────────────
-// TODO: replace these with your real Stripe price IDs from the Stripe dashboard
-// and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
-// in Base44 environment variables.
+const FALLBACK_PRICES = {
+  fieldPro: 'price_1TpKQgIUhJzYk2OCgomTVSTb',
+  family: 'price_1TpKQgIUhJzYk2OCw8PJzY0U'
+};
+
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
-  family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
+  fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || FALLBACK_PRICES.fieldPro, label: 'Field Pro' },
+  family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || FALLBACK_PRICES.family, label: 'Family' },
   successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
   cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
 };
