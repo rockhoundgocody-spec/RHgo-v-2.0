@@ -27,7 +27,6 @@ import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';

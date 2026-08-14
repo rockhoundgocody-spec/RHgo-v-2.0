@@ -3,7 +3,7 @@
  * Shows pulsing dots representing recent listing + catch activity.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Flame, Users } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const RARITY_COLORS = { common: '#94a3b8', uncommon: '#34d399', rare: '#38bdf8', legendary: '#a78bfa' };

@@ -5,7 +5,7 @@
  * - Speaking: waveform bars + words appear one-by-one as Clover speaks
  * - After speaking: reply lingers for 3s so user can read it
  */
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const THINKING_PHRASES = [

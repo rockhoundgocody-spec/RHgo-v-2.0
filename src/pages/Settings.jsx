@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Eye, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
+import { Bell, Zap, HardDrive, MapPin, Trash2, Mic2, Shield, Gem, ChevronRight } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Camera, Upload, Loader2, Atom, MapPin, X } from 'lucide-react';
+import { Camera, Loader2, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChronolithOpening from '@/components/chronolith/ChronolithOpening.jsx';
 import RealityTrial from '@/components/chronolith/RealityTrial.jsx';

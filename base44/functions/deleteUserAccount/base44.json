@@ -1,0 +1,5 @@
+{
+  "name": "deleteUserAccount",
+  "description": "Deletes all user data (specimens, companions, drafts, badges).",
+  "isPublic": false
+}
