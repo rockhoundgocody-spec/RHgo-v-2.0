@@ -16,6 +16,7 @@
 import React, { useMemo } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
+/* eslint-disable unused-imports/no-unused-imports */
 import { Gem, Sparkles, Diamond, Crown, Lock } from 'lucide-react';
 
 // Milestone thresholds per tier (controls visual "power level")
@@ -114,6 +115,97 @@ function MilestoneBar({ count }) {
   );
 }
 
+
+
+
+
+function TierInfo({ earned, badge, count, bracket }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className="text-[9px] font-black uppercase tracking-[0.2em]"
+        style={{ color: earned ? badge.color : 'hsla(0,0%,100%,0.25)' }}
+      >
+        {badge.label}
+      </div>
+
+      {earned ? (
+        <>
+          <div
+            className="text-[7px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded-full"
+            style={{ background: `${badge.color}15`, color: badge.color, border: `1px solid ${badge.color}30` }}
+          >
+            {BRACKET_LABEL[bracket]}
+          </div>
+          <MilestoneBar count={count} />
+        </>
+      ) : (
+        <div className="text-[7px] text-white/25 uppercase tracking-widest">Locked</div>
+      )}
+    </div>
+  );
+}
+
+function CountBubble({ count, badge }) {
+  if (count <= 0) return null;
+  return (
+    <div
+      className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center text-[9px] font-black z-10"
+      style={{
+        width: 22, height: 22,
+        background: badge.color,
+        color: '#000',
+        boxShadow: `0 0 8px ${badge.glow}`,
+        border: '1.5px solid rgba(0,0,0,0.35)',
+      }}
+    >
+      {count > 99 ? '99+' : count}
+    </div>
+  );
+}
+
+function OrbitRings({ badge, ringCfg, OCT }) {
+  if (ringCfg.rings < 1) return null;
+  return (
+    <>
+      {ringCfg.rings >= 1 && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: 4,
+            clipPath: OCT,
+            border: `1px solid ${badge.ringColor}`,
+            animation: ringCfg.spinDur ? `rbs-spin ${ringCfg.spinDur}s linear infinite` : `rbs-breathe ${ringCfg.dur * 0.9}s ease-in-out infinite`,
+          }}
+        />
+      )}
+      {ringCfg.rings >= 2 && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: -2,
+            clipPath: OCT,
+            border: `1.5px dashed ${badge.ringColor.replace('0.5', '0.2')}`,
+            animation: ringCfg.spinDur ? `rbs-spin-rev ${ringCfg.spinDur * 1.5}s linear infinite` : `rbs-breathe ${ringCfg.dur * 1.3}s ease-in-out infinite`,
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function OuterAmbientGlow({ badge, ringCfg }) {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none rounded-full"
+      style={{
+        background: `radial-gradient(circle, ${badge.glow} 0%, transparent 65%)`,
+        animation: `rbs-pulse ${ringCfg.dur}s ease-in-out infinite`,
+      }}
+    />
+  );
+}
+
 function TierCard({ tier, count, earned }) {
   const badge     = getTierBadge(tier, count);
   const ringCfg   = RING_CFG[tier];
@@ -125,39 +217,10 @@ function TierCard({ tier, count, earned }) {
     <div className="flex flex-col items-center gap-2">
       <div className="relative flex items-center justify-center" style={{ width: BADGE_SIZE + 28, height: BADGE_SIZE + 28 }}>
         {/* Outer ambient glow */}
-        {earned && (
-          <div
-            className="absolute inset-0 pointer-events-none rounded-full"
-            style={{
-              background: `radial-gradient(circle, ${badge.glow} 0%, transparent 65%)`,
-              animation: `rbs-pulse ${ringCfg.dur}s ease-in-out infinite`,
-            }}
-          />
-        )}
+        {earned && <OuterAmbientGlow badge={badge} ringCfg={ringCfg} />}
 
         {/* Orbit ring(s) */}
-        {earned && ringCfg.rings >= 1 && (
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              inset: 4,
-              clipPath: OCT,
-              border: `1px solid ${badge.ringColor}`,
-              animation: ringCfg.spinDur ? `rbs-spin ${ringCfg.spinDur}s linear infinite` : `rbs-breathe ${ringCfg.dur * 0.9}s ease-in-out infinite`,
-            }}
-          />
-        )}
-        {earned && ringCfg.rings >= 2 && (
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              inset: -2,
-              clipPath: OCT,
-              border: `1.5px dashed ${badge.ringColor.replace('0.5', '0.2')}`,
-              animation: ringCfg.spinDur ? `rbs-spin-rev ${ringCfg.spinDur * 1.5}s linear infinite` : `rbs-breathe ${ringCfg.dur * 1.3}s ease-in-out infinite`,
-            }}
-          />
-        )}
+        {earned && <OrbitRings badge={badge} ringCfg={ringCfg} OCT={OCT} />}
 
         {/* The badge itself */}
         <LiquidMineralBadge
@@ -168,20 +231,7 @@ function TierCard({ tier, count, earned }) {
         />
 
         {/* Count bubble */}
-        {earned && count > 0 && (
-          <div
-            className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center text-[9px] font-black z-10"
-            style={{
-              width: 22, height: 22,
-              background: badge.color,
-              color: '#000',
-              boxShadow: `0 0 8px ${badge.glow}`,
-              border: '1.5px solid rgba(0,0,0,0.35)',
-            }}
-          >
-            {count > 99 ? '99+' : count}
-          </div>
-        )}
+        {earned && <CountBubble count={count} badge={badge} />}
 
         {/* Lock icon if not earned */}
         {!earned && (
@@ -192,28 +242,7 @@ function TierCard({ tier, count, earned }) {
       </div>
 
       {/* Tier label + bracket + milestone pips */}
-      <div className="flex flex-col items-center gap-1">
-        <div
-          className="text-[9px] font-black uppercase tracking-[0.2em]"
-          style={{ color: earned ? badge.color : 'hsla(0,0%,100%,0.25)' }}
-        >
-          {badge.label}
-        </div>
-
-        {earned ? (
-          <>
-            <div
-              className="text-[7px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded-full"
-              style={{ background: `${badge.color}15`, color: badge.color, border: `1px solid ${badge.color}30` }}
-            >
-              {BRACKET_LABEL[bracket]}
-            </div>
-            <MilestoneBar count={count} />
-          </>
-        ) : (
-          <div className="text-[7px] text-white/25 uppercase tracking-widest">Locked</div>
-        )}
-      </div>
+      <TierInfo earned={earned} badge={badge} count={count} bracket={bracket} />
     </div>
   );
 }
