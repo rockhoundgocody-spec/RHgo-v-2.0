@@ -56,7 +56,8 @@ export default function QuickPinButton({ userLocation }) {
         onClick={handlePin}
         whileTap={{ scale: 0.88 }}
         disabled={state === 'saving'}
-        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+        aria-busy={state === 'saving'}
+        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         style={{
           background: state === 'saved'
             ? 'hsla(142,70%,30%,.35)'
@@ -106,6 +107,8 @@ export default function QuickPinButton({ userLocation }) {
       <AnimatePresence>
         {state === 'saved' && (
           <motion.div
+            role="status"
+            aria-live="polite"
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
             className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center gap-1"
             style={{
@@ -122,6 +125,8 @@ export default function QuickPinButton({ userLocation }) {
         )}
         {state === 'error' && (
           <motion.div
+            role="status"
+            aria-live="polite"
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
             className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold text-rose-300"
             style={{
