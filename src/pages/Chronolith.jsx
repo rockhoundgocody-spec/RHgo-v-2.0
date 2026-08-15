@@ -123,25 +123,24 @@ export default function Chronolith() {
           transition={{ delay: 0.2 }}
           className="w-full max-w-sm"
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            capture="environment"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
-            className="w-full aspect-[4/5] rounded-3xl flex flex-col items-center justify-center gap-4 transition active:scale-[0.98] disabled:opacity-60"
+          <label
+            aria-disabled={loading}
+            className={`w-full aspect-[4/5] rounded-3xl flex flex-col items-center justify-center gap-4 transition active:scale-[0.98] focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${loading ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
             style={{
               background: 'radial-gradient(ellipse at center, hsla(270,50%,20%,0.3) 0%, hsla(220,40%,5%,0.6) 70%)',
               border: '1px dashed hsla(270,60%,60%,0.3)',
             }}
           >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              capture="environment"
+              onChange={handleFileSelect}
+              className="sr-only"
+              disabled={loading}
+            />
             {loading ? (
               <>
                 <Loader2 size={32} className="animate-spin text-amethyst-glow" />
@@ -160,7 +159,7 @@ export default function Chronolith() {
                 </div>
               </>
             )}
-          </button>
+          </label>
 
           {error && (
             <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs text-center">

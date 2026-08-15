@@ -59,15 +59,15 @@ export default function PsvPhotoStage({ onReady }) {
             </div>
           ))}
           {previews.length < 4 && (
-            <button onClick={() => inputRef.current?.click()}
+            <label
               aria-label="Add photo"
-              className="aspect-square rounded-lg border-2 border-dashed border-amethyst/30 flex flex-col items-center justify-center gap-1 text-amethyst/50 hover:text-amethyst-glow hover:border-amethyst/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow">
+              className="cursor-pointer aspect-square rounded-lg border-2 border-dashed border-amethyst/30 flex flex-col items-center justify-center gap-1 text-amethyst/50 hover:text-amethyst-glow hover:border-amethyst/60 transition focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow">
               <Plus size={18} />
               <span className="text-[9px] uppercase tracking-[0.2em]">Add</span>
-            </button>
+              <input ref={inputRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => addFiles(e.target.files)} />
+            </label>
           )}
         </div>
-        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
       </div>
 
       <div className="flex items-center gap-3">

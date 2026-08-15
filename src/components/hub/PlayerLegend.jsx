@@ -192,19 +192,17 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
                 )}
               </Link>
               {/* Small upload badge */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90"
+              <label
+                className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{ background: 'hsla(265,60%,20%,0.95)', borderColor: 'hsla(280,60%,50%,0.5)' }}
               >
+                <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={uploading} />
                 {uploading
                   ? <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
                   : <Upload size={9} className="text-amethyst-glow" />
                 }
-              </button>
+              </label>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
 
             {/* Rank + XP */}
             <div className="flex-1 min-w-0">

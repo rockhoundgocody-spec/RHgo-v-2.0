@@ -74,16 +74,16 @@ export default function PsvQuestionCard({ question, revisions, onAnswer, onSkip 
       {/* Photo request */}
       {type === 'photo' && (
         <div className="space-y-2.5">
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
-            onChange={(e) => handlePhoto(e.target.files?.[0])} />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={photoUploading}
-            className="w-full py-4 rounded-2xl border-2 border-dashed border-hud-cyan/30 text-hud-cyan/70 hover:border-hud-cyan/60 hover:text-hud-cyan flex items-center justify-center gap-2 text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan transition"
+          <label
+            aria-disabled={photoUploading}
+            className={`w-full py-4 rounded-2xl border-2 border-dashed border-hud-cyan/30 text-hud-cyan/70 hover:border-hud-cyan/60 hover:text-hud-cyan flex items-center justify-center gap-2 text-base font-medium focus-within:outline-none focus-within:ring-2 focus-within:ring-hud-cyan transition ${photoUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
           >
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only"
+              disabled={photoUploading}
+              onChange={(e) => handlePhoto(e.target.files?.[0])} />
             <Camera size={18} />
             {photoUploading ? 'Uploading…' : 'Take close-up photo'}
-          </button>
+          </label>
         </div>
       )}
 
