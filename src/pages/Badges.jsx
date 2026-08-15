@@ -2,9 +2,9 @@
  * Badges — Liquid Mineral Badges collection screen
  * 2-column grid, rarity filter tabs, detail modal, unlock animation.
  */
-import React, { useState } from 'react';
-import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check, AlertCircle } from 'lucide-react';
-import { shareAchievement, buildSharePayload, executeShare } from '@/lib/shareAchievement';
+import React, { useState, useMemo } from 'react';
+import { Award, Lock, CheckCircle2, X, Gem, Share2, Check, AlertCircle } from 'lucide-react';
+import { buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
@@ -210,17 +210,21 @@ export default function Badges() {
     else if (result === 'error') { setPageCopied('error'); setTimeout(() => setPageCopied(false), 2200); }
   };
 
-  const filtered = rarityFilter === 'all'
-    ? allBadges
-    : allBadges.filter((b) => b.rarity === rarityFilter);
+  // Memoize filtered and sorted badge list to avoid redundant array filtering, sorting,
+  // and re-allocation on unrelated component state updates (e.g. modal open/close, copy state).
+  const sorted = useMemo(() => {
+    const filtered = rarityFilter === 'all'
+      ? allBadges
+      : allBadges.filter((b) => b.rarity === rarityFilter);
 
-  const sorted = [...filtered].sort((a, b) => {
-    // Earned first, then by rarity desc
-    const ae = earnedCodes.has(a.code) ? 0 : 1;
-    const be = earnedCodes.has(b.code) ? 0 : 1;
-    if (ae !== be) return ae - be;
-    return RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity);
-  });
+    return [...filtered].sort((a, b) => {
+      // Earned first, then by rarity desc
+      const ae = earnedCodes.has(a.code) ? 0 : 1;
+      const be = earnedCodes.has(b.code) ? 0 : 1;
+      if (ae !== be) return ae - be;
+      return RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity);
+    });
+  }, [rarityFilter, allBadges, earnedCodes]);
 
   return (
     <div
