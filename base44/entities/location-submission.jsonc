@@ -1,0 +1,79 @@
+{
+  "name": "LocationSubmission",
+  "type": "object",
+  "description": "Private moderation queue for a user's request to consider an existing specimen as location evidence. No coordinates are copied into this record and no submission auto-publishes a Hotspot.",
+  "properties": {
+    "specimen_id": {
+      "type": "string",
+      "description": "Owner-only Specimen reviewed by an administrator before any separate Hotspot record is created or changed."
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewing",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "submission_type": {
+      "type": "string",
+      "enum": [
+        "user_find"
+      ],
+      "default": "user_find"
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "review_notes": {
+      "type": "string",
+      "description": "Admin-only moderation notes."
+    }
+  },
+  "required": [
+    "specimen_id",
+    "mineral_name",
+    "owner_email",
+    "status",
+    "submission_type",
+    "requested_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.owner_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

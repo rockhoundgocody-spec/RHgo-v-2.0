@@ -432,6 +432,7 @@ export default function Scan() {
         notes:         richNotes,
         rarity:        result.rarity,
         found_date:    new Date().toISOString().split('T')[0],
+        geo_privacy:   'private',
         ...(lat != null ? { lat, lng } : {}),
       });
       specimenId = created.id;

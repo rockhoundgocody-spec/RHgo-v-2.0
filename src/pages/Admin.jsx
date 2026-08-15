@@ -22,7 +22,16 @@ const SEED_HOTSPOTS = [
   { name: 'Hogg Mine', state: 'GA', country: 'USA', lat: 33.1833, lng: -84.5667, land_type: 'private', minerals: ['Beryl', 'Aquamarine', 'Tourmaline'], difficulty: 'moderate', description: 'Pegmatite mine open on dig days.', trust_score: 0.86, source: 'club' },
   { name: 'Diamond Hill Mine', state: 'SC', country: 'USA', lat: 34.4500, lng: -82.4500, land_type: 'private', minerals: ['Quartz', 'Smoky Quartz', 'Amethyst'], difficulty: 'easy', description: 'Public-access quartz mine.', trust_score: 0.89, source: 'commercial' },
   { name: 'Tonopah Turquoise Area', state: 'NV', country: 'USA', lat: 38.0667, lng: -117.2300, land_type: 'private', minerals: ['Turquoise'], difficulty: 'hard', description: 'Multiple historic claim mines; permission required.', trust_score: 0.78, source: 'claim' },
-];
+].map((hotspot) => ({
+  ...hotspot,
+  // Seed data is reference material, not publication approval. Every record
+  // stays admin-only until its entrance and official rules are reviewed.
+  publication_state: 'hold',
+  access_status: 'unverified',
+  collection_status: 'unknown',
+  coordinate_quality: 'unknown',
+  navigation_eligible: false,
+}));
 
 export default function Admin() {
   const [counts, setCounts] = useState({ hotspots: 0, specimens: 0, minerals: 0 });
@@ -112,7 +121,7 @@ export default function Admin() {
               <div>
                 <div className="text-white font-medium">Seed Hotspot Database</div>
                 <div className="text-xs text-hud-cyan/60">
-                  Inserts {SEED_HOTSPOTS.length} curated US rockhounding sites with land-type & trust scores
+                  Inserts {SEED_HOTSPOTS.length} reference sites on admin-only hold for governance review
                 </div>
               </div>
               <Button

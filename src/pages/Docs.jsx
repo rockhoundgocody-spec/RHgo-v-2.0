@@ -35,12 +35,21 @@ DELIVERY .................. EAS Update (OTA) + App Store / Play Store`,
   id, name, state, country, lat, lng,
   land_type [public|blm|forest_service|state_park|private|unknown],
   minerals[], difficulty, description, rules,
-  trust_score (0..1), source, image_url
+  publication_state, access_status, collection_status,
+  coordinate_quality, navigation_eligible,
+  managing_authority, official_source_url, last_verified_at,
+  source, image_url
 
 Specimen
   id, mineral_name, common_name, image_url,
   found_at, lat, lng, found_date, notes,
-  ai_confidence, ai_candidates[], rarity, verified
+  ai_confidence, ai_candidates[], rarity, verified,
+  geo_privacy [private default|approximate|exact]
+
+LocationSubmission
+  specimen_id, mineral_name, owner_email,
+  status [pending|reviewing|approved|rejected]
+  No copied coordinates; admin moderation only.
 
 Mineral
   id, name, formula, crystal_system, hardness,
@@ -94,23 +103,30 @@ $ eas update --branch production --message "v1.0.1"`,
     id: 'security',
     icon: Shield,
     title: 'Security & Trust',
-    body: `LAND-LEGAL GATE
-  Every hotspot carries land_type + trust_score.
-  UI must surface land_type prominently before showing GPS.
-  Private/unknown sites require user acknowledgement.
+    body: `LOCATION PUBLICATION GATE
+  Legacy and hold records are admin-only.
+  Land ownership never implies access or collecting permission.
+  Access and collection status are reviewed independently.
 
 LOCATION PRIVACY
-  Foreground only by default.
-  Specimen GPS is fuzzed ±200m on public share.
+  Specimen locations default to owner-only private storage.
+  Quick pins write only to the private rock log.
+  User finds enter a coordinate-free moderation queue.
+  No user find automatically creates or updates a Hotspot.
+
+NAVIGATION
+  Directions require a managed publication state,
+  open access, verified entrance coordinates,
+  an official rules URL, and review within 180 days.
+  Research localities never receive directions.
 
 AI CONFIDENCE
   Identifications < 0.6 confidence are flagged "tentative".
   Never display single-result with > 0.95 unless verified.
 
 DATA SOURCES
-  trust_score weights: nps/blm/usfs (0.95+),
-  state_dnr (0.9), commercial (0.85),
-  club (0.8), claim (0.75), unverified (<0.7).`,
+  Official managing-authority rules are required.
+  Users must recheck official rules before travel.`,
   },
 ];
 

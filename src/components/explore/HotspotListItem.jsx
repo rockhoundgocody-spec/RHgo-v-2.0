@@ -1,18 +1,9 @@
 import React from 'react';
-import { MapPin, Lock } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
-
-const landBadge = {
-  public: { color: 'text-emerald-300 border-emerald-400/40 bg-emerald-400/10', label: 'PUBLIC' },
-  blm: { color: 'text-amber-300 border-amber-400/40 bg-amber-400/10', label: 'BLM' },
-  forest_service: { color: 'text-lime-300 border-lime-400/40 bg-lime-400/10', label: 'USFS' },
-  state_park: { color: 'text-sky-300 border-sky-400/40 bg-sky-400/10', label: 'STATE' },
-  private: { color: 'text-rose-300 border-rose-400/40 bg-rose-400/10', label: 'PRIVATE' },
-  unknown: { color: 'text-white/50 border-white/20 bg-white/5', label: 'UNKNOWN' },
-};
+import { getCollectionLabel, getPublicationLabel } from '@/lib/locationPolicy';
 
 export default function HotspotListItem({ hotspot, active, onClick }) {
-  const badge = landBadge[hotspot.land_type] || landBadge.unknown;
   return (
     <GlassPanel
       onClick={onClick}
@@ -29,10 +20,9 @@ export default function HotspotListItem({ hotspot, active, onClick }) {
             </div>
           </div>
           <div
-            className={`shrink-0 text-[9px] tracking-widest font-mono px-1.5 py-0.5 rounded border ${badge.color}`}
+            className="shrink-0 text-[9px] tracking-widest font-mono px-1.5 py-0.5 rounded border text-emerald-300 border-emerald-400/40 bg-emerald-400/10"
           >
-            {hotspot.land_type === 'private' && <Lock size={9} className="inline mr-0.5" />}
-            {badge.label}
+            {getPublicationLabel(hotspot)}
           </div>
         </div>
         {hotspot.minerals?.length > 0 && (
@@ -51,9 +41,7 @@ export default function HotspotListItem({ hotspot, active, onClick }) {
           <span className="text-[9px] uppercase tracking-wider text-white/40">
             {hotspot.difficulty}
           </span>
-          <span className="text-[9px] font-mono text-hud-cyan/70">
-            Trust {((hotspot.trust_score || 0) * 100).toFixed(0)}%
-          </span>
+          <span className="text-[9px] text-hud-cyan/70 text-right">{getCollectionLabel(hotspot)}</span>
         </div>
       </div>
     </GlassPanel>

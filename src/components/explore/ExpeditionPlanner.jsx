@@ -3,9 +3,9 @@
  * Suggests an ordered list of hotspots to visit for missing minerals.
  */
 import React, { useMemo, useState } from 'react';
-import { Route, Zap, ChevronRight, MapPin, X, Sparkles } from 'lucide-react';
+import { Route, Zap, ChevronRight, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { getNavigationStatus } from '@/lib/locationPolicy';
 
 function haversineKm(a, b) {
   const R = 6371;
@@ -51,6 +51,8 @@ export default function ExpeditionPlanner({
   const gapHotspots = useMemo(() => {
     return hotspots.filter(h => {
       if (!h.lat || !h.lng) return false;
+      const navigation = getNavigationStatus(h);
+      if (!navigation.allowed || !navigation.collectionAllowed) return false;
       return (h.minerals || []).some(m => !collectedMinerals.has(m.toLowerCase()));
     });
   }, [hotspots, collectedMinerals]);

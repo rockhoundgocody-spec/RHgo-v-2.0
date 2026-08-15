@@ -2,7 +2,7 @@
  * identifySpecimen — Great Lakes regional specialist AI rock identification.
  *
  * POST /identifySpecimen
- * Body: { image_url, lat?, lng?, save?, share_to_map?, prefilled_result?,
+ * Body: { image_url?, specimen_id?, lat?, lng?, save?, share_to_map?, geo_privacy?, prefilled_result?,
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
@@ -108,6 +108,31 @@ function buildGreatLakesContext({ beachName, wetDry, postStorm, season }) {
   ].filter(Boolean).join(' ');
 }
 
+async function submitLocationForReview(base44: any, user: { email: string }, specimen: any) {
+  if (specimen?.lat == null || specimen?.lng == null) {
+    throw new Error('A saved private specimen location is required for review');
+  }
+
+  const existing = await base44.asServiceRole.entities.LocationSubmission.filter(
+    { specimen_id: specimen.id, owner_email: user.email, status: 'pending' },
+    '-created_date',
+    1,
+  );
+  if (existing[0]) return existing[0];
+
+  // This queue record deliberately contains no coordinates, images, free-text
+  // notes, or public hotspot fields. An administrator must review the private
+  // owner-only Specimen and create a separate governed Hotspot if appropriate.
+  return base44.asServiceRole.entities.LocationSubmission.create({
+    specimen_id: specimen.id,
+    mineral_name: specimen.mineral_name || 'Unknown specimen',
+    owner_email: user.email,
+    status: 'pending',
+    submission_type: 'user_find',
+    requested_at: new Date().toISOString(),
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -116,14 +141,37 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      image_url, lat, lng,
+      image_url, specimen_id, lat, lng,
       save = false, share_to_map = false,
+      geo_privacy = 'private',
       prefilled_result = null,
       wet_dry = null,
       beach_name = null,
       post_storm = false,
       season = null,
     } = body;
+
+    // Backward-compatible share_to_map requests are now moderation submissions.
+    // Resolve the specimen through user-scoped RLS so a caller cannot submit
+    // another user's exact location, then return before any LLM or geo lookup.
+    if (share_to_map && specimen_id && !save) {
+      const specimen = await base44.entities.Specimen.get(specimen_id);
+      if (!specimen) return Response.json({ error: 'Specimen not found' }, { status: 404 });
+      try {
+        const submission = await submitLocationForReview(base44, user, specimen);
+        return Response.json({
+          success: true,
+          location_submission: { id: submission.id, status: submission.status },
+          hotspot_contribution: null,
+        });
+      } catch (error) {
+        return Response.json({ error: error.message }, { status: 400 });
+      }
+    }
+
+    if (share_to_map && !save) {
+      return Response.json({ error: 'specimen_id is required for location review' }, { status: 400 });
+    }
 
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
@@ -292,6 +340,7 @@ Deno.serve(async (req) => {
         found_date:    new Date().toISOString().split('T')[0],
         found_at:      beach_name || null,
         verified:      false,
+        geo_privacy:   ['exact', 'approximate', 'private'].includes(geo_privacy) ? geo_privacy : 'private',
         ...(lat != null ? { lat } : {}),
         ...(lng != null ? { lng } : {}),
       });
@@ -322,41 +371,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── OPTIONAL SHARE TO MAP ─────────────────────────────────────────────────
-    let hotspotContribution = null;
-    if (share_to_map && lat != null && lng != null && savedSpecimen) {
-      const nearby = await base44.asServiceRole.entities.Hotspot.filter({});
-      const found = nearby.find((h) => h.lat != null && h.lng != null &&
-        Math.abs(h.lat - lat) < 0.01 && Math.abs(h.lng - lng) < 0.01);
-      if (found) {
-        const minerals = found.minerals || [];
-        if (!minerals.includes(identification.top_match)) minerals.push(identification.top_match);
-        await base44.asServiceRole.entities.Hotspot.update(found.id, { minerals });
-        hotspotContribution = { type: 'updated', id: found.id };
-      } else {
-        // Hotspot has public read — everything written here is world-visible.
-        // Snap to a ~1.1km grid so sharing a find never publishes a dig site,
-        // and never write the reporter's email or the AI's free-text notes.
-        const newHotspot = await base44.asServiceRole.entities.Hotspot.create({
-          name: `${identification.top_match} Site (User Find)`,
-          lat: Math.round(lat * 100) / 100,
-          lng: Math.round(lng * 100) / 100,
-          minerals: [identification.top_match],
-          land_type: 'unknown',
-          difficulty: 'moderate',
-          trust_score: 0.4,
-          source: 'user_contribution',
-          description: `User-reported ${identification.top_match} in this area.`,
-        });
-        hotspotContribution = { type: 'created', id: newHotspot.id };
-      }
+    // ── OPTIONAL LOCATION REVIEW SUBMISSION ──────────────────────────────────
+    let locationSubmission = null;
+    if (share_to_map && savedSpecimen) {
+      const submission = await submitLocationForReview(base44, user, savedSpecimen);
+      locationSubmission = { id: submission.id, status: submission.status };
     }
 
     return Response.json({
       success: true,
       identification,
       saved_specimen_id: savedSpecimen?.id || null,
-      hotspot_contribution: hotspotContribution,
+      location_submission: locationSubmission,
+      hotspot_contribution: null,
       context_integrity: contextIntegrity,
       handbook: enforcement,
       essence,

@@ -1,6 +1,6 @@
 /**
  * MapLayerPanel — Layer toggle bar for the map.
- * Layers: All Finds | Rare Minerals | Collection Gaps | Public Only | Expedition
+ * Layers: All Finds | Rare Minerals | Collection Gaps | Reviewed Destinations | Expedition
  */
 import React from 'react';
 import { Layers, Gem, Package, MapPin, Route } from 'lucide-react';
@@ -11,7 +11,7 @@ const LAYERS = [
   { id: 'all',        label: 'All',       icon: Layers,  color: '#94a3b8' },
   { id: 'rare',       label: 'Rare',      icon: Gem,     color: '#a78bfa' },
   { id: 'gaps',       label: 'My Gaps',   icon: Package, color: '#c084fc' },
-  { id: 'public',     label: 'Open',      icon: MapPin,  color: '#34d399' },
+  { id: 'public',     label: 'Reviewed',  icon: MapPin,  color: '#34d399' },
   { id: 'expedition', label: 'Route',     icon: Route,   color: '#f59e0b' },
 ];
 

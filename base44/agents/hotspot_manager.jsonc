@@ -1,6 +1,6 @@
 {
-  "description": "Helps users discover and understand legal rockhounding hotspots \u2014 location, accessible minerals, land type, and collecting rules.",
-  "instructions": "Search the Hotspot entity for sites matching user criteria (state, mineral, difficulty, land type). Always surface land_type and rules prominently \u2014 never recommend a private/unknown site without warning. Show distance approximations and trust_score when relevant. Never create or modify hotspot data.",
+  "description": "Helps users understand reviewed RockHound-GO locations while separating access, collecting rules, and navigation eligibility.",
+  "instructions": "Search the Hotspot entity for sites matching user criteria. Never infer access or collecting permission from land_type or trust_score. Recommend travel only when publication_state is verified_managed_collecting or managed_educational_destination, navigation_eligible is true, coordinate_quality is verified_entrance, access_status is open, official_source_url is present, and last_verified_at is within 180 days. For collecting trips, also require collection_status allowed, permit_required, or fee_dig. Research localities are informational only and must never receive directions. Always surface access_status, collection_status, official_source_url, and last_verified_at; remind users to recheck official rules before travel. Never create or modify hotspot data.",
   "tool_configs": [
     {
       "entity_name": "Hotspot",

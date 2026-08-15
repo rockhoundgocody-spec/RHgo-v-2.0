@@ -13,10 +13,12 @@
       "default": "USA"
     },
     "lat": {
-      "type": "number"
+      "type": "number",
+      "description": "Public-safe coordinate only: a verified entrance for a managed destination or an intentionally generalized research locality. Never copy a user's find coordinate."
     },
     "lng": {
-      "type": "number"
+      "type": "number",
+      "description": "Public-safe coordinate only: a verified entrance for a managed destination or an intentionally generalized research locality. Never copy a user's find coordinate."
     },
     "land_type": {
       "type": "string",
@@ -52,9 +54,76 @@
     "rules": {
       "type": "string"
     },
+    "publication_state": {
+      "type": "string",
+      "enum": [
+        "verified_managed_collecting",
+        "managed_educational_destination",
+        "research_locality",
+        "hold"
+      ],
+      "default": "hold",
+      "description": "Moderated publication class. Hold records are never available to non-admin users."
+    },
+    "access_status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "seasonal",
+        "permission_required",
+        "restricted",
+        "closed",
+        "unverified"
+      ],
+      "default": "unverified",
+      "description": "Current access status from the managing authority; land ownership alone is not access permission."
+    },
+    "collection_status": {
+      "type": "string",
+      "enum": [
+        "allowed",
+        "permit_required",
+        "fee_dig",
+        "observation_only",
+        "prohibited",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Collecting rule from the official source, independent of access and ownership."
+    },
+    "coordinate_quality": {
+      "type": "string",
+      "enum": [
+        "verified_entrance",
+        "approximate_locality",
+        "approximate_region",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "What the public coordinate represents. Only a verified entrance can be navigation eligible."
+    },
+    "navigation_eligible": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin-reviewed navigation gate. The client also requires current rules, open access, and a verified entrance."
+    },
+    "managing_authority": {
+      "type": "string"
+    },
+    "official_source_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Official HTTPS managing-authority page used to verify access and collecting rules."
+    },
+    "last_verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When access, collecting rules, and the public entrance coordinate were last reviewed."
+    },
     "trust_score": {
       "type": "number",
-      "default": 0.7
+      "default": 0.7,
+      "description": "Deprecated internal quality signal. Never display as access, legality, or collecting guidance."
     },
     "source": {
       "type": "string"
@@ -74,7 +143,24 @@
         "role": "admin"
       }
     },
-    "read": {},
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.publication_state": {
+            "$in": [
+              "verified_managed_collecting",
+              "managed_educational_destination",
+              "research_locality"
+            ]
+          }
+        }
+      ]
+    },
     "update": {
       "user_condition": {
         "role": "admin"

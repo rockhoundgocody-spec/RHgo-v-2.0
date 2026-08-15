@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { getNavigationStatus } from '../../shared/locationGovernance.js';
 
 // Haversine distance in miles
 function distanceMi(lat1, lng1, lat2, lng2) {
@@ -33,8 +34,14 @@ Deno.serve(async (req) => {
       ? collectedNames.map(m => `${m} (${collection[m]})`).join(', ')
       : 'No specimens logged yet.';
 
-    // 2. Nearby hotspots — public read, sort by distance if geo available
-    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-updated_date', 100);
+    // 2. Only reviewed collecting destinations with a current official source
+    // may enter a hunt recommendation. Service-role reads must re-apply the
+    // same fail-closed policy used by the public map.
+    const allHotspots = await base44.asServiceRole.entities.Hotspot.list('-updated_date', 100);
+    const hotspots = allHotspots.filter((h) => {
+      const status = getNavigationStatus(h);
+      return status.allowed && status.collectionAllowed;
+    });
     let scored = hotspots.map(h => ({
       name: h.name,
       state: h.state,
@@ -42,8 +49,9 @@ Deno.serve(async (req) => {
       lng: h.lng,
       minerals: h.minerals || [],
       difficulty: h.difficulty,
-      trust_score: h.trust_score,
-      land_type: h.land_type,
+      collection_status: h.collection_status,
+      official_source_url: h.official_source_url,
+      last_verified_at: h.last_verified_at,
       distanceMi: (lat != null && h.lat != null) ? Math.round(distanceMi(lat, lng, h.lat, h.lng)) : null,
     }));
     if (lat != null) {
@@ -83,6 +91,8 @@ Rules:
 - For each, name the best nearby hotspot, what to look for, and why it's a good next target.
 - If no geolocation was given, still suggest based on collection gaps + general Midwest geology.
 - Be accurate — only reference minerals that genuinely occur at the named hotspots.
+- Never name a location outside NEARBY HOTSPOTS and never infer access from land ownership.
+- Tell the user to open the official rules before travel; conditions can change after review.
 - Keep each suggestion's "why" to one sentence.
 
 Output a JSON object:
@@ -133,11 +143,28 @@ Output a JSON object:
       }
     }
 
+    const allowedByName = new Map(nearby.map((h) => [h.name.toLowerCase(), h]));
+    const suggestions = (Array.isArray(parsed?.suggestions) ? parsed.suggestions : [])
+      .slice(0, 4)
+      .map((suggestion) => {
+        const safeHotspot = allowedByName.get(String(suggestion?.hotspot_name || '').toLowerCase());
+        if (!safeHotspot) return null;
+        return {
+          ...suggestion,
+          hotspot_name: safeHotspot.name,
+          distance_mi: safeHotspot.distanceMi ?? null,
+          official_source_url: safeHotspot.official_source_url,
+          rules_reviewed_at: safeHotspot.last_verified_at,
+        };
+      })
+      .filter(Boolean);
+
     return Response.json({
       clover_intro: String(parsed?.clover_intro || `Hey ${name}, here's what I'd hunt next.`).trim(),
-      suggestions: Array.isArray(parsed?.suggestions) ? parsed.suggestions.slice(0, 4) : [],
+      suggestions,
       collection_size: specimens.length,
       nearby_hotspot_count: nearby.length,
+      safety_note: 'Use the official rules link before travel. Access and collecting conditions can change.',
     });
   } catch (error) {
     console.error('suggestNextFinds error:', error);

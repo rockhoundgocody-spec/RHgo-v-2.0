@@ -1,12 +1,24 @@
 /**
  * QuickPinButton — one-tap "mark this spot" for offline hikes.
- * Saves current GPS coords as a Hotspot (name = "Field Pin · <date>")
- * via the offline queue so it survives zero-signal conditions.
+ * Saves exact GPS coordinates only in the owner's PrivateRockLog via the
+ * offline queue. A quick pin can never create or update a public Hotspot.
  */
 import React, { useState } from 'react';
 import { MapPin, Check, Loader2, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { queueWrite, getQueueLength } from '@/lib/offlineQueue';
+import { base44 } from '@/api/base44Client';
+
+const OWNER_EMAIL_KEY = 'rhgo-private-pin-owner';
+
+async function getOwnerEmail() {
+  const cached = localStorage.getItem(OWNER_EMAIL_KEY);
+  if (cached) return cached;
+  const user = await base44.auth.me();
+  if (!user?.email) throw new Error('Sign in is required to save a private pin');
+  localStorage.setItem(OWNER_EMAIL_KEY, user.email);
+  return user.email;
+}
 
 export default function QuickPinButton({ userLocation }) {
   const [state, setState] = useState('idle'); // idle | saving | saved | error
@@ -25,18 +37,30 @@ export default function QuickPinButton({ userLocation }) {
     const now = new Date();
     const label = `Field Pin · ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
 
-    const { ok, offline } = await queueWrite({
-      entity: 'Hotspot',
-      op: 'create',
-      data: {
-        name: label,
-        lat: userLocation.lat,
-        lng: userLocation.lng,
-        land_type: 'unknown',
-        trust_score: 0.5,
-        source: 'quick_pin',
-      },
-    });
+    let result;
+    try {
+      const ownerEmail = await getOwnerEmail();
+      result = await queueWrite({
+        entity: 'PrivateRockLog',
+        op: 'create',
+        id: null,
+        data: {
+          owner_email: ownerEmail,
+          mineral_name: 'Field Pin',
+          notes: 'Private quick pin captured from Explore.',
+          location_label: label,
+          lat: userLocation.lat,
+          lng: userLocation.lng,
+          found_date: now.toISOString().split('T')[0],
+        },
+      });
+    } catch {
+      setState('error');
+      setTimeout(() => setState('idle'), 2000);
+      return;
+    }
+
+    const { ok, offline } = result;
 
     if (ok) {
       setSavedOffline(offline);
@@ -117,7 +141,7 @@ export default function QuickPinButton({ userLocation }) {
             }}
           >
             {savedOffline && <WifiOff size={9} />}
-            {savedOffline ? 'Pinned offline — syncs on signal' : 'Pinned!'}
+            {savedOffline ? 'Private pin queued — syncs on signal' : 'Saved to private log'}
           </motion.div>
         )}
         {state === 'error' && (

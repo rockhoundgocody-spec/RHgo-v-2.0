@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard } from 'lucide-react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ExternalLink } from 'lucide-react';
 
 const PHASE_TEXT = {
   thinking:  'thinking…',
@@ -120,8 +120,21 @@ export default function CloverVoicePanel({
                   {s.hotspot_name && <p className="text-[9px] text-hud-cyan/80 mb-1">📍 {s.hotspot_name}</p>}
                   <p className="text-[9px] text-white/65 leading-relaxed mb-1">{s.what_to_look_for}</p>
                   <p className="text-[9px] text-white/40 italic leading-relaxed">{s.why}</p>
+                  {s.official_source_url && (
+                    <a
+                      href={s.official_source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[9px] text-hud-cyan/80 mt-1.5"
+                    >
+                      Check official rules <ExternalLink size={8} />
+                    </a>
+                  )}
                 </div>
               ))}
+              {suggestions.safety_note && (
+                <p className="text-[9px] text-amber-300/60 leading-relaxed px-1">{suggestions.safety_note}</p>
+              )}
               <button onClick={onDismissSuggestions} className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1">
                 Dismiss
               </button>

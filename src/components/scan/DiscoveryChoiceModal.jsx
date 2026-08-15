@@ -15,7 +15,7 @@ const PRIVACY_OPTIONS = [
 
 export default function DiscoveryChoiceModal({ open, mineralName, onClose, onConfirm }) {
   const [disposition, setDisposition] = useState(null);
-  const [geoPrivacy, setGeoPrivacy] = useState('approximate');
+  const [geoPrivacy, setGeoPrivacy] = useState('private');
   const [confirmedLegal, setConfirmedLegal] = useState(false);
 
   const canConfirm = disposition && confirmedLegal;

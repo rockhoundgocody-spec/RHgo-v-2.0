@@ -5,13 +5,20 @@
  *
  * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
+import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight, ExternalLink, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGES } from '@/lib/badgeDefinitions.js';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { base44 } from '@/api/base44Client';
+import {
+  getAccessLabel,
+  getCollectionLabel,
+  getNavigationStatus,
+  getOfficialSourceUrl,
+  getPublicationLabel,
+} from '@/lib/locationPolicy';
 
 const LAND_LABEL = {
   public:         { label: 'Public Land',      color: '#34d399' },
@@ -86,7 +93,11 @@ export default function HotspotDetailSheet({
   // ── ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURN ──────────────────────
 
   const land = LAND_LABEL[hotspot?.land_type] || LAND_LABEL.unknown;
-  const isPublic = ['public','blm','forest_service','state_park'].includes(hotspot?.land_type);
+  const navigation = getNavigationStatus(hotspot);
+  const publicationLabel = getPublicationLabel(hotspot);
+  const accessLabel = getAccessLabel(hotspot);
+  const collectionLabel = getCollectionLabel(hotspot);
+  const officialSourceUrl = getOfficialSourceUrl(hotspot);
 
   // Badge relevance — computed unconditionally
   const { earnable, earned } = useMemo(() => {
@@ -172,19 +183,20 @@ export default function HotspotDetailSheet({
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <span
                     className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                    style={{ color: land.color, borderColor: `${land.color}55`, background: `${land.color}12` }}
+                    style={{ color: '#34d399', borderColor: '#34d39955', background: '#34d39912' }}
                   >
-                    {land.label}
+                    {publicationLabel}
                   </span>
+                  <span className="text-[10px] text-white/40">{land.label}</span>
                   {hotspot.state && (
                     <span className="text-[10px] text-white/35 uppercase tracking-wider">
                       {hotspot.state}
                     </span>
                   )}
-                  {!isPublic && (
+                  {!navigation.collectionAllowed && (
                     <div className="flex items-center gap-1 text-amber-400/80">
                       <AlertTriangle size={10} />
-                      <span className="text-[9px]">Permission required</span>
+                      <span className="text-[9px]">{collectionLabel}</span>
                     </div>
                   )}
                 </div>
@@ -199,21 +211,11 @@ export default function HotspotDetailSheet({
               </button>
             </div>
 
-            {/* Difficulty + Trust */}
-            <div className="flex items-center gap-4 mt-3">
+            {/* Difficulty + verified governance state */}
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
               {hotspot.difficulty && <DifficultyStars difficulty={hotspot.difficulty} />}
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{
-                    background: `hsl(${Math.round((hotspot.trust_score || 0.5) * 120)},80%,55%)`,
-                    boxShadow: `0 0 6px hsl(${Math.round((hotspot.trust_score || 0.5) * 120)},80%,55%,0.6)`,
-                  }}
-                />
-                <span className="text-[10px] text-white/40 font-mono">
-                  {((hotspot.trust_score || 0) * 100).toFixed(0)}% trust
-                </span>
-              </div>
+              <span className="text-[10px] text-white/50">{accessLabel}</span>
+              <span className="text-[10px] text-white/50">{collectionLabel}</span>
             </div>
           </div>
 
@@ -260,6 +262,24 @@ export default function HotspotDetailSheet({
                 <Shield size={11} className="text-amber-400/80 mt-0.5 flex-shrink-0" />
                 <p className="text-amber-300/70 text-[11px] leading-relaxed">{hotspot.rules}</p>
               </div>
+            </div>
+          )}
+          {officialSourceUrl && (
+            <div className="px-5 mb-4">
+              <a
+                href={officialSourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] text-hud-cyan/80 hover:text-hud-cyan"
+              >
+                Official rules from {hotspot.managing_authority || 'managing authority'}
+                <ExternalLink size={11} />
+              </a>
+              {hotspot.last_verified_at && (
+                <div className="text-[9px] text-white/30 mt-1">
+                  Last reviewed {new Date(hotspot.last_verified_at).toLocaleDateString()}
+                </div>
+              )}
             </div>
           )}
 
@@ -320,29 +340,57 @@ export default function HotspotDetailSheet({
           )}
 
           {/* ── CTA ── */}
-          <div className="px-5 mb-2">
-            <Link
-              to="/scan"
-              onClick={() => base44.analytics.track({
-                eventName: 'hotspot_log_find_tapped',
-                properties: {
-                  hotspot_name: hotspot.name,
-                  land_type: hotspot.land_type || 'unknown',
-                  state: hotspot.state || 'unknown',
-                },
-              })}
-              className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-98"
-              style={{
-                background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
-                border: '1px solid hsla(280,80%,70%,0.5)',
-                boxShadow: '0 0 24px hsla(265,80%,55%,0.4)',
-                color: '#fff',
-              }}
-            >
-              <MapPin size={16} />
-              Log a Find Here
-              <ChevronRight size={14} className="ml-auto opacity-60" />
-            </Link>
+          <div className="px-5 mb-2 space-y-2">
+            {navigation.allowed ? (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${hotspot.lat},${hotspot.lng}`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-98"
+                style={{
+                  background: 'linear-gradient(135deg, hsla(195,75%,35%,0.95), hsla(215,80%,45%,0.95))',
+                  border: '1px solid hsla(195,90%,65%,0.5)',
+                  color: '#fff',
+                }}
+              >
+                <Navigation size={16} />
+                Directions to verified entrance
+                <ExternalLink size={13} className="ml-auto opacity-60" />
+              </a>
+            ) : (
+              <div
+                className="w-full px-4 py-3 rounded-2xl text-[11px] text-amber-200/70 flex items-start gap-2"
+                style={{ background: 'hsla(38,65%,15%,0.45)', border: '1px solid hsla(38,70%,45%,0.25)' }}
+              >
+                <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" />
+                <span><strong>Directions unavailable.</strong> {navigation.reason}</span>
+              </div>
+            )}
+
+            {navigation.collectionAllowed && (
+              <Link
+                to="/scan"
+                onClick={() => base44.analytics.track({
+                  eventName: 'hotspot_log_find_tapped',
+                  properties: {
+                    hotspot_name: hotspot.name,
+                    land_type: hotspot.land_type || 'unknown',
+                    state: hotspot.state || 'unknown',
+                  },
+                })}
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-bold tracking-wide transition-all active:scale-98"
+                style={{
+                  background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
+                  border: '1px solid hsla(280,80%,70%,0.5)',
+                  boxShadow: '0 0 24px hsla(265,80%,55%,0.4)',
+                  color: '#fff',
+                }}
+              >
+                <MapPin size={16} />
+                Log a Find Here
+                <ChevronRight size={14} className="ml-auto opacity-60" />
+              </Link>
+            )}
           </div>
         </div>
       </motion.div>

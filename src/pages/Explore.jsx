@@ -27,11 +27,15 @@ import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
 import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
+import {
+  getCollectionLabel,
+  getPublicationLabel,
+  isManagedDestination,
+} from '@/lib/locationPolicy';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -80,7 +84,7 @@ function HotspotCard({ hotspot, active, hasGap, onClick }) {
           <div className="min-w-0 flex-1">
             <div className="text-white font-semibold text-[12px] leading-tight truncate">{hotspot.name}</div>
             <div className="text-[9px] mt-0.5 font-mono tracking-widest uppercase" style={{ color }}>
-              {(hotspot.land_type||'unknown').replace(/_/g,' ')}
+              {getPublicationLabel(hotspot)}
             </div>
           </div>
           {hotspot.difficulty && (
@@ -112,11 +116,7 @@ function HotspotCard({ hotspot, active, hasGap, onClick }) {
         )}
         <div className="flex items-center justify-between pt-1.5 border-t" style={{ borderColor: 'hsla(255,30%,30%,.15)' }}>
           <span className="text-[9px] text-white/50">{hotspot.state||'—'}</span>
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full"
-              style={{ background: `hsl(${Math.round((hotspot.trust_score||.5)*120)},80%,55%)` }} />
-            <span className="text-[9px] font-mono text-white/35">{((hotspot.trust_score||0)*100).toFixed(0)}%</span>
-          </div>
+          <span className="text-[9px] text-white/40 text-right">{getCollectionLabel(hotspot)}</span>
         </div>
       </div>
     </motion.div>
@@ -222,7 +222,7 @@ export default function Explore() {
     // Layer-specific filtering for card list
     if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite'].includes(m.toLowerCase())));
     if (activeLayer === 'gaps')   list = list.filter(h => collectionGapIds.has(h.id));
-    if (activeLayer === 'public') list = list.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
+    if (activeLayer === 'public') list = list.filter(isManagedDestination);
     if (activeLayer === 'mine')   list = list.filter(h => (h.minerals||[]).some(m => collectedMinerals.has(m.toLowerCase())));
     // Mineral type filter — only hotspots containing at least one selected mineral
     if (selectedMineralsLower.size > 0) {
@@ -241,7 +241,7 @@ export default function Explore() {
     if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [activeId]);
 
-  const publicCount = hotspots.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type)).length;
+  const destinationCount = hotspots.filter(isManagedDestination).length;
 
   return (
     <div className="relative w-full isolate overflow-hidden" style={{ height: '100dvh' }}>
@@ -484,7 +484,7 @@ export default function Explore() {
                         {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Hotspots'}
                       </h2>
                       <p className="text-white/50 text-[10px] uppercase tracking-[.2em]">
-                        {hotspots.length} total · {publicCount} open
+                        {hotspots.length} reviewed · {destinationCount} managed destinations
                       </p>
                     </div>
                     <button onClick={() => setSheetOpen(false)}
@@ -497,7 +497,7 @@ export default function Explore() {
                   {/* Stats */}
                   <div className="flex gap-2 mb-3">
                     <StatPill value={hotspots.length}                         label="Sites"  color="#c084fc"/>
-                    <StatPill value={publicCount}                              label="Open"   color="#34d399"/>
+                    <StatPill value={destinationCount}                         label="Managed" color="#34d399"/>
                     <StatPill value={collectionGapIds.size}                    label="Gaps"   color="#a78bfa"/>
                     <StatPill value={specimens.filter(s=>s.lat&&s.lng).length} label="Finds"  color="#22d3ee"/>
                   </div>

@@ -1,12 +1,10 @@
 /**
- * IntentionRoulette — Randonautica-style wildcard hotspot generator.
- * User types an intention → Clover picks a random spot nearby → map pin drops.
+ * IntentionRoulette — chooses among reviewed managed destinations only.
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shuffle, MapPin, Loader2, Navigation, Sparkles } from 'lucide-react';
+import { Shuffle, MapPin, Loader2, ExternalLink, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
 
 const SAMPLE_INTENTIONS = [
   'find something purple',
@@ -41,13 +39,13 @@ export default function IntentionRoulette() {
 
       const response = await base44.functions.invoke('intentionRoulette', {
         lat, lng,
-        radiusMiles: 5,
+        radiusMiles: 25,
         intention: intentionText,
       });
 
       setResult({ ...response.data, usedIntention: intentionText });
     } catch (e) {
-      setError('The rocks are shy today. Try again!');
+      setError('No reviewed destination is available nearby yet. Try again after more sites are verified.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +70,7 @@ export default function IntentionRoulette() {
         </div>
         <div>
           <div className="text-white font-bold text-sm">Intention Roulette</div>
-          <div className="text-white/40 text-[10px] uppercase tracking-wider">Randonautica-style wildcard</div>
+          <div className="text-white/40 text-[10px] uppercase tracking-wider">Reviewed destination wildcard</div>
         </div>
         <Sparkles size={14} className="ml-auto" style={{ color: 'hsla(280,80%,70%,0.6)' }} />
       </div>
@@ -80,7 +78,7 @@ export default function IntentionRoulette() {
       {/* Input */}
       <div className="px-4 py-3">
         <p className="text-white/50 text-[11px] mb-2 leading-relaxed">
-          Set your intention — Clover picks a random hotspot nearby that matches your vibe.
+          Set your intention — Clover chooses only from managed destinations with a reviewed entrance and official rules.
         </p>
         <div className="flex gap-2">
           <input
@@ -131,14 +129,14 @@ export default function IntentionRoulette() {
               </div>
             </div>
 
-            {/* Random coordinate */}
+            {/* Reviewed entrance summary */}
             <div className="rounded-xl px-3 py-2 mb-2 flex items-center gap-2"
               style={{ background: 'hsla(280,50%,15%,0.6)', border: '1px solid hsla(280,50%,40%,0.2)' }}>
               <MapPin size={13} style={{ color: 'hsl(280,85%,75%)', flexShrink: 0 }} />
               <div className="min-w-0">
-                <div className="text-white/60 text-[9px] uppercase tracking-wider mb-0.5">Random Wildcard Point</div>
-                <div className="text-white/80 text-[11px] font-mono truncate">
-                  {result.randomPoint.lat.toFixed(5)}, {result.randomPoint.lng.toFixed(5)}
+                <div className="text-white/60 text-[9px] uppercase tracking-wider mb-0.5">Verified entrance</div>
+                <div className="text-white/80 text-[11px] truncate">
+                  {result.reviewedDestination?.state || 'Managed destination'} · {result.reviewedDestination?.distance_mi ?? '—'} miles away
                 </div>
               </div>
             </div>
@@ -147,7 +145,7 @@ export default function IntentionRoulette() {
             {result.nearestHotspot && (
               <div className="rounded-xl px-3 py-2 mb-3"
                 style={{ background: 'hsla(195,60%,14%,0.6)', border: '1px solid hsla(195,70%,40%,0.25)' }}>
-                <div className="text-white/50 text-[9px] uppercase tracking-wider mb-1">Nearest Hotspot</div>
+                <div className="text-white/50 text-[9px] uppercase tracking-wider mb-1">Reviewed Destination</div>
                 <div className="text-white font-semibold text-sm">{result.nearestHotspot.name}</div>
                 <div className="flex items-center gap-2 mt-1">
                   {result.nearestHotspot.difficulty && (
@@ -163,12 +161,17 @@ export default function IntentionRoulette() {
                     </span>
                   ))}
                 </div>
+                {result.safety_note && (
+                  <div className="text-[9px] text-amber-300/65 mt-1.5">{result.safety_note}</div>
+                )}
               </div>
             )}
 
-            {/* Navigate CTA */}
-            <Link
-              to={`/explore`}
+            {/* Official rules CTA */}
+            <a
+              href={result.reviewedDestination?.official_source_url}
+              target="_blank"
+              rel="noreferrer"
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95"
               style={{
                 background: 'linear-gradient(135deg, hsla(195,100%,40%,0.25), hsla(215,80%,35%,0.3))',
@@ -177,9 +180,9 @@ export default function IntentionRoulette() {
                 boxShadow: '0 0 16px hsla(195,100%,60%,0.15)',
               }}
             >
-              <Navigation size={14} />
-              Go Find It!
-            </Link>
+              <ExternalLink size={14} />
+              Open Official Rules
+            </a>
           </motion.div>
         )}
 
