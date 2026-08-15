@@ -16,7 +16,7 @@ export default function BackButton({ className }) {
     <button
       onClick={() => navigate(-1)}
       className={cn(
-        'flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none',
+        'flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian',
         className
       )}
       aria-label="Go back"
