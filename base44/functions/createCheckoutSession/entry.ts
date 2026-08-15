@@ -1,4 +1,7 @@
 import Stripe from 'npm:stripe@14.25.0';
+import { isValidRedirectTarget } from './redirectValidation.ts';
+
+export { isValidRedirectTarget };
 
 /**
  * createCheckoutSession — starts a Stripe Checkout (subscription mode) for a
@@ -18,6 +21,10 @@ Deno.serve(async (req) => {
 
     if (!priceId) return Response.json({ error: 'priceId is required' }, { status: 400 });
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
+
+    if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
+      return Response.json({ error: 'Invalid redirect target domain in successUrl or cancelUrl' }, { status: 400 });
+    }
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
