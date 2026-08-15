@@ -108,7 +108,33 @@ function buildGreatLakesContext({ beachName, wetDry, postStorm, season }) {
   ].filter(Boolean).join(' ');
 }
 
-async function submitLocationForReview(base44: any, user: { email: string }, specimen: any) {
+type LocationSubmissionRecord = { id: string; status: string };
+type LocationSpecimen = {
+  id: string;
+  mineral_name?: string;
+  lat?: number | null;
+  lng?: number | null;
+};
+type LocationReviewClient = {
+  asServiceRole: {
+    entities: {
+      LocationSubmission: {
+        filter(
+          query: Record<string, unknown>,
+          sort: string,
+          limit: number,
+        ): Promise<LocationSubmissionRecord[]>;
+        create(data: Record<string, unknown>): Promise<LocationSubmissionRecord>;
+      };
+    };
+  };
+};
+
+async function submitLocationForReview(
+  base44: LocationReviewClient,
+  user: { email: string },
+  specimen: LocationSpecimen,
+) {
   if (specimen?.lat == null || specimen?.lng == null) {
     throw new Error('A saved private specimen location is required for review');
   }
