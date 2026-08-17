@@ -10,7 +10,7 @@
  * - Expedition route planner
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
 import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
@@ -49,8 +49,8 @@ function StatPill({ value, label, color }) {
   );
 }
 
-// Compact hotspot card in the bottom sheet list
-function HotspotCard({ hotspot, active, hasGap, onClick }) {
+// Compact hotspot card in the bottom sheet list (Memoized to prevent unnecessary re-renders)
+const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick }) {
   const color = hasGap ? '#c084fc' : LAND_COLORS[hotspot.land_type] || LAND_COLORS.unknown;
   // Determine rarity-themed border for special hotspots
   const hasLegendary = (hotspot.minerals||[]).some(m =>
@@ -121,7 +121,7 @@ function HotspotCard({ hotspot, active, hasGap, onClick }) {
       </div>
     </motion.div>
   );
-}
+});
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Explore() {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { MapPin, Lock } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -11,7 +11,8 @@ const landBadge = {
   unknown: { color: 'text-white/50 border-white/20 bg-white/5', label: 'UNKNOWN' },
 };
 
-export default function HotspotListItem({ hotspot, active, onClick }) {
+// Memoized to prevent unnecessary re-renders when parent lists or map states update
+function HotspotListItem({ hotspot, active, onClick }) {
   const badge = landBadge[hotspot.land_type] || landBadge.unknown;
   return (
     <GlassPanel
@@ -59,3 +60,5 @@ export default function HotspotListItem({ hotspot, active, onClick }) {
     </GlassPanel>
   );
 }
+
+export default memo(HotspotListItem);
