@@ -56,25 +56,33 @@ const ChartStyle = ({
     return null
   }
 
-  return (
-    (<style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-.map(([key, itemConfig]) => {
-const color =
-  itemConfig.theme?.[theme] ||
-  itemConfig.color
-return color ? `  --color-${key}: ${color};` : null
-})
-.join("\n")}
-}
-`)
-          .join("\n"),
-      }} />)
-  );
+  const cleanId = String(id).replace(/[^a-zA-Z0-9_-]/g, "")
+
+  const cssLines = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const declarations = colorConfig
+        .map(([key, itemConfig]) => {
+          const color = itemConfig.theme?.[theme] || itemConfig.color
+          if (!color || typeof color !== "string") return null
+
+          const cleanKey = key.replace(/[^a-zA-Z0-9_-]/g, "")
+          if (!cleanKey) return null
+
+          if (/[;{}<>\r\n\\"'\/\*]/.test(color)) return null
+
+          return `  --color-${cleanKey}: ${color.trim()};`
+        })
+        .filter(Boolean)
+
+      if (!declarations.length) return null
+
+      return `${prefix} [data-chart=${cleanId}] {\n${declarations.join("\n")}\n}`
+    })
+    .filter(Boolean)
+
+  if (!cssLines.length) return null
+
+  return <style>{cssLines.join("\n")}</style>
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
