@@ -27,7 +27,7 @@ import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { getAllMinerals } from '@/lib/minerals.js';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
@@ -124,6 +124,8 @@ function HotspotCard({ hotspot, active, hasGap, onClick }) {
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
+
+
 export default function Explore() {
   const { data: hotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
   const { data: specimens = [] } = useQuery({
@@ -188,11 +190,7 @@ export default function Explore() {
   }, [detailHotspot, collectedMinerals]);
 
   // All unique minerals across hotspots — drives the filter chips
-  const allMinerals = useMemo(() => {
-    const set = new Set();
-    hotspots.forEach(h => (h.minerals || []).forEach(m => { if (m?.trim()) set.add(m.trim()); }));
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [hotspots]);
+  const allMinerals = useMemo(() => getAllMinerals(hotspots), [hotspots]);
 
   // Sorted lowercase lookup for filtering
   const selectedMineralsLower = useMemo(
