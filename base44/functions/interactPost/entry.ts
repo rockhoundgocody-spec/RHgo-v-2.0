@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { VALID_REACTIONS } from './reaction_validation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,8 +14,7 @@ Deno.serve(async (req) => {
     if (!post) return Response.json({ error: 'Post not found' }, { status: 404 });
 
     if (action === 'react') {
-      const valid = ['fire', 'gem', 'clap', 'wow'];
-      if (!valid.includes(reaction_type)) return Response.json({ error: 'Invalid reaction' }, { status: 400 });
+      if (!VALID_REACTIONS.has(reaction_type)) return Response.json({ error: 'Invalid reaction' }, { status: 400 });
 
       const reactors = post.reactors || [];
       // One reaction per user: remove any existing by this user
