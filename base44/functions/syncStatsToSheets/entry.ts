@@ -14,9 +14,9 @@ Deno.serve(async (req) => {
 
     // ── Aggregate anonymized stats ──
     const [specimens, hotspots, profiles] = await Promise.all([
-      base44.asServiceRole.entities.Specimen.list('-created_date', 10000),
-      base44.asServiceRole.entities.Hotspot.list('-created_date', 10000),
-      base44.asServiceRole.entities.PlayerProfile.list('-created_date', 10000),
+      base44.asServiceRole.entities.Specimen.list(undefined, 10000, 0, ['created_date', 'mineral_name', 'rarity']),
+      base44.asServiceRole.entities.Hotspot.list(undefined, 10000, 0, ['id']),
+      base44.asServiceRole.entities.PlayerProfile.list(undefined, 10000, 0, ['id']),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
