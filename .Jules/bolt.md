@@ -1,0 +1,3 @@
+## 2026-08-18 - Optimize Nested Iteration and Duplicate String Trimming in `allMinerals`
+**Learning:** Nested array callbacks (`forEach`) combined with default array fallback allocations (`(h.minerals || [])`) and duplicated string transformations (e.g. `if (m?.trim()) set.add(m.trim())`) create high garbage collector pressure and redundant CPU work.
+**Action:** Replace nested `forEach` callbacks with flat imperative `for` loops, eliminate fallback array allocations (`if (!mins) continue`), and store trimmed string results in a local variable to prevent duplicate string allocations and operations.

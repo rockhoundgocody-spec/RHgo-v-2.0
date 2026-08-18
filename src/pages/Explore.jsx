@@ -190,8 +190,18 @@ export default function Explore() {
   // All unique minerals across hotspots — drives the filter chips
   const allMinerals = useMemo(() => {
     const set = new Set();
-    hotspots.forEach(h => (h.minerals || []).forEach(m => { if (m?.trim()) set.add(m.trim()); }));
-    return [...set].sort((a, b) => a.localeCompare(b));
+    for (let i = 0; i < hotspots.length; i++) {
+      const mins = hotspots[i].minerals;
+      if (!mins) continue;
+      for (let j = 0; j < mins.length; j++) {
+        const m = mins[j];
+        if (m) {
+          const trimmed = m.trim();
+          if (trimmed) set.add(trimmed);
+        }
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [hotspots]);
 
   // Sorted lowercase lookup for filtering
