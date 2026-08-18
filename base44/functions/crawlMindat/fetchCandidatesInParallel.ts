@@ -8,8 +8,22 @@ export interface CandidateError {
   reason: string;
 }
 
+export interface MineralDetail {
+  name: string;
+  formula: string;
+  crystal_system: string;
+  hardness: string;
+  color: string;
+  luster: string;
+  streak: string;
+  description: string;
+  rarity: string;
+  category: string;
+  image_url: string;
+}
+
 export interface ParallelFetchResult {
-  created: any[];
+  created: MineralDetail[];
   errors: CandidateError[];
 }
 
@@ -17,12 +31,12 @@ export interface ParallelFetchResult {
  * Fetches and parses candidate minerals in parallel using Promise.all.
  */
 export async function fetchCandidatesInParallel(
-  base44: any,
+  base44: unknown,
   candidates: Candidate[],
   existingNames: Set<string>,
-  fetchAndParseFn: (base44: any, candidate: Candidate) => Promise<any>
+  fetchAndParseFn: (base44: unknown, candidate: Candidate) => Promise<MineralDetail | null>
 ): Promise<ParallelFetchResult> {
-  const created: any[] = [];
+  const created: MineralDetail[] = [];
   const errors: CandidateError[] = [];
 
   const toFetch = candidates.filter(c => !existingNames.has(c.name.toLowerCase()));
@@ -35,8 +49,9 @@ export async function fetchCandidatesInParallel(
           return { type: 'error' as const, error: { name: c.name, reason: 'parse_failed' } };
         }
         return { type: 'success' as const, detail };
-      } catch (e: any) {
-        return { type: 'error' as const, error: { name: c.name, reason: String(e?.message || e) } };
+      } catch (e: unknown) {
+        const err = e as { message?: string };
+        return { type: 'error' as const, error: { name: c.name, reason: String(err?.message || e) } };
       }
     })
   );
