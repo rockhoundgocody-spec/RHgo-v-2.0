@@ -7,11 +7,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Optimize data transfer and memory footprint by requesting only required fields
     const [specimens, weights, users, profiles] = await Promise.all([
-      base44.asServiceRole.entities.Specimen.list('-created_date', 5000),
-      base44.asServiceRole.entities.CollectionWeight.list('-created_date', 5000),
-      base44.asServiceRole.entities.User.list('-created_date', 5000),
-      base44.asServiceRole.entities.PlayerProfile.list('-created_date', 5000),
+      base44.asServiceRole.entities.Specimen.list('-created_date', 5000, 0, ['created_by_id', 'mineral_name']),
+      base44.asServiceRole.entities.CollectionWeight.list('-created_date', 5000, 0, ['owner_email', 'total_weight_lbs']),
+      base44.asServiceRole.entities.User.list('-created_date', 5000, 0, ['id', 'full_name', 'email']),
+      base44.asServiceRole.entities.PlayerProfile.list('-created_date', 5000, 0, ['owner_email', 'avatar_url']),
     ]);
 
     // user id -> display info
