@@ -30,3 +30,7 @@
 ## 2024-11-21 - Custom Layer Toggle Button Accessibility
 **Learning:** Found that custom horizontal scrolling filter bars (like the MapLayerPanel) often use highly customized `motion.button` elements that completely strip default focus rings and lack ARIA state indicators. This makes it impossible for screen reader users to know which layer is currently active, and keyboard users lose their place entirely.
 **Action:** Always ensure that custom styled toggle buttons (especially those inside horizontal scrolling menus) explicitly include `aria-pressed={active}` to communicate state to screen readers, and add `focus-visible:outline-none focus-visible:ring-2` to restore keyboard usability.
+
+## 2025-08-18 - Extracting Heavy Calculations in React Components
+**Learning:** Extracting static fallback lookup tables and pure data calculation pipelines out of React components into module-scoped functions improves render performance and makes logic directly testable without complex UI mocking.
+**Action:** Always move static dictionaries and pure aggregation routines out of component scopes into standalone helper functions.
