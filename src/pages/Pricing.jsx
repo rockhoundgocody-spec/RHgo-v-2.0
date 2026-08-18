@@ -2,8 +2,8 @@
  * Pricing.jsx — RockHound-GO Subscription Tiers
  *
  * Stripe configuration (set these in environment variables / secrets):
- *   STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — e.g. price_1XxxxxFieldProMonthly
- *   STRIPE_FAMILY_MONTHLY_PRICE_ID     — e.g. price_1XxxxxFamilyMonthly
+ *   STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — price_1TpKQgIUhJzYk2OCgomTVSTb (default)
+ *   STRIPE_FAMILY_MONTHLY_PRICE_ID     — price_1TpKQgIUhJzYk2OCw8PJzY0U (default)
  *   STRIPE_SUCCESS_URL                 — e.g. https://rhgo.base44.app/settings?upgrade=success
  *   STRIPE_CANCEL_URL                  — e.g. https://rhgo.base44.app/pricing
  *
@@ -21,10 +21,9 @@ import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
-// ─── STRIPE PRICE IDs ─────────────────────────────────────────────────────
-// TODO: replace these with your real Stripe price IDs from the Stripe dashboard
-// and set STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
-// in Base44 environment variables.
+// ─── STRIPE CONFIGURATION ─────────────────────────────────────────────────
+// Configured with live Stripe price IDs for Field Pro and Family subscriptions.
+// Can be overridden via VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID.
 const STRIPE_CONFIG = {
   fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
   family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
