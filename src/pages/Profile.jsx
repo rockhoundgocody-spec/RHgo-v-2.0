@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
@@ -227,7 +228,8 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          {allBadges.map((b) => {
+          {/* Performance Optimization: Use map index parameter instead of O(N) allBadges.indexOf(b) lookups per item */}
+          {allBadges.map((b, index) => {
             const earned = earnedCodes.has(b.code);
             // Rarity-specific glow color
             const glowMap = {
@@ -238,7 +240,7 @@ export default function Profile() {
               legendary: 'hsla(45,100%,60%,0.8)',
             };
             const glowColor = glowMap[b.rarity] || glowMap.common;
-            const animDelay = `${(allBadges.indexOf(b) % 5) * 0.6}s`;
+            const animDelay = `${(index % 5) * 0.6}s`;
 
             return (
               <Link
@@ -254,7 +256,7 @@ export default function Profile() {
                       className="absolute inset-0 rounded-full pointer-events-none"
                       style={{
                         background: `radial-gradient(circle, ${glowColor} 0%, transparent 65%)`,
-                        animation: `badge-pulse-glow ${2.8 + (allBadges.indexOf(b) % 3) * 0.5}s ${animDelay} ease-in-out infinite`,
+                        animation: `badge-pulse-glow ${2.8 + (index % 3) * 0.5}s ${animDelay} ease-in-out infinite`,
                       }}
                     />
                     {/* Spinning conic halo ring */}
@@ -262,7 +264,7 @@ export default function Profile() {
                       className="absolute inset-0 rounded-full pointer-events-none"
                       style={{
                         background: `conic-gradient(from 0deg, transparent 60%, ${glowColor} 80%, transparent 100%)`,
-                        animation: `badge-halo-spin ${3 + (allBadges.indexOf(b) % 3)}s linear infinite`,
+                        animation: `badge-halo-spin ${3 + (index % 3)}s linear infinite`,
                         opacity: 0.6,
                       }}
                     />
