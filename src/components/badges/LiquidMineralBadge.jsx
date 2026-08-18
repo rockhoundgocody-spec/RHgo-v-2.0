@@ -1,10 +1,10 @@
-/**
+/*
  * LiquidMineralBadge — Photorealistic 3D octagonal badge renderer
  *
- * Layering (bottom → top):
- *   L1  Deep stone base
- *   L2  Subsurface mineral veins
- *   L3  Material texture pattern
+ * Visual Layers:
+ *   L1  Deep stone base         (radial gradient)
+ *   L2  Mineral veins           (multi-spot radial gradient)
+ *   L3  Material texture        (CSS pattern overlay)
  *   L4  Liquid subsurface flow  (radial gradients)
  *   L5  Crystal core caustics   (inner gem glow)
  *   L6  Stone micro-crack overlay
@@ -284,6 +284,97 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
   );
 }
 
+// ── Sub-components for LiquidMineralBadge ────────────────────────────────────
+function BadgeStyles() {
+  return (
+    <style>{`
+      @keyframes lmb-glow     { 0%,100%{opacity:.55} 50%{opacity:1} }
+      @keyframes lmb-breathe  { 0%,100%{filter:brightness(1) saturate(1)} 50%{filter:brightness(1.14) saturate(1.22)} }
+      @keyframes lmb-ring     { 0%,100%{opacity:.32;transform:scale(1)} 50%{opacity:.78;transform:scale(1.06)} }
+      @keyframes lmb-particle { 0%{transform:translate(0,0) scale(1);opacity:.55} 50%{transform:translate(var(--px),var(--py)) scale(1.6);opacity:.92} 100%{transform:translate(calc(var(--px)*-0.4),calc(var(--py)*0.7)) scale(.6);opacity:.25} }
+      @keyframes lmb-spin-ring{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    `}</style>
+  );
+}
+
+function BadgeGlowRings({ rings, offset, scheme }) {
+  if (!rings || rings <= 0) return null;
+  return (
+    <>
+      {Array.from({ length: rings }).map((_, i) => (
+        <div key={i} className="absolute pointer-events-none" style={{
+          inset: -(i + 1) * 11 + offset,
+          clipPath: OCT,
+          background: `radial-gradient(ellipse at center, ${scheme.glow.replace('0.9', String(0.13 - i * 0.035))} 0%, transparent 68%)`,
+          animation: `lmb-ring ${2.8 + i * 0.7}s ${i * 0.4}s ease-in-out infinite`,
+        }} />
+      ))}
+    </>
+  );
+}
+
+function BadgeLegendaryRing({ isLegendary, locked, offset, scheme }) {
+  if (!isLegendary || locked) return null;
+  return (
+    <div className="absolute pointer-events-none" style={{
+      inset: -offset - 4,
+      clipPath: OCT,
+      border: `1px solid ${scheme.rim.replace('0.6','0.25')}`,
+      animation: 'lmb-spin-ring 12s linear infinite',
+      borderTopColor: scheme.secondary,
+      borderRightColor: 'transparent',
+      borderRadius: '4px',
+    }} />
+  );
+}
+
+function BadgeParticles({ count, locked, offset, totalSize, scheme }) {
+  if (locked || !count || count <= 0) return null;
+  return (
+    <div className="absolute pointer-events-none" style={{ inset: -offset, width: totalSize, height: totalSize }}>
+      {Array.from({ length: count }).map((_, i) => {
+        const angle  = (i / count) * Math.PI * 2;
+        const r      = 0.46 + (i % 4) * 0.055;
+        const cx     = 50 + Math.cos(angle) * r * 50;
+        const cy     = 50 + Math.sin(angle) * r * 50;
+        const ps     = 1.4 + (i % 5) * 0.85;
+        const delay  = (i / count) * 3.8;
+        const dur    = 2.6 + (i % 6) * 0.55;
+        const pxVal  = `${(Math.cos(angle + 0.9) * 4.5).toFixed(1)}px`;
+        const pyVal  = `${(Math.sin(angle + 0.9) * 4.5).toFixed(1)}px`;
+        // Alternate between primary/secondary/crystal colours
+        const color  = i % 4 === 0 ? scheme.secondary
+                     : i % 4 === 1 ? scheme.glow
+                     : i % 4 === 2 ? scheme.crystal
+                     : 'hsla(48,100%,80%,0.7)'; // gold sparkle
+        return (
+          <div key={i} className="absolute rounded-full" style={{
+            left: `${cx}%`, top: `${cy}%`,
+            width: ps, height: ps,
+            background: color,
+            boxShadow: `0 0 ${ps * 3.5}px ${color}`,
+            '--px': pxVal, '--py': pyVal,
+            animation: `lmb-particle ${dur}s ${delay}s ease-in-out infinite`,
+          }} />
+        );
+      })}
+    </div>
+  );
+}
+
+function BadgeLabel({ title, locked, scheme, size, totalSize }) {
+  return (
+    <div className="mt-2 text-center font-semibold" style={{
+      color: locked ? 'hsla(0,0%,100%,0.2)' : scheme.secondary,
+      fontSize: Math.max(9, size * 0.1),
+      maxWidth: totalSize,
+      lineHeight: 1.2,
+    }}>
+      {title}
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function LiquidMineralBadge({
   badge,
@@ -306,36 +397,11 @@ export default function LiquidMineralBadge({
       style={{ width: totalSize, cursor: onClick ? 'pointer' : 'default' }}
       onClick={onClick}
     >
-      <style>{`
-        @keyframes lmb-glow     { 0%,100%{opacity:.55} 50%{opacity:1} }
-        @keyframes lmb-breathe  { 0%,100%{filter:brightness(1) saturate(1)} 50%{filter:brightness(1.14) saturate(1.22)} }
-        @keyframes lmb-ring     { 0%,100%{opacity:.32;transform:scale(1)} 50%{opacity:.78;transform:scale(1.06)} }
-        @keyframes lmb-particle { 0%{transform:translate(0,0) scale(1);opacity:.55} 50%{transform:translate(var(--px),var(--py)) scale(1.6);opacity:.92} 100%{transform:translate(calc(var(--px)*-0.4),calc(var(--py)*0.7)) scale(.6);opacity:.25} }
-        @keyframes lmb-spin-ring{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-      `}</style>
+      <BadgeStyles />
 
-      {/* Outer glow rings */}
-      {Array.from({ length: rarityConf.rings }).map((_, i) => (
-        <div key={i} className="absolute pointer-events-none" style={{
-          inset: -(i + 1) * 11 + offset,
-          clipPath: OCT,
-          background: `radial-gradient(ellipse at center, ${scheme.glow.replace('0.9', String(0.13 - i * 0.035))} 0%, transparent 68%)`,
-          animation: `lmb-ring ${2.8 + i * 0.7}s ${i * 0.4}s ease-in-out infinite`,
-        }} />
-      ))}
+      <BadgeGlowRings rings={rarityConf.rings} offset={offset} scheme={scheme} />
 
-      {/* Legendary: spinning outer accent ring */}
-      {badge.rarity === 'legendary' && !locked && (
-        <div className="absolute pointer-events-none" style={{
-          inset: -offset - 4,
-          clipPath: OCT,
-          border: `1px solid ${scheme.rim.replace('0.6','0.25')}`,
-          animation: 'lmb-spin-ring 12s linear infinite',
-          borderTopColor: scheme.secondary,
-          borderRightColor: 'transparent',
-          borderRadius: '4px',
-        }} />
-      )}
+      <BadgeLegendaryRing isLegendary={badge.rarity === 'legendary'} locked={locked} offset={offset} scheme={scheme} />
 
       {/* Badge body */}
       <div style={{
@@ -355,47 +421,10 @@ export default function LiquidMineralBadge({
         )}
       </div>
 
-      {/* Ambient floating particles */}
-      {!locked && rarityConf.particles > 0 && (
-        <div className="absolute pointer-events-none" style={{ inset: -offset, width: totalSize, height: totalSize }}>
-          {Array.from({ length: rarityConf.particles }).map((_, i) => {
-            const angle  = (i / rarityConf.particles) * Math.PI * 2;
-            const r      = 0.46 + (i % 4) * 0.055;
-            const cx     = 50 + Math.cos(angle) * r * 50;
-            const cy     = 50 + Math.sin(angle) * r * 50;
-            const ps     = 1.4 + (i % 5) * 0.85;
-            const delay  = (i / rarityConf.particles) * 3.8;
-            const dur    = 2.6 + (i % 6) * 0.55;
-            const pxVal  = `${(Math.cos(angle + 0.9) * 4.5).toFixed(1)}px`;
-            const pyVal  = `${(Math.sin(angle + 0.9) * 4.5).toFixed(1)}px`;
-            // Alternate between primary/secondary/crystal colours
-            const color  = i % 4 === 0 ? scheme.secondary
-                         : i % 4 === 1 ? scheme.glow
-                         : i % 4 === 2 ? scheme.crystal
-                         : 'hsla(48,100%,80%,0.7)'; // gold sparkle
-            return (
-              <div key={i} className="absolute rounded-full" style={{
-                left: `${cx}%`, top: `${cy}%`,
-                width: ps, height: ps,
-                background: color,
-                boxShadow: `0 0 ${ps * 3.5}px ${color}`,
-                '--px': pxVal, '--py': pyVal,
-                animation: `lmb-particle ${dur}s ${delay}s ease-in-out infinite`,
-              }} />
-            );
-          })}
-        </div>
-      )}
+      <BadgeParticles count={rarityConf.particles} locked={locked} offset={offset} totalSize={totalSize} scheme={scheme} />
 
       {showLabel && (
-        <div className="mt-2 text-center font-semibold" style={{
-          color: locked ? 'hsla(0,0%,100%,0.2)' : scheme.secondary,
-          fontSize: Math.max(9, size * 0.1),
-          maxWidth: totalSize,
-          lineHeight: 1.2,
-        }}>
-          {badge.title}
-        </div>
+        <BadgeLabel title={badge.title} locked={locked} scheme={scheme} size={size} totalSize={totalSize} />
       )}
     </div>
   );
