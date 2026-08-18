@@ -78,8 +78,7 @@ Deno.serve(async (req) => {
     }
 
     // 2. Skip ones already in the DB (by name)
-    const existing = await base44.asServiceRole.entities.Mineral.list();
-    const existingNames = new Set(existing.map(x => (x.name || '').toLowerCase()));
+    const existingNames = await fetchExistingMineralNames(base44, slice);
 
     // 3. For each candidate, fetch detail page + extract structured data
     const created = [];
@@ -154,8 +153,7 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
   }
   const slice = candidates.slice(offset, offset + limit);
 
-  const existing = await base44.asServiceRole.entities.Mineral.list();
-  const existingNames = new Set(existing.map(x => (x.name || '').toLowerCase()));
+  const existingNames = await fetchExistingMineralNames(base44, slice);
 
   const created = [];
   const errors = [];
@@ -282,3 +280,22 @@ function decodeHtml(s) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function fetchExistingMineralNames(base44, candidates) {
+  const existingNames = new Set();
+  if (!candidates || candidates.length === 0) return existingNames;
+
+  const names = Array.from(new Set(candidates.map(c => c.name).filter(Boolean)));
+  if (names.length === 0) return existingNames;
+
+  // Batch query candidate names in chunks of 50 using filter with field selection
+  for (let i = 0; i < names.length; i += 50) {
+    const chunk = names.slice(i, i + 50);
+    const records = await base44.asServiceRole.entities.Mineral.filter({
+      name: { $in: chunk }
+    }, undefined, chunk.length, 0, ['name']);
+    for (const r of records) {
+      if (r.name) existingNames.add(r.name.toLowerCase());
+    }
+  }
+  return existingNames;
+}
