@@ -5,58 +5,56 @@ import useHotspotProximity from '@/lib/useHotspotProximity';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 
-const STORAGE_KEY = 'rh_dismissed_hotspots';
-const TODAY = new Date().toDateString();
+export const STORAGE_KEY = 'rh_dismissed_hotspots';
+export const TODAY = new Date().toDateString();
 
-function getDismissed() {
+export function getDismissed() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    // Reset daily
     if (raw.date !== TODAY) return {};
     return raw.ids || {};
   } catch { return {}; }
 }
 
-function saveDismissed(ids) {
+export function saveDismissed(ids) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: TODAY, ids }));
 }
 
-export default function HotspotProximityWatcher() {
-  const { nearby, requestPermission, permission } = useHotspotProximity({ enabled: true });
-  const [dismissedIds, setDismissedIds] = useState(() => getDismissed());
-  const timerRef = useRef(null);
-  const bannerRef = useRef(null);
+export function formatDistance(distance_m) {
+  if (!distance_m && distance_m !== 0) return { distMiles: '0.0', distKm: '0.0' };
+  const distMiles = (distance_m / 1609.34).toFixed(1);
+  const distKm = (distance_m / 1000).toFixed(1);
+  return { distMiles, distKm };
+}
 
-  const dismiss = (id) => {
-    const next = { ...dismissedIds, [id]: true };
-    setDismissedIds(next);
-    saveDismissed(next);
-  };
-
-  // Track analytics once per hotspot
+export function useHotspotAnalytics(nearby) {
   const trackedRef = useRef(null);
   useEffect(() => {
-    if (nearby && nearby.hotspot.id !== trackedRef.current) {
+    if (nearby && nearby.hotspot?.id !== trackedRef.current) {
       trackedRef.current = nearby.hotspot.id;
       base44.analytics.track({
         eventName: 'hotspot_proximity_alert',
-        properties: { hotspot_name: nearby.hotspot.name, distance_m: nearby.distance_m, land_type: nearby.hotspot.land_type || 'unknown' },
+        properties: {
+          hotspot_name: nearby.hotspot.name,
+          distance_m: nearby.distance_m,
+          land_type: nearby.hotspot.land_type || 'unknown',
+        },
       });
     }
   }, [nearby]);
+}
 
-  const hotspotId = nearby?.hotspot?.id;
-  const visible = nearby && !dismissedIds[hotspotId];
-
-  // Auto-dismiss after 7 seconds
+export function useAutoDismiss({ visible, hotspotId, onDismiss }) {
+  const timerRef = useRef(null);
   useEffect(() => {
     if (!visible || !hotspotId) return;
     clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => dismiss(hotspotId), 7000);
+    timerRef.current = setTimeout(() => onDismiss(hotspotId), 7000);
     return () => clearTimeout(timerRef.current);
-  }, [visible, hotspotId]);
+  }, [visible, hotspotId, onDismiss]);
+}
 
-  // Dismiss when user scrolls past 33% of the page
+export function useScrollDismiss({ visible, hotspotId, onDismiss }) {
   useEffect(() => {
     if (!visible || !hotspotId) return;
     const root = document.getElementById('root') || window;
@@ -65,17 +63,17 @@ export default function HotspotProximityWatcher() {
       const scrolled = el.scrollTop;
       const total = el.scrollHeight - el.clientHeight;
       if (total > 0 && scrolled / total >= 0.33) {
-        dismiss(hotspotId);
+        onDismiss(hotspotId);
       }
     };
     root.addEventListener('scroll', onScroll, { passive: true });
     return () => root.removeEventListener('scroll', onScroll);
-  }, [visible, hotspotId]);
+  }, [visible, hotspotId, onDismiss]);
+}
 
-  if (!visible) return null;
-
-  const distMiles = (nearby.distance_m / 1609.34).toFixed(1);
-  const distKm = (nearby.distance_m / 1000).toFixed(1);
+export function HotspotProximityBanner({ nearby, permission, requestPermission, onDismiss, hotspotId }) {
+  const bannerRef = useRef(null);
+  const { distMiles, distKm } = formatDistance(nearby?.distance_m);
 
   return (
     <div
@@ -109,13 +107,13 @@ export default function HotspotProximityWatcher() {
         </div>
         <Link
           to="/explore"
-          onClick={() => dismiss(hotspotId)}
+          onClick={() => onDismiss(hotspotId)}
           className="text-xs px-3 py-1.5 rounded-md bg-amethyst/30 hover:bg-amethyst/50 text-white border border-amethyst/50"
         >
           Explore
         </Link>
         <button
-          onClick={() => dismiss(hotspotId)}
+          onClick={() => onDismiss(hotspotId)}
           className="text-white/50 hover:text-white"
           aria-label="Dismiss"
         >
@@ -123,5 +121,35 @@ export default function HotspotProximityWatcher() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function HotspotProximityWatcher() {
+  const { nearby, requestPermission, permission } = useHotspotProximity({ enabled: true });
+  const [dismissedIds, setDismissedIds] = useState(() => getDismissed());
+
+  const dismiss = (id) => {
+    const next = { ...dismissedIds, [id]: true };
+    setDismissedIds(next);
+    saveDismissed(next);
+  };
+
+  const hotspotId = nearby?.hotspot?.id;
+  const visible = Boolean(nearby && !dismissedIds[hotspotId]);
+
+  useHotspotAnalytics(nearby);
+  useAutoDismiss({ visible, hotspotId, onDismiss: dismiss });
+  useScrollDismiss({ visible, hotspotId, onDismiss: dismiss });
+
+  if (!visible) return null;
+
+  return (
+    <HotspotProximityBanner
+      nearby={nearby}
+      permission={permission}
+      requestPermission={requestPermission}
+      onDismiss={dismiss}
+      hotspotId={hotspotId}
+    />
   );
 }
