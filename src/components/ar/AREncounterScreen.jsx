@@ -70,7 +70,8 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       life: 1,
     }));
     setParticles(p => [...p, ...newP]);
-    setTimeout(() => setParticles(p => p.filter(x => !newP.find(n => n.id === x.id))), 1500);
+    const newIds = new Set(newP.map(n => n.id));
+    setTimeout(() => setParticles(p => p.filter(x => !newIds.has(x.id))), 1500);
   }, []);
 
   const handleThrow = useCallback(async () => {
