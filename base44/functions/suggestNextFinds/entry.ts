@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const name = (user.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
 
     // 1. User's collection profile — group specimen counts by mineral name
-    const specimens = await base44.entities.Specimen.list('-found_date', 200);
+    const specimens = await base44.entities.Specimen.list('-found_date', 200, 0, ['mineral_name']);
     const collection = {};
     for (const s of specimens) {
       const m = (s.mineral_name || '').trim();
