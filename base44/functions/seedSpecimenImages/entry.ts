@@ -79,8 +79,9 @@ Deno.serve(async (req) => {
       })
     );
 
-    // Persist results — creates are fast, keep sequential to avoid write spikes.
+    // Persist results — bulk create candidates in a single batch request to avoid N+1 database creates.
     const results = { seeded: 0, skipped: minerals.length - toProcess.length, errors: [] };
+    const candidatesToCreate = [];
     for (const { job, urls, error } of searchResults) {
       if (error) {
         results.errors.push(`${job.name} (${job.condition}): ${error}`);
@@ -89,20 +90,24 @@ Deno.serve(async (req) => {
       const isWet = job.condition.includes('wet');
       for (const url of urls.slice(0, URLS_PER_CONDITION)) {
         if (!url || !url.startsWith('http')) continue;
-        try {
-          await base44.asServiceRole.entities.TrainingCandidate.create({
-            image_url: url,
-            predicted_label: job.name,
-            user_label: job.name,
-            user_notes: `Auto-seeded: ${isWet ? 'wet' : 'dry'} field specimen`,
-            status: 'pending',
-            model_version: 'gemini_3_flash_seed',
-            predicted_confidence: 0.7,
-          });
-          results.seeded++;
-        } catch (e) {
-          results.errors.push(`${job.name} (${job.condition}) create: ${e.message}`);
-        }
+        candidatesToCreate.push({
+          image_url: url,
+          predicted_label: job.name,
+          user_label: job.name,
+          user_notes: `Auto-seeded: ${isWet ? 'wet' : 'dry'} field specimen`,
+          status: 'pending',
+          model_version: 'gemini_3_flash_seed',
+          predicted_confidence: 0.7,
+        });
+      }
+    }
+
+    if (candidatesToCreate.length > 0) {
+      try {
+        const created = await base44.asServiceRole.entities.TrainingCandidate.bulkCreate(candidatesToCreate);
+        results.seeded += Array.isArray(created) ? created.length : candidatesToCreate.length;
+      } catch (e) {
+        results.errors.push(`Bulk create training candidates: ${e.message}`);
       }
     }
 
