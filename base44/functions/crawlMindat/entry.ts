@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { fetchCandidatesInParallel } from './fetchCandidatesInParallel.ts';
 
 /**
  * crawlMindat — admin-only crawler that pulls mineral species from mindat.org
@@ -81,21 +82,13 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.Mineral.list();
     const existingNames = new Set(existing.map(x => (x.name || '').toLowerCase()));
 
-    // 3. For each candidate, fetch detail page + extract structured data
-    const created = [];
-    const errors = [];
-    for (const c of slice) {
-      if (existingNames.has(c.name.toLowerCase())) continue;
-      try {
-        const detail = await fetchAndParseMineral(base44, c);
-        if (!detail) { errors.push({ name: c.name, reason: 'parse_failed' }); continue; }
-        created.push(detail);
-        // polite delay between detail fetches
-        await sleep(400);
-      } catch (e) {
-        errors.push({ name: c.name, reason: String(e.message || e) });
-      }
-    }
+    // 3. For each candidate, fetch detail page + extract structured data in parallel
+    const { created, errors } = await fetchCandidatesInParallel(
+      base44,
+      slice,
+      existingNames,
+      fetchAndParseMineral
+    );
 
     if (dryRun) {
       return Response.json({
@@ -157,16 +150,12 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
   const existing = await base44.asServiceRole.entities.Mineral.list();
   const existingNames = new Set(existing.map(x => (x.name || '').toLowerCase()));
 
-  const created = [];
-  const errors = [];
-  for (const c of slice) {
-    if (existingNames.has(c.name.toLowerCase())) continue;
-    try {
-      const detail = await fetchAndParseMineral(base44, c);
-      if (detail) created.push(detail);
-      await sleep(400);
-    } catch (e) { errors.push({ name: c.name, reason: String(e.message || e) }); }
-  }
+  const { created, errors } = await fetchCandidatesInParallel(
+    base44,
+    slice,
+    existingNames,
+    fetchAndParseMineral
+  );
 
   if (!dryRun && created.length) {
     for (let i = 0; i < created.length; i += 25) {
