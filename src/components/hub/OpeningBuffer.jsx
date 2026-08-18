@@ -378,10 +378,18 @@ function Typewriter({ text, start }) {
 const BOND_KEY = 'rhgo_clover_bond';
 const DEVICE_KEY = 'rhgo_device_id';
 
-function getDeviceId() {
+export function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
   if (!id) {
-    id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    let uuid;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      uuid = crypto.randomUUID();
+    } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      uuid = Date.now().toString(36) + '_' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+    } else {
+      uuid = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+    }
+    id = 'dev_' + uuid;
     localStorage.setItem(DEVICE_KEY, id);
   }
   return id;
