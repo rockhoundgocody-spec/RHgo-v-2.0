@@ -19,64 +19,61 @@ const AMETHYST_COLORS = [
 
 function pick(arr, i) { return arr[i % arr.length]; }
 
-export default function AmethystParticleField({ intensity = 1, size = 320 }) {
-  // Orbiting motes — circle the badge at various radii/speeds
-  const orbiters = useMemo(() =>
-    Array.from({ length: Math.round(14 * intensity) }, (_, i) => ({
-      angle: (i / 14) * Math.PI * 2,
-      radius: 90 + Math.random() * 60,
-      speed: 6 + Math.random() * 8,
-      size: 1.5 + Math.random() * 2.5,
-      color: pick(AMETHYST_COLORS, i),
-      delay: Math.random() * 3,
-      direction: Math.random() > 0.5 ? 1 : -1,
-    })), [intensity]);
+function generateOrbiters(intensity) {
+  return Array.from({ length: Math.round(14 * intensity) }, (_, i) => ({
+    angle: (i / 14) * Math.PI * 2,
+    radius: 90 + Math.random() * 60,
+    speed: 6 + Math.random() * 8,
+    size: 1.5 + Math.random() * 2.5,
+    color: pick(AMETHYST_COLORS, i),
+    delay: Math.random() * 3,
+    direction: Math.random() > 0.5 ? 1 : -1,
+  }));
+}
 
-  // Rising sparkles — drift upward from bottom, twinkle, fade
-  const risers = useMemo(() =>
-    Array.from({ length: Math.round(10 * intensity) }, (_, i) => ({
-      x: 15 + Math.random() * 70,
-      startY: 70 + Math.random() * 25,
-      drift: -15 + Math.random() * 30,
-      size: 1 + Math.random() * 2,
-      dur: 4 + Math.random() * 5,
-      delay: Math.random() * 4,
-      color: pick(AMETHYST_COLORS, i + 2),
-    })), [intensity]);
+function generateRisers(intensity) {
+  return Array.from({ length: Math.round(10 * intensity) }, (_, i) => ({
+    x: 15 + Math.random() * 70,
+    startY: 70 + Math.random() * 25,
+    drift: -15 + Math.random() * 30,
+    size: 1 + Math.random() * 2,
+    dur: 4 + Math.random() * 5,
+    delay: Math.random() * 4,
+    color: pick(AMETHYST_COLORS, i + 2),
+  }));
+}
 
-  // Shimmer flashes — occasional 4-point star sparkles
-  const shimmers = useMemo(() =>
-    Array.from({ length: Math.round(5 * intensity) }, (_, i) => ({
-      x: 20 + Math.random() * 60,
-      y: 20 + Math.random() * 60,
-      size: 4 + Math.random() * 6,
-      dur: 2.5 + Math.random() * 3,
-      delay: Math.random() * 4,
-    })), [intensity]);
+function generateShimmers(intensity) {
+  return Array.from({ length: Math.round(5 * intensity) }, () => ({
+    x: 20 + Math.random() * 60,
+    y: 20 + Math.random() * 60,
+    size: 4 + Math.random() * 6,
+    dur: 2.5 + Math.random() * 3,
+    delay: Math.random() * 4,
+  }));
+}
 
-  const center = size / 2;
-
+function PulsingAura({ size }) {
   return (
-    <div
-      className="absolute pointer-events-none"
-      style={{ width: size, height: size, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
-    >
-      {/* 1. Pulsing amethyst aura */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: size * 0.85,
-          height: size * 0.85,
-          left: '7.5%',
-          top: '7.5%',
-          background: 'radial-gradient(circle, hsla(280,100%,70%,0.22) 0%, hsla(270,80%,50%,0.08) 40%, transparent 70%)',
-          filter: 'blur(16px)',
-        }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: size * 0.85,
+        height: size * 0.85,
+        left: '7.5%',
+        top: '7.5%',
+        background: 'radial-gradient(circle, hsla(280,100%,70%,0.22) 0%, hsla(270,80%,50%,0.08) 40%, transparent 70%)',
+        filter: 'blur(16px)',
+      }}
+      animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
 
-      {/* 2. Orbiting crystal motes */}
+function OrbitingMotes({ orbiters, center }) {
+  return (
+    <>
       {orbiters.map((o, i) => (
         <motion.div
           key={`orbit-${i}`}
@@ -112,8 +109,13 @@ export default function AmethystParticleField({ intensity = 1, size = 320 }) {
           }}
         />
       ))}
+    </>
+  );
+}
 
-      {/* 3. Rising sparkles */}
+function RisingSparkles({ risers }) {
+  return (
+    <>
       {risers.map((r, i) => (
         <motion.div
           key={`rise-${i}`}
@@ -140,8 +142,13 @@ export default function AmethystParticleField({ intensity = 1, size = 320 }) {
           }}
         />
       ))}
+    </>
+  );
+}
 
-      {/* 4. Shimmer flash sparkles (4-point star shape) */}
+function ShimmerFlashes({ shimmers }) {
+  return (
+    <>
       {shimmers.map((s, i) => (
         <motion.div
           key={`shimmer-${i}`}
@@ -187,6 +194,26 @@ export default function AmethystParticleField({ intensity = 1, size = 320 }) {
           }} />
         </motion.div>
       ))}
+    </>
+  );
+}
+
+export default function AmethystParticleField({ intensity = 1, size = 320 }) {
+  const orbiters = useMemo(() => generateOrbiters(intensity), [intensity]);
+  const risers = useMemo(() => generateRisers(intensity), [intensity]);
+  const shimmers = useMemo(() => generateShimmers(intensity), [intensity]);
+
+  const center = size / 2;
+
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{ width: size, height: size, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+    >
+      <PulsingAura size={size} />
+      <OrbitingMotes orbiters={orbiters} center={center} />
+      <RisingSparkles risers={risers} />
+      <ShimmerFlashes shimmers={shimmers} />
     </div>
   );
 }
