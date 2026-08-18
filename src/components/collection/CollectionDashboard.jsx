@@ -91,6 +91,32 @@ export default function CollectionDashboard({ specimens = [] }) {
       .slice(0, 3),
   [specimens]);
 
+  const { verified, uniqueNames, rarePlus, avgConf } = useMemo(() => {
+    let verifiedCount = 0;
+    let rarePlusCount = 0;
+    let aiConfSum = 0;
+    let aiConfCount = 0;
+    const uniqueNamesSet = new Set();
+
+    for (let i = 0; i < specimens.length; i++) {
+      const s = specimens[i];
+      if (s.verified) verifiedCount++;
+      if (s.mineral_name) uniqueNamesSet.add(s.mineral_name);
+      if (s.rarity === 'rare' || s.rarity === 'legendary') rarePlusCount++;
+      if (s.ai_confidence) {
+        aiConfSum += s.ai_confidence;
+        aiConfCount++;
+      }
+    }
+
+    return {
+      verified: verifiedCount,
+      uniqueNames: uniqueNamesSet.size,
+      rarePlus: rarePlusCount,
+      avgConf: aiConfCount > 0 ? aiConfSum / aiConfCount : 0,
+    };
+  }, [specimens]);
+
   if (specimens.length === 0) {
     return (
       <GlassPanel variant="hud" className="p-8 text-center">
@@ -99,12 +125,6 @@ export default function CollectionDashboard({ specimens = [] }) {
       </GlassPanel>
     );
   }
-
-  const verified = specimens.filter((s) => s.verified).length;
-  const uniqueNames = new Set(specimens.map((s) => s.mineral_name)).size;
-  const rarePlus = specimens.filter((s) => s.rarity === 'rare' || s.rarity === 'legendary').length;
-  const avgConf = specimens.filter((s) => s.ai_confidence)
-    .reduce((a, s, _, arr) => a + s.ai_confidence / arr.length, 0);
 
   return (
     <div className="space-y-4">
