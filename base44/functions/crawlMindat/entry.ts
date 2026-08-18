@@ -81,19 +81,26 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.Mineral.list();
     const existingNames = new Set(existing.map(x => (x.name || '').toLowerCase()));
 
-    // 3. For each candidate, fetch detail page + extract structured data
+    // 3. For each candidate, fetch detail page + extract structured data in parallel
     const created = [];
     const errors = [];
-    for (const c of slice) {
-      if (existingNames.has(c.name.toLowerCase())) continue;
-      try {
-        const detail = await fetchAndParseMineral(base44, c);
-        if (!detail) { errors.push({ name: c.name, reason: 'parse_failed' }); continue; }
-        created.push(detail);
-        // polite delay between detail fetches
-        await sleep(400);
-      } catch (e) {
-        errors.push({ name: c.name, reason: String(e.message || e) });
+    const toFetch = slice.filter(c => !existingNames.has(c.name.toLowerCase()));
+    const fetchedResults = await Promise.all(
+      toFetch.map(async (c) => {
+        try {
+          const detail = await fetchAndParseMineral(base44, c);
+          if (!detail) return { name: c.name, reason: 'parse_failed' };
+          return { detail };
+        } catch (e) {
+          return { name: c.name, reason: String(e.message || e) };
+        }
+      })
+    );
+    for (const res of fetchedResults) {
+      if (res.detail) {
+        created.push(res.detail);
+      } else {
+        errors.push({ name: res.name, reason: res.reason });
       }
     }
 
@@ -159,13 +166,24 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
 
   const created = [];
   const errors = [];
-  for (const c of slice) {
-    if (existingNames.has(c.name.toLowerCase())) continue;
-    try {
-      const detail = await fetchAndParseMineral(base44, c);
-      if (detail) created.push(detail);
-      await sleep(400);
-    } catch (e) { errors.push({ name: c.name, reason: String(e.message || e) }); }
+  const toFetchFallback = slice.filter(c => !existingNames.has(c.name.toLowerCase()));
+  const fallbackResults = await Promise.all(
+    toFetchFallback.map(async (c) => {
+      try {
+        const detail = await fetchAndParseMineral(base44, c);
+        if (!detail) return { name: c.name, reason: 'parse_failed' };
+        return { detail };
+      } catch (e) {
+        return { name: c.name, reason: String(e.message || e) };
+      }
+    })
+  );
+  for (const res of fallbackResults) {
+    if (res.detail) {
+      created.push(res.detail);
+    } else {
+      errors.push({ name: res.name, reason: res.reason });
+    }
   }
 
   if (!dryRun && created.length) {
