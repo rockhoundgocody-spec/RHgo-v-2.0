@@ -16,13 +16,22 @@ const rarityGlow = {
   legendary: 'rgba(192,132,252,0.7)',
 };
 
-export default function CollectionMap({ specimens }) {
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
-  const [mapsReady, setMapsReady] = useState(!!window.google?.maps);
-  const [selectedPin, setSelectedPin] = useState(null);
+const darkMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8080a0' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5a' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#16213e' }] },
+];
+
+function useGoogleMapsLoader() {
   const [apiKey, setApiKey] = useState(null);
+  const [mapsReady, setMapsReady] = useState(!!window.google?.maps);
 
   // Fetch the Maps API key
   useEffect(() => {
@@ -56,8 +65,88 @@ export default function CollectionMap({ specimens }) {
     document.head.appendChild(script);
   }, [apiKey]);
 
+  return { apiKey, mapsReady };
+}
+
+function MapPlaceholder({ apiKey, pinnedCount }) {
+  if (!apiKey) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-white/40 gap-3">
+        <MapPin size={32} />
+        <p className="text-sm">Loading map…</p>
+      </div>
+    );
+  }
+
+  if (pinnedCount === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-white/40 gap-3">
+        <MapPin size={32} />
+        <p className="text-sm text-center">No geo-tagged finds yet.<br />Specimens with location data will appear here.</p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function MapLegend() {
+  return (
+    <div className="absolute top-3 left-3 glass-panel px-3 py-2 rounded-xl flex flex-col gap-1.5 text-[11px]">
+      {Object.entries(rarityColor).map(([r, c]) => (
+        <div key={r} className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full border border-white/30" style={{ background: c }} />
+          <span className="text-white/60 capitalize">{r}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SelectedPinCard({ selectedPin, onClose }) {
+  if (!selectedPin) return null;
+
+  return (
+    <div
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-3 flex items-center gap-3 max-w-[280px] w-[90%] cursor-pointer"
+      onClick={onClose}
+    >
+      {selectedPin.image_url ? (
+        <img
+          src={selectedPin.image_url}
+          alt={selectedPin.mineral_name}
+          className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+        />
+      ) : (
+        <div className="w-12 h-12 rounded-xl bg-amethyst/20 flex items-center justify-center flex-shrink-0">
+          <Gem size={20} className="text-amethyst-glow" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="text-white text-sm font-semibold truncate">{selectedPin.mineral_name}</div>
+        {selectedPin.found_date && (
+          <div className="text-white/40 text-[10px] mt-0.5">{selectedPin.found_date}</div>
+        )}
+        <div
+          className="text-[9px] uppercase tracking-wider mt-1 font-medium"
+          style={{ color: rarityColor[selectedPin.rarity || 'common'] }}
+        >
+          {selectedPin.rarity || 'common'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CollectionMap({ specimens }) {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+  const [selectedPin, setSelectedPin] = useState(null);
+  const { apiKey, mapsReady } = useGoogleMapsLoader();
+
   // Specimens with valid coordinates
-  const pinned = specimens.filter((s) => s.lat && s.lng);
+  const pinned = specimens ? specimens.filter((s) => s.lat && s.lng) : [];
 
   // Init map once ready
   useEffect(() => {
@@ -118,22 +207,8 @@ export default function CollectionMap({ specimens }) {
     }
   }, [mapsReady, pinned]);
 
-  if (!apiKey) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-white/40 gap-3">
-        <MapPin size={32} />
-        <p className="text-sm">Loading map…</p>
-      </div>
-    );
-  }
-
-  if (pinned.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-white/40 gap-3">
-        <MapPin size={32} />
-        <p className="text-sm text-center">No geo-tagged finds yet.<br />Specimens with location data will appear here.</p>
-      </div>
-    );
+  if (!apiKey || pinned.length === 0) {
+    return <MapPlaceholder apiKey={apiKey} pinnedCount={pinned.length} />;
   }
 
   return (
@@ -141,14 +216,7 @@ export default function CollectionMap({ specimens }) {
       <div ref={mapRef} className="w-full h-full" />
 
       {/* Legend */}
-      <div className="absolute top-3 left-3 glass-panel px-3 py-2 rounded-xl flex flex-col gap-1.5 text-[11px]">
-        {Object.entries(rarityColor).map(([r, c]) => (
-          <div key={r} className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full border border-white/30" style={{ background: c }} />
-            <span className="text-white/60 capitalize">{r}</span>
-          </div>
-        ))}
-      </div>
+      <MapLegend />
 
       {/* Pin count badge */}
       <div className="absolute top-3 right-3 glass-panel px-3 py-1.5 rounded-full text-[11px] text-amethyst-glow font-mono">
@@ -156,49 +224,7 @@ export default function CollectionMap({ specimens }) {
       </div>
 
       {/* Selected specimen card */}
-      {selectedPin && (
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-3 flex items-center gap-3 max-w-[280px] w-[90%] cursor-pointer"
-          onClick={() => setSelectedPin(null)}
-        >
-          {selectedPin.image_url ? (
-            <img
-              src={selectedPin.image_url}
-              alt={selectedPin.mineral_name}
-              className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-xl bg-amethyst/20 flex items-center justify-center flex-shrink-0">
-              <Gem size={20} className="text-amethyst-glow" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-semibold truncate">{selectedPin.mineral_name}</div>
-            {selectedPin.found_date && (
-              <div className="text-white/40 text-[10px] mt-0.5">{selectedPin.found_date}</div>
-            )}
-            <div
-              className="text-[9px] uppercase tracking-wider mt-1 font-medium"
-              style={{ color: rarityColor[selectedPin.rarity || 'common'] }}
-            >
-              {selectedPin.rarity || 'common'}
-            </div>
-          </div>
-        </div>
-      )}
+      <SelectedPinCard selectedPin={selectedPin} onClose={() => setSelectedPin(null)} />
     </div>
   );
 }
-
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8080a0' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5a' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#16213e' }] },
-];
