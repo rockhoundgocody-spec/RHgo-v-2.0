@@ -24,6 +24,156 @@ const CATCH_MESSAGES = {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function EncounterTopBar({ theme, spawn, onDismiss }) {
+  return (
+    <div className="relative w-full flex items-center justify-between px-5 pt-12 z-10">
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: theme.glow }}>
+          {theme.label}{spawn.is_shiny ? ' · ✨ SHINY' : ''}
+        </div>
+        <div className="text-xl font-black text-white">{spawn.mineral_name}</div>
+      </div>
+      <button onClick={onDismiss}
+        type="button"
+        className="w-10 h-10 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        aria-label="Close encounter"
+        style={{ background: 'hsla(0,0%,0%,0.5)', border: '1px solid hsla(0,0%,100%,0.15)' }}>
+        <X size={18} className="text-white/60" />
+      </button>
+    </div>
+  );
+}
+
+function MineralOrb({ phase, orbScale, theme, spawn, handleThrow, handleSwipe }) {
+  return (
+    <div className="relative flex flex-col items-center justify-center flex-1 z-10">
+      <AnimatePresence mode="wait">
+        {phase !== 'result' && (
+          <motion.div key="orb"
+            animate={{ scale: orbScale, y: [0, -8, 0] }}
+            transition={{ y: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' }, scale: { duration: 0.4 } }}
+            className="relative cursor-pointer select-none"
+            style={{ width: 160, height: 160 }}
+            onClick={handleThrow}
+            onTouchEnd={handleSwipe}
+          >
+            {/* Glow rings */}
+            {[1.8, 1.5, 1.25].map((scale, i) => (
+              <div key={i} className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: `radial-gradient(circle, ${theme.glow}${['18', '22', '28'][i]} 0%, transparent 65%)`,
+                  transform: `scale(${scale})`,
+                  animation: `badge-pulse-glow ${2 + i * 0.4}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.3}s`,
+                }} />
+            ))}
+            {/* Crystal orb */}
+            <div className="absolute inset-0 rounded-full flex items-center justify-center"
+              style={{
+                background: `radial-gradient(circle at 35% 30%, ${theme.glow}cc, ${theme.glow}44 60%, transparent 80%)`,
+                border: `2px solid ${theme.ring}aa`,
+                boxShadow: `0 0 40px ${theme.glow}66, inset 0 2px 0 ${theme.ring}44`,
+              }}>
+              <span className="text-5xl select-none" role="img">{spawn.emoji}</span>
+            </div>
+            {/* Spinning ring */}
+            <div className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                border: `1px solid transparent`,
+                borderTopColor: theme.ring,
+                borderRightColor: `${theme.ring}44`,
+                animation: 'badge-halo-spin 3s linear infinite',
+              }} />
+          </motion.div>
+        )}
+
+        {phase === 'throwing' && (
+          <motion.div key="throwing"
+            initial={{ scale: 1.2, opacity: 1 }} animate={{ scale: 0.3, opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            className="text-5xl" style={{ fontSize: 64 }}>⛏️</motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Rarity XP hint */}
+      {phase === 'encounter' && (
+        <div className="mt-8 flex items-center gap-2">
+          <Zap size={13} style={{ color: theme.glow }} />
+          <span className="text-sm font-bold" style={{ color: theme.glow }}>+{spawn.xp} XP</span>
+          {spawn.is_shiny && <span className="text-xs text-yellow-300 font-bold animate-pulse">2× SHINY BONUS</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CatchResultCard({ phase, result, theme, spawn, xp, onDismiss, onRetry }) {
+  return (
+    <AnimatePresence>
+      {phase === 'result' && result && (
+        <motion.div
+          initial={{ y: 120, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+          className="relative w-full z-10 mx-4 mb-8"
+        >
+          <div className="mx-4 rounded-3xl p-5 text-center"
+            style={{ background: result === 'escape' ? 'hsla(0,30%,10%,0.95)' : theme.bg, border: `1px solid ${theme.ring}44` }}>
+            <div className="text-3xl mb-2">
+              {result === 'escape' ? '💨' : result === 'critical' ? '⚡' : result === 'shiny' ? '✨' : '🎉'}
+            </div>
+            <div className="text-base font-black text-white mb-1">
+              {pick(CATCH_MESSAGES[result] || CATCH_MESSAGES.success)}
+            </div>
+            {result !== 'escape' && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Star size={14} style={{ color: theme.glow }} />
+                <span className="text-sm font-bold" style={{ color: theme.glow }}>+{xp} XP</span>
+                <span className="text-xs text-white/40">· Added to Geo-DEX</span>
+              </div>
+            )}
+            <div className="flex gap-2 mt-4">
+              {result !== 'escape' ? (
+                <>
+                  <button onClick={onDismiss}
+                    type="button"
+                    className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    style={{ background: 'hsla(255,20%,20%,0.7)', border: '1px solid hsla(255,20%,40%,0.3)' }}>
+                    Continue
+                  </button>
+                  <button onClick={() => {
+                    const text = `I just caught a ${spawn.is_shiny ? '✨ SHINY ' : ''}${spawn.rarity} ${spawn.mineral_name} in RockHound-GO! +${xp} XP 🪨`;
+                    navigator.share?.({ title: 'RockHound-GO Find!', text }) || navigator.clipboard?.writeText(text);
+                  }}
+                    type="button"
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
+                    <Share2 size={14} /> Share
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={onRetry}
+                    type="button"
+                    className="flex-1 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
+                    Try Again
+                  </button>
+                  <button onClick={onDismiss}
+                    type="button"
+                    className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    style={{ background: 'hsla(255,20%,15%,0.7)' }}>
+                    Leave
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [phase, setPhase] = useState('encounter'); // encounter | throwing | result
   const [result, setResult] = useState(null); // success | critical | escape | shiny
@@ -128,6 +278,11 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     if (phase === 'encounter') handleThrow();
   }, [phase, handleThrow]);
 
+  const handleRetry = useCallback(() => {
+    setPhase('encounter');
+    setResult(null);
+  }, []);
+
   const xp = RARITY_XP_MAP[spawn.rarity] * (spawn.is_shiny || result === 'critical' ? 2 : 1);
 
   return (
@@ -159,145 +314,28 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       </div>
 
       {/* Top bar */}
-      <div className="relative w-full flex items-center justify-between px-5 pt-12 z-10">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: theme.glow }}>
-            {theme.label}{spawn.is_shiny ? ' · ✨ SHINY' : ''}
-          </div>
-          <div className="text-xl font-black text-white">{spawn.mineral_name}</div>
-        </div>
-        <button onClick={onDismiss}
-          type="button"
-          className="w-10 h-10 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-          aria-label="Close encounter"
-          style={{ background: 'hsla(0,0%,0%,0.5)', border: '1px solid hsla(0,0%,100%,0.15)' }}>
-          <X size={18} className="text-white/60" />
-        </button>
-      </div>
+      <EncounterTopBar theme={theme} spawn={spawn} onDismiss={onDismiss} />
 
       {/* Center — floating mineral orb */}
-      <div className="relative flex flex-col items-center justify-center flex-1 z-10">
-        <AnimatePresence mode="wait">
-          {phase !== 'result' && (
-            <motion.div key="orb"
-              animate={{ scale: orbScale, y: [0, -8, 0] }}
-              transition={{ y: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' }, scale: { duration: 0.4 } }}
-              className="relative cursor-pointer select-none"
-              style={{ width: 160, height: 160 }}
-              onClick={handleThrow}
-              onTouchEnd={handleSwipe}
-            >
-              {/* Glow rings */}
-              {[1.8, 1.5, 1.25].map((scale, i) => (
-                <div key={i} className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle, ${theme.glow}${['18', '22', '28'][i]} 0%, transparent 65%)`,
-                    transform: `scale(${scale})`,
-                    animation: `badge-pulse-glow ${2 + i * 0.4}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.3}s`,
-                  }} />
-              ))}
-              {/* Crystal orb */}
-              <div className="absolute inset-0 rounded-full flex items-center justify-center"
-                style={{
-                  background: `radial-gradient(circle at 35% 30%, ${theme.glow}cc, ${theme.glow}44 60%, transparent 80%)`,
-                  border: `2px solid ${theme.ring}aa`,
-                  boxShadow: `0 0 40px ${theme.glow}66, inset 0 2px 0 ${theme.ring}44`,
-                }}>
-                <span className="text-5xl select-none" role="img">{spawn.emoji}</span>
-              </div>
-              {/* Spinning ring */}
-              <div className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  border: `1px solid transparent`,
-                  borderTopColor: theme.ring,
-                  borderRightColor: `${theme.ring}44`,
-                  animation: 'badge-halo-spin 3s linear infinite',
-                }} />
-            </motion.div>
-          )}
-
-          {phase === 'throwing' && (
-            <motion.div key="throwing"
-              initial={{ scale: 1.2, opacity: 1 }} animate={{ scale: 0.3, opacity: 0 }}
-              transition={{ duration: 0.7 }}
-              className="text-5xl" style={{ fontSize: 64 }}>⛏️</motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Rarity XP hint */}
-        {phase === 'encounter' && (
-          <div className="mt-8 flex items-center gap-2">
-            <Zap size={13} style={{ color: theme.glow }} />
-            <span className="text-sm font-bold" style={{ color: theme.glow }}>+{spawn.xp} XP</span>
-            {spawn.is_shiny && <span className="text-xs text-yellow-300 font-bold animate-pulse">2× SHINY BONUS</span>}
-          </div>
-        )}
-      </div>
+      <MineralOrb
+        phase={phase}
+        orbScale={orbScale}
+        theme={theme}
+        spawn={spawn}
+        handleThrow={handleThrow}
+        handleSwipe={handleSwipe}
+      />
 
       {/* Result card */}
-      <AnimatePresence>
-        {phase === 'result' && result && (
-          <motion.div
-            initial={{ y: 120, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-            className="relative w-full z-10 mx-4 mb-8"
-          >
-            <div className="mx-4 rounded-3xl p-5 text-center"
-              style={{ background: result === 'escape' ? 'hsla(0,30%,10%,0.95)' : theme.bg, border: `1px solid ${theme.ring}44` }}>
-              <div className="text-3xl mb-2">
-                {result === 'escape' ? '💨' : result === 'critical' ? '⚡' : result === 'shiny' ? '✨' : '🎉'}
-              </div>
-              <div className="text-base font-black text-white mb-1">
-                {pick(CATCH_MESSAGES[result] || CATCH_MESSAGES.success)}
-              </div>
-              {result !== 'escape' && (
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <Star size={14} style={{ color: theme.glow }} />
-                  <span className="text-sm font-bold" style={{ color: theme.glow }}>+{xp} XP</span>
-                  <span className="text-xs text-white/40">· Added to Geo-DEX</span>
-                </div>
-              )}
-              <div className="flex gap-2 mt-4">
-                {result !== 'escape' ? (
-                  <>
-                    <button onClick={onDismiss}
-                      type="button"
-                      className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                      style={{ background: 'hsla(255,20%,20%,0.7)', border: '1px solid hsla(255,20%,40%,0.3)' }}>
-                      Continue
-                    </button>
-                    <button onClick={() => {
-                      const text = `I just caught a ${spawn.is_shiny ? '✨ SHINY ' : ''}${spawn.rarity} ${spawn.mineral_name} in RockHound-GO! +${xp} XP 🪨`;
-                      navigator.share?.({ title: 'RockHound-GO Find!', text }) || navigator.clipboard?.writeText(text);
-                    }}
-                      type="button"
-                      className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                      style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
-                      <Share2 size={14} /> Share
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => { setPhase('encounter'); setResult(null); }}
-                      type="button"
-                      className="flex-1 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                      style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
-                      Try Again
-                    </button>
-                    <button onClick={onDismiss}
-                      type="button"
-                      className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                      style={{ background: 'hsla(255,20%,15%,0.7)' }}>
-                      Leave
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <CatchResultCard
+        phase={phase}
+        result={result}
+        theme={theme}
+        spawn={spawn}
+        xp={xp}
+        onDismiss={onDismiss}
+        onRetry={handleRetry}
+      />
 
       {/* Throw instruction */}
       {phase === 'encounter' && (
