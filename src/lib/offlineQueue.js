@@ -154,7 +154,7 @@ export async function flushWhenStable() {
 const PERIODIC_INTERVAL_MS = 30_000; // retry every 30 s while queue has items
 let retryTimer = null;
 
-function schedulePeriodicRetry() {
+export function schedulePeriodicRetry() {
   if (retryTimer) return; // already running
   retryTimer = setInterval(async () => {
     if (getQueueLength() === 0) {
