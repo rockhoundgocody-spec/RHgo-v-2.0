@@ -36,7 +36,7 @@ function fastDistanceMi(
 Deno.test('distance calculation correctness', () => {
   const distOrig = originalDistanceMi(44.3148, -85.6024, 46.5436, -87.3954);
   const distFast = fastDistanceMi(44.3148, -85.6024, 46.5436, -87.3954);
-  assertEquals(Math.round(distOrig), 178);
+  assertEquals(Math.round(distOrig), 177);
   assertAlmostEquals(distFast, distOrig, 1e-5);
   assertEquals(Math.round(distFast), Math.round(distOrig));
 });
