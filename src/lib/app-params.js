@@ -17,7 +17,8 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 		urlParams.delete(paramName);
 		const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ""
 			}${window.location.hash}`;
-		window.history.replaceState({}, document.title, newUrl);
+		const docTitle = typeof document !== 'undefined' ? document.title : '';
+		window.history.replaceState({}, docTitle, newUrl);
 	}
 	if (searchParam) {
 		storage.setItem(storageKey, searchParam);
@@ -34,6 +35,41 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 	return null;
 }
 
+/**
+ * Sanitizes a redirect target URL to prevent Open Redirect vulnerabilities.
+ * Allows same-origin absolute URLs or relative paths starting with a single '/'
+ * that do not match protocol-relative or backslash bypasses (e.g. //, \\, /\, ///).
+ */
+export const getSafeRedirectUrl = (url, fallback = '/') => {
+	if (!url || typeof url !== 'string') return fallback;
+	const trimmed = url.trim();
+
+	if (
+		trimmed.startsWith('//') ||
+		trimmed.startsWith('\\') ||
+		trimmed.startsWith('/\\') ||
+		trimmed.startsWith('///')
+	) {
+		return fallback;
+	}
+
+	if (trimmed.startsWith('/')) {
+		return trimmed;
+	}
+
+	try {
+		const origin = typeof window !== 'undefined' && window.location ? window.location.origin : undefined;
+		const parsed = new URL(trimmed, origin);
+		if (origin && parsed.origin === origin) {
+			return parsed.pathname + parsed.search + parsed.hash;
+		}
+	} catch {
+		return fallback;
+	}
+
+	return fallback;
+};
+
 const getAppParams = () => {
 	if (getAppParamValue("clear_access_token") === 'true') {
 		storage.removeItem('base44_access_token');
@@ -42,7 +78,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
+		fromUrl: getSafeRedirectUrl(getAppParamValue("from_url", { defaultValue: typeof window !== 'undefined' ? window.location.href : '/' })),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}
