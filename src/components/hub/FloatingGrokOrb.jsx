@@ -1,11 +1,17 @@
 /**
- * FloatingGrokOrb V2.5 — emotionally expressive crystal companion
- * Shows context-aware tips with geologist voice, liquid-glass bubble
+ * FloatingGrokOrb V2.5 — emotionally expressive crystal companion & voice assistant
+ * Shows context-aware tips with geologist voice, liquid-glass bubble,
+ * and expands into full hands-free voice conversation on tap from any page.
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Sparkles, Zap, Compass, Moon } from 'lucide-react';
+import useCloverConversation from './useCloverConversation';
+import CloverVoicePanel from './CloverVoicePanel.jsx';
+import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import useLiquidInteraction from '@/lib/useLiquidInteraction';
+import { base44 } from '@/api/base44Client';
 
 const ROUTE_TIPS = {
   '/':         ["Tap me to chat! 🍀", "How's your collection growing?", "Any new finds today?", "I sense crystals nearby…", "Every rock has a story waiting."],
@@ -17,6 +23,13 @@ const ROUTE_TIPS = {
 };
 
 const DEFAULT_TIPS = ["🍀 Tap me — I'm Clover, your geo guide!", "The earth is hiding something beautiful nearby.", "Rockhounds unite! Let's find something epic."];
+
+const GREETINGS = [
+  "Hey there! What are you finding out in the field today?",
+  "Oh hey! Need an expert read on a rock, or just checking in?",
+  "Good to hear from you! What's on your mind?",
+  "Hey! I'm right here — tell me about your latest discovery.",
+];
 
 // Emotions: idle, excited, wise, sleepy — obsidian disc, accent-tinted icon
 const MOOD_STYLES = {
@@ -30,14 +43,36 @@ const HIDDEN_ROUTES = ['/scan', '/onboarding', '/login', '/register', '/forgot-p
 
 export default function FloatingGrokOrb() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [tip, setTip] = useState('');
   const [showTip, setShowTip] = useState(false);
   const [mood, setMood] = useState('idle');
+  const [loggedFind, setLoggedFind] = useState(null);
+  const [suggestions, setSuggestions] = useState(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [companion, setCompanion] = useState(null);
+
   const tipTimer = useRef(null);
   const pulseTimer = useRef(null);
+  const { getInteraction, injectTap } = useLiquidInteraction();
 
+  const clover = useCloverConversation({
+    companion,
+    todaysSpecimens: 0,
+    onFindLogged: (name) => {
+      setLoggedFind(name);
+      setTimeout(() => setLoggedFind(null), 4000);
+    },
+  });
+
+  const open = clover.phase !== 'idle';
   const shouldHide = HIDDEN_ROUTES.some(r => location.pathname.startsWith(r));
+
+  // Fetch companion state once for conversation context
+  useEffect(() => {
+    base44.functions.invoke('getCompanionState', {})
+      .then((res) => setCompanion(res?.data?.companion || null))
+      .catch(() => {});
+  }, []);
 
   const pickTip = (pathname) => {
     const tips = ROUTE_TIPS[pathname] || DEFAULT_TIPS;
@@ -45,6 +80,7 @@ export default function FloatingGrokOrb() {
   };
 
   const flashTip = (text, moodType = 'idle') => {
+    if (open) return; // Don't interrupt active conversation panel
     setTip(text);
     setMood(moodType);
     setShowTip(true);
@@ -80,24 +116,80 @@ export default function FloatingGrokOrb() {
       clearInterval(periodic);
       clearInterval(pulseTimer.current);
     };
-  }, [location.pathname, shouldHide]);
+  }, [location.pathname, shouldHide, open]);
 
-  const handleTap = () => {
-    navigate('/companion');
+  const handleTap = (e) => {
+    if (e?.clientX != null) injectTap(e.clientX, e.clientY);
+    setShowTip(false);
+
+    if (!open) {
+      const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+      clover.start(greeting);
+    } else {
+      clover.nudge();
+    }
+  };
+
+  const handleHunt = async () => {
+    if (suggestLoading) return;
+    setSuggestLoading(true);
+    try {
+      const cached = sessionStorage.getItem('rhgo_last_gps');
+      const gps = cached ? JSON.parse(cached) : {};
+      const res = await base44.functions.invoke('suggestNextFinds', {
+        lat: gps.lat ?? null, lng: gps.lng ?? null,
+      });
+      if (res?.data?.suggestions?.length) setSuggestions(res.data);
+    } catch (err) {
+      console.error('suggestNextFinds failed:', err);
+    } finally {
+      setSuggestLoading(false);
+    }
   };
 
   if (shouldHide) return null;
 
   const style = MOOD_STYLES[mood];
 
+  const orbState = clover.phase === 'thinking' ? 'thinking'
+    : clover.phase === 'speaking' ? 'speaking'
+    : clover.phase === 'listening' ? 'listening'
+    : 'idle';
+
   return (
     <div
-      className="fixed z-40 select-none"
+      className="fixed z-40 select-none flex flex-col items-end"
       style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))', right: 14 }}
     >
-      {/* Speech bubble */}
+      {/* Active Conversation Panel */}
       <AnimatePresence>
-        {showTip && tip && (
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.9 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="mb-3"
+          >
+            <CloverVoicePanel
+              phase={clover.phase}
+              messages={clover.messages}
+              interim={clover.interim}
+              onClose={clover.end}
+              onHunt={handleHunt}
+              huntLoading={suggestLoading}
+              suggestions={suggestions}
+              onDismissSuggestions={() => setSuggestions(null)}
+              voiceSupported={clover.voiceSupported}
+              onSend={clover.send}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Speech bubble when not open */}
+      <AnimatePresence>
+        {!open && showTip && tip && (
           <motion.div
             initial={{ opacity: 0, y: 8, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -130,39 +222,60 @@ export default function FloatingGrokOrb() {
         )}
       </AnimatePresence>
 
-      {/* Orb */}
-      <motion.button
-        onClick={handleTap}
-        animate={mood === 'excited'
-          ? { scale: [1, 1.22, 0.93, 1.12, 1], rotate: [0, -6, 4, -2, 0] }
-          : mood === 'wise'
-          ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.25)', 'brightness(1)'] }
-          : { scale: [1, 1.035, 1] }
-        }
-        transition={mood !== 'idle'
-          ? { duration: 0.75, ease: 'easeInOut' }
-          : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
-        }
-        whileTap={{ scale: 0.85 }}
-        className="relative w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer"
-        style={{
-          background: style.bg,
-          boxShadow: `0 0 20px ${style.glow}, 0 0 42px hsla(265,80%,45%,0.22), inset 0 1.5px 0 hsla(290,100%,90%,0.28)`,
-          border: `1.5px solid ${style.border}`,
-          transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
-        }}
-        aria-label="Chat with Clover"
-      >
-        {/* Inner crystal facet shimmer */}
+      {/* Interactive Orb Button */}
+      {open ? (
         <div
-          className="absolute inset-0 rounded-full"
+          onClick={handleTap}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleTap(e)}
+          className="relative cursor-pointer select-none active:scale-95 transition-transform"
+          style={{ width: 56, height: 56 }}
+          aria-label="Clover active conversation"
+        >
+          <AmethystOrb
+            size={56}
+            orbState={orbState}
+            level={companion?.level || 1}
+            getInteraction={getInteraction}
+            getAmplitude={clover.getAmplitude}
+            getSpectrum={clover.getSpectrum}
+          />
+        </div>
+      ) : (
+        <motion.button
+          onClick={handleTap}
+          animate={mood === 'excited'
+            ? { scale: [1, 1.22, 0.93, 1.12, 1], rotate: [0, -6, 4, -2, 0] }
+            : mood === 'wise'
+            ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.25)', 'brightness(1)'] }
+            : { scale: [1, 1.035, 1] }
+          }
+          transition={mood !== 'idle'
+            ? { duration: 0.75, ease: 'easeInOut' }
+            : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
+          }
+          whileTap={{ scale: 0.85 }}
+          className="relative w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer"
           style={{
-            background: 'conic-gradient(from 90deg, hsla(280,100%,80%,0.12) 0deg, transparent 90deg, hsla(195,100%,70%,0.1) 200deg, transparent 270deg)',
-            borderRadius: '50%',
+            background: style.bg,
+            boxShadow: `0 0 20px ${style.glow}, 0 0 42px hsla(265,80%,45%,0.22), inset 0 1.5px 0 hsla(290,100%,90%,0.28)`,
+            border: `1.5px solid ${style.border}`,
+            transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
           }}
-        />
-        <style.Icon size={18} strokeWidth={1.75} className="relative z-10" style={{ color: style.iconColor }} />
-      </motion.button>
+          aria-label="Chat with Clover"
+        >
+          {/* Inner crystal facet shimmer */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: 'conic-gradient(from 90deg, hsla(280,100%,80%,0.12) 0deg, transparent 90deg, hsla(195,100%,70%,0.1) 200deg, transparent 270deg)',
+              borderRadius: '50%',
+            }}
+          />
+          <style.Icon size={18} strokeWidth={1.75} className="relative z-10" style={{ color: style.iconColor }} />
+        </motion.button>
+      )}
     </div>
   );
 }
