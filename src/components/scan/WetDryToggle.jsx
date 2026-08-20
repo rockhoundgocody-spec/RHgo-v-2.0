@@ -13,7 +13,9 @@ export default function WetDryToggle({ value, onChange }) {
         padding: '3px',
       }}>
       <button
+        type="button"
         onClick={() => onChange('wet')}
+        aria-pressed={value === 'wet'}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.18em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
         style={{
           background: value === 'wet'
@@ -28,7 +30,9 @@ export default function WetDryToggle({ value, onChange }) {
         Wet
       </button>
       <button
+        type="button"
         onClick={() => onChange('dry')}
+        aria-pressed={value === 'dry'}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.18em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500/50"
         style={{
           background: value === 'dry'
