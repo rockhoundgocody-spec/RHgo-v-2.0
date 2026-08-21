@@ -3,9 +3,8 @@
  * Suggests an ordered list of hotspots to visit for missing minerals.
  */
 import React, { useMemo, useState } from 'react';
-import { Route, Zap, ChevronRight, MapPin, X, Sparkles } from 'lucide-react';
+import { Route, Zap, ChevronRight, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 function haversineKm(a, b) {
   const R = 6371;
@@ -103,7 +102,7 @@ export default function ExpeditionPlanner({
       <motion.button
         whileTap={{ scale: 0.94 }}
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider border transition-all"
+        className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
         style={{
           background: route.length > 0
             ? 'hsla(45,80%,18%,0.8)'
@@ -142,8 +141,8 @@ export default function ExpeditionPlanner({
                   <Sparkles size={14} className="text-amber-400" />
                   <span className="text-white font-bold text-sm">Expedition Planner</span>
                 </div>
-                <button onClick={() => setOpen(false)} aria-label="Close">
-                  <X size={15} className="text-white/40" />
+                <button onClick={() => setOpen(false)} aria-label="Close" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
+                  <X size={15} className="text-white/40 hover:text-white/70 transition" />
                 </button>
               </div>
 
@@ -188,7 +187,7 @@ export default function ExpeditionPlanner({
                       <button
                         key={h.id}
                         onClick={() => { onHotspotFocus && onHotspotFocus(h); setOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all active:scale-98"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all active:scale-98 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                         style={{ background: 'hsla(255,25%,14%,0.7)', border: '1px solid hsla(255,30%,30%,0.2)' }}
                       >
                         <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-black"
@@ -213,7 +212,7 @@ export default function ExpeditionPlanner({
                 <button
                   onClick={handlePlan}
                   disabled={planning || gapHotspots.length === 0}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-40"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                   style={{
                     background: 'linear-gradient(135deg, hsla(265,70%,45%,0.9), hsla(280,80%,55%,0.9))',
                     border: '1px solid hsla(280,80%,65%,0.4)',
@@ -228,7 +227,7 @@ export default function ExpeditionPlanner({
                 {route.length > 0 && (
                   <button
                     onClick={handleClear}
-                    className="px-4 py-3 rounded-xl text-xs font-bold text-white/50 transition-all active:scale-95"
+                    className="px-4 py-3 rounded-xl text-xs font-bold text-white/50 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                     style={{ background: 'hsla(0,40%,16%,0.5)', border: '1px solid hsla(0,40%,40%,0.2)' }}
                   >
                     Clear
