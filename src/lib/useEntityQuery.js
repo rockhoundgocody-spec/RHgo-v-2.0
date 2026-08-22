@@ -12,16 +12,17 @@ export function useEntityList(entityName, sortKey, limit, options = {}) {
     options = limit;
     limit = undefined;
   }
+  const { fields, skip, ...queryOptions } = options;
   return useQuery({
-    queryKey: ['entity', entityName, 'list', sortKey ?? null, limit ?? null],
+    queryKey: ['entity', entityName, 'list', sortKey ?? null, limit ?? null, skip ?? null, fields ?? null],
     queryFn: () => {
       const e = base44.entities[entityName];
-      if (sortKey && limit) return e.list(sortKey, limit);
-      if (sortKey) return e.list(sortKey);
-      return e.list();
+      // Optimization (Bolt): Pass fields array to base44 entity list() to project required fields only,
+      // reducing network response payload size and JSON parsing memory footprint.
+      return e.list(sortKey, limit, skip, fields);
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,
-    ...options,
+    ...queryOptions,
   });
 }
