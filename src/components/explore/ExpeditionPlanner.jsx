@@ -102,6 +102,8 @@ export default function ExpeditionPlanner({
       <motion.button
         whileTap={{ scale: 0.94 }}
         onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        aria-controls="expedition-planner-panel"
         className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
         style={{
           background: route.length > 0
@@ -123,6 +125,7 @@ export default function ExpeditionPlanner({
       <AnimatePresence>
         {open && (
           <motion.div
+            id="expedition-planner-panel"
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
