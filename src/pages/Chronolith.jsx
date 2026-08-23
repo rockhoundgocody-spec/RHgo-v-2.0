@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Camera, Upload, Loader2, Atom, MapPin, X } from 'lucide-react';
+import { Camera, Loader2, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChronolithOpening from '@/components/chronolith/ChronolithOpening.jsx';
 import RealityTrial from '@/components/chronolith/RealityTrial.jsx';
@@ -13,6 +13,15 @@ import RealityTrial from '@/components/chronolith/RealityTrial.jsx';
  *
  * Stages: capture → analyzing → opening → trial
  */
+/**
+ * Helper function to upload selected files in parallel (up to 3 files).
+ */
+export async function uploadSelectedFiles(files = [], uploadFn = (file) => base44.integrations.Core.UploadFile({ file })) {
+  const selectedFiles = files.slice(0, 3);
+  const results = await Promise.all(selectedFiles.map((file) => uploadFn(file)));
+  return results.map((res) => res?.file_url).filter(Boolean);
+}
+
 export default function Chronolith() {
   const [stage, setStage] = useState('capture');
   const [imageUrls, setImageUrls] = useState([]);
@@ -39,11 +48,7 @@ export default function Chronolith() {
     setLoading(true);
     setError('');
     try {
-      const urls = [];
-      for (const file of files.slice(0, 3)) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        urls.push(file_url);
-      }
+      const urls = await uploadSelectedFiles(files);
       setImageUrls(urls);
       await runInvestigation(urls);
     } catch (err) {
