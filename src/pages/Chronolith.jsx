@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Camera, Upload, Loader2, Atom, MapPin, X } from 'lucide-react';
+import { Camera, Loader2, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChronolithOpening from '@/components/chronolith/ChronolithOpening.jsx';
 import RealityTrial from '@/components/chronolith/RealityTrial.jsx';
@@ -39,11 +39,12 @@ export default function Chronolith() {
     setLoading(true);
     setError('');
     try {
-      const urls = [];
-      for (const file of files.slice(0, 3)) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        urls.push(file_url);
-      }
+      const urls = await Promise.all(
+        files.slice(0, 3).map(async (file) => {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          return file_url;
+        })
+      );
       setImageUrls(urls);
       await runInvestigation(urls);
     } catch (err) {
