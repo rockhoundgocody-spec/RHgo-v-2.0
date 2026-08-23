@@ -56,25 +56,33 @@ const ChartStyle = ({
     return null
   }
 
-  return (
-    (<style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-.map(([key, itemConfig]) => {
-const color =
-  itemConfig.theme?.[theme] ||
-  itemConfig.color
-return color ? `  --color-${key}: ${color};` : null
-})
-.join("\n")}
-}
-`)
-          .join("\n"),
-      }} />)
-  );
+  const cleanId = String(id).replace(/[^a-zA-Z0-9_-]/g, "")
+
+  const cssText = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const declarations = colorConfig
+        .map(([key, itemConfig]) => {
+          const color = itemConfig.theme?.[theme] || itemConfig.color
+          if (!color || typeof color !== "string") return null
+          const cleanKey = String(key).replace(/[^a-zA-Z0-9_-]/g, "")
+          const cleanColor = color.replace(/[<>{};\\`"']/g, "").trim()
+          if (!cleanKey || !cleanColor) return null
+          return `  --color-${cleanKey}: ${cleanColor};`
+        })
+        .filter(Boolean)
+        .join("\n")
+
+      if (!declarations) return null
+      return `${prefix} [data-chart=${cleanId}] {\n${declarations}\n}`
+    })
+    .filter(Boolean)
+    .join("\n")
+
+  if (!cssText) {
+    return null
+  }
+
+  return <style>{cssText}</style>
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
