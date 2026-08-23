@@ -5,6 +5,7 @@ Deno.test('isValidRedirectTarget: allows valid base44 app origins', () => {
   assertEquals(isValidRedirectTarget('https://rhgo.base44.app/settings?upgrade=success'), true);
   assertEquals(isValidRedirectTarget('https://rhgo2.base44.app/pricing'), true);
   assertEquals(isValidRedirectTarget('https://sub.rhgo.base44.app/page'), true);
+  assertEquals(isValidRedirectTarget('https://sub.rhgo2.base44.app/page'), true);
 });
 
 Deno.test('isValidRedirectTarget: allows localhost and local IP origins for local testing', () => {
@@ -12,10 +13,12 @@ Deno.test('isValidRedirectTarget: allows localhost and local IP origins for loca
   assertEquals(isValidRedirectTarget('http://127.0.0.1:5173/settings'), true);
 });
 
-Deno.test('isValidRedirectTarget: rejects unapproved external domains', () => {
+Deno.test('isValidRedirectTarget: rejects unapproved external domains or unauthorized base44 app subdomains', () => {
   assertEquals(isValidRedirectTarget('https://attacker.com/malicious'), false);
   assertEquals(isValidRedirectTarget('https://evil-base44.app.com/phish'), false);
   assertEquals(isValidRedirectTarget('https://fakebase44.app/login'), false);
+  assertEquals(isValidRedirectTarget('https://evil.base44.app/phish'), false);
+  assertEquals(isValidRedirectTarget('https://otherapp.base44.app/login'), false);
 });
 
 Deno.test('isValidRedirectTarget: rejects non-http/https protocols', () => {

@@ -10,13 +10,24 @@ export function isValidRedirectTarget(urlStr: string): boolean {
     }
 
     const hostname = parsed.hostname.toLowerCase();
-    if (
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname === 'rhgo.base44.app' ||
-      hostname === 'rhgo2.base44.app' ||
-      hostname.endsWith('.base44.app')
-    ) {
+
+    const ALLOWED_EXACT_HOSTNAMES = new Set([
+      'localhost',
+      '127.0.0.1',
+      'rhgo.base44.app',
+      'rhgo2.base44.app',
+    ]);
+
+    const ALLOWED_DOMAIN_SUFFIXES = [
+      '.rhgo.base44.app',
+      '.rhgo2.base44.app',
+    ];
+
+    if (ALLOWED_EXACT_HOSTNAMES.has(hostname)) {
+      return true;
+    }
+
+    if (ALLOWED_DOMAIN_SUFFIXES.some((suffix) => hostname.endsWith(suffix))) {
       return true;
     }
 
