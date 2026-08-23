@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BADGES, getBadgeDefinition, evaluateEarnedCodes } from './badgeDefinitions';
+import { BADGES, getBadgeDefinition, evaluateEarnedCodes, streakDays } from './badgeDefinitions';
 
 describe('Liquid Mineral Badge System - badgeDefinitions', () => {
   it('should contain all 15 required core badges', () => {
@@ -80,5 +80,34 @@ describe('Liquid Mineral Badge System - badgeDefinitions', () => {
     const prog = trailblazer.progress(mockSpecimens);
     expect(prog.current).toBe(2);
     expect(prog.target).toBe(25);
+  });
+
+  it('should correctly calculate streakDays across various edge cases', () => {
+    expect(streakDays([])).toBe(0);
+
+    expect(streakDays([{ found_date: '2026-08-01' }])).toBe(1);
+
+    expect(streakDays([
+      { found_date: '2026-08-01' },
+      { found_date: '2026-08-01' },
+    ])).toBe(1);
+
+    expect(streakDays([
+      { found_date: '2026-08-01' },
+      { found_date: '2026-08-03' },
+    ])).toBe(1);
+
+    expect(streakDays([
+      { found_date: '2026-08-01' },
+      { found_date: '2026-08-02' },
+      { found_date: '2026-08-03' },
+      { found_date: '2026-08-05' },
+      { found_date: '2026-08-06' },
+    ])).toBe(3);
+
+    expect(streakDays([
+      { created_date: '2026-08-01T10:00:00Z' },
+      { created_date: '2026-08-02T15:30:00Z' },
+    ])).toBe(2);
   });
 });

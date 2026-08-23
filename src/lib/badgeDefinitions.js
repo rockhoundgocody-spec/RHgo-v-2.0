@@ -6,15 +6,19 @@ const maxFindsAtSpot  = (s) => {
   const c = {}; for (const x of s) { const l = (x.found_at||'').toLowerCase().trim(); if (l) c[l]=(c[l]||0)+1; }
   return Math.max(0, ...Object.values(c));
 };
-const streakDays = (s) => {
+export const streakDays = (s) => {
   const dates = [...new Set(s.map(x => (x.found_date||x.created_date||'').slice(0,10)).filter(Boolean))].sort();
+  if (!dates.length) return 0;
   let best = 1, cur = 1;
+  let prevTime = Date.parse(dates[0]);
   for (let i = 1; i < dates.length; i++) {
-    const diff = (new Date(dates[i]) - new Date(dates[i-1])) / 86400000;
+    const currTime = Date.parse(dates[i]);
+    const diff = (currTime - prevTime) / 86400000;
     cur = diff === 1 ? cur + 1 : 1;
     best = Math.max(best, cur);
+    prevTime = currTime;
   }
-  return dates.length ? best : 0;
+  return best;
 };
 
 // Backward-compatible alias mapping
