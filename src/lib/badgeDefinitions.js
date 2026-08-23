@@ -170,9 +170,11 @@ export const BADGES = [
   },
 ];
 
+const BADGE_MAP = new Map(BADGES.map(b => [b.code, b]));
+
 export const getBadgeDefinition = code => {
   const resolvedCode = ALIASES[code] || code;
-  return BADGES.find(b => b.code === resolvedCode) || BADGES.find(b => b.code === code) || BADGES[0];
+  return BADGE_MAP.get(resolvedCode) || BADGE_MAP.get(code) || BADGES[0];
 };
 
 export const evaluateEarnedCodes = specimens => BADGES.filter(b => b.check(specimens||[])).map(b => b.code);
