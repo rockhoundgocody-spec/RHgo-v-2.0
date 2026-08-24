@@ -90,12 +90,14 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
           <div className="mb-4">
             <button
               onClick={() => setShowLookalikes(p => !p)}
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2"
+              aria-expanded={showLookalikes}
+              aria-controls="lookalikes-content"
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm"
             >
               Ruled-out lookalikes {showLookalikes ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
             </button>
             {showLookalikes && (
-              <div className="flex flex-wrap gap-1.5">
+              <div id="lookalikes-content" className="flex flex-wrap gap-1.5">
                 {result.lookalikes_ruled_out.map((n, i) => (
                   <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/35 line-through">{n}</span>
                 ))}
@@ -127,14 +129,16 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         <GlassPanel className="p-4">
           <button
             onClick={() => setShowReviewers(p => !p)}
-            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition"
+            aria-expanded={showReviewers}
+            aria-controls="reviewers-content"
+            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm"
           >
             <span>6 Specialist Reviewers</span>
             {showReviewers ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
 
           {showReviewers && (
-            <div className="mt-3 space-y-3">
+            <div id="reviewers-content" className="mt-3 space-y-3">
               {Object.entries(REVIEWER_META).map(([key, meta]) => {
                 const data = reviewResults[key];
                 if (!data) return null;
