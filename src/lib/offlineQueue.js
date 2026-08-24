@@ -53,11 +53,16 @@ export async function flushQueue() {
   let flushed = 0;
   try {
     let queue = loadQueue();
+    let queueModified = false;
     while (queue.length > 0) {
       const next = queue[0];
       try {
         const e = base44.entities[next.entity];
-        if (!e) { queue.shift(); continue; }
+        if (!e) {
+          queue.shift();
+          queueModified = true;
+          continue;
+        }
         if (next.op === 'create') {
           await e.create(next.data);
         } else if (next.op === 'update') {
@@ -65,7 +70,7 @@ export async function flushQueue() {
         }
         flushed += 1;
         queue.shift();
-        saveQueue(queue);
+        queueModified = true;
       } catch (err) {
         // Client errors (4xx) will never succeed on retry — evict so the rest
         // of the queue can drain instead of stalling behind a poison item.
@@ -74,14 +79,17 @@ export async function flushQueue() {
         if ((status && status >= 400 && status < 500) || attempts >= MAX_ATTEMPTS) {
           console.warn('offlineQueue: dropping unsendable write', next.entity, next.op, status);
           queue.shift();
-          saveQueue(queue);
+          queueModified = true;
           continue;
         }
         // Transient failure — record the attempt and retry later, order intact.
         queue[0] = { ...next, attempts };
-        saveQueue(queue);
+        queueModified = true;
         break;
       }
+    }
+    if (queueModified) {
+      saveQueue(queue);
     }
     return { flushed, remaining: queue.length };
   } finally {
