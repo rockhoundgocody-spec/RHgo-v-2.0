@@ -36,3 +36,6 @@
 ## 2024-11-21 - Custom Input Accessible Focus within Glass Panels
 **Learning:** Adding accessibility features to inputs housed within custom "GlassPanel" containers can be tricky because the background relies on transparency, and standard focus rings look unnatural or clash with custom border styles (like `1px solid hsla(...)`).
 **Action:** Always maintain the design aesthetic when adding `focus-visible:ring-2`. When standard rings clash, combine `focus-visible:outline-none` with `focus-visible:ring-2 focus-visible:ring-white/50` (or `amethyst-glow/50` for primary actions) to ensure the focus state is obvious but visually coherent with the glassmorphism theme.
+## 2026-08-24 - Accessible Disclosure Widgets
+**Learning:** In a highly themed UI, standard focus indicators might clash or be invisible. However, combining focus rings (`focus-visible:ring-2`) with a slight border radius (`rounded-sm`) improves the visual box for textual toggle buttons that sit flush with their containers.
+**Action:** When adding ARIA expanded states to inline text toggle buttons, include a subtle border radius if applying focus rings, ensuring the ring outlines a neat rectangle rather than clipping awkwardly against text boundaries.
