@@ -5,8 +5,8 @@
  * - Badge-glow pulse on hotspots linked to earned badges
  * - Expedition route polyline
  */
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ActivityHeatLayer from '@/components/explore/ActivityHeatLayer.jsx';
@@ -42,14 +42,23 @@ const DIFF_BADGE = {
   expert:   '★',
 };
 
-// ── Custom div icon factory ───────────────────────────────────────────────────
+// ── Custom div icon factories & caches ─────────────────────────────────────────
+// Optimization (Bolt): Cache L.divIcon instances by visual parameter combination.
+// Returning reference-equal divIcon objects prevents React-Leaflet from executing
+// marker.setIcon() and tearing down/rebuilding DOM nodes on every re-render.
+const hotspotIconCache = new Map();
+const specimenIconCache = new Map();
+const userIconCache = new Map();
+
 // highContrast: used when the geology overlay is on — solid fills, dark halos
 // and thick white rings so markers stay readable in bright sunlight.
-function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
+export function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
+  const cacheKey = `${color}_${Boolean(isActive)}_${Boolean(isGlowing)}_${Boolean(hasGap)}_${difficulty || 'none'}_${Boolean(highContrast)}`;
+  if (hotspotIconCache.has(cacheKey)) {
+    return hotspotIconCache.get(cacheKey);
+  }
+
   const size   = highContrast ? (isActive ? 42 : 34) : (isActive ? 36 : 28);
-  const glow   = isActive  ? `0 0 18px ${color}, 0 0 36px ${color}55`
-               : isGlowing ? `0 0 12px ${color}cc`
-               : 'none';
   const badge  = DIFF_BADGE[difficulty] || '●';
   const ring   = hasGap ? `<circle cx="18" cy="18" r="16" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.8"/>` : '';
   const pulse  = isGlowing ? `
@@ -74,15 +83,22 @@ function makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highC
         ${highContrast ? 'stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
     </svg>`;
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html: svg,
     className: '',
     iconSize:   [size + 8, size + 8],
     iconAnchor: [(size + 8) / 2, (size + 8) / 2],
   });
+  hotspotIconCache.set(cacheKey, icon);
+  return icon;
 }
 
-function makeSpecimenIcon(rarity, highContrast) {
+export function makeSpecimenIcon(rarity, highContrast) {
+  const cacheKey = `${rarity}_${Boolean(highContrast)}`;
+  if (specimenIconCache.has(cacheKey)) {
+    return specimenIconCache.get(cacheKey);
+  }
+
   const glow = RARITY_GLOW[rarity];
   const color = rarity === 'legendary' ? '#f59e0b' : rarity === 'rare' ? '#a78bfa' : '#c084fc';
   const s = highContrast ? 24 : 18;
@@ -93,10 +109,17 @@ function makeSpecimenIcon(rarity, highContrast) {
         style="filter:drop-shadow(0 0 ${glow ? 5 : 2}px ${highContrast ? '#0a0f1e' : color})"/>
       <polygon points="9,2 16,7 13,15 5,15 2,7" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.5)'}" stroke-width="${highContrast ? 1.5 : 1}"/>
     </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
+  const icon = L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
+  specimenIconCache.set(cacheKey, icon);
+  return icon;
 }
 
-function makeUserIcon(highContrast) {
+export function makeUserIcon(highContrast) {
+  const cacheKey = `${Boolean(highContrast)}`;
+  if (userIconCache.has(cacheKey)) {
+    return userIconCache.get(cacheKey);
+  }
+
   const s = highContrast ? 36 : 28;
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 28 28">
@@ -110,7 +133,9 @@ function makeUserIcon(highContrast) {
       <circle cx="14" cy="14" r="7" fill="none" stroke="white" stroke-width="${highContrast ? 3 : 2}"/>
       <circle cx="14" cy="14" r="2.5" fill="white"/>
     </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
+  const icon = L.divIcon({ html: svg, className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
+  userIconCache.set(cacheKey, icon);
+  return icon;
 }
 
 // ── Inner map effect components ───────────────────────────────────────────────
@@ -146,7 +171,7 @@ export default function HotspotMap({
   activeLayer   = 'all',
   collectionGapIds = new Set(),
   expeditionRoute  = [],
-  earnedBadgeCodes = new Set(),
+  earnedBadgeCodes = new Set(), // eslint-disable-line unused-imports/no-unused-vars
   showGeology      = false,
   hudMode          = false,
   selectedMineralFilter = new Set(),
