@@ -24,6 +24,12 @@ const SEED_HOTSPOTS = [
   { name: 'Tonopah Turquoise Area', state: 'NV', country: 'USA', lat: 38.0667, lng: -117.2300, land_type: 'private', minerals: ['Turquoise'], difficulty: 'hard', description: 'Multiple historic claim mines; permission required.', trust_score: 0.78, source: 'claim' },
 ];
 
+export const clearAllHotspots = async (client = base44, confirmFn = (msg) => typeof window !== 'undefined' && window.confirm ? window.confirm(msg) : true) => {
+  if (!confirmFn('Delete all hotspots?')) return false;
+  await client.entities.Hotspot.deleteMany({});
+  return true;
+};
+
 export default function Admin() {
   const [counts, setCounts] = useState({ hotspots: 0, specimens: 0, minerals: 0 });
   const [loading, setLoading] = useState(true);
@@ -55,11 +61,11 @@ export default function Admin() {
   };
 
   const clearHotspots = async () => {
-    if (!confirm('Delete all hotspots?')) return;
     setSeeding(true);
-    const all = await base44.entities.Hotspot.list();
-    await Promise.all(all.map((h) => base44.entities.Hotspot.delete(h.id)));
-    await refresh();
+    const deleted = await clearAllHotspots();
+    if (deleted) {
+      await refresh();
+    }
     setSeeding(false);
   };
 
