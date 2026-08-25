@@ -5,8 +5,6 @@ import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import Top3BadgesStrip from '@/components/badges/Top3BadgesStrip.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
