@@ -151,27 +151,32 @@ export default function PostCard({ post, myEmail }) {
           const active = myReaction === r.type;
           return (
             <button key={r.type} onClick={() => react(r.type)} disabled={busy}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all active:scale-90"
+              aria-label={`React with ${r.type}`}
+              aria-pressed={active}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
               style={{
                 background: active ? `${rarityColor}22` : 'hsla(255,20%,20%,0.5)',
                 border: `1px solid ${active ? `${rarityColor}66` : 'hsla(255,20%,40%,0.2)'}`,
               }}>
-              <span className="text-sm">{r.emoji}</span>
+              <span className="text-sm" aria-hidden="true">{r.emoji}</span>
               {count > 0 && <span className="text-[10px] font-bold text-white/60">{count}</span>}
             </button>
           );
         })}
         <button onClick={() => setShowComments(s => !s)}
-          className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-white/50 hover:text-white/80 transition"
+          aria-expanded={showComments}
+          aria-controls={`comments-${post.id}`}
+          aria-label={showComments ? "Hide comments" : "Show comments"}
+          className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-white/50 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           style={{ background: 'hsla(255,20%,20%,0.5)', border: '1px solid hsla(255,20%,40%,0.2)' }}>
-          <MessageCircle size={13} />
+          <MessageCircle size={13} aria-hidden="true" />
           <span className="text-[10px] font-bold">{comments.length}</span>
         </button>
       </div>
 
       {/* Comments */}
       {showComments && (
-        <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+        <div id={`comments-${post.id}`} className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
           {comments.map((c, i) => (
             <div key={i} className="flex gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
@@ -188,11 +193,13 @@ export default function PostCard({ post, myEmail }) {
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && submitComment()}
               placeholder="Add a comment…" disabled={busy}
-              className="flex-1 text-[11px] text-white/80 placeholder-white/25 outline-none px-2 py-1.5 rounded-lg"
+              aria-label="Write a comment"
+              className="flex-1 text-[11px] text-white/80 placeholder-white/25 outline-none px-2 py-1.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
               style={{ background: 'hsla(255,20%,18%,0.6)', border: '1px solid hsla(255,20%,40%,0.2)' }} />
             <button onClick={submitComment} disabled={busy || !commentText.trim()}
-              className="text-amethyst-glow disabled:opacity-30 transition active:scale-90 p-1.5">
-              {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              aria-label="Submit comment"
+              className="text-amethyst-glow disabled:opacity-30 transition active:scale-90 p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-sm">
+              {busy ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <Send size={14} aria-hidden="true" />}
             </button>
           </div>
         </div>

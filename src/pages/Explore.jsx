@@ -27,7 +27,6 @@ import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
@@ -320,25 +319,26 @@ export default function Explore() {
             )}
           </div>
           <button onClick={locate} disabled={locating}
-            aria-label="Locate me"
+            aria-label="My location"
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
             style={{
               background: userLocation ? 'hsla(195,100%,40%,.25)' : 'hsla(240,30%,8%,.88)',
               border: userLocation ? '1px solid hsla(195,100%,60%,.5)' : '1px solid hsla(255,30%,40%,.3)',
               backdropFilter: 'blur(20px)',
               boxShadow: userLocation ? '0 0 16px hsla(195,100%,60%,.25)' : 'none',
-            }} aria-label="My location">
+            }}>
             {locating ? <Loader2 size={16} className="text-hud-cyan animate-spin"/> : <Locate size={16} className={userLocation ? 'text-hud-cyan' : 'text-white/50'}/>}
           </button>
           <button onClick={() => setShowGeology(g => !g)}
             aria-label="Toggle geology view"
+            aria-pressed={showGeology}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
             style={{
               background: showGeology ? 'hsla(150,60%,30%,.3)' : 'hsla(240,30%,8%,.88)',
               border: showGeology ? '1px solid hsla(150,70%,50%,.55)' : '1px solid hsla(255,30%,40%,.3)',
               backdropFilter: 'blur(20px)',
               boxShadow: showGeology ? '0 0 16px hsla(150,70%,50%,.25)' : 'none',
-            }} aria-label="Toggle geology layer">
+            }}>
             <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
           </button>
           <SpawnHUD
@@ -354,6 +354,7 @@ export default function Explore() {
           <button
             onClick={() => setHudMode(h => !h)}
             title="High-contrast HUD mode"
+            aria-pressed={hudMode}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
             style={{
               background: hudMode ? 'hsla(195,100%,30%,.4)' : 'hsla(240,30%,8%,.88)',
@@ -370,6 +371,7 @@ export default function Explore() {
           <button
             onClick={() => setShowHeatMap(h => !h)}
             title="Community activity heat map"
+            aria-pressed={showHeatMap}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
             style={{
               background: showHeatMap ? 'hsla(0,80%,30%,.4)' : 'hsla(240,30%,8%,.88)',
@@ -386,6 +388,7 @@ export default function Explore() {
           <button
             onClick={() => setShowWeather(w => !w)}
             title="Beach weather conditions"
+            aria-pressed={showWeather}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             style={{
               background: showWeather ? 'hsla(38,80%,30%,.35)' : 'hsla(240,30%,8%,.88)',

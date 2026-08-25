@@ -20,6 +20,24 @@ function ScanLine() {
   );
 }
 
+// Optimization (Bolt): Pre-calculate 1-based rank on each item during memoized sort phase.
+// This avoids O(N) Array.prototype.indexOf lookups per row during list rendering (reducing overall render complexity from O(N²) to O(N)).
+export function computeSortedRanks(rows, sortKey) {
+  const list = [...rows].sort((a, b) => b[sortKey] - a[sortKey] || b.unique_minerals - a.unique_minerals);
+  return list.map((item, index) => ({
+    ...item,
+    rank: index + 1,
+  }));
+}
+
+// Optimization (Bolt): Memoize search filter and hoist search.toLowerCase() to execute once per query change
+// instead of once per element during every render pass.
+export function filterRows(sorted, search) {
+  const query = search.trim().toLowerCase();
+  if (!query) return sorted;
+  return sorted.filter((r) => (r.name || '').toLowerCase().includes(query));
+}
+
 function AvatarCircle({ name, isYou }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase();
   return (
@@ -50,18 +68,16 @@ export default function Leaderboard() {
   }, []);
 
   const sortKey = sortBy === 'weight' ? 'total_weight_lbs' : 'unique_minerals';
-  const sorted = useMemo(
-    () => [...rows].sort((a, b) => b[sortKey] - a[sortKey] || b.unique_minerals - a.unique_minerals),
-    [rows, sortKey]
-  );
+  const sorted = useMemo(() => computeSortedRanks(rows, sortKey), [rows, sortKey]);
 
   const myEmail = (me?.email || '').toLowerCase();
-  const myRow = sorted.find((r) => (r.email || '').toLowerCase() === myEmail);
-  const myRank = myRow ? sorted.indexOf(myRow) + 1 : null;
+  const myRow = useMemo(
+    () => (myEmail ? sorted.find((r) => (r.email || '').toLowerCase() === myEmail) : null),
+    [sorted, myEmail]
+  );
+  const myRank = myRow ? myRow.rank : null;
 
-  const filtered = search.trim()
-    ? sorted.filter((r) => (r.name || '').toLowerCase().includes(search.toLowerCase()))
-    : sorted;
+  const filtered = useMemo(() => filterRows(sorted, search), [sorted, search]);
 
   return (
     <div className="min-h-screen pb-28 px-4 pt-6 max-w-md mx-auto">
@@ -157,10 +173,11 @@ export default function Leaderboard() {
             </div>
           )}
           {!loading && filtered.map((entry) => {
-            const originalIdx = sorted.indexOf(entry);
+            // Bolt optimization: use pre-calculated entry.rank for O(1) index/rank lookup
+            const originalIdx = entry.rank - 1;
             const isTop3 = originalIdx < 3;
-            const isYou = (entry.email || '').toLowerCase() === myEmail;
-            const medal = isTop3 ? MEDAL[originalIdx] : `#${originalIdx + 1}`;
+            const isYou = Boolean(myEmail) && (entry.email || '').toLowerCase() === myEmail;
+            const medal = isTop3 ? MEDAL[originalIdx] : `#${entry.rank}`;
             return (
               <motion.div
                 key={entry.user_id || entry.email}

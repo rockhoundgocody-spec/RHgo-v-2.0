@@ -1,0 +1,7 @@
+[
+  {
+    "title": "React Component Modularization Refactoring",
+    "learning": "Refactoring monolithic JSX templates into helper subcomponents defined outside the main component improves component readability, maintainability, and testability while preserving exact visual structure.",
+    "action": "When refactoring JSX views, extract stateless subcomponents for discrete UI sections like headers, metrics grid, or outcomes list directly in the module scope."
+  }
+]

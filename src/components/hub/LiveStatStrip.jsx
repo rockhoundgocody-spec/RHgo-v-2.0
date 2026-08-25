@@ -21,8 +21,13 @@ export function getRank(count) {
 }
 
 export default function LiveStatStrip() {
-  const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
-  const { data: hotspots = [] } = useEntityList('Hotspot', 'name');
+  // Optimization (Bolt): Request only necessary fields via projection to minimize JSON payload size
+  const { data: specimens = [] } = useEntityList('Specimen', '-found_date', undefined, {
+    fields: ['id', 'mineral_name', 'rarity'],
+  });
+  const { data: hotspots = [] } = useEntityList('Hotspot', 'name', undefined, {
+    fields: ['id'],
+  });
 
   const total = specimens.length;
   const unique = new Set(specimens.map((s) => s.mineral_name)).size;
