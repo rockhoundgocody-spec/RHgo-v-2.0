@@ -6,20 +6,47 @@ import useCameraDevices from './useCameraDevices';
 import useBroadcast from './useBroadcast';
 import StreamChat from './StreamChat.jsx';
 import LiveIdFeed from './LiveIdFeed.jsx';
+import GlassesSource from './GlassesSource.jsx';
+import useAutoIdentify from './useAutoIdentify';
 
 export default function BroadcastStudio({ me, coords, onClose }) {
   const videoRef = useRef(null);
   const { devices, permission, requestAccess, refresh } = useCameraDevices();
   const [deviceId, setDeviceId] = useState(null);
   const [title, setTitle] = useState('');
-  const { stream, starting, goLive, endStream, identifyNow, identifying } =
+  const [glassesReady, setGlassesReady] = useState(false);
+  const [connectingGlasses, setConnectingGlasses] = useState(false);
+  const { stream, starting, goLive, endStream, identifyNow, identifying, openScreen } =
     useBroadcast({ videoRef, me });
 
   const selected = devices.find((d) => d.deviceId === deviceId);
+  const isGlasses = stream?.device_label?.includes('glasses');
+
+  // Glasses streams identify continuously so viewers get a rolling ID feed.
+  useAutoIdentify({ active: !!stream && isGlasses, identifyNow });
 
   const handleSelect = async (id) => {
     setDeviceId(id);
+    setGlassesReady(false);
     if (!stream) await startPreview(videoRef, id);
+  };
+
+  const connectGlasses = async () => {
+    setConnectingGlasses(true);
+    try {
+      await openScreen();
+      setGlassesReady(true);
+      setDeviceId(null);
+    } catch { /* user cancelled the capture picker */ }
+    finally { setConnectingGlasses(false); }
+  };
+
+  const handleGoLive = () => {
+    if (glassesReady) {
+      goLive({ deviceLabel: 'AI glasses (mirrored)', title, coords, keepMedia: true });
+    } else {
+      goLive({ deviceId, deviceLabel: selected?.label, title, coords });
+    }
   };
 
   return (
@@ -38,6 +65,11 @@ export default function BroadcastStudio({ me, coords, onClose }) {
 
       {!stream ? (
         <>
+          <GlassesSource
+            connected={glassesReady}
+            connecting={connectingGlasses}
+            onConnect={connectGlasses}
+          />
           <DevicePicker
             devices={devices}
             selectedId={deviceId}
@@ -55,8 +87,8 @@ export default function BroadcastStudio({ me, coords, onClose }) {
             style={{ background: 'hsla(220,30%,10%,0.7)', border: '1px solid hsla(0,0%,100%,0.08)' }}
           />
           <Button
-            onClick={() => goLive({ deviceId, deviceLabel: selected?.label, title, coords })}
-            disabled={starting || devices.length === 0}
+            onClick={handleGoLive}
+            disabled={starting || (!glassesReady && devices.length === 0)}
             className="w-full h-12 rounded-xl text-sm font-bold text-white"
             style={{ background: 'linear-gradient(135deg, hsla(0,75%,45%,0.9), hsla(340,90%,55%,0.75))' }}
           >

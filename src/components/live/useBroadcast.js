@@ -51,6 +51,25 @@ export default function useBroadcast({ videoRef, me }) {
     return media;
   }, [stopMedia, videoRef]);
 
+  /**
+   * Mirror the glasses' companion-app preview via screen capture. The glasses
+   * only render video inside their own app, so we read those pixels off the
+   * screen instead of touching their proprietary stream.
+   */
+  const openScreen = useCallback(async () => {
+    stopMedia();
+    const media = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 15 },
+      audio: false,
+    });
+    mediaRef.current = media;
+    if (videoRef.current) {
+      videoRef.current.srcObject = media;
+      await videoRef.current.play().catch(() => {});
+    }
+    return media;
+  }, [stopMedia, videoRef]);
+
   const publishFrame = useCallback(async (streamId) => {
     if (busyRef.current || !videoRef.current) return;
     busyRef.current = true;
@@ -70,11 +89,12 @@ export default function useBroadcast({ videoRef, me }) {
     }
   }, [videoRef]);
 
-  const goLive = useCallback(async ({ deviceId, deviceLabel, title, coords }) => {
+  const goLive = useCallback(async ({ deviceId, deviceLabel, title, coords, keepMedia }) => {
     if (!me) { base44.auth.redirectToLogin(); return; }
     setStarting(true);
     try {
-      await openDevice(deviceId);
+      // keepMedia: the glasses screen-capture stream is already open — reuse it.
+      if (!keepMedia) await openDevice(deviceId);
       const record = await base44.entities.LiveStream.create({
         owner_email: me.email,
         host_name: me.full_name || me.email.split('@')[0],
@@ -145,5 +165,5 @@ export default function useBroadcast({ videoRef, me }) {
 
   useEffect(() => () => stopMedia(), [stopMedia]);
 
-  return { stream, starting, goLive, endStream, identifyNow, identifying, lastId, openDevice };
+  return { stream, starting, goLive, endStream, identifyNow, identifying, lastId, openDevice, openScreen };
 }
