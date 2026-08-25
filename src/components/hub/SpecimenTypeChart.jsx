@@ -23,7 +23,10 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function SpecimenTypeChart() {
-  const { data: specimens = [], isLoading } = useEntityList('Specimen', '-found_date');
+  // Optimization (Bolt): Request only required fields via projection to minimize network payload size
+  const { data: specimens = [], isLoading } = useEntityList('Specimen', '-found_date', undefined, {
+    fields: ['id', 'mineral_name', 'rarity'],
+  });
 
   const chartData = useMemo(() => {
     const counts = {};

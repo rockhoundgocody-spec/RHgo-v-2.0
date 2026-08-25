@@ -42,7 +42,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function DiscoveryTrendChart() {
-  const { data: specimens = [], isLoading } = useEntityList('Specimen', '-found_date');
+  // Optimization (Bolt): Request only required fields via projection to reduce network payload and memory parsing overhead
+  const { data: specimens = [], isLoading } = useEntityList('Specimen', '-found_date', undefined, {
+    fields: ['id', 'found_date', 'created_date', 'rarity'],
+  });
   const [mode, setMode] = useState('stacked'); // 'stacked' | 'total'
 
   const { chartData, totalFinds, bestDay, streak } = useMemo(() => {
