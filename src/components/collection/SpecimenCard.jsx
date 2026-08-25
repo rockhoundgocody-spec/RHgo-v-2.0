@@ -152,6 +152,7 @@ export default function SpecimenCard({ specimen, index }) {
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
             aria-expanded={expanded}
+            aria-label={expanded ? 'Collapse specimen lore' : 'Expand specimen lore'}
             className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
