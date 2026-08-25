@@ -6,6 +6,7 @@ import useCameraDevices from './useCameraDevices';
 import useBroadcast from './useBroadcast';
 import StreamChat from './StreamChat.jsx';
 import LiveIdFeed from './LiveIdFeed.jsx';
+import LiveIdOverlay from './LiveIdOverlay.jsx';
 import GlassesSource from './GlassesSource.jsx';
 import useAutoIdentify from './useAutoIdentify';
 
@@ -16,7 +17,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
   const [title, setTitle] = useState('');
   const [glassesReady, setGlassesReady] = useState(false);
   const [connectingGlasses, setConnectingGlasses] = useState(false);
-  const { stream, starting, goLive, endStream, identifyNow, identifying, openScreen } =
+  const { stream, starting, goLive, endStream, identifyNow, identifying, lastId, openScreen } =
     useBroadcast({ videoRef, me });
 
   const selected = devices.find((d) => d.deviceId === deviceId);
@@ -61,6 +62,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
             <Radio size={8} /> On air
           </span>
         )}
+        {stream && <LiveIdOverlay identification={lastId} />}
       </div>
 
       {!stream ? (

@@ -4,14 +4,30 @@ import { base44 } from '@/api/base44Client';
 import { Radio, Eye, ArrowLeft, Glasses } from 'lucide-react';
 import StreamChat from '@/components/live/StreamChat.jsx';
 import LiveIdFeed from '@/components/live/LiveIdFeed.jsx';
+import LiveIdOverlay from '@/components/live/LiveIdOverlay.jsx';
 
 export default function LiveStreamView() {
   const { streamId } = useParams();
   const [stream, setStream] = useState(null);
   const [me, setMe] = useState(null);
   const [missing, setMissing] = useState(false);
+  const [latestId, setLatestId] = useState(null);
 
   useEffect(() => { base44.auth.me().then(setMe).catch(() => setMe(null)); }, []);
+
+  // Track the most recent AI identification for this stream to overlay on the feed.
+  useEffect(() => {
+    if (!streamId) return;
+    let alive = true;
+    base44.entities.StreamIdentification
+      .filter({ stream_id: streamId }, '-created_date', 1)
+      .then((list) => { if (alive && list[0]) setLatestId(list[0]); });
+    const unsub = base44.entities.StreamIdentification.subscribe((event) => {
+      if (event.type !== 'create' || event.data?.stream_id !== streamId) return;
+      setLatestId(event.data);
+    });
+    return () => { alive = false; unsub(); };
+  }, [streamId]);
 
   // Poll the stream record so the published frame stays current for viewers.
   useEffect(() => {
@@ -73,6 +89,7 @@ export default function LiveStreamView() {
             Ended
           </span>
         ) : null}
+        <LiveIdOverlay identification={latestId} />
       </div>
 
       <div>
