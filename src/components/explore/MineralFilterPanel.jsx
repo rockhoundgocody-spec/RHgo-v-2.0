@@ -39,7 +39,7 @@ function metaFor(mineral) {
   return match ? MINERAL_META[match] : { emoji: '💎', color: '#c084fc' };
 }
 
-export default function MineralFilterPanel({ minerals = [], selected, onToggle, onClearAll }) {
+export default function MineralFilterPanel({ minerals = [], selected = new Set(), onToggle, onClearAll }) {
   if (minerals.length === 0) return null;
 
   const allActive = selected.size === 0;
@@ -53,9 +53,11 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={onClearAll}
+        aria-pressed={allActive}
         className={cn(
           'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
           'text-[10px] font-bold uppercase tracking-widest border transition-all',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50'
         )}
         style={{
           background: allActive ? 'hsla(280,80%,60%,0.22)' : 'hsla(240,30%,8%,0.82)',
@@ -77,9 +79,11 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
             key={mineral}
             whileTap={{ scale: 0.92 }}
             onClick={() => onToggle(mineral)}
+            aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full',
               'text-[10px] font-bold uppercase tracking-wider border transition-all capitalize',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50'
             )}
             style={{
               background: active ? `${m.color}22` : 'hsla(240,30%,8%,0.82)',
@@ -89,7 +93,7 @@ export default function MineralFilterPanel({ minerals = [], selected, onToggle, 
               boxShadow: active ? `0 0 12px ${m.color}44` : 'none',
             }}
           >
-            <span className="text-[11px]">{m.emoji}</span>
+            <span className="text-[11px]" aria-hidden="true">{m.emoji}</span>
             {mineral}
           </motion.button>
         );

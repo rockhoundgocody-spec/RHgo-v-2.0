@@ -5,8 +5,17 @@ import PrivacySelectSheet from '@/components/nav/PrivacySelectSheet.jsx';
 import DeleteAccountDialog from '@/components/nav/DeleteAccountDialog.jsx';
 import PermissionsPrompt from '@/components/PermissionsPrompt.jsx';
 import { dumpAllCaches } from '@/lib/dumpCache.js';
+import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 
-const DEFAULT_VOICE = { rate: 0.92, pitch: 1.18, volume: 0.95 };
+const DEFAULT_VOICE = { voice: 'honey', rate: 0.92, pitch: 1.18, volume: 0.95 };
+
+const VOICE_PERSONAS = [
+  { id: 'honey', label: 'Honey', desc: 'Warm & Soft' },
+  { id: 'river', label: 'River', desc: 'Relaxed & Natural' },
+  { id: 'sunny', label: 'Sunny', desc: 'Upbeat & Energetic' },
+  { id: 'storm', label: 'Storm', desc: 'Deep & Steady' },
+  { id: 'spark', label: 'Spark', desc: 'Lively & Bright' },
+];
 
 function loadVoice() {
   try { return { ...DEFAULT_VOICE, ...JSON.parse(localStorage.getItem('clover_voice') || '{}') }; }
@@ -66,6 +75,7 @@ export default function Settings() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [voice, setVoice] = useState(loadVoice);
   const [voiceSaved, setVoiceSaved] = useState(false);
+  const { speak: previewSpeak } = useSpeechSynthesis();
   const [cacheDumping, setCacheDumping] = useState(false);
   const [cacheDumped, setCacheDumped] = useState(false);
 
@@ -85,12 +95,7 @@ export default function Settings() {
     localStorage.setItem('clover_voice', JSON.stringify(voice));
     setVoiceSaved(true);
     setTimeout(() => setVoiceSaved(false), 2000);
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance("Hey! How does my voice sound now?");
-      u.rate = voice.rate; u.pitch = voice.pitch; u.volume = voice.volume;
-      window.speechSynthesis.speak(u);
-    }
+    previewSpeak("Hey! How does my voice sound now?");
   };
 
   const resetVoice = () => setVoice(DEFAULT_VOICE);
@@ -301,6 +306,33 @@ export default function Settings() {
         <GlassPanel className="p-4">
           <SectionHeader icon={Mic2} iconColor="text-amethyst-glow" title="Clover 🍀 Voice" subtitle="Tune how Clover sounds in the field. Press Preview to hear the result live." />
           <div className="ml-9 space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-sm text-white/70 font-medium block">Voice Persona</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {VOICE_PERSONAS.map((p) => {
+                  const selected = (voice.voice || 'honey') === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setVoice((prev) => ({ ...prev, voice: p.id }))}
+                      className="p-2.5 rounded-xl text-left transition border select-none"
+                      style={{
+                        background: selected ? 'hsla(270,70%,40%,0.35)' : 'hsla(255,20%,12%,0.4)',
+                        borderColor: selected ? 'hsla(280,80%,65%,0.6)' : 'hsla(255,20%,30%,0.2)',
+                      }}
+                    >
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        {p.label}
+                        {selected && <span className="text-[10px] text-amethyst-glow font-mono">✓</span>}
+                      </div>
+                      <div className="text-[10px] text-white/40 mt-0.5">{p.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <VoiceSlider label="Speed" hint="0.5 = slow & deliberate · 1.0 = natural · 1.5 = quick" min={0.5} max={1.5} step={0.01} value={voice.rate} onChange={(v) => setVoice((p) => ({ ...p, rate: v }))} />
             <VoiceSlider label="Pitch" hint="0.8 = deeper · 1.0 = neutral · 1.5 = higher / more expressive" min={0.8} max={1.5} step={0.01} value={voice.pitch} onChange={(v) => setVoice((p) => ({ ...p, pitch: v }))} />
             <VoiceSlider label="Volume" hint="0.5 = quiet · 1.0 = full" min={0.5} max={1.0} step={0.01} value={voice.volume} onChange={(v) => setVoice((p) => ({ ...p, volume: v }))} />

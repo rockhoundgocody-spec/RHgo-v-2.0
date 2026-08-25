@@ -1,10 +1,10 @@
 /**
  * Badges — Liquid Mineral Badges collection screen
- * 2-column grid, rarity filter tabs, detail modal, unlock animation.
+ * 2-column grid, rarity filter tabs, dark/light/AR mode toggle, detail modal, unlock animation.
  */
 import React, { useState } from 'react';
-import { Award, Lock, CheckCircle2, X, Gem, Share2, Copy, Check, AlertCircle } from 'lucide-react';
-import { shareAchievement, buildSharePayload, executeShare } from '@/lib/shareAchievement';
+import { Award, Lock, CheckCircle2, X, Gem, Share2, Check, AlertCircle, Sun, Moon, Eye } from 'lucide-react';
+import { buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
@@ -52,7 +52,7 @@ function ProgressBar({ current, target, scheme }) {
 }
 
 // ── Badge detail modal ────────────────────────────────────────────────────────
-function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
+function BadgeDetailModal({ badge, earned, progress, variant, onClose, onReplay }) {
   const [showMat, setShowMat] = useState(false);
   const [copied,  setCopied]  = useState(false);
   const scheme = COLOR_SCHEMES[badge.colorScheme] || COLOR_SCHEMES.amethyst;
@@ -63,8 +63,10 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
 
   const handleShare = async () => {
     const payload = buildSharePayload({ rank: badge.title, xp: null, extra: badgeExtra });
-    // Override text for badge context — still includes url
-    payload.text = `${badgeExtra}\n\nJoin me here:\nhttps://rhgo.base44.app`;
+    payload.text = `${badgeExtra}
+
+Join me here:
+https://rhgo.base44.app`;
     const result = await executeShare(payload);
     if (result === 'clipboard') { setCopied(true); setTimeout(() => setCopied(false), 2200); }
     else if (result === 'error') { setCopied('error'); setTimeout(() => setCopied(false), 2200); }
@@ -96,7 +98,7 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
         </button>
 
         <div className="flex flex-col items-center text-center">
-          <LiquidMineralBadge badge={badge} size={136} locked={!earned} />
+          <LiquidMineralBadge badge={badge} size={136} locked={!earned} variant={variant} arGlow={true} />
 
           <div className="mt-4 text-white font-bold text-[18px] leading-tight">{badge.title}</div>
           <div className={`text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border mt-2 ${RARITY_PILL[badge.rarity]}`}>
@@ -142,7 +144,7 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
                 color: 'hsl(255,60%,10%)',
                 boxShadow: `0 0 20px ${scheme.glow.replace('0.9','0.45')}`,
               }}>
-              ✨ Replay Unlock
+              ✨ Replay 5-Step Unlock Sequence
             </button>
           )}
         </div>
@@ -152,25 +154,31 @@ function BadgeDetailModal({ badge, earned, progress, onClose, onReplay }) {
 }
 
 // ── Badge grid card ───────────────────────────────────────────────────────────
-function BadgeCard({ badge, earned, onClick }) {
+function BadgeCard({ badge, earned, variant, arMode, onClick }) {
   const scheme = COLOR_SCHEMES[badge.colorScheme] || COLOR_SCHEMES.amethyst;
+  const isLight = variant === 'light';
+
   return (
     <div
       onClick={onClick}
       className="rounded-3xl p-4 cursor-pointer transition-all duration-200 active:scale-95 hover:scale-[1.02] flex flex-col items-center"
       style={{
-        background: earned
+        background: isLight
+          ? 'linear-gradient(145deg, hsl(210,30%,98%), hsl(220,20%,92%))'
+          : earned
           ? 'linear-gradient(145deg, hsla(265,38%,13%,0.96), hsla(250,30%,8%,0.98))'
           : 'linear-gradient(145deg, hsla(255,25%,10%,0.88), hsla(240,20%,7%,0.92))',
-        border: earned
+        border: isLight
+          ? '1px solid hsl(220,20%,80%)'
+          : earned
           ? `1px solid ${scheme.rim.replace('0.6','0.35')}`
           : '1px solid hsla(255,25%,22%,0.2)',
         boxShadow: earned ? RARITY_GLOW[badge.rarity] : 'none',
       }}
     >
-      <LiquidMineralBadge badge={badge} size={90} locked={!earned} />
+      <LiquidMineralBadge badge={badge} size={90} locked={!earned} variant={variant} arGlow={arMode} />
 
-      <div className="text-white text-[12px] font-bold mt-3 text-center leading-tight line-clamp-2 w-full">
+      <div className={`text-[12px] font-bold mt-3 text-center leading-tight line-clamp-2 w-full ${isLight ? 'text-slate-800' : 'text-white'}`}>
         {badge.title}
       </div>
 
@@ -181,7 +189,7 @@ function BadgeCard({ badge, earned, onClick }) {
         }
       </div>
 
-      <p className="text-white/38 text-[10px] mt-2 text-center leading-snug line-clamp-2 w-full">
+      <p className={`text-[10px] mt-2 text-center leading-snug line-clamp-2 w-full ${isLight ? 'text-slate-600' : 'text-white/38'}`}>
         {badge.description}
       </p>
     </div>
@@ -194,6 +202,7 @@ export default function Badges() {
   const [selected,     setSelected]     = useState(null);
   const [replayBadge,  setReplayBadge]  = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
+  const [mode,         setMode]         = useState('dark'); // 'dark' | 'light' | 'ar'
   const [pageCopied,   setPageCopied]   = useState(false);
 
   const earnedCount = allBadges.filter((b) => earnedCodes.has(b.code)).length;
@@ -203,7 +212,10 @@ export default function Badges() {
     const { executeShare } = await import('@/lib/shareAchievement');
     const result = await executeShare({
       title: 'RockHound-GO Challenge',
-      text: `🏆 I've earned ${earnedCount}/${allBadges.length} badges (${pct}%) on RockHound-GO! Can you beat my collection?\n\nJoin me here:\nhttps://rhgo.base44.app`,
+      text: `🏆 I've earned ${earnedCount}/${allBadges.length} Liquid Mineral Badges (${pct}%) on RockHound-GO! Can you beat my collection?
+
+Join me here:
+https://rhgo.base44.app`,
       url: 'https://rhgo.base44.app',
     });
     if (result === 'clipboard') { setPageCopied('copied'); setTimeout(() => setPageCopied(false), 2200); }
@@ -215,32 +227,66 @@ export default function Badges() {
     : allBadges.filter((b) => b.rarity === rarityFilter);
 
   const sorted = [...filtered].sort((a, b) => {
-    // Earned first, then by rarity desc
     const ae = earnedCodes.has(a.code) ? 0 : 1;
     const be = earnedCodes.has(b.code) ? 0 : 1;
     if (ae !== be) return ae - be;
     return RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity);
   });
 
+  const activeVariant = mode === 'light' ? 'light' : 'dark';
+  const isArMode      = mode === 'ar';
+
   return (
     <div
-      className="px-4 pt-6 max-w-md mx-auto w-full"
+      className={`px-4 pt-6 max-w-md mx-auto w-full min-h-screen transition-colors duration-300 ${
+        mode === 'light' ? 'bg-slate-100 text-slate-900' : 'bg-slate-950 text-white'
+      }`}
       style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* ── Header ── */}
       <div className="mb-5 text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Gem size={16} className="text-amethyst-glow" />
-          <h1 className="text-2xl font-black text-white tracking-wide">Liquid Mineral Codex</h1>
+          <h1 className={`text-2xl font-black tracking-wide ${mode === 'light' ? 'text-slate-900' : 'text-white'}`}>
+            Liquid Mineral Codex
+          </h1>
         </div>
-        <p className="text-amethyst/55 text-[10px] uppercase tracking-[0.35em]">Collectible Field Achievements</p>
+        <p className="text-amethyst/55 text-[10px] uppercase tracking-[0.35em]">15 Collectible 3D Octagonal Medallions</p>
+      </div>
+
+      {/* ── Mode selector: Dark / Light / AR View ── */}
+      <div className="flex justify-center gap-2 mb-5">
+        <button
+          onClick={() => setMode('dark')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+            mode === 'dark' ? 'bg-purple-900/60 text-purple-200 border border-purple-400/40 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
+          }`}
+        >
+          <Moon size={13} /> Dark Cinematic
+        </button>
+        <button
+          onClick={() => setMode('light')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+            mode === 'light' ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
+          }`}
+        >
+          <Sun size={13} /> Light Mode
+        </button>
+        <button
+          onClick={() => setMode('ar')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+            mode === 'ar' ? 'bg-cyan-900/60 text-cyan-200 border border-cyan-400/40 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
+          }`}
+        >
+          <Eye size={13} /> AR Glow Mode
+        </button>
       </div>
 
       {/* ── Stats strip ── */}
       <GlassPanel className="mb-5">
         <div className="grid grid-cols-3 divide-x divide-white/8 text-center py-4">
           <div>
-            <div className="text-[26px] font-black text-white"
+            <div className={`text-[26px] font-black ${mode === 'light' ? 'text-slate-900' : 'text-white'}`}
               style={{ textShadow: '0 0 18px hsla(280,100%,70%,0.6)' }}>
               {earnedCount}
             </div>
@@ -303,7 +349,7 @@ export default function Badges() {
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-all ${
                 active
                   ? r === 'all'
-                    ? 'bg-white/15 text-white border-white/30'
+                    ? 'bg-purple-600 text-white border-purple-400'
                     : RARITY_PILL[r]
                   : 'bg-white/4 text-white/32 border-white/8 hover:bg-white/10'
               }`}>
@@ -317,14 +363,14 @@ export default function Badges() {
       <div className="grid grid-cols-2 gap-3">
         {sorted.map((b) => {
           const earned = earnedCodes.has(b.code);
-          const prog   = b.progress ? b.progress([]) : { current: 0, target: 1 };
           return (
             <BadgeCard
               key={b.code}
               badge={b}
               earned={earned}
+              variant={activeVariant}
+              arMode={isArMode}
               onClick={() => setSelected(b)}
-              progress={prog}
             />
           );
         })}
@@ -344,6 +390,7 @@ export default function Badges() {
           badge={selected}
           earned={earnedCodes.has(selected.code)}
           progress={selected.progress ? selected.progress([]) : { current: 0, target: 1 }}
+          variant={activeVariant}
           onClose={() => setSelected(null)}
           onReplay={() => setReplayBadge(selected)}
         />

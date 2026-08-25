@@ -8,14 +8,16 @@ export default function PsvDeltaLog({ log = [] }) {
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden">
       <button onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition">
+        aria-expanded={open}
+        aria-controls="delta-log-content"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white/3 hover:bg-white/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50">
         <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
           Revision log · {log.length - 1} update{log.length > 2 ? 's' : ''}
         </span>
         {open ? <ChevronUp size={12} className="text-white/30" /> : <ChevronDown size={12} className="text-white/30" />}
       </button>
       {open && (
-        <div className="divide-y divide-white/5">
+        <div id="delta-log-content" className="divide-y divide-white/5">
           {log.slice(1).map((entry, i) => {
             const delta = entry.confidence_after - entry.confidence_before;
             const Icon = delta > 0.01 ? TrendingUp : delta < -0.01 ? TrendingDown : Minus;

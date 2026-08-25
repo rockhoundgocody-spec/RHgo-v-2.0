@@ -4,7 +4,7 @@
  * lighting tips panel, and scale reference toggle.
  */
 import React, { useState } from 'react';
-import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, ChevronDown, X } from 'lucide-react';
+import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MODES = [
@@ -36,7 +36,8 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             <button
               key={m.id}
               onClick={() => onModeChange(m.id)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] whitespace-nowrap transition-all shrink-0"
+              aria-pressed={active}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] whitespace-nowrap transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{
                 background: active ? 'hsla(280,80%,40%,0.35)' : 'hsla(255,30%,12%,0.6)',
                 border: `1px solid ${active ? 'hsla(280,90%,65%,0.5)' : 'hsla(270,20%,30%,0.25)'}`,
@@ -54,7 +55,8 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
       <div className="flex items-center gap-2">
         <button
           onClick={() => setTipsOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all"
+          aria-expanded={tipsOpen}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
           style={{
             background: 'hsla(45,80%,40%,0.15)',
             border: '1px solid hsla(45,80%,55%,0.3)',
@@ -67,7 +69,8 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
 
         <button
           onClick={onScaleToggle}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all"
+          aria-pressed={scaleOn}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
           style={{
             background: scaleOn ? 'hsla(195,80%,40%,0.2)' : 'hsla(255,30%,12%,0.6)',
             border: `1px solid ${scaleOn ? 'hsla(195,90%,65%,0.4)' : 'hsla(270,20%,30%,0.25)'}`,
@@ -108,7 +111,11 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
                   <Lightbulb size={16} className="text-amber-300" />
                   <h3 className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
                 </div>
-                <button onClick={() => setTipsOpen(false)} className="text-white/30 hover:text-white/70">
+                <button
+                  onClick={() => setTipsOpen(false)}
+                  aria-label="Close tips"
+                  className="text-white/30 hover:text-white/70 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                >
                   <X size={18} />
                 </button>
               </div>
@@ -116,7 +123,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
                 {LIGHTING_TIPS.map((tip, i) => (
                   <div key={i} className="flex items-start gap-3 px-3 py-2.5 rounded-xl"
                     style={{ background: 'hsla(255,30%,12%,0.5)', border: '1px solid hsla(270,20%,25%,0.2)' }}>
-                    <span className="text-lg shrink-0">{tip.icon}</span>
+                    <span className="text-lg shrink-0" aria-hidden="true">{tip.icon}</span>
                     <p className="text-white/70 text-xs leading-relaxed">{tip.text}</p>
                   </div>
                 ))}

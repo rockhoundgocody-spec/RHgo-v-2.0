@@ -2,20 +2,20 @@
  * LiquidMineralBadge — Photorealistic 3D octagonal badge renderer
  *
  * Layering (bottom → top):
- *   L1  Deep stone base
+ *   L1  Deep stone base (Dark obsidian or Light quartzite/marble)
  *   L2  Subsurface mineral veins
- *   L3  Material texture pattern
+ *   L3  Material texture pattern (Liquid Glass, Natural Stone, Metallic Inlay, Crystal Core, Geo Topo)
  *   L4  Liquid subsurface flow  (radial gradients)
  *   L5  Crystal core caustics   (inner gem glow)
  *   L6  Stone micro-crack overlay
- *   L7  Metallic inlay filigree
- *   L8  Top specular highlight
+ *   L7  Brushed metallic inlay filigree with gold plating
+ *   L8  Top specular highlight & light refraction
  *   L9  Bottom rim catch-light
  *   L10 Side rim specular
  *   L11 Icon (glowing, drop-shadow)
  *   L12 Inner border + inset glow
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
@@ -127,61 +127,70 @@ const RARITY_CFG = {
 };
 
 // Material texture patterns (CSS gradients)
-const matPattern = (mat, scheme) => ({
+const matPattern = (mat, scheme, isLight) => ({
   liquid_glass: `
-    radial-gradient(ellipse at 32% 22%, hsla(0,0%,100%,0.26) 0%, transparent 50%),
-    radial-gradient(ellipse at 72% 78%, ${scheme.primary.replace(')', ',0.13)')} 0%, transparent 42%),
+    radial-gradient(ellipse at 32% 22%, ${isLight ? 'hsla(0,0%,100%,0.5)' : 'hsla(0,0%,100%,0.26)'} 0%, transparent 50%),
+    radial-gradient(ellipse at 72% 78%, ${scheme.primary.replace(')', ',0.18)')} 0%, transparent 42%),
     radial-gradient(ellipse at 55% 50%, ${scheme.crystal} 0%, transparent 60%)
   `,
   natural_stone: `
-    repeating-linear-gradient(47deg, transparent 0px, transparent 3px, hsla(0,0%,100%,0.04) 3px, hsla(0,0%,100%,0.04) 4px),
-    repeating-linear-gradient(133deg, transparent 0px, transparent 6px, hsla(0,0%,0%,0.04) 6px, hsla(0,0%,0%,0.04) 7px)
+    repeating-linear-gradient(47deg, transparent 0px, transparent 3px, ${isLight ? 'hsla(0,0%,0%,0.05)' : 'hsla(0,0%,100%,0.04)'} 3px, ${isLight ? 'hsla(0,0%,0%,0.05)' : 'hsla(0,0%,100%,0.04)'} 4px),
+    repeating-linear-gradient(133deg, transparent 0px, transparent 6px, hsla(0,0%,0%,0.06) 6px, hsla(0,0%,0%,0.06) 7px)
   `,
   metallic_inlay: `
-    repeating-linear-gradient(90deg, transparent 0px, transparent 5px, hsla(0,0%,100%,0.07) 5px, hsla(0,0%,100%,0.07) 6px),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 5px, ${isLight ? 'hsla(45,100%,40%,0.12)' : 'hsla(0,0%,100%,0.07)'} 5px, ${isLight ? 'hsla(45,100%,40%,0.12)' : 'hsla(0,0%,100%,0.07)'} 6px),
     repeating-linear-gradient(0deg, transparent 0px, transparent 5px, hsla(0,0%,0%,0.04) 5px, hsla(0,0%,0%,0.04) 6px)
   `,
   crystal_core: `
-    repeating-conic-gradient(from 15deg, hsla(0,0%,100%,0.07) 0deg, transparent 30deg, hsla(0,0%,100%,0.12) 60deg, transparent 90deg),
-    radial-gradient(ellipse at 50% 40%, hsla(0,0%,100%,0.12) 0%, transparent 55%)
+    repeating-conic-gradient(from 15deg, ${isLight ? 'hsla(280,100%,50%,0.12)' : 'hsla(0,0%,100%,0.07)'} 0deg, transparent 30deg, ${isLight ? 'hsla(0,0%,100%,0.25)' : 'hsla(0,0%,100%,0.12)'} 60deg, transparent 90deg),
+    radial-gradient(ellipse at 50% 40%, hsla(0,0%,100%,0.18) 0%, transparent 55%)
   `,
   geo_topo: `
-    repeating-radial-gradient(circle at 50% 50%, transparent 0px, transparent 8px, hsla(200,100%,80%,0.07) 8px, hsla(200,100%,80%,0.07) 9px),
-    repeating-linear-gradient(25deg, transparent 0px, transparent 12px, ${scheme.secondary.replace(')', ',0.04)')} 12px, ${scheme.secondary.replace(')', ',0.04)')} 13px)
+    repeating-radial-gradient(circle at 50% 50%, transparent 0px, transparent 8px, ${isLight ? 'hsla(200,100%,40%,0.12)' : 'hsla(200,100%,80%,0.07)'} 8px, ${isLight ? 'hsla(200,100%,40%,0.12)' : 'hsla(200,100%,80%,0.07)'} 9px),
+    repeating-linear-gradient(25deg, transparent 0px, transparent 12px, ${scheme.secondary.replace(')', ',0.08)')} 12px, ${scheme.secondary.replace(')', ',0.08)')} 13px)
   `,
 })[mat] || '';
 
 // Stone crack SVG overlay
-const CrackOverlay = ({ size }) => (
+const CrackOverlay = ({ size, isLight }) => (
   <svg
     className="absolute inset-0 pointer-events-none"
     width={size} height={size}
     viewBox="0 0 100 100"
-    style={{ opacity: 0.06, mixBlendMode: 'overlay' }}
+    style={{ opacity: isLight ? 0.12 : 0.06, mixBlendMode: isLight ? 'multiply' : 'overlay' }}
   >
-    <polyline points="18,45 25,38 34,52 42,44 55,60" stroke="white" strokeWidth="0.6" fill="none" strokeLinecap="round" />
-    <polyline points="65,20 72,30 68,42 78,38" stroke="white" strokeWidth="0.4" fill="none" strokeLinecap="round" />
-    <polyline points="30,68 38,72 42,80 50,75 58,82" stroke="white" strokeWidth="0.5" fill="none" strokeLinecap="round" />
-    <polyline points="75,60 80,68 72,74" stroke="white" strokeWidth="0.35" fill="none" strokeLinecap="round" />
+    <polyline points="18,45 25,38 34,52 42,44 55,60" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+    <polyline points="65,20 72,30 68,42 78,38" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+    <polyline points="30,68 38,72 42,80 50,75 58,82" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+    <polyline points="75,60 80,68 72,74" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.35" fill="none" strokeLinecap="round" />
   </svg>
 );
 
-// Metallic filigree SVG
-const FiligreeOverlay = ({ size, color }) => (
+// Metallic filigree SVG with Gold Plating
+const FiligreeOverlay = ({ size, color, isLight }) => (
   <svg
     className="absolute inset-0 pointer-events-none"
     width={size} height={size}
     viewBox="0 0 100 100"
-    style={{ opacity: 0.18 }}
+    style={{ opacity: isLight ? 0.35 : 0.22 }}
   >
-    {/* Corner accent diamonds */}
-    <polygon points="15,15 19,12 23,15 19,18" fill={color} opacity="0.7" />
-    <polygon points="77,15 81,12 85,15 81,18" fill={color} opacity="0.7" />
-    <polygon points="15,82 19,79 23,82 19,85" fill={color} opacity="0.7" />
-    <polygon points="77,82 81,79 85,82 81,85" fill={color} opacity="0.7" />
+    {/* Outer octagonal filigree border */}
+    <polygon points="30,4 70,4 96,30 96,70 70,96 30,96 4,70 4,30" fill="none" stroke="url(#goldGrad)" strokeWidth="1" opacity="0.6" />
+    {/* Corner accent gold diamonds */}
+    <polygon points="15,15 19,12 23,15 19,18" fill="url(#goldGrad)" opacity="0.9" />
+    <polygon points="77,15 81,12 85,15 81,18" fill="url(#goldGrad)" opacity="0.9" />
+    <polygon points="15,82 19,79 23,82 19,85" fill="url(#goldGrad)" opacity="0.9" />
+    <polygon points="77,82 81,79 85,82 81,85" fill="url(#goldGrad)" opacity="0.9" />
     {/* Central cross micro-accent */}
-    <line x1="50" y1="22" x2="50" y2="28" stroke={color} strokeWidth="0.8" opacity="0.5" />
-    <line x1="44" y1="25" x2="56" y2="25" stroke={color} strokeWidth="0.8" opacity="0.5" />
+    <line x1="50" y1="22" x2="50" y2="28" stroke="url(#goldGrad)" strokeWidth="1" opacity="0.8" />
+    <line x1="44" y1="25" x2="56" y2="25" stroke="url(#goldGrad)" strokeWidth="1" opacity="0.8" />
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#ffe066" />
+        <stop offset="50%" stopColor="#d4af37" />
+        <stop offset="100%" stopColor="#aa7c11" />
+      </linearGradient>
+    </defs>
   </svg>
 );
 
@@ -189,17 +198,20 @@ const FiligreeOverlay = ({ size, color }) => (
 const OCT = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)';
 
 // ── Badge Body (all visual layers) ────────────────────────────────────────────
-function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
-  const matPat = matPattern(mat, scheme);
+function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow }) {
+  const isLight = variant === 'light';
+  const matPat  = matPattern(mat, scheme, isLight);
 
   return (
     <div
-      className="relative overflow-hidden flex-shrink-0"
+      className="relative overflow-hidden flex-shrink-0 transition-all duration-300"
       style={{ width: size, height: size, clipPath: OCT }}
     >
       {/* L1: Deep stone base */}
       <div className="absolute inset-0" style={{
-        background: `radial-gradient(ellipse at 38% 32%, ${scheme.mid} 0%, ${scheme.dark} 80%)`,
+        background: isLight
+          ? 'radial-gradient(ellipse at 38% 32%, hsl(210,30%,96%) 0%, hsl(220,20%,84%) 80%)'
+          : `radial-gradient(ellipse at 38% 32%, ${scheme.mid} 0%, ${scheme.dark} 80%)`,
       }} />
 
       {/* L2: Mineral veins */}
@@ -213,7 +225,7 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
 
       {/* L3: Material texture */}
       {matPat && (
-        <div className="absolute inset-0" style={{ background: matPat, opacity: 0.28 }} />
+        <div className="absolute inset-0" style={{ background: matPat, opacity: isLight ? 0.38 : 0.28 }} />
       )}
 
       {/* L4: Liquid subsurface flow */}
@@ -230,20 +242,22 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
         style={{
           inset: '20%',
           background: `radial-gradient(ellipse at 42% 38%, ${scheme.crystal} 0%, ${scheme.glow.replace('0.9','0.45')} 35%, transparent 65%)`,
-          animation: 'lmb-glow 3.5s ease-in-out infinite',
+          animation: arGlow ? 'lmb-glow 1.5s ease-in-out infinite' : 'lmb-glow 3.5s ease-in-out infinite',
         }}
       />
 
       {/* L6: Stone micro-cracks */}
-      <CrackOverlay size={size} />
+      <CrackOverlay size={size} isLight={isLight} />
 
       {/* L7: Metallic filigree */}
-      <FiligreeOverlay size={size} color={scheme.secondary} />
+      <FiligreeOverlay size={size} color={scheme.secondary} isLight={isLight} />
 
       {/* L8: Top specular highlight */}
       <div className="absolute" style={{
         top: 0, left: 0, right: 0, height: '42%',
-        background: 'linear-gradient(180deg, hsla(0,0%,100%,0.20) 0%, hsla(0,0%,100%,0.04) 60%, transparent 100%)',
+        background: isLight
+          ? 'linear-gradient(180deg, hsla(0,0%,100%,0.45) 0%, hsla(0,0%,100%,0.10) 60%, transparent 100%)'
+          : 'linear-gradient(180deg, hsla(0,0%,100%,0.20) 0%, hsla(0,0%,100%,0.04) 60%, transparent 100%)',
       }} />
 
       {/* L9: Bottom rim catch-light */}
@@ -255,17 +269,19 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
 
       {/* L10: Side rim specular */}
       <div className="absolute inset-0" style={{
-        background: `linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, transparent 38%, transparent 62%, hsla(0,0%,0%,0.18) 100%)`,
+        background: isLight
+          ? `linear-gradient(135deg, hsla(0,0%,100%,0.25) 0%, transparent 38%, transparent 62%, hsla(220,30%,20%,0.15) 100%)`
+          : `linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, transparent 38%, transparent 62%, hsla(0,0%,0%,0.18) 100%)`,
       }} />
 
       {/* L11: Icon */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div style={{
-          color: scheme.secondary,
+          color: isLight ? scheme.primary : scheme.secondary,
           filter: `
             drop-shadow(0 0 ${iconSize * 0.45}px ${scheme.glow})
             drop-shadow(0 2px ${iconSize * 0.9}px ${scheme.glow.replace('0.9','0.4')})
-            drop-shadow(0 0 2px hsla(0,0%,100%,0.5))
+            drop-shadow(0 0 2px ${isLight ? 'hsla(0,0%,100%,0.8)' : 'hsla(0,0%,100%,0.5)'})
           `,
         }}>
           <IconComp size={iconSize} strokeWidth={1.4} />
@@ -277,9 +293,17 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize }) {
         boxShadow: `
           inset 0 0 0 ${Math.max(1, size * 0.022)}px ${scheme.rim},
           inset 0 0 ${size * 0.14}px ${scheme.glow.replace('0.9','0.18')},
-          inset 0 ${size * 0.02}px ${size * 0.08}px hsla(0,0%,100%,0.08)
+          inset 0 ${size * 0.02}px ${size * 0.08}px ${isLight ? 'hsla(0,0%,100%,0.3)' : 'hsla(0,0%,100%,0.08)'}
         `,
       }} />
+
+      {/* AR Scanning Reticle Overlay */}
+      {arGlow && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="w-full h-full border border-cyan-400/50 animate-pulse" style={{ clipPath: OCT }} />
+          <div className="absolute w-3/4 h-0.5 bg-gradient-to-r from-transparent via-cyan-300 to-transparent animate-bounce opacity-80" />
+        </div>
+      )}
     </div>
   );
 }
@@ -290,9 +314,14 @@ export default function LiquidMineralBadge({
   size = 120,
   locked = false,
   showLabel = false,
+  variant = 'dark', // 'dark' | 'light'
+  arGlow = false,   // hover/AR mode
   onClick,
   className = '',
 }) {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [hovered, setHovered]   = useState(false);
+
   const scheme      = COLOR_SCHEMES[badge.colorScheme] || COLOR_SCHEMES.amethyst;
   const rarityConf  = RARITY_CFG[badge.rarity] || RARITY_CFG.common;
   const IconComp    = ICON_MAP[badge.icon] || Gem;
@@ -300,11 +329,29 @@ export default function LiquidMineralBadge({
   const totalSize   = size + rarityConf.rings * 22;
   const offset      = rarityConf.rings * 11;
 
+  const isArActive = arGlow || hovered;
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setMousePos({ x, y });
+  };
+
   return (
     <div
-      className={cn('relative flex flex-col items-center select-none', className)}
-      style={{ width: totalSize, cursor: onClick ? 'pointer' : 'default' }}
+      className={cn('relative flex flex-col items-center select-none transition-transform duration-300', className)}
+      style={{
+        width: totalSize,
+        cursor: onClick ? 'pointer' : 'default',
+        transform: hovered && !locked
+          ? `perspective(600px) rotateX(${mousePos.y * -18}deg) rotateY(${mousePos.x * 18}deg) scale(1.08)`
+          : 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)',
+      }}
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setMousePos({ x: 0, y: 0 }); }}
+      onMouseMove={handleMouseMove}
     >
       <style>{`
         @keyframes lmb-glow     { 0%,100%{opacity:.55} 50%{opacity:1} }
@@ -342,11 +389,21 @@ export default function LiquidMineralBadge({
         animation: locked ? 'none' : 'lmb-breathe 4.5s ease-in-out infinite',
         filter: locked
           ? 'grayscale(0.9) brightness(0.35)'
+          : isArActive
+          ? `drop-shadow(0 0 ${rarityConf.glowBlur * 1.6}px ${scheme.glow}) drop-shadow(0 0 25px ${scheme.secondary})`
           : `drop-shadow(0 0 ${rarityConf.glowBlur}px ${scheme.glow}) drop-shadow(0 4px 12px hsla(255,60%,5%,0.7))`,
         transition: 'filter 0.5s ease',
         position: 'relative',
       }}>
-        <BadgeBody scheme={scheme} mat={badge.material} size={size} IconComp={IconComp} iconSize={iconSize} />
+        <BadgeBody
+          scheme={scheme}
+          mat={badge.material}
+          size={size}
+          IconComp={IconComp}
+          iconSize={iconSize}
+          variant={variant}
+          arGlow={isArActive}
+        />
 
         {locked && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ clipPath: OCT }}>
@@ -368,7 +425,6 @@ export default function LiquidMineralBadge({
             const dur    = 2.6 + (i % 6) * 0.55;
             const pxVal  = `${(Math.cos(angle + 0.9) * 4.5).toFixed(1)}px`;
             const pyVal  = `${(Math.sin(angle + 0.9) * 4.5).toFixed(1)}px`;
-            // Alternate between primary/secondary/crystal colours
             const color  = i % 4 === 0 ? scheme.secondary
                          : i % 4 === 1 ? scheme.glow
                          : i % 4 === 2 ? scheme.crystal
@@ -389,7 +445,9 @@ export default function LiquidMineralBadge({
 
       {showLabel && (
         <div className="mt-2 text-center font-semibold" style={{
-          color: locked ? 'hsla(0,0%,100%,0.2)' : scheme.secondary,
+          color: locked
+            ? variant === 'light' ? 'hsla(220,20%,30%,0.35)' : 'hsla(0,0%,100%,0.2)'
+            : variant === 'light' ? scheme.primary : scheme.secondary,
           fontSize: Math.max(9, size * 0.1),
           maxWidth: totalSize,
           lineHeight: 1.2,

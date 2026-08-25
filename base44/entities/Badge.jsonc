@@ -4,7 +4,7 @@
   "properties": {
     "code": {
       "type": "string",
-      "description": "Stable identifier for the badge definition (e.g. 'first_find')"
+      "description": "Stable identifier for the badge definition (e.g. 'crystal_whisperer')"
     },
     "title": {
       "type": "string"
@@ -23,10 +23,33 @@
       ],
       "default": "common"
     },
+    "material": {
+      "type": "string",
+      "enum": [
+        "liquid_glass",
+        "natural_stone",
+        "metallic_inlay",
+        "crystal_core",
+        "geo_topo"
+      ],
+      "default": "crystal_core"
+    },
+    "color_scheme": {
+      "type": "string",
+      "default": "amethyst"
+    },
     "icon": {
       "type": "string",
       "description": "Lucide icon name to render in the badge core",
       "default": "Gem"
+    },
+    "progress_current": {
+      "type": "number",
+      "default": 0
+    },
+    "progress_target": {
+      "type": "number",
+      "default": 1
     },
     "earned_at": {
       "type": "string",
