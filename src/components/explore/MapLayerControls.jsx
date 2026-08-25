@@ -12,10 +12,13 @@ const TYPES = [
 function Chip({ active, onClick, icon: Icon, children, title }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       title={title}
+      aria-pressed={active !== undefined ? active : undefined}
       className={cn(
         'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] uppercase tracking-wider border transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60 focus-visible:ring-offset-1 focus-visible:ring-offset-black/80',
         active
           ? 'bg-hud-cyan/25 border-hud-cyan/60 text-hud glow-hud'
           : 'bg-black/40 border-white/10 text-white/70 hover:text-white hover:border-hud-cyan/40'
