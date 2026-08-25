@@ -12,6 +12,14 @@ export default function Community() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [myEmail, setMyEmail] = useState(null);
+  const [myVoteId, setMyVoteId] = useState(null);
+
+  const refreshMyVote = useCallback(async () => {
+    try {
+      const res = await base44.functions.invoke('getWeeklyBallot', {});
+      setMyVoteId(res?.data?.my_vote || null);
+    } catch { /* not logged in or no ballot yet */ }
+  }, []);
 
   const loadInitial = useCallback(async () => {
     setLoading(true);
@@ -50,6 +58,13 @@ export default function Community() {
   }, [posts]);
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
+  useEffect(() => { refreshMyVote(); }, [refreshMyVote]);
+
+  // Real-time: re-fetch my vote when any FindVote changes (someone voted/changed)
+  useEffect(() => {
+    const unsubscribe = base44.entities.FindVote.subscribe(() => { refreshMyVote(); });
+    return unsubscribe;
+  }, [refreshMyVote]);
 
   // Real-time subscription — new posts appear instantly
   useEffect(() => {
@@ -96,7 +111,7 @@ export default function Community() {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map(p => <PostCard key={p.id} post={p} myEmail={myEmail} />)}
+          {posts.map(p => <PostCard key={p.id} post={p} myEmail={myEmail} myVoteId={myVoteId} />)}
           {hasMore && (
             <button onClick={loadMore} disabled={loadingMore}
               className="w-full py-3 text-center text-[11px] font-semibold text-amethyst-glow/70 hover:text-amethyst-glow transition">

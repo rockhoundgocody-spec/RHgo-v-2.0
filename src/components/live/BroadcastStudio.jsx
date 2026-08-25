@@ -119,7 +119,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
               <Square size={15} />
             </Button>
           </div>
-          <LiveIdFeed streamId={stream.id} isHost />
+          <LiveIdFeed streamId={stream.id} />
           <DraftList stream={stream} me={me} />
           <StreamChat streamId={stream.id} me={me} />
         </>

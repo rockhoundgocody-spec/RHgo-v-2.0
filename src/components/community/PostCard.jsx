@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { MessageCircle, Loader2, Send } from 'lucide-react';
+import { MessageCircle, Loader2, Send, Heart } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 const REACTIONS = [
@@ -35,7 +35,7 @@ function timeAgo(dateStr) {
   return `${Math.floor(diff / 86400)}d`;
 }
 
-export default function PostCard({ post, myEmail }) {
+export default function PostCard({ post, myEmail, myVoteId }) {
   const [reactions, setReactions] = useState(post.reactions || { fire: 0, gem: 0, clap: 0, wow: 0 });
   const [myReaction, setMyReaction] = useState(
     (post.reactors || []).find(r => r.email === myEmail)?.type || null
@@ -88,7 +88,19 @@ export default function PostCard({ post, myEmail }) {
     }
   };
 
+  const [voting, setVoting] = useState(false);
   const isFind = post.post_type === 'find_share';
+  const voted = isFind && post.id === myVoteId;
+
+  const vote = async () => {
+    if (voting || voted) return;
+    setVoting(true);
+    try {
+      await base44.functions.invoke('castFindVote', { entry_id: post.id });
+    } catch { /* vote may be unchanged or auth required */ } finally {
+      setVoting(false);
+    }
+  };
   const rarityColor = RARITY_COLORS[post.rarity] || RARITY_COLORS.common;
   const { text: bodyText, topics } = parseBody(post.body);
 
@@ -141,6 +153,25 @@ export default function PostCard({ post, myEmail }) {
             <div className="text-sm font-bold text-white">{post.mineral_name}</div>
             <div className="text-[10px] text-white/40">Shared find</div>
           </div>
+        </div>
+      )}
+
+      {isFind && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={vote}
+            disabled={voting || voted}
+            aria-label={voted ? 'Voted for Find of the Week' : 'Vote for Find of the Week'}
+            aria-pressed={voted}
+            className="w-full h-9 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            style={voted
+              ? { background: `${rarityColor}22`, color: rarityColor, border: `1px solid ${rarityColor}66` }
+              : { background: 'hsla(270,60%,40%,0.25)', color: 'hsl(280,80%,88%)', border: '1px solid hsla(270,60%,60%,0.35)' }}
+          >
+            {voting ? <Loader2 size={13} className="animate-spin" aria-hidden="true" />
+              : voted ? <><Heart size={13} className="fill-current" aria-hidden="true" /> Voted for Find of the Week</>
+              : <><Heart size={13} aria-hidden="true" /> Vote for Find of the Week</>}
+          </button>
         </div>
       )}
 

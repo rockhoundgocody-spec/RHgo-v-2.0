@@ -2,9 +2,10 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import { weekKey } from "../../shared/weekKey.ts";
 
 /**
- * Cast or change a user's single vote for the current week's Find of the Week ballot.
- * One vote per user per ISO week is enforced server-side: an existing vote for the
- * same week is updated in place rather than creating a duplicate.
+ * Cast or change a user's single vote for the current week's Find of the Week
+ * ballot. The entry must be a community find-share post. One vote per user per
+ * ISO week is enforced server-side: an existing vote for the same week is
+ * updated in place rather than creating a duplicate.
  */
 export default async function (req: Request): Promise<Response> {
   try {
@@ -16,9 +17,9 @@ export default async function (req: Request): Promise<Response> {
     const entryId = body?.entry_id;
     if (!entryId) return Response.json({ error: "Missing entry_id" }, { status: 400 });
 
-    const entry = await base44.entities.StreamIdentification.get(entryId);
-    if (!entry || !entry.confirmed)
-      return Response.json({ error: "Entry is not a confirmed find" }, { status: 400 });
+    const post = await base44.entities.Post.get(entryId);
+    if (!post || post.post_type !== "find_share")
+      return Response.json({ error: "Entry is not a find-share post" }, { status: 400 });
 
     const wk = weekKey(new Date());
     const existing = await base44.entities.FindVote.filter({
@@ -27,8 +28,7 @@ export default async function (req: Request): Promise<Response> {
     });
     if (existing && existing.length > 0) {
       const old = existing[0];
-      if (old.entry_id === entryId)
-        return Response.json({ ok: true, unchanged: true });
+      if (old.entry_id === entryId) return Response.json({ ok: true, unchanged: true });
       await base44.entities.FindVote.update(old.id, {
         entry_id: entryId,
         voted_at: new Date().toISOString(),

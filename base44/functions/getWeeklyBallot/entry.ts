@@ -9,10 +9,10 @@ const RARITY_RANK: Record<string, number> = {
 };
 
 /**
- * Returns the current week's Find of the Week ballot: confirmed identifications
- * whose confirmed_at falls inside this ISO week, ranked by rarity then confidence,
- * de-duped to one entry per stream, each with its live vote tally. Also returns
- * the caller's current vote (my_vote) so the UI can show the "Voted" state.
+ * Returns the current week's Find of the Week ballot sourced from community
+ * find-share posts (Post.post_type === 'find_share') created this ISO week.
+ * Entries are de-duplicated to one per author so a single user can't flood the
+ * ballot, then ranked live by community vote count (ties broken by rarity).
  */
 export default async function (req: Request): Promise<Response> {
   try {
@@ -23,12 +23,10 @@ export default async function (req: Request): Promise<Response> {
     const wk = weekKey(now);
     const { start, end } = weekRange(now);
 
-    const confirmed = await base44.entities.StreamIdentification.filter({
-      confirmed: true,
-    });
-    const eligible = confirmed.filter((x) => {
-      if (!x.confirmed_at) return false;
-      const at = new Date(x.confirmed_at);
+    const posts = await base44.entities.Post.filter({ post_type: "find_share" });
+    const eligible = posts.filter((p) => {
+      if (!p.created_date) return false;
+      const at = new Date(p.created_date);
       return at >= start && at < end;
     });
 
@@ -36,22 +34,20 @@ export default async function (req: Request): Promise<Response> {
       const ra = RARITY_RANK[b.rarity] || 1;
       const rb = RARITY_RANK[a.rarity] || 1;
       if (ra !== rb) return ra - rb;
-      return (b.confidence || 0) - (a.confidence || 0);
+      return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
     });
 
-    // De-duplicate: one entry per stream so a single host can't flood the ballot.
-    const seenStreams = new Set<string>();
+    // De-duplicate: one entry per author.
+    const seenAuthors = new Set<string>();
     const entries: typeof eligible = [];
-    for (const x of eligible) {
-      if (x.stream_id) {
-        if (seenStreams.has(x.stream_id)) continue;
-        seenStreams.add(x.stream_id);
-      }
-      entries.push(x);
+    for (const p of eligible) {
+      const author = p.owner_email || p.author_name;
+      if (author && seenAuthors.has(author)) continue;
+      if (author) seenAuthors.add(author);
+      entries.push(p);
       if (entries.length >= 12) break;
     }
 
-    // Vote tallies for the week.
     const votes = await base44.entities.FindVote.filter({ week_key: wk });
     const tally: Record<string, number> = {};
     let myVote: string | null = null;
@@ -60,33 +56,23 @@ export default async function (req: Request): Promise<Response> {
       if (user && v.voter_email === user.email) myVote = v.entry_id;
     }
 
-    // Hydrate host names from the parent streams.
-    const streamIds = [...new Set(entries.map((e) => e.stream_id).filter(Boolean))];
-    const streams: Record<string, { host_name?: string }> = {};
-    for (const sid of streamIds) {
-      const s = await base44.entities.LiveStream.get(sid).catch(() => null);
-      if (s) streams[sid] = { host_name: s.host_name };
-    }
-
-    const result = entries.map((e) => ({
-      id: e.id,
-      mineral_name: e.mineral_name,
-      image_url: e.image_url,
-      rarity: e.rarity,
-      confidence: e.confidence,
-      description: e.description,
-      host_name: streams[e.stream_id]?.host_name || (e.owner_email || "").split("@")[0] || "unknown",
-      stream_id: e.stream_id,
-      votes: tally[e.id] || 0,
+    const result = entries.map((p) => ({
+      id: p.id,
+      mineral_name: p.mineral_name,
+      image_url: p.image_url,
+      rarity: p.rarity,
+      body: p.body,
+      author_name: p.author_name || (p.owner_email || "").split("@")[0] || "unknown",
+      location_label: p.location_label,
+      votes: tally[p.id] || 0,
     }));
 
-    // Live ranking: sort by votes desc, ties broken by rarity then confidence.
     result.sort((a, b) => {
       if (b.votes !== a.votes) return b.votes - a.votes;
       const ra = RARITY_RANK[b.rarity] || 1;
       const rb = RARITY_RANK[a.rarity] || 1;
       if (ra !== rb) return ra - rb;
-      return (b.confidence || 0) - (a.confidence || 0);
+      return 0;
     });
     result.forEach((r, i) => { (r as any).rank = i + 1; });
 

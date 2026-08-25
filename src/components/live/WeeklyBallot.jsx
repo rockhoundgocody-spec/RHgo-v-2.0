@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Trophy, Heart, Loader2, Sparkles, Crown } from 'lucide-react';
+import { Trophy, Heart, Loader2, Sparkles, Crown, MapPin } from 'lucide-react';
 
 const RARITY_COLOR = {
   common: '#94a3b8',
@@ -20,8 +20,8 @@ function countdown(closesAt) {
 }
 
 /**
- * The weekly Find of the Week ballot — confirmed finds ranked by live community
- * vote count. Re-fetches on any FindVote change so the leaderboard stays live.
+ * The weekly Find of the Week ballot — community find-share posts ranked by
+ * live vote count. Re-fetches on any FindVote change so the leaderboard stays live.
  */
 export default function WeeklyBallot() {
   const [data, setData] = useState(null);
@@ -62,8 +62,8 @@ export default function WeeklyBallot() {
     return (
       <div className="rounded-2xl px-5 py-12 text-center" style={{ background: 'hsla(220,40%,6%,0.6)', border: '1px solid hsla(270,30%,25%,0.3)' }}>
         <Trophy size={32} className="mx-auto text-white/20 mb-3" />
-        <p className="text-white/70 text-sm font-semibold">No confirmed finds this week yet</p>
-        <p className="text-white/40 text-xs mt-1.5">Hosts: confirm a 70%+ identification during your stream to enter the ballot.</p>
+        <p className="text-white/70 text-sm font-semibold">No find shares this week yet</p>
+        <p className="text-white/40 text-xs mt-1.5">Share a find in the Community feed to enter the ballot.</p>
       </div>
     );
   }
@@ -101,9 +101,11 @@ export default function WeeklyBallot() {
                 <div className="flex-1 p-2.5 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-white/95 truncate">{e.mineral_name}</div>
-                      <div className="text-[10px] font-mono mt-0.5" style={{ color }}>{e.rarity} · {Math.round((e.confidence || 0) * 100)}%</div>
-                      <div className="text-[10px] text-white/40 mt-0.5 truncate">by {e.host_name}</div>
+                      <div className="text-sm font-bold text-white/95 truncate">{e.mineral_name || 'Find'}</div>
+                      <div className="text-[10px] font-mono mt-0.5" style={{ color }}>{e.rarity}</div>
+                      <div className="text-[10px] text-white/40 mt-0.5 truncate">
+                        by {e.author_name}{e.location_label ? ` · ${e.location_label}` : ''}
+                      </div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-lg font-black" style={{ color }}>{e.votes}</div>

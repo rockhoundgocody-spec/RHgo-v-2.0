@@ -15,7 +15,7 @@
     },
     "entry_id": {
       "type": "string",
-      "description": "StreamIdentification id being voted for"
+      "description": "Post id (a find-share post) being voted for"
     },
     "voted_at": {
       "type": "string",
