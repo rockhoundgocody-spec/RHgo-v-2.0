@@ -7,6 +7,7 @@ import useBroadcast from './useBroadcast';
 import StreamChat from './StreamChat.jsx';
 import LiveIdFeed from './LiveIdFeed.jsx';
 import LiveIdOverlay from './LiveIdOverlay.jsx';
+import BroadcastHud from './BroadcastHud.jsx';
 import GlassesSource from './GlassesSource.jsx';
 import useAutoIdentify from './useAutoIdentify';
 
@@ -19,6 +20,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
   const [connectingGlasses, setConnectingGlasses] = useState(false);
   const { stream, starting, goLive, endStream, identifyNow, identifying, lastId, openScreen } =
     useBroadcast({ videoRef, me });
+  const showHud = !!stream;
 
   const selected = devices.find((d) => d.deviceId === deviceId);
   const isGlasses = stream?.device_label?.includes('glasses');
@@ -56,12 +58,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
       <div className="relative rounded-2xl overflow-hidden aspect-video bg-black"
         style={{ border: '1px solid hsla(280,100%,70%,0.3)' }}>
         <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
-        {stream && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] text-white"
-            style={{ background: 'hsla(0,80%,45%,0.9)' }}>
-            <Radio size={8} /> On air
-          </span>
-        )}
+        {showHud && <BroadcastHud stream={stream} lastId={lastId} />}
         {stream && <LiveIdOverlay identification={lastId} />}
       </div>
 
