@@ -139,6 +139,41 @@ function makeUserIcon(highContrast) {
   return icon;
 }
 
+// ── Module-level L.divIcon caches ─────────────────────────────────────────────
+// Caching divIcon instances preserves reference equality on <Marker icon={...}> props
+// across re-renders, preventing React-Leaflet from executing marker.setIcon() and
+// thrashing DOM nodes for unmodified map markers.
+const hotspotIconCache = new Map();
+const specimenIconCache = new Map();
+const userIconCache = new Map();
+
+export function getHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
+  const key = `${color}_${isActive ? 1 : 0}_${isGlowing ? 1 : 0}_${hasGap ? 1 : 0}_${difficulty || ''}_${highContrast ? 1 : 0}`;
+  if (!hotspotIconCache.has(key)) {
+    hotspotIconCache.set(
+      key,
+      makeHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast })
+    );
+  }
+  return hotspotIconCache.get(key);
+}
+
+export function getSpecimenIcon(rarity, highContrast) {
+  const key = `${rarity || 'common'}_${highContrast ? 1 : 0}`;
+  if (!specimenIconCache.has(key)) {
+    specimenIconCache.set(key, makeSpecimenIcon(rarity, highContrast));
+  }
+  return specimenIconCache.get(key);
+}
+
+export function getUserIcon(highContrast) {
+  const key = `${highContrast ? 1 : 0}`;
+  if (!userIconCache.has(key)) {
+    userIconCache.set(key, makeUserIcon(highContrast));
+  }
+  return userIconCache.get(key);
+}
+
 // ── Inner map effect components ───────────────────────────────────────────────
 function ActivePanner({ hotspots, activeId }) {
   const map = useMap();
@@ -220,7 +255,7 @@ export default function HotspotMap({
     [specimens]
   );
 
-  const userIcon = useMemo(() => makeUserIcon(showGeology || hudMode), [showGeology, hudMode]);
+  const userIcon = getUserIcon(showGeology || hudMode);
 
   return (
     <div
@@ -280,7 +315,7 @@ export default function HotspotMap({
             (h.minerals || []).some(m => m.toLowerCase().includes('tourmaline') ||
               m.toLowerCase().includes('topaz') || m.toLowerCase().includes('sapphire'));
 
-          const icon = makeHotspotIcon({
+          const icon = getHotspotIcon({
             color, isActive, isGlowing, hasGap, difficulty: h.difficulty,
             highContrast: showGeology || hudMode,
           });
@@ -298,7 +333,7 @@ export default function HotspotMap({
 
         {/* Specimen finds (personal) — shown on all + gaps layers */}
         {(activeLayer === 'all' || activeLayer === 'gaps') && geoSpecimens.map(s => {
-          const icon = makeSpecimenIcon(s.rarity, showGeology || hudMode);
+          const icon = getSpecimenIcon(s.rarity, showGeology || hudMode);
           return (
             <Marker key={s.id} position={[s.lat, s.lng]} icon={icon}>
               <Popup>
