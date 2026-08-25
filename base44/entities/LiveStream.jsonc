@@ -1,0 +1,105 @@
+{
+  "name": "LiveStream",
+  "type": "object",
+  "description": "A live field broadcast from a rockhound's camera or AI glasses. current_frame_url holds the latest published frame; viewers watch that feed and see AI identifications made during the stream.",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "host_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "live",
+        "ended"
+      ],
+      "default": "live"
+    },
+    "device_label": {
+      "type": "string",
+      "description": "Human label of the capture device, e.g. 'CY03-B250 Glasses'"
+    },
+    "current_frame_url": {
+      "type": "string",
+      "description": "URL of the most recently published frame from the broadcaster"
+    },
+    "frame_seq": {
+      "type": "integer",
+      "default": 0,
+      "description": "Increments on every published frame so viewers can detect new frames"
+    },
+    "viewer_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "id_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "location_label": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "owner_email",
+    "host_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

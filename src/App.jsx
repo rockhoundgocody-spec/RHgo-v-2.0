@@ -47,6 +47,8 @@ const Badges = lazy(() => import('@/pages/Badges.jsx'));
 const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
 const PrivateRockLog = lazy(() => import('@/pages/PrivateRockLog'));
 const AgateGuide = lazy(() => import('@/pages/AgateGuide'));
+const Live = lazy(() => import('@/pages/Live'));
+const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
@@ -90,6 +92,8 @@ const AuthenticatedApp = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/live" element={<Live />} />
+            <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
@@ -132,6 +136,8 @@ const AuthenticatedApp = () => {
           <Route path="/companion" element={<CompanionDashboard />} />
           <Route path="/private-log" element={<PrivateRockLog />} />
           <Route path="/agate-guide" element={<AgateGuide />} />
+          <Route path="/live" element={<Live />} />
+          <Route path="/live/:streamId" element={<LiveStreamView />} />
 
           {/* USER ROUTES */}
           <Route path="/profile" element={<Profile />} />

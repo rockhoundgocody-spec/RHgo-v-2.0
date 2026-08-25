@@ -1,0 +1,79 @@
+{
+  "name": "StreamIdentification",
+  "type": "object",
+  "description": "An AI mineral identification captured live during a stream, visible to everyone watching.",
+  "properties": {
+    "stream_id": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "stream_id",
+    "mineral_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
