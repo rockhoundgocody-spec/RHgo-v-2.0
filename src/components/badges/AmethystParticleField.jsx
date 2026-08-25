@@ -17,42 +17,177 @@ const AMETHYST_COLORS = [
   'hsla(290,100%,80%,0.75)', // pink-violet shimmer
 ];
 
-function pick(arr, i) { return arr[i % arr.length]; }
+function pick(arr, i) {
+  return arr[i % arr.length];
+}
+
+export function generateOrbiters(intensity) {
+  return Array.from({ length: Math.round(14 * intensity) }, (_, i) => ({
+    angle: (i / 14) * Math.PI * 2,
+    radius: 90 + Math.random() * 60,
+    speed: 6 + Math.random() * 8,
+    size: 1.5 + Math.random() * 2.5,
+    color: pick(AMETHYST_COLORS, i),
+    delay: Math.random() * 3,
+    direction: Math.random() > 0.5 ? 1 : -1,
+  }));
+}
+
+export function generateRisers(intensity) {
+  return Array.from({ length: Math.round(10 * intensity) }, (_, i) => ({
+    x: 15 + Math.random() * 70,
+    startY: 70 + Math.random() * 25,
+    drift: -15 + Math.random() * 30,
+    size: 1 + Math.random() * 2,
+    dur: 4 + Math.random() * 5,
+    delay: Math.random() * 4,
+    color: pick(AMETHYST_COLORS, i + 2),
+  }));
+}
+
+export function generateShimmers(intensity) {
+  return Array.from({ length: Math.round(5 * intensity) }, () => ({
+    x: 20 + Math.random() * 60,
+    y: 20 + Math.random() * 60,
+    size: 4 + Math.random() * 6,
+    dur: 2.5 + Math.random() * 3,
+    delay: Math.random() * 4,
+  }));
+}
+
+function PulsingAura({ size }) {
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: size * 0.85,
+        height: size * 0.85,
+        left: '7.5%',
+        top: '7.5%',
+        background: 'radial-gradient(circle, hsla(280,100%,70%,0.22) 0%, hsla(270,80%,50%,0.08) 40%, transparent 70%)',
+        filter: 'blur(16px)',
+      }}
+      animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+function OrbiterMote({ mote, center }) {
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: mote.size,
+        height: mote.size,
+        background: mote.color,
+        boxShadow: `0 0 ${mote.size * 4}px ${mote.color}, 0 0 ${mote.size * 8}px ${mote.color.replace(/[\d.]+\)$/, '0.3)')}`,
+        left: center,
+        top: center,
+        marginLeft: -mote.size / 2,
+        marginTop: -mote.size / 2,
+      }}
+      animate={{
+        x: [
+          Math.cos(mote.angle) * mote.radius,
+          Math.cos(mote.angle + Math.PI * 2 * mote.direction) * mote.radius,
+          Math.cos(mote.angle) * mote.radius,
+        ],
+        y: [
+          Math.sin(mote.angle) * mote.radius,
+          Math.sin(mote.angle + Math.PI * 2 * mote.direction) * mote.radius,
+          Math.sin(mote.angle) * mote.radius,
+        ],
+        opacity: [0.4, 1, 0.4],
+      }}
+      transition={{
+        duration: mote.speed,
+        delay: mote.delay,
+        repeat: Infinity,
+        ease: 'linear',
+      }}
+    />
+  );
+}
+
+function RisingSparkle({ sparkle }) {
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: sparkle.size,
+        height: sparkle.size,
+        background: sparkle.color,
+        boxShadow: `0 0 ${sparkle.size * 5}px ${sparkle.color}`,
+        left: `${sparkle.x}%`,
+        top: `${sparkle.startY}%`,
+      }}
+      animate={{
+        y: [0, -120, -160],
+        x: [0, sparkle.drift, sparkle.drift * 0.5],
+        opacity: [0, 1, 0],
+        scale: [0.5, 1.2, 0.3],
+      }}
+      transition={{
+        duration: sparkle.dur,
+        delay: sparkle.delay,
+        repeat: Infinity,
+        ease: 'easeOut',
+      }}
+    />
+  );
+}
+
+function ShimmerFlash({ shimmer }) {
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        left: `${shimmer.x}%`,
+        top: `${shimmer.y}%`,
+        width: shimmer.size,
+        height: shimmer.size,
+      }}
+      animate={{
+        opacity: [0, 1, 0],
+        scale: [0, 1.5, 0],
+        rotate: [0, 90, 180],
+      }}
+      transition={{
+        duration: shimmer.dur,
+        delay: shimmer.delay,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: shimmer.size * 3,
+        height: 1,
+        transform: 'translate(-50%, -50%)',
+        background: 'linear-gradient(90deg, transparent, hsla(280,100%,90%,0.9), transparent)',
+        boxShadow: '0 0 4px hsla(280,100%,80%,0.8)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: 1,
+        height: shimmer.size * 3,
+        transform: 'translate(-50%, -50%)',
+        background: 'linear-gradient(180deg, transparent, hsla(280,100%,90%,0.9), transparent)',
+        boxShadow: '0 0 4px hsla(280,100%,80%,0.8)',
+      }} />
+    </motion.div>
+  );
+}
 
 export default function AmethystParticleField({ intensity = 1, size = 320 }) {
-  // Orbiting motes — circle the badge at various radii/speeds
-  const orbiters = useMemo(() =>
-    Array.from({ length: Math.round(14 * intensity) }, (_, i) => ({
-      angle: (i / 14) * Math.PI * 2,
-      radius: 90 + Math.random() * 60,
-      speed: 6 + Math.random() * 8,
-      size: 1.5 + Math.random() * 2.5,
-      color: pick(AMETHYST_COLORS, i),
-      delay: Math.random() * 3,
-      direction: Math.random() > 0.5 ? 1 : -1,
-    })), [intensity]);
-
-  // Rising sparkles — drift upward from bottom, twinkle, fade
-  const risers = useMemo(() =>
-    Array.from({ length: Math.round(10 * intensity) }, (_, i) => ({
-      x: 15 + Math.random() * 70,
-      startY: 70 + Math.random() * 25,
-      drift: -15 + Math.random() * 30,
-      size: 1 + Math.random() * 2,
-      dur: 4 + Math.random() * 5,
-      delay: Math.random() * 4,
-      color: pick(AMETHYST_COLORS, i + 2),
-    })), [intensity]);
-
-  // Shimmer flashes — occasional 4-point star sparkles
-  const shimmers = useMemo(() =>
-    Array.from({ length: Math.round(5 * intensity) }, (_, i) => ({
-      x: 20 + Math.random() * 60,
-      y: 20 + Math.random() * 60,
-      size: 4 + Math.random() * 6,
-      dur: 2.5 + Math.random() * 3,
-      delay: Math.random() * 4,
-    })), [intensity]);
+  const orbiters = useMemo(() => generateOrbiters(intensity), [intensity]);
+  const risers = useMemo(() => generateRisers(intensity), [intensity]);
+  const shimmers = useMemo(() => generateShimmers(intensity), [intensity]);
 
   const center = size / 2;
 
@@ -61,131 +196,18 @@ export default function AmethystParticleField({ intensity = 1, size = 320 }) {
       className="absolute pointer-events-none"
       style={{ width: size, height: size, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
     >
-      {/* 1. Pulsing amethyst aura */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: size * 0.85,
-          height: size * 0.85,
-          left: '7.5%',
-          top: '7.5%',
-          background: 'radial-gradient(circle, hsla(280,100%,70%,0.22) 0%, hsla(270,80%,50%,0.08) 40%, transparent 70%)',
-          filter: 'blur(16px)',
-        }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      <PulsingAura size={size} />
 
-      {/* 2. Orbiting crystal motes */}
       {orbiters.map((o, i) => (
-        <motion.div
-          key={`orbit-${i}`}
-          className="absolute rounded-full"
-          style={{
-            width: o.size,
-            height: o.size,
-            background: o.color,
-            boxShadow: `0 0 ${o.size * 4}px ${o.color}, 0 0 ${o.size * 8}px ${o.color.replace(/[\d.]+\)$/, '0.3)')}`,
-            left: center,
-            top: center,
-            marginLeft: -o.size / 2,
-            marginTop: -o.size / 2,
-          }}
-          animate={{
-            x: [
-              Math.cos(o.angle) * o.radius,
-              Math.cos(o.angle + Math.PI * 2 * o.direction) * o.radius,
-              Math.cos(o.angle) * o.radius,
-            ],
-            y: [
-              Math.sin(o.angle) * o.radius,
-              Math.sin(o.angle + Math.PI * 2 * o.direction) * o.radius,
-              Math.sin(o.angle) * o.radius,
-            ],
-            opacity: [0.4, 1, 0.4],
-          }}
-          transition={{
-            duration: o.speed,
-            delay: o.delay,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        />
+        <OrbiterMote key={`orbit-${i}`} mote={o} center={center} />
       ))}
 
-      {/* 3. Rising sparkles */}
       {risers.map((r, i) => (
-        <motion.div
-          key={`rise-${i}`}
-          className="absolute rounded-full"
-          style={{
-            width: r.size,
-            height: r.size,
-            background: r.color,
-            boxShadow: `0 0 ${r.size * 5}px ${r.color}`,
-            left: `${r.x}%`,
-            top: `${r.startY}%`,
-          }}
-          animate={{
-            y: [0, -120, -160],
-            x: [0, r.drift, r.drift * 0.5],
-            opacity: [0, 1, 0],
-            scale: [0.5, 1.2, 0.3],
-          }}
-          transition={{
-            duration: r.dur,
-            delay: r.delay,
-            repeat: Infinity,
-            ease: 'easeOut',
-          }}
-        />
+        <RisingSparkle key={`rise-${i}`} sparkle={r} />
       ))}
 
-      {/* 4. Shimmer flash sparkles (4-point star shape) */}
       {shimmers.map((s, i) => (
-        <motion.div
-          key={`shimmer-${i}`}
-          className="absolute"
-          style={{
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            width: s.size,
-            height: s.size,
-          }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0, 1.5, 0],
-            rotate: [0, 90, 180],
-          }}
-          transition={{
-            duration: s.dur,
-            delay: s.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
-          {/* Cross-shaped sparkle */}
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: s.size * 3,
-            height: 1,
-            transform: 'translate(-50%, -50%)',
-            background: 'linear-gradient(90deg, transparent, hsla(280,100%,90%,0.9), transparent)',
-            boxShadow: '0 0 4px hsla(280,100%,80%,0.8)',
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: 1,
-            height: s.size * 3,
-            transform: 'translate(-50%, -50%)',
-            background: 'linear-gradient(180deg, transparent, hsla(280,100%,90%,0.9), transparent)',
-            boxShadow: '0 0 4px hsla(280,100%,80%,0.8)',
-          }} />
-        </motion.div>
+        <ShimmerFlash key={`shimmer-${i}`} shimmer={s} />
       ))}
     </div>
   );
