@@ -1,0 +1,53 @@
+{
+  "name": "FindVote",
+  "type": "object",
+  "description": "A community vote in the weekly Find of the Week ballot. One vote per user per ISO week, enforced server-side by the castFindVote function.",
+  "properties": {
+    "week_key": {
+      "type": "string",
+      "description": "ISO week key, e.g. '2026-W35'"
+    },
+    "voter_email": {
+      "type": "string"
+    },
+    "voter_name": {
+      "type": "string"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "StreamIdentification id being voted for"
+    },
+    "voted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "week_key",
+    "voter_email",
+    "entry_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.voter_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

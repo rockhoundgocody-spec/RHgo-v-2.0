@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Radio, Glasses } from 'lucide-react';
+import { Radio, Glasses, Trophy } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import StreamCard from '@/components/live/StreamCard.jsx';
 import BroadcastStudio from '@/components/live/BroadcastStudio.jsx';
@@ -39,15 +40,26 @@ export default function Live() {
             Glasses · Live AI ID · Chat
           </p>
         </div>
-        {!studioOpen && (
-          <Button
-            onClick={() => (me ? setStudioOpen(true) : base44.auth.redirectToLogin())}
-            className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] text-white"
-            style={{ background: 'linear-gradient(135deg, hsla(0,75%,45%,0.9), hsla(340,90%,55%,0.75))' }}
-          >
-            <Radio size={13} className="mr-1.5" /> Go Live
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!studioOpen && (
+            <Link
+              to="/find-of-the-week"
+              className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] flex items-center text-amethyst-glow"
+              style={{ border: '1px solid hsla(280,100%,70%,0.4)' }}
+            >
+              <Trophy size={13} className="mr-1.5" /> Find of the Week
+            </Link>
+          )}
+          {!studioOpen && (
+            <Button
+              onClick={() => (me ? setStudioOpen(true) : base44.auth.redirectToLogin())}
+              className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] text-white"
+              style={{ background: 'linear-gradient(135deg, hsla(0,75%,45%,0.9), hsla(340,90%,55%,0.75))' }}
+            >
+              <Radio size={13} className="mr-1.5" /> Go Live
+            </Button>
+          )}
+        </div>
       </div>
 
       {studioOpen ? (

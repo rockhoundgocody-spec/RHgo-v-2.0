@@ -6,6 +6,7 @@ import useCameraDevices from './useCameraDevices';
 import useBroadcast from './useBroadcast';
 import StreamChat from './StreamChat.jsx';
 import LiveIdFeed from './LiveIdFeed.jsx';
+import DraftList from './DraftList.jsx';
 import LiveIdOverlay from './LiveIdOverlay.jsx';
 import BroadcastHud from './BroadcastHud.jsx';
 import GlassesSource from './GlassesSource.jsx';
@@ -118,7 +119,8 @@ export default function BroadcastStudio({ me, coords, onClose }) {
               <Square size={15} />
             </Button>
           </div>
-          <LiveIdFeed streamId={stream.id} />
+          <LiveIdFeed streamId={stream.id} isHost />
+          <DraftList stream={stream} me={me} />
           <StreamChat streamId={stream.id} me={me} />
         </>
       )}

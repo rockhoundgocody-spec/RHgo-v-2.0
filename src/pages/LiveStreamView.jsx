@@ -54,6 +54,8 @@ export default function LiveStreamView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream?.id]);
 
+  const isHost = !!(me?.email && stream?.owner_email && me.email === stream.owner_email);
+
   if (missing) {
     return (
       <div className="w-full max-w-md mx-auto px-4 pt-10 text-center">
@@ -101,7 +103,7 @@ export default function LiveStreamView() {
         </div>
       </div>
 
-      <LiveIdFeed streamId={streamId} />
+      <LiveIdFeed streamId={streamId} isHost={isHost} />
       <StreamChat streamId={streamId} me={me} />
     </div>
   );
