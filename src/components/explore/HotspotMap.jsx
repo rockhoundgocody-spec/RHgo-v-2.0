@@ -139,14 +139,6 @@ function makeUserIcon(highContrast) {
   return icon;
 }
 
-// ── Module-level L.divIcon caches ─────────────────────────────────────────────
-// Caching divIcon instances preserves reference equality on <Marker icon={...}> props
-// across re-renders, preventing React-Leaflet from executing marker.setIcon() and
-// thrashing DOM nodes for unmodified map markers.
-const hotspotIconCache = new Map();
-const specimenIconCache = new Map();
-const userIconCache = new Map();
-
 export function getHotspotIcon({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
   const key = `${color}_${isActive ? 1 : 0}_${isGlowing ? 1 : 0}_${hasGap ? 1 : 0}_${difficulty || ''}_${highContrast ? 1 : 0}`;
   if (!hotspotIconCache.has(key)) {
