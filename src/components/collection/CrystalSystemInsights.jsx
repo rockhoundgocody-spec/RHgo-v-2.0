@@ -15,70 +15,74 @@ const PALETTE = [
   'hsl(310 75% 65%)',
 ];
 
+// Fallback table for common mineral families when not in DB
+// Maps a mineral name → { system, parent }
+const FALLBACKS = {
+  agate: { system: 'Trigonal (Quartz Family)' },
+  chalcedony: { system: 'Trigonal (Quartz Family)' },
+  jasper: { system: 'Trigonal (Quartz Family)' },
+  onyx: { system: 'Trigonal (Quartz Family)' },
+  carnelian: { system: 'Trigonal (Quartz Family)' },
+  chrysoprase: { system: 'Trigonal (Quartz Family)' },
+  bloodstone: { system: 'Trigonal (Quartz Family)' },
+  flint: { system: 'Trigonal (Quartz Family)' },
+  chert: { system: 'Trigonal (Quartz Family)' },
+  quartz: { system: 'Trigonal' },
+  amethyst: { system: 'Trigonal' },
+  citrine: { system: 'Trigonal' },
+  'rose quartz': { system: 'Trigonal' },
+  'smoky quartz': { system: 'Trigonal' },
+  'tiger eye': { system: 'Trigonal' },
+  tigereye: { system: 'Trigonal' },
+  aventurine: { system: 'Trigonal' },
+  opal: { system: 'Amorphous' },
+  obsidian: { system: 'Amorphous' },
+  pyrite: { system: 'Cubic' },
+  galena: { system: 'Cubic' },
+  fluorite: { system: 'Cubic' },
+  halite: { system: 'Cubic' },
+  garnet: { system: 'Cubic' },
+  diamond: { system: 'Cubic' },
+  calcite: { system: 'Trigonal' },
+  tourmaline: { system: 'Trigonal' },
+  hematite: { system: 'Trigonal' },
+  beryl: { system: 'Hexagonal' },
+  emerald: { system: 'Hexagonal' },
+  aquamarine: { system: 'Hexagonal' },
+  apatite: { system: 'Hexagonal' },
+  topaz: { system: 'Orthorhombic' },
+  olivine: { system: 'Orthorhombic' },
+  peridot: { system: 'Orthorhombic' },
+  gypsum: { system: 'Monoclinic' },
+  malachite: { system: 'Monoclinic' },
+  azurite: { system: 'Monoclinic' },
+  mica: { system: 'Monoclinic' },
+  muscovite: { system: 'Monoclinic' },
+  turquoise: { system: 'Triclinic' },
+  labradorite: { system: 'Triclinic' },
+};
+
 export default function CrystalSystemInsights({ specimens }) {
   const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
 
-  const data = useMemo(() => {
-    if (!specimens?.length) return [];
-    // Build name → crystal_system lookup (case-insensitive)
+  // Build name → crystal_system lookup map (case-insensitive & trimmed)
+  const mineralLookup = useMemo(() => {
     const lookup = new Map();
     for (const m of minerals) {
       if (m.name && m.crystal_system) {
         lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
       }
     }
+    return lookup;
+  }, [minerals]);
 
-    // Fallback table for common mineral families when not in DB
-    // Maps a mineral name → { system, parent }
-    const FALLBACKS = {
-      agate: { system: 'Trigonal (Quartz Family)' },
-      chalcedony: { system: 'Trigonal (Quartz Family)' },
-      jasper: { system: 'Trigonal (Quartz Family)' },
-      onyx: { system: 'Trigonal (Quartz Family)' },
-      carnelian: { system: 'Trigonal (Quartz Family)' },
-      chrysoprase: { system: 'Trigonal (Quartz Family)' },
-      bloodstone: { system: 'Trigonal (Quartz Family)' },
-      flint: { system: 'Trigonal (Quartz Family)' },
-      chert: { system: 'Trigonal (Quartz Family)' },
-      quartz: { system: 'Trigonal' },
-      amethyst: { system: 'Trigonal' },
-      citrine: { system: 'Trigonal' },
-      'rose quartz': { system: 'Trigonal' },
-      'smoky quartz': { system: 'Trigonal' },
-      'tiger eye': { system: 'Trigonal' },
-      tigereye: { system: 'Trigonal' },
-      aventurine: { system: 'Trigonal' },
-      opal: { system: 'Amorphous' },
-      obsidian: { system: 'Amorphous' },
-      pyrite: { system: 'Cubic' },
-      galena: { system: 'Cubic' },
-      fluorite: { system: 'Cubic' },
-      halite: { system: 'Cubic' },
-      garnet: { system: 'Cubic' },
-      diamond: { system: 'Cubic' },
-      calcite: { system: 'Trigonal' },
-      tourmaline: { system: 'Trigonal' },
-      hematite: { system: 'Trigonal' },
-      beryl: { system: 'Hexagonal' },
-      emerald: { system: 'Hexagonal' },
-      aquamarine: { system: 'Hexagonal' },
-      apatite: { system: 'Hexagonal' },
-      topaz: { system: 'Orthorhombic' },
-      olivine: { system: 'Orthorhombic' },
-      peridot: { system: 'Orthorhombic' },
-      gypsum: { system: 'Monoclinic' },
-      malachite: { system: 'Monoclinic' },
-      azurite: { system: 'Monoclinic' },
-      mica: { system: 'Monoclinic' },
-      muscovite: { system: 'Monoclinic' },
-      turquoise: { system: 'Triclinic' },
-      labradorite: { system: 'Triclinic' },
-    };
+  const data = useMemo(() => {
+    if (!specimens?.length) return [];
 
     const counts = {};
     for (const s of specimens) {
       const key = s.mineral_name?.toLowerCase().trim();
-      let sys = key ? lookup.get(key) : null;
+      let sys = key ? mineralLookup.get(key) : null;
       if (!sys && key && FALLBACKS[key]) sys = FALLBACKS[key].system;
       const label = sys || 'Unknown';
       counts[label] = (counts[label] || 0) + 1;
@@ -86,7 +90,7 @@ export default function CrystalSystemInsights({ specimens }) {
     return Object.entries(counts)
       .map(([system, count]) => ({ system, count }))
       .sort((a, b) => b.count - a.count);
-  }, [specimens, minerals]);
+  }, [specimens, mineralLookup]);
 
   if (loading) return null;
   if (!specimens?.length) return null;
