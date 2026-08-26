@@ -2,21 +2,30 @@
  * HelpTip — small ? icon that shows a Clover-written pop-up on tap.
  * Usage: <HelpTip tip="What this feature does" />
  */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { HelpCircle } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 export default function HelpTip({ tip, size = 13 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const tooltipId = useId();
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const handlePointerDown = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) setOpen(false);
     };
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   return (
@@ -24,20 +33,25 @@ export default function HelpTip({ tip, size = 13 }) {
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(v => !v); }}
-        className="ml-1 text-white/30 hover:text-amethyst transition-colors focus:outline-none"
+        className="ml-1 text-white/30 hover:text-amethyst transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
         aria-label="Help"
+        aria-expanded={open}
+        aria-controls={tooltipId}
+        aria-describedby={open ? tooltipId : undefined}
         style={{ lineHeight: 1 }}
       >
-        <HelpCircle size={size} strokeWidth={1.8} />
+        <HelpCircle size={size} strokeWidth={1.8} aria-hidden="true" />
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.93 }}
+            id={tooltipId}
+            role="tooltip"
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.93 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: reducedMotion ? 0 : 0.15 }}
             className="absolute z-50 bottom-full left-1/2 mb-2 w-56 rounded-2xl p-3 text-left pointer-events-none"
             style={{
               transform: 'translateX(-50%)',
@@ -47,7 +61,7 @@ export default function HelpTip({ tip, size = 13 }) {
             }}
           >
             <div className="flex items-start gap-2">
-              <span className="text-base select-none shrink-0">🍀</span>
+              <span className="text-base select-none shrink-0" aria-hidden="true">🍀</span>
               <p className="text-white/65 text-[11px] leading-snug">{tip}</p>
             </div>
             {/* Caret */}
