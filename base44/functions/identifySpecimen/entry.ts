@@ -9,6 +9,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 import { computeEssence } from '../../shared/essence.ts';
+import {
+  buildLocationSubmission,
+  getStoredLocation,
+  hasValidPrivateLocation,
+  type PrivateSpecimenLocation,
+} from '../../shared/locationSubmission.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -108,22 +114,77 @@ function buildGreatLakesContext({ beachName, wetDry, postStorm, season }) {
   ].filter(Boolean).join(' ');
 }
 
+type LocationSubmissionRecord = { id: string; status: string };
+type LocationReviewClient = {
+  asServiceRole: {
+    entities: {
+      LocationSubmission: {
+        filter(
+          query: Record<string, unknown>,
+          sort: string,
+          limit: number,
+        ): Promise<LocationSubmissionRecord[]>;
+        create(data: Record<string, unknown>): Promise<LocationSubmissionRecord>;
+      };
+    };
+  };
+};
+
+async function submitLocationForReview(
+  base44: LocationReviewClient,
+  ownerEmail: string,
+  specimen: PrivateSpecimenLocation,
+) {
+  const data = buildLocationSubmission(specimen, ownerEmail);
+  const existing = await base44.asServiceRole.entities.LocationSubmission.filter(
+    { specimen_id: specimen.id, owner_email: ownerEmail, status: 'pending' },
+    '-created_date',
+    1,
+  );
+  if (existing[0]) return existing[0];
+  return base44.asServiceRole.entities.LocationSubmission.create(data);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user?.email) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const {
-      image_url, lat, lng,
-      save = false, share_to_map = false,
+      image_url, specimen_id, lat, lng,
+      save = false, share_to_map = false, geo_privacy = 'private',
       prefilled_result = null,
       wet_dry = null,
       beach_name = null,
       post_storm = false,
       season = null,
     } = body;
+    const storedLocation = getStoredLocation(lat, lng, geo_privacy);
+
+    // A share request can only submit the caller's existing owner-scoped
+    // specimen for moderation. No coordinates are copied into the queue.
+    if (share_to_map && !save) {
+      if (!specimen_id) {
+        return Response.json({ error: 'specimen_id is required for location review' }, { status: 400 });
+      }
+      let specimen: PrivateSpecimenLocation | null = null;
+      try {
+        specimen = await base44.entities.Specimen.get(specimen_id) as PrivateSpecimenLocation;
+      } catch {
+        return Response.json({ error: 'Specimen not found' }, { status: 404 });
+      }
+      if (!specimen || !hasValidPrivateLocation(specimen)) {
+        return Response.json({ error: 'A saved private specimen location is required for review' }, { status: 400 });
+      }
+      const submission = await submitLocationForReview(base44, user.email, specimen);
+      return Response.json({
+        success: true,
+        location_submission: { id: submission.id, status: submission.status },
+        hotspot_contribution: null,
+      });
+    }
 
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
@@ -292,8 +353,8 @@ Deno.serve(async (req) => {
         found_date:    new Date().toISOString().split('T')[0],
         found_at:      beach_name || null,
         verified:      false,
-        ...(lat != null ? { lat } : {}),
-        ...(lng != null ? { lng } : {}),
+        geo_privacy:   storedLocation.geoPrivacy,
+        ...(storedLocation.lat != null ? { lat: storedLocation.lat, lng: storedLocation.lng } : {}),
       });
 
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
@@ -322,41 +383,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── OPTIONAL SHARE TO MAP ─────────────────────────────────────────────────
-    let hotspotContribution = null;
-    if (share_to_map && lat != null && lng != null && savedSpecimen) {
-      const nearby = await base44.asServiceRole.entities.Hotspot.filter({});
-      const found = nearby.find((h) => h.lat != null && h.lng != null &&
-        Math.abs(h.lat - lat) < 0.01 && Math.abs(h.lng - lng) < 0.01);
-      if (found) {
-        const minerals = found.minerals || [];
-        if (!minerals.includes(identification.top_match)) minerals.push(identification.top_match);
-        await base44.asServiceRole.entities.Hotspot.update(found.id, { minerals });
-        hotspotContribution = { type: 'updated', id: found.id };
-      } else {
-        // Hotspot has public read — everything written here is world-visible.
-        // Snap to a ~1.1km grid so sharing a find never publishes a dig site,
-        // and never write the reporter's email or the AI's free-text notes.
-        const newHotspot = await base44.asServiceRole.entities.Hotspot.create({
-          name: `${identification.top_match} Site (User Find)`,
-          lat: Math.round(lat * 100) / 100,
-          lng: Math.round(lng * 100) / 100,
-          minerals: [identification.top_match],
-          land_type: 'unknown',
-          difficulty: 'moderate',
-          trust_score: 0.4,
-          source: 'user_contribution',
-          description: `User-reported ${identification.top_match} in this area.`,
-        });
-        hotspotContribution = { type: 'created', id: newHotspot.id };
-      }
+    // ── OPTIONAL LOCATION REVIEW SUBMISSION ──────────────────────────────────
+    let locationSubmission = null;
+    if (share_to_map && savedSpecimen) {
+      const submission = await submitLocationForReview(
+        base44,
+        user.email,
+        savedSpecimen as PrivateSpecimenLocation,
+      );
+      locationSubmission = { id: submission.id, status: submission.status };
     }
 
     return Response.json({
       success: true,
       identification,
       saved_specimen_id: savedSpecimen?.id || null,
-      hotspot_contribution: hotspotContribution,
+      location_submission: locationSubmission,
+      hotspot_contribution: null,
       context_integrity: contextIntegrity,
       handbook: enforcement,
       essence,

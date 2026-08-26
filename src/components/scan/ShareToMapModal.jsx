@@ -1,31 +1,32 @@
 /**
- * ShareToMapModal — lets the user opt-in to sharing their find
- * to the global hotspot map after saving a specimen.
+ * ShareToMapModal — submits an owner-only specimen for moderated review.
+ * It never copies coordinates into a public hotspot.
  */
 import React, { useState } from 'react';
-import { MapPin, Globe, Lock, Loader2, CheckCircle2, X } from 'lucide-react';
+import { ClipboardCheck, Lock, Loader2, CheckCircle2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function ShareToMapModal({ open, specimen, result, onClose, onShared }) {
   const [sharing, setSharing] = useState(false);
   const [shared, setShared] = useState(false);
-  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
 
   if (!open) return null;
 
   const handleShare = async () => {
-    if (!specimen?.id || !result) return;
+    if (!specimen?.id) return;
     setSharing(true);
+    setError('');
     try {
       await base44.functions.invoke('identifySpecimen', {
-        image_url: specimen.image_url,
-        lat: specimen.lat,
-        lng: specimen.lng,
+        specimen_id: specimen.id,
         save: false,
         share_to_map: true,
       });
       setShared(true);
       setTimeout(() => { onShared?.(); onClose(); }, 1800);
+    } catch {
+      setError('Could not submit this location for review. Please try again.');
     } finally {
       setSharing(false);
     }
@@ -50,26 +51,26 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/30 hover:text-white/70">
+        <button type="button" onClick={onClose} aria-label="Close location review" className="absolute top-4 right-4 text-white/30 hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan rounded-md">
           <X size={16} />
         </button>
 
         {shared ? (
           <div className="flex flex-col items-center text-center py-4">
             <CheckCircle2 size={40} className="text-emerald-400 mb-3" />
-            <div className="text-white font-bold text-base">Added to Global Map!</div>
-            <p className="text-white/50 text-sm mt-1">Your find is now visible to other rockhounds nearby.</p>
+            <div className="text-white font-bold text-base">Submitted for Review</div>
+            <p className="text-white/50 text-sm mt-1">Nothing was published. A moderator must verify the site, entrance, and rules first.</p>
           </div>
         ) : (
           <>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: 'hsla(195,100%,30%,0.3)', border: '1px solid hsla(195,100%,60%,0.35)' }}>
-                <Globe size={18} className="text-hud-cyan" />
+                <ClipboardCheck size={18} className="text-hud-cyan" />
               </div>
               <div>
-                <div className="text-white font-bold text-sm">Share to Global Map?</div>
-                <div className="text-white/40 text-xs">Help other rockhounds find great sites</div>
+                <div className="text-white font-bold text-sm">Submit Location for Review?</div>
+                <div className="text-white/40 text-xs">Suggest evidence for a future reviewed site</div>
               </div>
             </div>
 
@@ -84,12 +85,7 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
               <div>
                 <div className="text-white text-sm font-bold">{result?.top_match}</div>
                 <div className="text-white/40 text-xs capitalize">{result?.rarity} · {(result?.confidence * 100)?.toFixed(0)}% confidence</div>
-                {specimen?.lat && (
-                  <div className="flex items-center gap-1 mt-1 text-hud-cyan/70 text-[10px]">
-                    <MapPin size={9} />
-                    {specimen.lat.toFixed(4)}, {specimen.lng.toFixed(4)}
-                  </div>
-                )}
+                <div className="mt-1 text-hud-cyan/70 text-[10px]">Private specimen record</div>
               </div>
             </div>
 
@@ -98,35 +94,37 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
               style={{ background: 'hsla(220,40%,10%,0.5)', border: '1px solid hsla(220,40%,25%,0.25)' }}>
               <Lock size={12} className="text-white/30 mt-0.5 flex-shrink-0" />
               <p className="text-white/40 text-[10px] leading-relaxed">
-                Your exact coordinates are rounded to protect privacy. Only the mineral type and general area are shared. Your profile is never shown.
+                Exact coordinates stay in your owner-only specimen record. The review queue contains no coordinates, and no public site is created automatically.
               </p>
             </div>
 
             <div className="flex gap-2">
-              <button onClick={onClose}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white/40 border border-white/10 hover:border-white/20 transition">
+              <button type="button" onClick={onClose}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white/40 border border-white/10 hover:border-white/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
                 Keep Private
               </button>
               <button
+                type="button"
                 onClick={handleShare}
-                disabled={sharing || !specimen?.lat}
-                className="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+                disabled={sharing || specimen?.lat == null || specimen?.lng == null}
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                 style={{
                   background: 'linear-gradient(135deg, hsla(195,80%,30%,0.8), hsla(215,80%,40%,0.8))',
                   border: '1px solid hsla(195,100%,60%,0.4)',
                   boxShadow: '0 0 16px hsla(195,100%,50%,0.2)',
                 }}
               >
-                {sharing ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
-                {sharing ? 'Sharing…' : 'Share Find'}
+                {sharing ? <Loader2 size={14} className="animate-spin" /> : <ClipboardCheck size={14} />}
+                {sharing ? 'Submitting…' : 'Submit for Review'}
               </button>
             </div>
 
-            {!specimen?.lat && (
+            {(specimen?.lat == null || specimen?.lng == null) && (
               <p className="text-center text-xs text-amber-400/60 mt-2">
-                No GPS data — enable location to share to map.
+                No private location is attached to this specimen.
               </p>
             )}
+            {error && <p role="alert" className="text-center text-xs text-rose-300 mt-2">{error}</p>}
           </>
         )}
       </div>

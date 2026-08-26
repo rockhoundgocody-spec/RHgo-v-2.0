@@ -1,0 +1,74 @@
+{
+  "name": "LocationSubmission",
+  "type": "object",
+  "description": "Private moderation queue for considering an owner-only specimen as location evidence. Coordinates are never copied into this record and submissions never publish hotspots automatically.",
+  "properties": {
+    "specimen_id": {
+      "type": "string"
+    },
+    "mineral_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewing",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "submission_type": {
+      "type": "string",
+      "enum": [
+        "user_find"
+      ],
+      "default": "user_find"
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "specimen_id",
+    "mineral_name",
+    "owner_email",
+    "status",
+    "submission_type",
+    "requested_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.owner_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
