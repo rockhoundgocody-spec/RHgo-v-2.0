@@ -3,9 +3,9 @@ import { collectPages, countByOwner, firstByOwner, writeLogsInBatches } from './
 
 describe('daily companion log batching', () => {
   it('paginates all records instead of relying on a fixed cap', async () => {
-    const fetchPage = vi.fn(async (limit: number, skip: number) =>
+    const fetchPage = vi.fn((limit: number, skip: number) => Promise.resolve(
       Array.from({ length: Math.min(limit, 5 - skip) }, (_, index) => ({ id: skip + index })),
-    );
+    ));
 
     await expect(collectPages(fetchPage, 2)).resolves.toHaveLength(5);
     expect(fetchPage.mock.calls).toEqual([[2, 0], [2, 2], [2, 4]]);

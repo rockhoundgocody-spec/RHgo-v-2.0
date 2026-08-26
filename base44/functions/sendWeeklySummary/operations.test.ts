@@ -11,9 +11,9 @@ describe('weekly summary batching', () => {
   });
 
   it('paginates until the backend returns a partial page', async () => {
-    const fetchPage = vi.fn(async (limit: number, skip: number) =>
+    const fetchPage = vi.fn((limit: number, skip: number) => Promise.resolve(
       Array.from({ length: Math.min(limit, 5 - skip) }, (_, index) => skip + index),
-    );
+    ));
 
     await expect(collectPages(fetchPage, 2)).resolves.toEqual([0, 1, 2, 3, 4]);
     expect(fetchPage.mock.calls).toEqual([[2, 0], [2, 2], [2, 4]]);

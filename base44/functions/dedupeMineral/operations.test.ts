@@ -3,9 +3,9 @@ import { deleteMineralsInBatches } from './operations.ts';
 
 describe('deleteMineralsInBatches', () => {
   it('deletes each record once and reports partial failures', async () => {
-    const remove = vi.fn(async (id: string) => {
-      if (id === 'mineral-3') throw new Error('rate limited');
-    });
+    const remove = vi.fn((id: string) => (
+      id === 'mineral-3' ? Promise.reject(new Error('rate limited')) : Promise.resolve()
+    ));
     const minerals = Array.from({ length: 7 }, (_, index) => ({ id: `mineral-${index}` }));
 
     await expect(deleteMineralsInBatches(minerals, remove, 3)).resolves.toEqual({
@@ -35,7 +35,10 @@ describe('deleteMineralsInBatches', () => {
     const order: string[] = [];
     await deleteMineralsInBatches(
       [{ id: 'a' }, { id: 'b' }],
-      async (id) => { order.push(id); },
+      (id) => {
+        order.push(id);
+        return Promise.resolve();
+      },
       0,
     );
 
