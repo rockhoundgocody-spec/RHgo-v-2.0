@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Camera, Upload, Loader2, Atom, MapPin, X } from 'lucide-react';
+import { Camera, Loader2, Atom, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChronolithOpening from '@/components/chronolith/ChronolithOpening.jsx';
 import RealityTrial from '@/components/chronolith/RealityTrial.jsx';
+import { uploadChronolithImages } from '@/lib/chronolithUploads.js';
 
 /**
  * CHRONOLITH — The Planet That Remembers
@@ -22,6 +23,7 @@ export default function Chronolith() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
   // Auto-capture GPS
   useEffect(() => {
@@ -36,19 +38,21 @@ export default function Chronolith() {
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+    const input = e.currentTarget;
     setLoading(true);
     setError('');
     try {
-      const urls = [];
-      for (const file of files.slice(0, 3)) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        urls.push(file_url);
-      }
+      const urls = await uploadChronolithImages(
+        files,
+        (payload) => base44.integrations.Core.UploadFile(payload),
+      );
       setImageUrls(urls);
       await runInvestigation(urls);
     } catch (err) {
       setError(err.message || 'Failed to upload images');
       setLoading(false);
+    } finally {
+      input.value = '';
     }
   };
 
@@ -100,7 +104,7 @@ export default function Chronolith() {
 
         {/* Logo */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
@@ -118,9 +122,9 @@ export default function Chronolith() {
 
         {/* Upload zone */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: reducedMotion ? 0 : 0.2 }}
           className="w-full max-w-sm"
         >
           <label
@@ -143,7 +147,7 @@ export default function Chronolith() {
             />
             {loading ? (
               <>
-                <Loader2 size={32} className="animate-spin text-amethyst-glow" />
+                <Loader2 size={32} className="motion-safe:animate-spin text-amethyst-glow" />
                 <p className="text-sm text-white/60">Interrogating reality…</p>
                 <p className="text-[10px] text-white/30 uppercase tracking-widest">Nine agents are investigating</p>
               </>
@@ -212,7 +216,7 @@ export default function Chronolith() {
               style={{ background: 'hsla(0,0%,0%,0.6)', backdropFilter: 'blur(4px)' }}
             >
               <div className="text-center">
-                <Loader2 size={28} className="animate-spin text-amethyst-glow mx-auto mb-3" />
+                <Loader2 size={28} className="motion-safe:animate-spin text-amethyst-glow mx-auto mb-3" />
                 <p className="text-sm text-white/60">Histories reorganizing…</p>
                 <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">The skeptic is reviewing</p>
               </div>

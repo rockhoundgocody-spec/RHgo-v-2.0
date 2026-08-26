@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Wind, Droplets, Eye, Waves, X, CloudRain, Sun, Cloud, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const WMO_LABELS = {
   0: { label: 'Clear', icon: Sun, color: '#fcd34d' },
