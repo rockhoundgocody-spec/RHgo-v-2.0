@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Gem, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { getPinnedSpecimens } from './mapSpecimens';
 
 const rarityColor = {
   common: '#a0a0b0',
@@ -10,14 +11,19 @@ const rarityColor = {
 };
 
 function useGoogleMapsScript() {
-  const [mapsReady, setMapsReady] = useState(!!window.google?.maps);
+  const [mapsReady, setMapsReady] = useState(() => !!globalThis.window?.google?.maps?.Map);
   const [apiKey, setApiKey] = useState(null);
+  const [loadError, setLoadError] = useState(false);
 
   // Fetch the Maps API key
   useEffect(() => {
     base44.functions.invoke('getMapsKey', {})
-      .then((r) => setApiKey(r?.data?.apiKey))
-      .catch(() => {});
+      .then((r) => {
+        const key = r?.data?.apiKey;
+        if (key) setApiKey(key);
+        else setLoadError(true);
+      })
+      .catch(() => setLoadError(true));
   }, []);
 
   // Load Google Maps script — reuse the shared loader promise if available
@@ -30,9 +36,10 @@ function useGoogleMapsScript() {
     // Piggyback on HotspotMap's loader promise if it exists, otherwise load ourselves
     const existing = document.querySelector('script[data-rockhound-gmaps]');
     if (existing) {
-      // Script already injected — wait for google to be ready
+      let attempts = 0;
       const poll = setInterval(() => {
         if (window.google?.maps?.Map) { clearInterval(poll); setMapsReady(true); }
+        else if (++attempts >= 100) { clearInterval(poll); setLoadError(true); }
       }, 100);
       return () => clearInterval(poll);
     }
@@ -41,10 +48,11 @@ function useGoogleMapsScript() {
     script.async = true;
     script.dataset.rockhoundGmaps = '1';
     script.onload = () => setMapsReady(true);
+    script.onerror = () => setLoadError(true);
     document.head.appendChild(script);
   }, [apiKey]);
 
-  return { mapsReady, apiKey };
+  return { mapsReady, apiKey, loadError };
 }
 
 function MapLoadingState() {
@@ -61,6 +69,15 @@ function MapEmptyState() {
     <div className="flex flex-col items-center justify-center h-64 text-white/40 gap-3">
       <MapPin size={32} />
       <p className="text-sm text-center">No geo-tagged finds yet.<br />Specimens with location data will appear here.</p>
+    </div>
+  );
+}
+
+function MapErrorState() {
+  return (
+    <div role="alert" className="flex flex-col items-center justify-center h-64 text-white/50 gap-3">
+      <MapPin size={32} aria-hidden="true" />
+      <p className="text-sm text-center">The collection map could not load.<br />Your saved specimens are still available in the gallery.</p>
     </div>
   );
 }
@@ -89,8 +106,10 @@ function PinCountBadge({ count }) {
 function SelectedSpecimenCard({ specimen, onClose }) {
   if (!specimen) return null;
   return (
-    <div
-      className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-3 flex items-center gap-3 max-w-[280px] w-[90%] cursor-pointer"
+    <button
+      type="button"
+      aria-label={`Close details for ${specimen.mineral_name || 'selected specimen'}`}
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-3 flex items-center gap-3 max-w-[280px] w-[90%] text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
       onClick={onClose}
     >
       {specimen.image_url ? (
@@ -116,7 +135,7 @@ function SelectedSpecimenCard({ specimen, onClose }) {
           {specimen.rarity || 'common'}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -125,10 +144,9 @@ export default function CollectionMap({ specimens = [] }) {
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const [selectedPin, setSelectedPin] = useState(null);
-  const { mapsReady, apiKey } = useGoogleMapsScript();
+  const { mapsReady, apiKey, loadError } = useGoogleMapsScript();
 
-  // Specimens with valid coordinates
-  const pinned = specimens.filter((s) => s.lat && s.lng);
+  const pinned = useMemo(() => getPinnedSpecimens(specimens), [specimens]);
 
   // Init map once ready
   useEffect(() => {
@@ -186,7 +204,17 @@ export default function CollectionMap({ specimens = [] }) {
     if (pinned.length > 1) {
       mapInstanceRef.current.fitBounds(bounds, { top: 48, right: 24, bottom: 48, left: 24 });
     }
+
+    return () => {
+      markersRef.current.forEach((marker) => {
+        window.google.maps.event?.clearInstanceListeners(marker);
+        marker.setMap(null);
+      });
+      markersRef.current = [];
+    };
   }, [mapsReady, pinned]);
+
+  if (loadError) return <MapErrorState />;
 
   if (!apiKey) {
     return <MapLoadingState />;
@@ -198,7 +226,7 @@ export default function CollectionMap({ specimens = [] }) {
 
   return (
     <div className="relative rounded-2xl overflow-hidden" style={{ height: '60vh', minHeight: 320 }}>
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="w-full h-full" role="region" aria-label="Map of geo-tagged specimens" />
       <MapLegend />
       <PinCountBadge count={pinned.length} />
       <SelectedSpecimenCard specimen={selectedPin} onClose={() => setSelectedPin(null)} />
