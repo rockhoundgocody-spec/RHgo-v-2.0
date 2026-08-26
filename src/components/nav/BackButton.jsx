@@ -14,6 +14,7 @@ export default function BackButton({ className }) {
 
   return (
     <button
+      type="button"
       onClick={() => navigate(-1)}
       className={cn(
         'flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-lg p-0.5',
