@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { calculateCatchOutcome, saveCatchToCollection } from "./AREncounterScreen.jsx";
+import { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
 import { base44 } from "@/api/base44Client";
 
 vi.mock("@/api/base44Client", () => ({
@@ -46,6 +46,22 @@ describe("calculateCatchOutcome", () => {
 
   it("returns success on third throw due to mercy rule", () => {
     expect(calculateCatchOutcome(commonSpawn, 2, 0.8)).toBe("success");
+  });
+});
+
+describe("getCelebrationOptions", () => {
+  it("uses a bounded celebration for normal catches", () => {
+    expect(getCelebrationOptions("success", "#22d3ee")).toEqual(expect.objectContaining({
+      particleCount: 70,
+      spread: 65,
+      colors: ["#22d3ee", "#ffffff"],
+      disableForReducedMotion: true,
+    }));
+  });
+
+  it("amplifies critical and shiny celebrations", () => {
+    expect(getCelebrationOptions("critical", "#fbbf24").particleCount).toBe(150);
+    expect(getCelebrationOptions("shiny", "#fbbf24").spread).toBe(85);
   });
 });
 

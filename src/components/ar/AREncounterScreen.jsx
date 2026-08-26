@@ -4,9 +4,11 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { X, Zap, Star, Share2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { RARITY_XP_MAP } from "@/lib/spawnEngine";
+import useReducedMotion from "@/lib/useReducedMotion";
 
 const RARITY_THEMES = {
   common:    { bg: "hsla(215,35%,25%,0.9)",  glow: "hsl(215,35%,68%)",  ring: "#94a3b8", label: "COMMON"    },
@@ -23,6 +25,18 @@ const CATCH_MESSAGES = {
 };
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+export function getCelebrationOptions(outcome, color) {
+  const exceptional = outcome === "critical" || outcome === "shiny";
+  return {
+    particleCount: exceptional ? 150 : 70,
+    spread: exceptional ? 85 : 65,
+    origin: { y: 0.62 },
+    colors: [color, "#ffffff"],
+    zIndex: 10_000,
+    disableForReducedMotion: true,
+  };
+}
 
 export function calculateCatchOutcome(spawn, throwCount, roll = Math.random()) {
   const catchChance = spawn.catch_chance + throwCount * 0.05;
@@ -95,18 +109,21 @@ export function EncounterTopBar({ spawn, theme, onDismiss }) {
   );
 }
 
-export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme, spawn }) {
+export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme, spawn, reduceMotion }) {
   return (
     <div className="relative flex flex-col items-center justify-center flex-1 z-10">
       <AnimatePresence mode="wait">
         {phase !== "result" && (
-          <motion.div key="orb"
-            animate={{ scale: orbScale, y: [0, -8, 0] }}
-            transition={{ y: { repeat: Infinity, duration: 2.2, ease: "easeInOut" }, scale: { duration: 0.4 } }}
-            className="relative cursor-pointer select-none"
+          <motion.button key="orb"
+            type="button"
+            disabled={phase !== "encounter"}
+            animate={{ scale: orbScale, y: reduceMotion ? 0 : [0, -8, 0] }}
+            transition={{ y: { repeat: reduceMotion ? 0 : Infinity, duration: 2.2, ease: "easeInOut" }, scale: { duration: reduceMotion ? 0 : 0.4 } }}
+            className="relative cursor-pointer select-none rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-default"
             style={{ width: 160, height: 160 }}
             onClick={handleThrow}
             onTouchEnd={handleSwipe}
+            aria-label={`Catch ${spawn.mineral_name}`}
           >
             {/* Glow rings */}
             {[1.8, 1.5, 1.25].map((scale, i) => (
@@ -114,7 +131,7 @@ export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme,
                 style={{
                   background: `radial-gradient(circle, ${theme.glow}${["18", "22", "28"][i]} 0%, transparent 65%)`,
                   transform: `scale(${scale})`,
-                  animation: `badge-pulse-glow ${2 + i * 0.4}s ease-in-out infinite`,
+                  animation: reduceMotion ? "none" : `badge-pulse-glow ${2 + i * 0.4}s ease-in-out infinite`,
                   animationDelay: `${i * 0.3}s`,
                 }} />
             ))}
@@ -133,9 +150,9 @@ export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme,
                 border: "1px solid transparent",
                 borderTopColor: theme.ring,
                 borderRightColor: `${theme.ring}44`,
-                animation: "badge-halo-spin 3s linear infinite",
+                animation: reduceMotion ? "none" : "badge-halo-spin 3s linear infinite",
               }} />
-          </motion.div>
+          </motion.button>
         )}
 
         {phase === "throwing" && (
@@ -167,6 +184,7 @@ export function EncounterResultCard({ phase, result, theme, spawn, xp, onDismiss
         initial={{ y: 120, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", damping: 22, stiffness: 280 }}
         className="relative w-full z-10 mx-4 mb-8"
+        aria-live="polite"
       >
         <div className="mx-4 rounded-3xl p-5 text-center"
           style={{ background: result === "escape" ? "hsla(0,30%,10%,0.95)" : theme.bg, border: `1px solid ${theme.ring}44` }}>
@@ -231,6 +249,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [throwCount, setThrowCount] = useState(0);
   const [orbScale, setOrbScale] = useState(1);
   const [particles, setParticles] = useState([]);
+  const reduceMotion = useReducedMotion();
 
   const videoRef = useRef(null);
 
@@ -241,14 +260,18 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
 
   // Orb idle animation
   useEffect(() => {
-    if (phase !== "encounter") return;
+    if (phase !== "encounter" || reduceMotion) {
+      setOrbScale(1);
+      return;
+    }
     const interval = setInterval(() => {
       setOrbScale(s => s === 1 ? 1.06 : 1);
     }, 1200);
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [phase, reduceMotion]);
 
   const spawnParticles = useCallback((count, color) => {
+    if (reduceMotion) return;
     const newP = Array.from({ length: count }, (_, i) => ({
       id: Date.now() + i,
       x: 40 + Math.random() * 20,
@@ -260,7 +283,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     }));
     setParticles(p => [...p, ...newP]);
     setTimeout(() => setParticles(p => p.filter(x => !newP.find(n => n.id === x.id))), 1500);
-  }, []);
+  }, [reduceMotion]);
 
   const handleThrow = useCallback(async () => {
     if (phase !== "encounter") return;
@@ -275,11 +298,12 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     setPhase("result");
 
     if (outcome !== "escape") {
+      if (!reduceMotion) confetti(getCelebrationOptions(outcome, theme.ring));
       spawnParticles(outcome === "critical" || outcome === "shiny" ? 28 : 14, theme.glow);
       await saveCatchToCollection(spawn, outcome);
       onCatch?.(spawn, outcome);
     }
-  }, [phase, spawn, throwCount, theme.glow, onCatch, spawnParticles]);
+  }, [phase, spawn, throwCount, theme.glow, theme.ring, onCatch, reduceMotion, spawnParticles]);
 
   const handleSwipe = useCallback((e) => {
     e.preventDefault();
@@ -298,6 +322,9 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden"
       style={{ background: "#040810" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${spawn.mineral_name} AR encounter`}
     >
       {/* Camera background */}
       <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover opacity-40" muted playsInline />
@@ -316,8 +343,14 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       {/* Particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {particles.map(p => (
-          <div key={p.id} className="absolute w-2 h-2 rounded-full"
-            style={{ left: `${p.x}%`, top: `${p.y}%`, background: p.color, boxShadow: `0 0 6px ${p.color}`, transform: "translateX(-50%)" }} />
+          <motion.div
+            key={p.id}
+            className="absolute w-2 h-2 rounded-full"
+            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+            animate={{ x: p.vx * 8, y: p.vy * 8, opacity: 0, scale: 0.25 }}
+            transition={{ duration: 1.35, ease: "easeOut" }}
+            style={{ left: `${p.x}%`, top: `${p.y}%`, marginLeft: "-0.25rem", background: p.color, boxShadow: `0 0 6px ${p.color}` }}
+          />
         ))}
       </div>
 
@@ -332,6 +365,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
         handleSwipe={handleSwipe}
         theme={theme}
         spawn={spawn}
+        reduceMotion={reduceMotion}
       />
 
       {/* Result card */}
@@ -348,7 +382,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       {/* Throw instruction */}
       {phase === "encounter" && (
         <div className="relative z-10 mb-32 text-center">
-          <p className="text-white/40 text-xs uppercase tracking-[0.25em] animate-pulse">Tap or swipe up to throw Field Lens</p>
+          <p className={`text-white/40 text-xs uppercase tracking-[0.25em] ${reduceMotion ? "" : "animate-pulse"}`}>Tap, swipe, or press Enter to throw Field Lens</p>
           <p className="text-white/20 text-[10px] mt-1">{spawn.rarity === "legendary" ? "⚠️ Legendary — bonus answers improve catch chance" : `Catch chance: ${Math.round(spawn.catch_chance * 100)}%`}</p>
         </div>
       )}
