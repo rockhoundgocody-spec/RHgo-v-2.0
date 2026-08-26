@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import {
   CheckCircle2, AlertTriangle, Save, RotateCcw,
   ChevronDown, ChevronUp, Tag, FlaskConical,
@@ -18,6 +18,8 @@ const REVIEWER_META = {
 export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
   const [showReviewers, setShowReviewers] = useState(false);
   const [showLookalikes, setShowLookalikes] = useState(false);
+  const lookalikesId = useId();
+  const reviewersId = useId();
   if (!result) return null;
 
   const pct = Math.round(result.confidence * 100);
@@ -92,13 +94,13 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
               type="button"
               onClick={() => setShowLookalikes(p => !p)}
               aria-expanded={showLookalikes}
-              aria-controls="lookalikes-content"
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm"
+              aria-controls={lookalikesId}
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/35 hover:text-white/55 transition mb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm motion-reduce:transition-none"
             >
               Ruled-out lookalikes {showLookalikes ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
             </button>
             {showLookalikes && (
-              <div id="lookalikes-content" className="flex flex-wrap gap-1.5">
+              <div id={lookalikesId} className="flex flex-wrap gap-1.5">
                 {result.lookalikes_ruled_out.map((n, i) => (
                   <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/35 line-through">{n}</span>
                 ))}
@@ -134,15 +136,15 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
             type="button"
             onClick={() => setShowReviewers(p => !p)}
             aria-expanded={showReviewers}
-            aria-controls="reviewers-content"
-            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm"
+            aria-controls={reviewersId}
+            className="w-full flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/55 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-sm motion-reduce:transition-none"
           >
             <span>6 Specialist Reviewers</span>
             {showReviewers ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
 
           {showReviewers && (
-            <div id="reviewers-content" className="mt-3 space-y-3">
+            <div id={reviewersId} className="mt-3 space-y-3">
               {Object.entries(REVIEWER_META).map(([key, meta]) => {
                 const data = reviewResults[key];
                 if (!data) return null;
@@ -154,7 +156,7 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
                     </div>
                     <div className="text-white/55 text-xs leading-relaxed font-mono">
                       {Object.entries(data)
-                        .filter(([k, v]) => v !== null && v !== undefined && typeof v !== 'object')
+                        .filter(([_key, value]) => value !== null && value !== undefined && typeof value !== 'object')
                         .slice(0, 3)
                         .map(([k, v]) => (
                           <div key={k}><span className="text-white/30">{k}:</span> {String(v)}</div>
