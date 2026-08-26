@@ -1,6 +1,64 @@
-const isNode = typeof window === 'undefined';
 const noopStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-const storage = isNode ? noopStorage : window.localStorage;
+const AUTH_PARAM_NAMES = new Set(['access_token', 'token']);
+const AUTH_STORAGE_KEYS = ['base44_access_token', 'base44_token', 'token'];
+
+const isBrowser = () => typeof window !== 'undefined';
+
+const getBrowserStorage = (storageName) => {
+	if (!isBrowser()) return noopStorage;
+
+	try {
+		return window[storageName] || noopStorage;
+	} catch {
+		// Storage access can be blocked by browser privacy settings.
+		return noopStorage;
+	}
+};
+
+export const isTokenKey = (paramName) => AUTH_PARAM_NAMES.has(String(paramName).toLowerCase());
+
+export const getStorageBackend = (paramName) => (
+	isTokenKey(paramName)
+		? getBrowserStorage('sessionStorage')
+		: getBrowserStorage('localStorage')
+);
+
+const getStoredValue = (storage, key) => {
+	try {
+		return storage.getItem(key);
+	} catch {
+		return null;
+	}
+};
+
+const setStoredValue = (storage, key, value) => {
+	try {
+		storage.setItem(key, value);
+	} catch {
+		// App parameters remain available in memory even when storage is disabled.
+	}
+};
+
+const removeStoredValue = (storage, key) => {
+	try {
+		storage.removeItem(key);
+	} catch {
+		// A blocked storage backend is already inaccessible to the application.
+	}
+};
+
+export const clearStoredAuthTokens = ({ includeSession = true } = {}) => {
+	const stores = [getBrowserStorage('localStorage')];
+	if (includeSession) stores.push(getBrowserStorage('sessionStorage'));
+
+	for (const storage of stores) {
+		for (const key of AUTH_STORAGE_KEYS) removeStoredValue(storage, key);
+	}
+};
+
+// Remove credentials persisted by older releases. New credentials are scoped to
+// the current browser tab through sessionStorage.
+clearStoredAuthTokens({ includeSession: false });
 
 const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -33,7 +91,7 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 	}
 
 	// Absolute URL check: must match same origin
-	if (!isNode && typeof window !== 'undefined' && window.location?.origin) {
+	if (isBrowser() && window.location?.origin) {
 		try {
 			const parsed = new URL(trimmed, window.location.origin);
 			if (parsed.origin === window.location.origin) {
@@ -47,10 +105,11 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 	return defaultUrl;
 };
 
-const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
-	if (isNode) {
+export const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
+	if (!isBrowser()) {
 		return defaultValue;
 	}
+	const storage = getStorageBackend(paramName);
 	const storageKey = `base44_${toSnakeCase(paramName)}`;
 	const urlParams = new URLSearchParams(window.location.search);
 	const searchParam = urlParams.get(paramName);
@@ -61,14 +120,14 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 		window.history.replaceState({}, document.title, newUrl);
 	}
 	if (searchParam) {
-		storage.setItem(storageKey, searchParam);
+		setStoredValue(storage, storageKey, searchParam);
 		return searchParam;
 	}
 	if (defaultValue) {
-		storage.setItem(storageKey, defaultValue);
+		setStoredValue(storage, storageKey, defaultValue);
 		return defaultValue;
 	}
-	const storedValue = storage.getItem(storageKey);
+	const storedValue = getStoredValue(storage, storageKey);
 	if (storedValue) {
 		return storedValue;
 	}
@@ -77,14 +136,13 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 
 const getAppParams = () => {
 	if (getAppParamValue("clear_access_token") === 'true') {
-		storage.removeItem('base44_access_token');
-		storage.removeItem('token');
+		clearStoredAuthTokens();
 	}
-	const rawFromUrl = getAppParamValue("from_url", { defaultValue: isNode ? '/' : window.location.href });
+	const rawFromUrl = getAppParamValue("from_url", { defaultValue: isBrowser() ? window.location.href : '/' });
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
-		fromUrl: getSafeRedirectUrl(rawFromUrl, isNode ? '/' : window.location.href),
+		fromUrl: getSafeRedirectUrl(rawFromUrl, isBrowser() ? window.location.href : '/'),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}
