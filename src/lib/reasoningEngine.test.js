@@ -15,6 +15,7 @@ vi.mock('@/api/base44Client', () => ({
 let scoreToBand;
 let bandLabel;
 let reason;
+let shouldHalt;
 
 beforeAll(async () => {
   globalThis.window = {
@@ -38,6 +39,7 @@ beforeAll(async () => {
   scoreToBand = mod.scoreToBand;
   bandLabel = mod.bandLabel;
   reason = mod.reason;
+  shouldHalt = mod.shouldHalt;
 });
 
 afterEach(() => {
@@ -156,5 +158,55 @@ describe('reason fallback behavior', () => {
     expect(result.evidenceUsed).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'feature', label: 'habit', value: 'hexagonal' }),
     ]));
+  });
+});
+
+describe('shouldHalt', () => {
+  it('prioritizes insufficient evidence over offline state', () => {
+    expect(shouldHalt({ needsMoreEvidence: true, isOffline: true }))
+      .toEqual({ halt: true, reason: 'insufficient_evidence' });
+  });
+
+  it('halts offline work before confidence evaluation', () => {
+    expect(shouldHalt({ needsMoreEvidence: false, isOffline: true, evidenceScore: 1, modelConfidence: 1 }))
+      .toEqual({ halt: true, reason: 'offline' });
+  });
+
+  it('halts at the exact combined-confidence threshold', () => {
+    expect(shouldHalt({
+      evidenceScore: 0.4,
+      modelConfidence: 0.9,
+      needsMoreEvidence: false,
+      isOffline: false,
+    })).toEqual({ halt: true, reason: 'sufficient_confidence' });
+  });
+
+  it('continues immediately below the combined-confidence threshold', () => {
+    expect(shouldHalt({
+      evidenceScore: 0.4,
+      modelConfidence: 0.899,
+      needsMoreEvidence: false,
+      isOffline: false,
+    })).toEqual({ halt: false, reason: null });
+  });
+
+  it('treats missing, non-finite, and negative confidence as zero', () => {
+    for (const value of [undefined, Number.NaN, Number.POSITIVE_INFINITY, -1]) {
+      expect(shouldHalt({
+        evidenceScore: value,
+        modelConfidence: value,
+        needsMoreEvidence: false,
+        isOffline: false,
+      })).toEqual({ halt: false, reason: null });
+    }
+  });
+
+  it('clamps oversized finite confidence values to calibrated unit scores', () => {
+    expect(shouldHalt({
+      evidenceScore: 5,
+      modelConfidence: 5,
+      needsMoreEvidence: false,
+      isOffline: false,
+    })).toEqual({ halt: true, reason: 'sufficient_confidence' });
   });
 });
