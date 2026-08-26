@@ -35,10 +35,30 @@ vi.mock('@/components/visuals/GlassPanel.jsx', () => ({
   default: ({ children }) => <div data-testid="glass-panel">{children}</div>
 }));
 
-import CrystalSystemInsights from './CrystalSystemInsights.jsx';
+import CrystalSystemInsights, { getMineralLookup } from './CrystalSystemInsights.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 
 describe('CrystalSystemInsights', () => {
+  it('reuses a normalized lookup for the same immutable mineral result', () => {
+    const minerals = [
+      { name: ' Quartz ', crystal_system: 'Trigonal' },
+      { name: 'Fluorite', crystal_system: 'Cubic' },
+      { name: 'Unknown' },
+    ];
+
+    const first = getMineralLookup(minerals);
+    const second = getMineralLookup(minerals);
+
+    expect(second).toBe(first);
+    expect(first.get('quartz')).toBe('Trigonal');
+    expect(first.get('fluorite')).toBe('Cubic');
+    expect(first.has('unknown')).toBe(false);
+  });
+
+  it('returns an empty lookup for non-array input', () => {
+    expect(getMineralLookup(null).size).toBe(0);
+  });
+
   it('returns null when specimens is empty or null', () => {
     expect(CrystalSystemInsights({ specimens: [] })).toBeNull();
     expect(CrystalSystemInsights({ specimens: null })).toBeNull();
