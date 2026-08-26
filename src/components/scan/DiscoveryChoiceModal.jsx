@@ -3,9 +3,10 @@
  * Chattel vs affixed choice: Add to My GeoDex (collect) or Mark In Place (legacy pin).
  * Includes legal-access confirmation and geo-privacy controls.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gem, MapPin, ShieldCheck } from 'lucide-react';
+import useReducedMotion from '@/lib/useReducedMotion';
 
 const PRIVACY_OPTIONS = [
   { id: 'exact', label: 'Exact' },
@@ -17,41 +18,65 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
   const [disposition, setDisposition] = useState(null);
   const [geoPrivacy, setGeoPrivacy] = useState('approximate');
   const [confirmedLegal, setConfirmedLegal] = useState(false);
+  const reduceMotion = useReducedMotion();
 
-  const canConfirm = disposition && confirmedLegal;
+  const canConfirm = Boolean(disposition && confirmedLegal);
+
+  useEffect(() => {
+    if (!open) return;
+    setDisposition(null);
+    setGeoPrivacy('approximate');
+    setConfirmedLegal(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, open]);
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pt-4 pb-safe"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
-          style={{ background: 'hsla(245,30%,4%,0.8)', backdropFilter: 'blur(8px)' }}
+          style={{
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+            background: 'hsla(245,30%,4%,0.8)',
+            backdropFilter: 'blur(8px)',
+          }}
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 40, opacity: 0 }}
+            initial={reduceMotion ? false : { y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.25, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-sm rounded-3xl p-5 overflow-y-auto"
-            style={{ maxHeight: 'calc(100dvh - 80px)' }}
             style={{
+              maxHeight: 'calc(100dvh - 80px)',
               background: 'linear-gradient(180deg, hsl(250 20% 12%) 0%, hsl(248 22% 7%) 100%)',
               border: '1px solid hsla(270,50%,60%,0.25)',
               boxShadow: '0 12px 60px hsla(250,60%,3%,0.8), inset 0 1px 0 hsla(270,60%,90%,0.08)',
             }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discovery-choice-title"
+            aria-describedby="discovery-choice-description"
           >
-            <h2 className="text-white font-bold text-lg text-center">Discovery Choice</h2>
-            <p className="text-white/40 text-[11px] text-center mt-1 mb-4">
+            <h2 id="discovery-choice-title" className="text-white font-bold text-lg text-center">Discovery Choice</h2>
+            <p id="discovery-choice-description" className="text-white/40 text-[11px] text-center mt-1 mb-4">
               What happens to this {mineralName || 'specimen'}?
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div role="radiogroup" aria-label="Discovery disposition" className="grid grid-cols-2 gap-2.5">
               <ChoiceCard
                 icon={Gem}
                 title="Add to My GeoDex"
@@ -77,12 +102,15 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
               <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-1.5">
                 Location privacy
               </div>
-              <div className="flex gap-1.5">
+              <div role="radiogroup" aria-label="Location privacy" className="flex gap-1.5">
                 {PRIVACY_OPTIONS.map((p) => (
                   <button
                     key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={geoPrivacy === p.id}
                     onClick={() => setGeoPrivacy(p.id)}
-                    className="flex-1 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-colors"
+                    className="flex-1 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                     style={{
                       color: geoPrivacy === p.id ? 'hsl(195,100%,80%)' : 'hsla(220,25%,65%,0.5)',
                       background: geoPrivacy === p.id ? 'hsla(195,100%,60%,0.1)' : 'hsla(0,0%,100%,0.03)',
@@ -101,7 +129,7 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
                 type="checkbox"
                 checked={confirmedLegal}
                 onChange={(e) => setConfirmedLegal(e.target.checked)}
-                className="mt-0.5 accent-purple-400"
+                className="mt-0.5 accent-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
               />
               <span className="text-white/55 text-[11px] leading-snug">
                 <ShieldCheck size={12} className="inline mr-1 text-emerald-400" />
@@ -111,9 +139,10 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
             </label>
 
             <button
+              type="button"
               disabled={!canConfirm}
               onClick={() => onConfirm({ disposition, geoPrivacy })}
-              className="mt-4 w-full py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-35"
+              className="mt-4 w-full py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
               style={{
                 background: canConfirm
                   ? 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))'
@@ -137,8 +166,11 @@ function ChoiceCard({ icon: Icon, title, subtitle, xp, accent, selected, onClick
     : { icon: 'hsl(280,85%,80%)', border: 'hsla(280,80%,65%,0.55)', glow: 'hsla(280,100%,65%,0.25)' };
   return (
     <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
       onClick={onClick}
-      className="flex flex-col items-center text-center gap-1.5 rounded-2xl px-3 py-4 transition-all active:scale-[0.97]"
+      className="flex flex-col items-center text-center gap-1.5 rounded-2xl px-3 py-4 transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
       style={{
         background: 'hsla(0,0%,100%,0.04)',
         border: `1.5px solid ${selected ? c.border : 'hsla(0,0%,100%,0.1)'}`,
