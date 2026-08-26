@@ -59,6 +59,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
         const Icon = tab.Icon;
         return (
           <button
+            type="button"
             key={tab.to}
             onClick={() => onTabClick(tab.to, isActive)}
             aria-current={isActive ? 'page' : undefined}
@@ -97,6 +98,7 @@ function HeroScanButton({ isActive, onClick }) {
   return (
     <div className="flex flex-col items-center gap-1 -mt-6 px-1 select-none">
       <motion.button
+        type="button"
         onClick={onClick}
         whileTap={{ scale: 0.92 }}
         className="relative flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"

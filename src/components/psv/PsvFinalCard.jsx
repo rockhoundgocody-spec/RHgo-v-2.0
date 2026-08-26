@@ -89,6 +89,7 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         {result.lookalikes_ruled_out?.length > 0 && (
           <div className="mb-4">
             <button
+              type="button"
               onClick={() => setShowLookalikes(p => !p)}
               aria-expanded={showLookalikes}
               aria-controls="lookalikes-content"
@@ -109,15 +110,17 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
         {/* Save / Rescan CTAs */}
         <div className="flex gap-2.5">
           <button
+            type="button"
             onClick={onSave}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-bold text-base active:scale-[0.98] transition"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-amethyst-deep hover:bg-amethyst border border-amethyst/40 text-white font-bold text-base active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           >
             <Save size={16} /> Save to Collection
           </button>
           <button
+            type="button"
             onClick={onRescan}
             aria-label="Rescan"
-            className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition text-sm"
+            className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <RotateCcw size={15} />
           </button>
@@ -128,6 +131,7 @@ export default function PsvFinalCard({ result, draft, onSave, onRescan }) {
       {Object.keys(reviewResults).length > 0 && (
         <GlassPanel className="p-4">
           <button
+            type="button"
             onClick={() => setShowReviewers(p => !p)}
             aria-expanded={showReviewers}
             aria-controls="reviewers-content"
