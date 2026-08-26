@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Layers, Gem, Package, MapPin, Route } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const LAYERS = [
@@ -16,9 +16,13 @@ const LAYERS = [
 ];
 
 export default function MapLayerPanel({ activeLayer, onLayerChange }) {
+  const reducedMotion = useReducedMotion();
+
   return (
     <div
       className="flex gap-1.5 overflow-x-auto scrollbar-none px-1 py-1"
+      role="group"
+      aria-label="Map layers"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {LAYERS.map(layer => {
@@ -27,12 +31,12 @@ export default function MapLayerPanel({ activeLayer, onLayerChange }) {
         return (
           <motion.button
             key={layer.id}
-            whileTap={{ scale: 0.92 }}
+            whileTap={reducedMotion ? undefined : { scale: 0.92 }}
             onClick={() => onLayerChange(layer.id)}
             aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
-              'text-[10px] font-bold uppercase tracking-widest border transition-all',
+              'text-[10px] font-bold uppercase tracking-widest border transition-all motion-reduce:transition-none',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50'
             )}
             style={{

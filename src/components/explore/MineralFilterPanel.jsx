@@ -5,7 +5,7 @@
  * one of the selected minerals are shown on the map and in the list.
  */
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 // Mineral display config — icon emoji + display color per category
@@ -40,6 +40,7 @@ function metaFor(mineral) {
 }
 
 export default function MineralFilterPanel({ minerals = [], selected = new Set(), onToggle, onClearAll }) {
+  const reducedMotion = useReducedMotion();
   if (minerals.length === 0) return null;
 
   const allActive = selected.size === 0;
@@ -47,16 +48,18 @@ export default function MineralFilterPanel({ minerals = [], selected = new Set()
   return (
     <div
       className="flex gap-1.5 overflow-x-auto scrollbar-none px-1 py-1"
+      role="group"
+      aria-label="Mineral filters"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {/* All chip */}
       <motion.button
-        whileTap={{ scale: 0.92 }}
+        whileTap={reducedMotion ? undefined : { scale: 0.92 }}
         onClick={onClearAll}
         aria-pressed={allActive}
         className={cn(
           'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full',
-          'text-[10px] font-bold uppercase tracking-widest border transition-all',
+          'text-[10px] font-bold uppercase tracking-widest border transition-all motion-reduce:transition-none',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50'
         )}
         style={{
@@ -77,12 +80,12 @@ export default function MineralFilterPanel({ minerals = [], selected = new Set()
         return (
           <motion.button
             key={mineral}
-            whileTap={{ scale: 0.92 }}
+            whileTap={reducedMotion ? undefined : { scale: 0.92 }}
             onClick={() => onToggle(mineral)}
             aria-pressed={active}
             className={cn(
               'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full',
-              'text-[10px] font-bold uppercase tracking-wider border transition-all capitalize',
+              'text-[10px] font-bold uppercase tracking-wider border transition-all capitalize motion-reduce:transition-none',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50'
             )}
             style={{

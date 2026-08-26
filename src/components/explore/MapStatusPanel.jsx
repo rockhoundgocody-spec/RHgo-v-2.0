@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { CheckCircle2, XCircle, Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
  */
 export default function MapStatusPanel({ items = [] }) {
   const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
 
   const errorCount = items.filter((i) => i.state === 'error').length;
   const warnCount = items.filter((i) => i.state === 'warn').length;
@@ -31,7 +32,9 @@ export default function MapStatusPanel({ items = [] }) {
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 px-3 py-2"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
       >
         <div className="flex items-center gap-2">
           <StateIcon
@@ -51,7 +54,7 @@ export default function MapStatusPanel({ items = [] }) {
       </button>
 
       {expanded && (
-        <ul className="border-t border-white/10 divide-y divide-white/5">
+        <ul id={contentId} className="border-t border-white/10 divide-y divide-white/5">
           {items.map((item, i) => (
             <li key={i} className="flex items-start gap-2 px-3 py-2">
               <span className="mt-0.5 shrink-0">
@@ -72,8 +75,8 @@ export default function MapStatusPanel({ items = [] }) {
 }
 
 function StateIcon({ state }) {
-  if (state === 'ok') return <CheckCircle2 size={14} className="text-emerald-400" />;
-  if (state === 'error') return <XCircle size={14} className="text-rose-400" />;
-  if (state === 'warn') return <AlertTriangle size={14} className="text-amber-400" />;
-  return <Loader2 size={14} className="text-hud-cyan/80 animate-spin" />;
+  if (state === 'ok') return <CheckCircle2 size={14} className="text-emerald-400" aria-hidden="true" />;
+  if (state === 'error') return <XCircle size={14} className="text-rose-400" aria-hidden="true" />;
+  if (state === 'warn') return <AlertTriangle size={14} className="text-amber-400" aria-hidden="true" />;
+  return <Loader2 size={14} className="text-hud-cyan/80 animate-spin motion-reduce:animate-none" aria-hidden="true" />;
 }
