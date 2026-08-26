@@ -97,11 +97,11 @@ export default function Profile() {
             >
               <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} aria-label="Avatar file input" disabled={uploading} />
               {avatarUrl ? (
-                <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt="Profile avatar" className="w-full h-full object-cover" />
               ) : (
                 <User size={24} className="text-amethyst-glow" />
               )}
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition motion-reduce:transition-none">
                 {uploading
                   ? <Loader2 size={16} className="animate-spin text-white" />
                   : <Camera size={16} className="text-white" />}
@@ -112,8 +112,10 @@ export default function Profile() {
             <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>
             <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition"
+              disabled={uploading}
+              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition rounded px-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
             >
               {uploading ? 'Uploading…' : 'Change avatar'}
             </button>
