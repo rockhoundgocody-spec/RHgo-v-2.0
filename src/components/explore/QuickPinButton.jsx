@@ -5,10 +5,11 @@
  */
 import React, { useState } from 'react';
 import { MapPin, Check, Loader2, WifiOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { queueWrite, getQueueLength } from '@/lib/offlineQueue';
 
 export default function QuickPinButton({ userLocation }) {
+  const reducedMotion = useReducedMotion();
   const [state, setState] = useState('idle'); // idle | saving | saved | error
   const [savedOffline, setSavedOffline] = useState(false);
 
@@ -53,10 +54,11 @@ export default function QuickPinButton({ userLocation }) {
   return (
     <div className="relative flex flex-col items-center gap-1">
       <motion.button
+        type="button"
         onClick={handlePin}
-        whileTap={{ scale: 0.88 }}
+        whileTap={reducedMotion ? undefined : { scale: 0.88 }}
         disabled={state === 'saving'}
-        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+        className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
         style={{
           background: state === 'saved'
             ? 'hsla(142,70%,30%,.35)'
@@ -72,6 +74,7 @@ export default function QuickPinButton({ userLocation }) {
           boxShadow: state === 'saved' ? '0 0 14px hsla(142,70%,50%,.3)' : 'none',
         }}
         aria-label="Quick-pin this location"
+        aria-busy={state === 'saving'}
       >
         <AnimatePresence mode="wait" initial={false}>
           {state === 'saving' && (
@@ -95,6 +98,7 @@ export default function QuickPinButton({ userLocation }) {
       {/* Pending queue badge */}
       {queueCount > 0 && state === 'idle' && (
         <div
+          aria-label={`${queueCount} pending ${queueCount === 1 ? 'pin' : 'pins'}`}
           className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
           style={{ background: 'hsla(280,80%,55%,1)', border: '1.5px solid hsla(240,30%,8%,.9)' }}
         >
@@ -106,7 +110,8 @@ export default function QuickPinButton({ userLocation }) {
       <AnimatePresence>
         {state === 'saved' && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            role="status"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
             className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center gap-1"
             style={{
               background: 'hsla(245,30%,9%,.95)',
@@ -122,7 +127,8 @@ export default function QuickPinButton({ userLocation }) {
         )}
         {state === 'error' && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            role="status"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
             className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold text-rose-300"
             style={{
               background: 'hsla(245,30%,9%,.95)',
