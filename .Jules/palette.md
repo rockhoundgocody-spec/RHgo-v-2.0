@@ -39,3 +39,6 @@
 ## 2026-08-24 - Accessible Disclosure Widgets
 **Learning:** In a highly themed UI, standard focus indicators might clash or be invisible. However, combining focus rings (`focus-visible:ring-2`) with a slight border radius (`rounded-sm`) improves the visual box for textual toggle buttons that sit flush with their containers.
 **Action:** When adding ARIA expanded states to inline text toggle buttons, include a subtle border radius if applying focus rings, ensuring the ring outlines a neat rectangle rather than clipping awkwardly against text boundaries.
+## 2026-08-25 - Accessible Nearby Places Panel
+**Learning:** The NearbyPlacesPanel component had interactive category chips functioning as toggles but lacked ARIA properties to communicate their active state to screen readers. Focus rings should use context-specific colors (e.g. hud-cyan) to match the dark UI.
+**Action:** Apply `aria-pressed` to toggle buttons, ensure external links have descriptive `aria-label` attributes, and always use themed focus-visible states (`focus-visible:ring-hud-cyan/60`) for keyboard accessibility.

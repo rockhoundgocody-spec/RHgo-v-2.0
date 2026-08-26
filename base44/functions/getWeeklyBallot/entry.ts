@@ -74,7 +74,7 @@ export default async function (req: Request): Promise<Response> {
       if (ra !== rb) return ra - rb;
       return 0;
     });
-    result.forEach((r, i) => { (r as any).rank = i + 1; });
+    result.forEach((r, i) => { Object.assign(r, { rank: i + 1 }); });
 
     return Response.json({
       week_key: wk,

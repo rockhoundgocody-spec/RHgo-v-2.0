@@ -32,7 +32,8 @@ export default function NearbyPlacesPanel({ lat, lng }) {
               <button
                 key={c.type}
                 onClick={() => setActive(c.type)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] uppercase tracking-wider border transition ${
+                aria-pressed={isActive}
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60 focus-visible:ring-offset-1 focus-visible:ring-offset-black/80 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] uppercase tracking-wider border transition ${
                   isActive
                     ? 'bg-hud-cyan/25 border-hud-cyan/60 text-hud glow-hud'
                     : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
@@ -49,7 +50,8 @@ export default function NearbyPlacesPanel({ lat, lng }) {
           href={searchUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-hud-cyan/40 bg-hud-cyan/10 text-hud-cyan text-xs uppercase tracking-[0.25em] hover:bg-hud-cyan/20 transition"
+          aria-label={`Search ${cat.label} on Google Maps in a new tab`}
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60 focus-visible:ring-offset-1 focus-visible:ring-offset-black/80 flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-hud-cyan/40 bg-hud-cyan/10 text-hud-cyan text-xs uppercase tracking-[0.25em] hover:bg-hud-cyan/20 transition"
         >
           <ExternalLink size={13} />
           Search {cat.label} on Maps
