@@ -108,14 +108,50 @@ describe('Performance Optimization Utilities - VirtualScroller & Helpers', () =>
     expect(container.children[0].textContent).toBe('UpdatedFirst');
   });
 
-  it('ResponseCache should cache and respect expiry TTL', () => {
+});
+
+describe('ResponseCache', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('returns null for unknown keys and preserves stored object identity', () => {
     const cache = new ResponseCache(60);
-    cache.set('key1', 'value1');
+    const value = { minerals: ['quartz'] };
 
-    expect(cache.get('key1')).toBe('value1');
-    expect(cache.get('non_existent')).toBeNull();
+    expect(cache.get('missing')).toBeNull();
+    cache.set('finds', value);
+    expect(cache.get('finds')).toBe(value);
+  });
 
+  it('expires entries exactly at the configured TTL boundary', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-26T12:00:00Z'));
+    const cache = new ResponseCache(60);
+    cache.set('finds', 'fresh');
+
+    vi.advanceTimersByTime(59_999);
+    expect(cache.get('finds')).toBe('fresh');
+    vi.advanceTimersByTime(1);
+    expect(cache.get('finds')).toBeNull();
+  });
+
+  it('can replace an expired key with a fresh value', () => {
+    vi.useFakeTimers();
+    const cache = new ResponseCache(1);
+    cache.set('finds', 'old');
+    vi.advanceTimersByTime(1_000);
+
+    expect(cache.get('finds')).toBeNull();
+    cache.set('finds', 'new');
+    expect(cache.get('finds')).toBe('new');
+  });
+
+  it('clears every cached response', () => {
+    const cache = new ResponseCache(60);
+    cache.set('a', 1);
+    cache.set('b', 2);
     cache.clear();
-    expect(cache.get('key1')).toBeNull();
+
+    expect(cache.get('a')).toBeNull();
+    expect(cache.get('b')).toBeNull();
   });
 });
