@@ -7,6 +7,7 @@ vi.mock('react', async (importOriginal) => {
     ...actual,
     useState: (initial) => [initial, vi.fn()],
     useMemo: (factory) => factory(),
+    useId: () => 'specimen-lore-id',
   };
 });
 
@@ -57,6 +58,7 @@ describe('SpecimenCard', () => {
     const [, expandButton] = shareExpandRow.props.children;
     expect(expandButton.type).toBe('button');
     expect(expandButton.props['aria-expanded']).toBe(false);
+    expect(expandButton.props['aria-controls']).toBe('specimen-lore-id');
     expect(expandButton.props['aria-label']).toBe('Expand specimen lore');
     expect(expandButton.props.className).toContain('focus-visible:ring-2');
   });

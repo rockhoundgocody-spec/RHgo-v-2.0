@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
@@ -34,6 +34,7 @@ function buildLore(specimen) {
 
 export default function SpecimenCard({ specimen, index }) {
   const [expanded, setExpanded] = useState(false);
+  const loreId = useId();
   const rarity = RARITY_CONFIG[specimen.rarity] || RARITY_CONFIG.common;
   const evoLevel = getEvolutionLevel(specimen);
   const evoLabel = EVOLUTION_LABELS[evoLevel];
@@ -150,17 +151,19 @@ export default function SpecimenCard({ specimen, index }) {
         <div className="flex items-center gap-2">
           <ShareSpecimenButton specimen={specimen} className="flex-1" />
           <button
+            type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
             aria-expanded={expanded}
+            aria-controls={loreId}
             aria-label={expanded ? 'Collapse specimen lore' : 'Expand specimen lore'}
-            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 motion-reduce:transition-none"
           >
             {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
           </button>
         </div>
 
         {expanded && (
-          <div className="space-y-2 border-t border-white/5 pt-2">
+          <div id={loreId} className="space-y-2 border-t border-white/5 pt-2">
             <p className="text-[10px] text-white/50 leading-relaxed italic">
               {buildLore(specimen)}
             </p>
