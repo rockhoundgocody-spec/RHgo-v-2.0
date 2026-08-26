@@ -16,6 +16,7 @@ Deno.test('isValidRedirectTarget: rejects unapproved external domains', () => {
   assertEquals(isValidRedirectTarget('https://attacker.com/malicious'), false);
   assertEquals(isValidRedirectTarget('https://evil-base44.app.com/phish'), false);
   assertEquals(isValidRedirectTarget('https://fakebase44.app/login'), false);
+  assertEquals(isValidRedirectTarget('https://attacker.base44.app/phish'), false);
 });
 
 Deno.test('isValidRedirectTarget: rejects non-http/https protocols', () => {

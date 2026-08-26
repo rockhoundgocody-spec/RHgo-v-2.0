@@ -1,12 +1,13 @@
 import Stripe from 'npm:stripe@14.25.0';
 import { isValidRedirectTarget } from './redirectValidation.ts';
+import { resolveCheckoutPrice } from './tierPricing.ts';
 
 /**
  * createCheckoutSession — starts a Stripe Checkout (subscription mode) for a
  * RockHound-GO tier. Public app (no login required), so we do NOT call
  * base44.auth.me(); the caller may pass an optional customerEmail.
  *
- * Body: { priceId, successUrl, cancelUrl, tier, customerEmail? }
+ * Body: { successUrl, cancelUrl, tier }
  * Returns: { url } — redirect the browser there.
  *
  * metadata.tier is propagated to the subscription so the webhook can sync the
@@ -15,14 +16,20 @@ import { isValidRedirectTarget } from './redirectValidation.ts';
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
-    const { priceId, successUrl, cancelUrl, tier, customerEmail } = body || {};
+    const { priceId: requestedPriceId, successUrl, cancelUrl, tier } = body || {};
 
-    if (!priceId) return Response.json({ error: 'priceId is required' }, { status: 400 });
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
 
     if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
       return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target' }, { status: 400 });
     }
+
+    const pricing = resolveCheckoutPrice(
+      tier,
+      requestedPriceId,
+      (name) => Deno.env.get(name),
+    );
+    if (!pricing.ok) return Response.json({ error: pricing.error }, { status: 400 });
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
@@ -33,16 +40,16 @@ Deno.serve(async (req) => {
       'prod_UoyNC9AKOB5ZDh': 'field_pro',
       'prod_UoyNPk13OVCr11': 'family',
     };
-    const price = await stripe.prices.retrieve(priceId);
+    const price = await stripe.prices.retrieve(pricing.priceId);
     const productId = typeof price.product === 'string' ? price.product : price.product?.id;
-    const resolvedTier = PRODUCT_TIERS[productId] || 'field_pro';
-    if (tier && tier !== resolvedTier) {
-      console.warn(`createCheckoutSession: client tier '${tier}' ignored; price maps to '${resolvedTier}'`);
+    const resolvedTier = PRODUCT_TIERS[productId];
+    if (!resolvedTier || resolvedTier !== tier) {
+      return Response.json({ error: 'Configured price does not match the requested tier' }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: pricing.priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
@@ -56,7 +63,6 @@ Deno.serve(async (req) => {
       subscription_data: {
         metadata: { tier: resolvedTier },
       },
-      ...(customerEmail ? { customer_email: customerEmail } : {}),
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
     });

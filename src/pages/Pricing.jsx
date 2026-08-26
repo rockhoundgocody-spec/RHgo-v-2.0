@@ -1,11 +1,7 @@
 /**
  * Pricing.jsx — RockHound-GO Subscription Tiers
  *
- * Stripe configuration (set these in environment variables / secrets):
- *   STRIPE_FIELD_PRO_MONTHLY_PRICE_ID  — price_1TpKQgIUhJzYk2OCgomTVSTb (default)
- *   STRIPE_FAMILY_MONTHLY_PRICE_ID     — price_1TpKQgIUhJzYk2OCw8PJzY0U (default)
- *   STRIPE_SUCCESS_URL                 — e.g. https://rhgo.base44.app/settings?upgrade=success
- *   STRIPE_CANCEL_URL                  — e.g. https://rhgo.base44.app/pricing
+ * Stripe price IDs are resolved server-side from trusted environment settings.
  *
  * When Stripe is connected: replace the handleUpgrade placeholder below with
  *   a call to your createCheckoutSession backend function.
@@ -22,11 +18,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
 // ─── STRIPE CONFIGURATION ─────────────────────────────────────────────────
-// Configured with live Stripe price IDs for Field Pro and Family subscriptions.
-// Can be overridden via VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID / VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID.
 const STRIPE_CONFIG = {
-  fieldPro:  { priceId: import.meta.env.VITE_STRIPE_FIELD_PRO_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCgomTVSTb', label: 'Field Pro' },
-  family:    { priceId: import.meta.env.VITE_STRIPE_FAMILY_MONTHLY_PRICE_ID || 'price_1TpKQgIUhJzYk2OCw8PJzY0U', label: 'Family' },
   successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
   cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
 };
@@ -115,8 +107,6 @@ export default function Pricing() {
 
     base44.analytics.track({ eventName: 'pricing_upgrade_tapped', properties: { tier: tier.id } });
 
-    const priceId = tier.id === 'field_pro' ? STRIPE_CONFIG.fieldPro.priceId : STRIPE_CONFIG.family.priceId;
-
     // Checkout must run outside the Base44 preview iframe.
     if (typeof window !== 'undefined' && window.self !== window.top) {
       alert('Checkout only works from the published app — open it in a new tab to upgrade.');
@@ -126,11 +116,9 @@ export default function Pricing() {
     setUpgrading(tier.id);
     try {
       const res = await base44.functions.invoke('createCheckoutSession', {
-        priceId,
         successUrl: STRIPE_CONFIG.successUrl,
         cancelUrl: STRIPE_CONFIG.cancelUrl,
         tier: tier.id,
-        customerEmail: user?.email || null,
       });
       const url = res?.data?.url;
       if (!url) throw new Error('No checkout URL returned');
