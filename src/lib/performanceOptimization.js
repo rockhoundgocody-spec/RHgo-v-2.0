@@ -42,7 +42,6 @@ export function measureRenderTime(componentName) {
     performance.measure(componentName, startMark, endMark);
 
     const measure = performance.getEntriesByName(componentName)[0];
-    console.log(`[Perf] ${componentName}: ${measure.duration.toFixed(2)}ms`);
 
     return measure.duration;
   };
