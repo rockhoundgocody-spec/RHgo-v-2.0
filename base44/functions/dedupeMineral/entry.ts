@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { deleteMineralsInBatches } from './operations.ts';
 
 // Admin-only maintenance: finds Mineral records with identical names,
 // keeps the OLDEST copy of each, deletes the rest.
@@ -42,16 +43,11 @@ Deno.serve(async (req) => {
 
     let deleted = 0;
     let failed = 0;
-    if (!dryRun) {
-      for (const d of toDelete) {
-        try {
-          await base44.asServiceRole.entities.Mineral.delete(d.id);
-          deleted++;
-        } catch {
-          failed++;
-        }
-        await new Promise((r) => setTimeout(r, 250));
-      }
+    if (!dryRun && toDelete.length > 0) {
+      ({ deleted, failed } = await deleteMineralsInBatches(
+        toDelete,
+        (id) => base44.asServiceRole.entities.Mineral.delete(id),
+      ));
     }
 
     return Response.json({
