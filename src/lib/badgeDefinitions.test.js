@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BADGES, getBadgeDefinition, evaluateEarnedCodes } from './badgeDefinitions';
+import { BADGES, computeBadgeMetrics, getBadgeDefinition, evaluateEarnedCodes } from './badgeDefinitions';
 
 describe('Liquid Mineral Badge System - badgeDefinitions', () => {
   it('should contain all 15 required core badges', () => {
@@ -80,5 +80,30 @@ describe('Liquid Mineral Badge System - badgeDefinitions', () => {
     const prog = trailblazer.progress(mockSpecimens);
     expect(prog.current).toBe(2);
     expect(prog.target).toBe(25);
+  });
+
+  it('computes reusable metrics without changing array-based badge callers', () => {
+    const specimens = [
+      { mineral_name: '__proto__', found_at: '__proto__', rarity: 'legendary', verified: true },
+      { mineral_name: '__proto__', found_at: 'Site B', ai_confidence: 0.95 },
+    ];
+    const metrics = computeBadgeMetrics(specimens);
+
+    expect(metrics.bestMineralCount).toBe(2);
+    expect(metrics.uniqueLocationsCount).toBe(2);
+    expect(getBadgeDefinition('earth_chosen').check(metrics)).toBe(true);
+    expect(getBadgeDefinition('earth_chosen').check(specimens)).toBe(true);
+  });
+
+  it('normalizes unique days and tracks consecutive streaks', () => {
+    const metrics = computeBadgeMetrics([
+      { found_date: '2026-08-01T23:00:00Z' },
+      { found_date: '2026-08-01T08:00:00Z' },
+      { found_date: '2026-08-02' },
+      { found_date: 'invalid' },
+      { found_date: '2026-08-03' },
+    ]);
+
+    expect(metrics.maxDayStreak).toBe(3);
   });
 });

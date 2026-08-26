@@ -13,7 +13,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { BADGES } from '@/lib/badgeDefinitions';
+import { BADGES, computeBadgeMetrics } from '@/lib/badgeDefinitions';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 // Explicit map — wildcard imports from lucide-react aren't allowed.
@@ -42,6 +42,11 @@ const RARITY_COLOR = {
  */
 export default function ProgressDashboard() {
   const [specimens, setSpecimens] = useState(null);
+  const metrics = React.useMemo(() => computeBadgeMetrics(specimens || []), [specimens]);
+  const rows = React.useMemo(() => BADGES.map((badge) => {
+    const { current, target } = badge.progress(metrics);
+    return { ...badge, current, target, earned: current >= target };
+  }), [metrics]);
 
   useEffect(() => {
     base44.entities.Specimen.list().then((s) => setSpecimens(s || []));
@@ -54,11 +59,6 @@ export default function ProgressDashboard() {
       </GlassPanel>
     );
   }
-
-  const rows = BADGES.map((b) => {
-    const { current, target } = b.progress(specimens);
-    return { ...b, current, target, earned: current >= target };
-  });
 
   const earnedCount = rows.filter((r) => r.earned).length;
   const totalCount = rows.length;

@@ -2,7 +2,7 @@
  * Badges — Liquid Mineral Badges collection screen
  * 2-column grid, rarity filter tabs, dark/light/AR mode toggle, detail modal, unlock animation.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Award, Lock, CheckCircle2, X, Gem, Share2, Check, AlertCircle, Sun, Moon, Eye } from 'lucide-react';
 import { buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
@@ -11,6 +11,7 @@ import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import BadgeMaterialPanel from '@/components/badges/BadgeMaterialPanel.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { computeBadgeMetrics } from '@/lib/badgeDefinitions';
 
 const RARITY_ORDER  = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const FILTER_TABS   = ['all', ...RARITY_ORDER];
@@ -198,12 +199,13 @@ function BadgeCard({ badge, earned, variant, arMode, onClick }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Badges() {
-  const { earnedCodes, pendingBadge, dismissPending, allBadges } = useBadgeAwarder();
+  const { earnedCodes, specimens, pendingBadge, dismissPending, allBadges } = useBadgeAwarder();
   const [selected,     setSelected]     = useState(null);
   const [replayBadge,  setReplayBadge]  = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
   const [mode,         setMode]         = useState('dark'); // 'dark' | 'light' | 'ar'
   const [pageCopied,   setPageCopied]   = useState(false);
+  const badgeMetrics = useMemo(() => computeBadgeMetrics(specimens), [specimens]);
 
   const earnedCount = allBadges.filter((b) => earnedCodes.has(b.code)).length;
 
@@ -389,7 +391,7 @@ https://rhgo.base44.app`,
         <BadgeDetailModal
           badge={selected}
           earned={earnedCodes.has(selected.code)}
-          progress={selected.progress ? selected.progress([]) : { current: 0, target: 1 }}
+          progress={selected.progress ? selected.progress(badgeMetrics) : { current: 0, target: 1 }}
           variant={activeVariant}
           onClose={() => setSelected(null)}
           onReplay={() => setReplayBadge(selected)}
