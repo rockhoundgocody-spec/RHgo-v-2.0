@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 if (typeof globalThis.window === 'undefined') {
   globalThis.window = {
@@ -6,53 +6,21 @@ if (typeof globalThis.window === 'undefined') {
   };
 }
 
-if (!globalThis.navigator) {
-  globalThis.navigator = {};
-}
-
-let stateStore = {};
-let effectStore = [];
-
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useState: (initial) => {
-      const id = stateStore.currentId++;
-      if (!(id in stateStore.values)) {
-        stateStore.values[id] = typeof initial === 'function' ? initial() : initial;
-      }
-      const setState = (val) => {
-        stateStore.values[id] = typeof val === 'function' ? val(stateStore.values[id]) : val;
-      };
-      return [stateStore.values[id], setState];
-    },
-    useEffect: (fn) => {
-      effectStore.push(fn);
-    },
+    useState: (initial) => [typeof initial === 'function' ? initial() : initial, vi.fn()],
+    useEffect: vi.fn(),
   };
 });
 
-import PermissionsPrompt from './PermissionsPrompt.jsx';
+import PermissionsPrompt from './PermissionsPrompt';
 
 describe('PermissionsPrompt', () => {
-  beforeEach(() => {
-    stateStore = { currentId: 0, values: {} };
-    effectStore = [];
-  });
-
-  function renderComponent(props = {}) {
-    stateStore.currentId = 0;
-    const tree = PermissionsPrompt(props);
-    const effectsToRun = [...effectStore];
-    effectStore = [];
-    effectsToRun.forEach((effect) => effect());
-    return tree;
-  }
-
   it('renders dismiss button with aria-label and focus-visible classes when onDismiss is provided', () => {
     const onDismissMock = vi.fn();
-    const tree = renderComponent({ onDismiss: onDismissMock });
+    const tree = PermissionsPrompt({ onDismiss: onDismissMock });
 
     expect(tree).not.toBeNull();
     const headerDiv = tree.props.children[0];
@@ -65,7 +33,7 @@ describe('PermissionsPrompt', () => {
   });
 
   it('renders permission action buttons with focus-visible classes', () => {
-    const tree = renderComponent({});
+    const tree = PermissionsPrompt({});
 
     expect(tree).not.toBeNull();
     const itemsContainer = tree.props.children[1];
