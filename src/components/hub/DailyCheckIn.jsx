@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Check, Loader2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { getLocalDayKey, getLocalTimezone } from '@/lib/dayKey';
 
 const moods = [
   { key: 'great', label: 'Great', emoji: '✨' },
@@ -20,7 +21,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
   const [intention, setIntention] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getLocalDayKey();
   if (companion?.last_check_in_date === today) return null;
 
   const submit = async () => {
@@ -30,6 +31,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
       await base44.functions.invoke('dailyCheckIn', {
         mood_label: picked,
         intention: intention.trim() || undefined,
+        timezone: getLocalTimezone(),
       });
       onCheckedIn?.({ mood_label: picked, intention: intention.trim() });
     } finally {

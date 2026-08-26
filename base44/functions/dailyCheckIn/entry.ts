@@ -1,10 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { resolveDayKey } from './dayKey.ts';
 
 /**
  * Records the user's daily mood + intention, refills companion energy,
  * grants XP, and levels up if XP threshold is crossed.
  *
- * Payload: { mood_label: string, intention?: string }
+ * Payload: {
+ *   mood_label: string,
+ *   intention?: string,
+ *   timezone?: string, // IANA timezone from client (ex: "America/Los_Angeles")
+ * }
+ *
+ * The server derives the date from the timezone rather than trusting a
+ * client-supplied day key. Missing and invalid timezones fall back to UTC.
+ *
  * Returns: { companion, leveled_up: boolean }
  */
 Deno.serve(async (req) => {
@@ -15,12 +24,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { mood_label, intention } = await req.json();
+    const { mood_label, intention, timezone } = await req.json();
     if (!mood_label || typeof mood_label !== 'string') {
       return Response.json({ error: 'mood_label required' }, { status: 400 });
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = resolveDayKey(timezone);
 
     const existing = await base44.entities.Companion.filter({ owner_email: user.email });
     let companion =
@@ -35,7 +44,7 @@ Deno.serve(async (req) => {
         streak_days: 0,
       }));
 
-    // Block double-check-ins same day (idempotent — return current state)
+    // Block double-check-ins for the same normalized day key (idempotent).
     if (companion.last_check_in_date === today) {
       return Response.json({ companion, leveled_up: false, already_checked_in: true });
     }
