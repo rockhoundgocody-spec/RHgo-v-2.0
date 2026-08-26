@@ -17,10 +17,11 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 		return defaultUrl;
 	}
 
-	const trimmed = targetUrl.trim();
+	// Remove ASCII control characters (0x00-0x1F, 0x7F) and trim
+	const sanitized = targetUrl.replace(/[\x00-\x1F\x7F]/g, '').trim();
 
-	// Reject empty strings
-	if (!trimmed) {
+	// Reject empty strings or multi-slash / backslash protocol-relative vectors
+	if (!sanitized || sanitized.startsWith('//') || sanitized.startsWith('/\\') || sanitized.startsWith('/#')) {
 		return defaultUrl;
 	}
 
@@ -29,7 +30,7 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 			? window.location.origin
 			: 'http://localhost';
 
-		const parsed = new URL(trimmed, origin);
+		const parsed = new URL(sanitized, origin);
 
 		// Must be http: or https: protocol
 		if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -42,7 +43,10 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 		}
 
 		// Relative path: preserve pathname, query params, and hash
-		if (trimmed.startsWith('/')) {
+		if (sanitized.startsWith('/')) {
+			if (parsed.pathname.startsWith('//') || parsed.pathname.includes('\\')) {
+				return defaultUrl;
+			}
 			return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 		}
 
