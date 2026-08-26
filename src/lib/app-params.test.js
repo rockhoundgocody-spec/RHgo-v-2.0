@@ -75,6 +75,13 @@ describe('getSafeRedirectUrl', () => {
 		expect(getSafeRedirectUrl('/\\attacker.com')).toBe('/');
 	});
 
+	it('blocks control-character redirect vectors after browser normalization', () => {
+		expect(getSafeRedirectUrl('/\t//evil.com')).toBe('/');
+		expect(getSafeRedirectUrl('/\n//evil.com')).toBe('/');
+		expect(getSafeRedirectUrl('/\r//evil.com')).toBe('/');
+		expect(getSafeRedirectUrl('/\u0000//evil.com')).toBe('/');
+	});
+
 	it('allows same-origin absolute URLs', () => {
 		const safeUrl = 'http://localhost:3000/settings?upgrade=success';
 		expect(getSafeRedirectUrl(safeUrl)).toBe(safeUrl);

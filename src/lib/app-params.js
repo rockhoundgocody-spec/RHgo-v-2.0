@@ -82,27 +82,27 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 		return defaultUrl;
 	}
 
-	// Relative path check: must start with single '/' and not be followed by '/' or '\'
-	if (trimmed.startsWith('/')) {
-		if (trimmed.startsWith('//') || trimmed.startsWith('/\\') || trimmed.startsWith('/#')) {
+	if (trimmed.startsWith('/#') || /[\u0000-\u001f\u007f]/.test(trimmed)) return defaultUrl;
+
+	try {
+		const origin = isBrowser() && window.location?.origin
+			? window.location.origin
+			: 'https://rhgo.invalid';
+		const parsed = new URL(trimmed, origin);
+		if (!['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin) {
 			return defaultUrl;
 		}
-		return trimmed;
-	}
 
-	// Absolute URL check: must match same origin
-	if (isBrowser() && window.location?.origin) {
-		try {
-			const parsed = new URL(trimmed, window.location.origin);
-			if (parsed.origin === window.location.origin) {
-				return parsed.href;
-			}
-		} catch {
-			return defaultUrl;
+		// Preserve the existing relative return shape after the URL parser has
+		// normalized control characters, slashes, and backslashes safely.
+		if (trimmed.startsWith('/')) {
+			return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 		}
-	}
 
-	return defaultUrl;
+		return isBrowser() ? parsed.href : defaultUrl;
+	} catch {
+		return defaultUrl;
+	}
 };
 
 export const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
