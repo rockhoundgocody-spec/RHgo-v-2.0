@@ -1,5 +1,49 @@
-import { describe, it, expect, vi } from 'vitest';
-import { VirtualScroller, ResponseCache } from './performanceOptimization';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { debounce, VirtualScroller, ResponseCache } from './performanceOptimization';
+
+describe('debounce', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('delays execution and resets the timer after repeated calls', () => {
+    vi.useFakeTimers();
+    const callback = vi.fn();
+    const debounced = debounce(callback, 100);
+
+    debounced('first');
+    vi.advanceTimersByTime(75);
+    debounced('latest');
+    vi.advanceTimersByTime(99);
+
+    expect(callback).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith('latest');
+  });
+
+  it('preserves the caller context', () => {
+    vi.useFakeTimers();
+    const callback = vi.fn(function () {
+      return this.name;
+    });
+    const owner = { name: 'Clover', run: debounce(callback, 10) };
+
+    owner.run();
+    vi.advanceTimersByTime(10);
+
+    expect(callback.mock.instances[0]).toBe(owner);
+  });
+
+  it('uses the 300ms default delay', () => {
+    vi.useFakeTimers();
+    const callback = vi.fn();
+
+    debounce(callback)();
+    vi.advanceTimersByTime(299);
+    expect(callback).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(callback).toHaveBeenCalledOnce();
+  });
+});
 
 describe('Performance Optimization Utilities - VirtualScroller & Helpers', () => {
   it('should render items safely using replaceChildren without innerHTML', () => {
