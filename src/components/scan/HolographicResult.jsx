@@ -10,6 +10,7 @@ import RarityFireworks from './RarityFireworks.jsx';
 import ClaimPathModal from './ClaimPathModal.jsx';
 import FieldRarityBadge from './FieldRarityBadge.jsx';
 import ContextIntegrityCard from './ContextIntegrityCard.jsx';
+import useReducedMotion from '@/lib/useReducedMotion';
 
 const RARITY_CFG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.5)',  border: 'hsla(215,20%,55%,0.3)',  badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
@@ -17,6 +18,14 @@ const RARITY_CFG = {
   rare:      { label: 'Rare',      color: '#38bdf8', glow: 'hsla(200,90%,60%,0.55)', border: 'hsla(200,90%,60%,0.4)',  badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30' },
   legendary: { label: 'Legendary', color: '#a78bfa', glow: 'hsla(270,80%,65%,0.65)', border: 'hsla(270,80%,65%,0.5)', badge: 'bg-amethyst/20 text-amethyst-glow border-amethyst/40' },
 };
+
+const TABS = [
+  { id: 'quick',    icon: Sparkles,     label: 'Quick ID' },
+  { id: 'deep',     icon: Cloud,        label: 'Deep' },
+  { id: 'tests',    icon: FlaskConical, label: 'Tests' },
+  { id: 'features', icon: Zap,          label: 'Features' },
+  { id: 'lore',     icon: BookOpen,     label: 'Lore' },
+];
 
 function confidenceLabel(c) {
   if (c >= 0.88) return { text: 'Near Certain', color: '#34d399' };
@@ -41,6 +50,8 @@ export default function HolographicResult({
   gpsCoords,
 }) {
   const tiltRef = useRef(null);
+  const tabRefs = useRef(new Map());
+  const reduceMotion = useReducedMotion();
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [claimPath, setClaimPath] = useState(null);
@@ -61,6 +72,10 @@ export default function HolographicResult({
   useEffect(() => {
     const el = tiltRef.current;
     if (!el) return;
+    if (reduceMotion) {
+      el.style.transform = 'none';
+      return;
+    }
     const target = { x: 0, y: 0 };
     const cur = { x: 0, y: 0 };
     const onMove = (e) => {
@@ -78,7 +93,7 @@ export default function HolographicResult({
     tick();
     window.addEventListener('mousemove', onMove);
     return () => { window.removeEventListener('mousemove', onMove); cancelAnimationFrame(raf); };
-  }, []);
+  }, [reduceMotion]);
 
   const rarity = result?.rarity || 'common';
   const rc = RARITY_CFG[rarity] || RARITY_CFG.common;
@@ -89,13 +104,20 @@ export default function HolographicResult({
   const tests = result?.verification_tests || [];
   const lookalikes = result?.lookalikes || [];
 
-  const TABS = [
-    { id: 'quick',    icon: Sparkles,     label: 'Quick ID' },
-    { id: 'deep',     icon: Cloud,        label: 'Deep' },
-    { id: 'tests',    icon: FlaskConical, label: 'Tests' },
-    { id: 'features', icon: Zap,          label: 'Features' },
-    { id: 'lore',     icon: BookOpen,     label: 'Lore' },
-  ];
+  const focusTab = (index) => {
+    const tab = TABS[(index + TABS.length) % TABS.length];
+    setActiveTab(tab.id);
+    tabRefs.current.get(tab.id)?.focus();
+  };
+
+  const handleTabKeyDown = (event, index) => {
+    if (event.key === 'ArrowRight') focusTab(index + 1);
+    else if (event.key === 'ArrowLeft') focusTab(index - 1);
+    else if (event.key === 'Home') focusTab(0);
+    else if (event.key === 'End') focusTab(TABS.length - 1);
+    else return;
+    event.preventDefault();
+  };
 
   return (
     <>
@@ -184,22 +206,33 @@ export default function HolographicResult({
           </div>
         )}
         {onCompare && (
-          <Button onClick={onCompare} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl" title="Compare">
+          <Button onClick={onCompare} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl focus-visible:ring-2 focus-visible:ring-amethyst-glow" title="Compare" aria-label="Compare with other specimens">
             <GitCompare size={16} />
           </Button>
         )}
-        <Button onClick={onReset} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl" title="Scan again">
+        <Button onClick={onReset} variant="outline" className="h-12 px-3 border-white/15 text-white/70 hover:bg-white/5 rounded-xl focus-visible:ring-2 focus-visible:ring-amethyst-glow" title="Scan again" aria-label="Reset and scan a new specimen">
           <RotateCcw size={16} />
         </Button>
       </div>
 
       {/* ── TAB BAR ── */}
-      <div className="mt-4 flex gap-1 p-1 rounded-xl" style={{ background: 'hsla(220,40%,6%,0.8)', border: '1px solid hsla(270,30%,30%,0.25)' }}>
-        {TABS.map(({ id, icon: Icon, label }) => (
+      <div role="tablist" aria-label="Specimen analysis" className="mt-4 flex gap-1 p-1 rounded-xl" style={{ background: 'hsla(220,40%,6%,0.8)', border: '1px solid hsla(270,30%,30%,0.25)' }}>
+        {TABS.map(({ id, icon: Icon, label }, index) => (
           <button
             key={id}
+            ref={(node) => {
+              if (node) tabRefs.current.set(id, node);
+              else tabRefs.current.delete(id);
+            }}
+            id={`result-tab-${id}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === id}
+            aria-controls={`result-panel-${id}`}
+            tabIndex={activeTab === id ? 0 : -1}
             onClick={() => setActiveTab(id)}
-            className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-all text-[10px] font-semibold uppercase tracking-[0.15em]"
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
+            className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-all text-[10px] font-semibold uppercase tracking-[0.15em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
             style={{
               background: activeTab === id ? `hsla(270,60%,30%,0.5)` : 'transparent',
               color: activeTab === id ? rc.color : 'hsla(0,0%,100%,0.4)',
@@ -217,7 +250,7 @@ export default function HolographicResult({
 
         {/* QUICK ID TAB (2B.2) */}
         {activeTab === 'quick' && (
-          <div className="p-4">
+          <div id="result-panel-quick" role="tabpanel" aria-labelledby="result-tab-quick" tabIndex={0} className="p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amethyst-glow">
             <QuickIDStack
               result={result}
               candidates={candidates}
@@ -266,7 +299,7 @@ export default function HolographicResult({
 
         {/* DEEP ANALYSIS TAB (2B.3) */}
         {activeTab === 'deep' && (
-          <div className="p-4">
+          <div id="result-panel-deep" role="tabpanel" aria-labelledby="result-tab-deep" tabIndex={0} className="p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amethyst-glow">
             {deepLoading || deepAnalysis ? (
               <DeepAnalysisPanel analysis={deepAnalysis} loading={deepLoading} />
             ) : (
@@ -299,7 +332,7 @@ export default function HolographicResult({
 
         {/* TESTS TAB */}
         {activeTab === 'tests' && (
-          <div className="p-4 space-y-3">
+          <div id="result-panel-tests" role="tabpanel" aria-labelledby="result-tab-tests" tabIndex={0} className="p-4 space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amethyst-glow">
             {tests.length === 0 && (
               <p className="text-white/30 text-sm text-center py-6">No verification tests available.</p>
             )}
@@ -331,7 +364,7 @@ export default function HolographicResult({
 
         {/* FEATURES TAB */}
         {activeTab === 'features' && (
-          <div className="p-4">
+          <div id="result-panel-features" role="tabpanel" aria-labelledby="result-tab-features" tabIndex={0} className="p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amethyst-glow">
             {features.length === 0 && (
               <p className="text-white/30 text-sm text-center py-6">No features extracted.</p>
             )}
@@ -348,7 +381,7 @@ export default function HolographicResult({
 
         {/* LORE TAB */}
         {activeTab === 'lore' && (
-          <div className="p-4 space-y-4">
+          <div id="result-panel-lore" role="tabpanel" aria-labelledby="result-tab-lore" tabIndex={0} className="p-4 space-y-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amethyst-glow">
             {/* Great Lakes origin story card */}
             <MineralStoryCard mineralName={result?.top_match} />
             {result?.fun_fact && (
