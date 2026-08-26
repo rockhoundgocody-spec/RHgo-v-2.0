@@ -15,7 +15,8 @@ export function isValidRedirectTarget(urlStr: string): boolean {
       hostname === '127.0.0.1' ||
       hostname === 'rhgo.base44.app' ||
       hostname === 'rhgo2.base44.app' ||
-      hostname.endsWith('.base44.app')
+      hostname.endsWith('.rhgo.base44.app') ||
+      hostname.endsWith('.rhgo2.base44.app')
     ) {
       return true;
     }
