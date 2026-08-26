@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Upload, Trophy, Zap, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { User, Upload, Trophy, Share2, ChevronRight, Check, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { shareAchievement } from '@/lib/shareAchievement';
 
 const LEVEL_TITLES = [
@@ -35,7 +35,7 @@ function xpToNext(xp) {
 }
 
 // Level-up celebration overlay
-function LevelUpModal({ title, onClose }) {
+function LevelUpModal({ title, onClose, reducedMotion }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3200);
     return () => clearTimeout(t);
@@ -43,17 +43,17 @@ function LevelUpModal({ title, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none"
       style={{ background: 'hsla(260,80%,5%,0.75)', backdropFilter: 'blur(6px)' }}
     >
       <motion.div
-        initial={{ scale: 0.7, y: 30 }}
+        initial={reducedMotion ? false : { scale: 0.7, y: 30 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+        exit={reducedMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
+        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 22 }}
         className="text-center px-8 py-10 rounded-3xl"
         style={{ background: 'linear-gradient(135deg, hsla(265,80%,12%,0.97), hsla(280,60%,8%,0.99))', border: '1px solid hsla(280,100%,70%,0.4)', boxShadow: '0 0 60px hsla(280,100%,60%,0.35)' }}
       >
@@ -71,8 +71,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
   const [uploading, setUploading] = useState(false);
   const [levelUpTitle, setLevelUpTitle] = useState(null);
   const [shared, setShared] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
 
   const [player, setPlayer] = useState({ totalXP: 0, avatarUrl: null, badges: [] });
 
@@ -83,8 +82,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
         const p = res.data;
         if (p) setPlayer({ totalXP: p.total_xp || 0, avatarUrl: p.avatar_url || null, badges: p.badges || [] });
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, [userEmail]);
 
   const level = getLevel(player.totalXP);
@@ -193,13 +191,13 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
               </Link>
               {/* Small upload badge */}
               <label
-                className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border transition active:scale-90 focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow motion-reduce:transform-none motion-reduce:transition-none ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{ background: 'hsla(265,60%,20%,0.95)', borderColor: 'hsla(280,60%,50%,0.5)' }}
               >
-                <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={uploading} />
+                <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={uploading} aria-label="Upload avatar" />
                 {uploading
-                  ? <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin" />
-                  : <Upload size={9} className="text-amethyst-glow" />
+                  ? <div className="w-2.5 h-2.5 border border-amethyst/40 border-t-amethyst-glow rounded-full animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                  : <Upload size={9} className="text-amethyst-glow" aria-hidden="true" />
                 }
               </label>
             </div>
@@ -284,7 +282,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
       {/* Level-up modal */}
       <AnimatePresence>
         {levelUpTitle && (
-          <LevelUpModal title={levelUpTitle} onClose={() => setLevelUpTitle(null)} />
+          <LevelUpModal title={levelUpTitle} onClose={() => setLevelUpTitle(null)} reducedMotion={reducedMotion} />
         )}
       </AnimatePresence>
     </>
