@@ -19,6 +19,7 @@ import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
+import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore } from '@/lib/scanSave';
 
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
@@ -385,16 +386,8 @@ export default function Scan() {
   const saveWithChoice = async (choice) => {
     setChoiceOpen(false);
     if (!result || !primaryUrl) return;
-    // Geo privacy controls — exact, approximate (~1km), or private (no coords)
-    let lat = gpsCoords?.lat ?? null;
-    let lng = gpsCoords?.lng ?? null;
-    if (choice.geoPrivacy === 'private') { lat = null; lng = null; }
-    else if (choice.geoPrivacy === 'approximate' && lat != null) {
-      lat = Math.round(lat * 100) / 100;
-      lng = Math.round(lng * 100) / 100;
-    }
-    const rarityWeight = { common: 1, uncommon: 2, rare: 3, legendary: 5 }[result.rarity] || 1;
-    const rqs = Math.round(rarityWeight * (result.confidence || 0.5) * 20);
+    const { lat, lng } = applyGeoPrivacy(gpsCoords, choice.geoPrivacy);
+    const rqs = calculateRarityQualityScore(result.rarity, result.confidence);
     const xp = choice.disposition === 'left_in_place' ? 40 : 25;
     // Route through the backend identifySpecimen function with save=true
     // so all rich metadata (scientific name, formula, hardness, formation, value) gets persisted
@@ -413,23 +406,13 @@ export default function Scan() {
     let specimenObj = null;
     if (!specimenId) {
       // Fallback: save directly with full metadata from result
-      const richNotes = [
-        result.description,
-        result.scientific_name ? `Scientific name: ${result.scientific_name}` : null,
-        result.chemical_formula ? `Formula: ${result.chemical_formula}` : null,
-        result.crystal_system ? `Crystal system: ${result.crystal_system}` : null,
-        result.hardness_mohs != null ? `Hardness: ${result.hardness_mohs} Mohs` : null,
-        result.formation ? `Formation: ${result.formation}` : null,
-        result.value_estimate ? `Value: ${result.value_estimate}` : null,
-        result.fun_fact ? `Fun fact: ${result.fun_fact}` : null,
-      ].filter(Boolean).join('\n\n');
       const created = await base44.entities.Specimen.create({
         mineral_name:  result.top_match,
         common_name:   result.scientific_name || result.top_match,
         image_url:     primaryUrl,
         ai_confidence: result.confidence,
         ai_candidates: result.candidates,
-        notes:         richNotes,
+        notes:         buildSpecimenNotes(result),
         rarity:        result.rarity,
         found_date:    new Date().toISOString().split('T')[0],
         ...(lat != null ? { lat, lng } : {}),
@@ -453,29 +436,27 @@ export default function Scan() {
     });
 
     // Award category XP — Collector for collecting, Steward for leaving in place
-    const me = await base44.auth.me();
-    const cat = choice.disposition === 'left_in_place' ? 'steward' : 'collector';
-    const emptyCats = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
-    const profs = await base44.entities.PlayerProfile.filter({ owner_email: me.email });
-    if (profs[0]) {
-      const cats = { ...emptyCats, ...(profs[0].xp_categories || {}) };
-      cats[cat] += xp;
-      await base44.entities.PlayerProfile.update(profs[0].id, {
-        xp_categories: cats,
-        total_xp: (profs[0].total_xp || 0) + xp,
-      });
-    } else {
-      await base44.entities.PlayerProfile.create({
-        owner_email: me.email,
-        total_xp: xp,
-        xp_categories: { ...emptyCats, [cat]: xp },
-      });
-    }
+    const currentUser = await base44.auth.me().catch(() => null);
+    if (currentUser?.email) {
+      const category = choice.disposition === 'left_in_place' ? 'steward' : 'collector';
+      const emptyCategories = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
+      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: currentUser.email });
+      if (profiles[0]) {
+        const categories = { ...emptyCategories, ...(profiles[0].xp_categories || {}) };
+        categories[category] += xp;
+        await base44.entities.PlayerProfile.update(profiles[0].id, {
+          xp_categories: categories,
+          total_xp: (profiles[0].total_xp || 0) + xp,
+        });
+      } else {
+        await base44.entities.PlayerProfile.create({
+          owner_email: currentUser.email,
+          total_xp: xp,
+          xp_categories: { ...emptyCategories, [category]: xp },
+        });
+      }
 
-    // Track collected weight for Michigan legal limit
-    if (choice.disposition === 'collected') {
-      const me = await base44.auth.me().catch(() => null);
-      if (me?.email) logCollectedWeight(me.email);
+      if (choice.disposition === 'collected') logCollectedWeight(currentUser.email);
     }
 
     setSavedId(specimenId);
@@ -621,7 +602,6 @@ function StageStrip({ stage }) {
         const active = i === activeIdx;
         return (
           <React.Fragment key={s.id}>
-            {/* eslint-disable-next-line */}
             <div
               className="text-[7px] font-mono uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-full"
               style={{

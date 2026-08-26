@@ -9,7 +9,7 @@ import React from "react";
  * Check if user prefers reduced motion
  */
 export function prefersReducedMotion() {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
@@ -96,26 +96,42 @@ export const SkipToMainLink = () => (
 );
 
 /**
- * Color contrast validator (WCAG AA)
- * Returns true if contrast ratio >= 4.5:1
+ * Color contrast validator (WCAG AA normal text).
+ * Supports three- and six-digit hexadecimal colors.
  */
+function parseHexColor(value) {
+  if (typeof value !== 'string') return null;
+  const match = value.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+  if (!match) return null;
+  const expanded = match[1].length === 3
+    ? [...match[1]].map((character) => character.repeat(2)).join('')
+    : match[1];
+  return [0, 2, 4].map((offset) => Number.parseInt(expanded.slice(offset, offset + 2), 16));
+}
+
+function getRelativeLuminance(color) {
+  const channels = parseHexColor(color);
+  if (!channels) return null;
+  const [red, green, blue] = channels.map((channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+export function getContrastRatio(hexColor1, hexColor2) {
+  const l1 = getRelativeLuminance(hexColor1);
+  const l2 = getRelativeLuminance(hexColor2);
+  if (l1 == null || l2 == null) return null;
+
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
 export function validateContrast(hexColor1, hexColor2) {
-  const getLuminance = (hex) => {
-    const rgb = parseInt(hex.slice(1), 16);
-    const r = (rgb >> 16) & 0xff;
-    const g = (rgb >> 8) & 0xff;
-    const b = (rgb >> 0) & 0xff;
-
-    const luminance =
-      (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance <= 0.03955 ? luminance / 12.92 : Math.pow((luminance + 0.055) / 1.055, 2.4);
-  };
-
-  const l1 = getLuminance(hexColor1);
-  const l2 = getLuminance(hexColor2);
-
-  const contrast = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-  return contrast >= 4.5;
+  const contrast = getContrastRatio(hexColor1, hexColor2);
+  return contrast != null && contrast >= 4.5;
 }
 
 /**

@@ -12,6 +12,7 @@ import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import BadgeMaterialPanel from '@/components/badges/BadgeMaterialPanel.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { computeBadgeMetrics } from '@/lib/badgeDefinitions';
+import { sortBadgesForDisplay } from '@/lib/badgeSorting';
 
 const RARITY_ORDER  = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const FILTER_TABS   = ['all', ...RARITY_ORDER];
@@ -224,16 +225,10 @@ https://rhgo.base44.app`,
     else if (result === 'error') { setPageCopied('error'); setTimeout(() => setPageCopied(false), 2200); }
   };
 
-  const filtered = rarityFilter === 'all'
-    ? allBadges
-    : allBadges.filter((b) => b.rarity === rarityFilter);
-
-  const sorted = [...filtered].sort((a, b) => {
-    const ae = earnedCodes.has(a.code) ? 0 : 1;
-    const be = earnedCodes.has(b.code) ? 0 : 1;
-    if (ae !== be) return ae - be;
-    return RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity);
-  });
+  const sorted = useMemo(
+    () => sortBadgesForDisplay(allBadges, earnedCodes, rarityFilter, RARITY_ORDER),
+    [allBadges, earnedCodes, rarityFilter],
+  );
 
   const activeVariant = mode === 'light' ? 'light' : 'dark';
   const isArMode      = mode === 'ar';
