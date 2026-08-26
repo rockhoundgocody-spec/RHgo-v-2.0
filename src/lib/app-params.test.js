@@ -1,6 +1,22 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 
 let getSafeRedirectUrl;
+let getAppParamValue;
+let getStorageBackend;
+let clearStoredAuthTokens;
+
+const createStorage = () => {
+	const values = new Map();
+	return {
+		getItem: (key) => values.get(key) ?? null,
+		setItem: (key, value) => values.set(key, String(value)),
+		removeItem: (key) => values.delete(key),
+		clear: () => values.clear(),
+	};
+};
+
+const localStorage = createStorage();
+const sessionStorage = createStorage();
 
 beforeAll(async () => {
 	globalThis.window = {
@@ -11,11 +27,8 @@ beforeAll(async () => {
 			search: '',
 			hash: '',
 		},
-		localStorage: {
-			getItem: () => null,
-			setItem: () => {},
-			removeItem: () => {},
-		},
+		localStorage,
+		sessionStorage,
 		history: {
 			replaceState: () => {},
 		},
@@ -26,6 +39,15 @@ beforeAll(async () => {
 
 	const mod = await import('./app-params');
 	getSafeRedirectUrl = mod.getSafeRedirectUrl;
+	getAppParamValue = mod.getAppParamValue;
+	getStorageBackend = mod.getStorageBackend;
+	clearStoredAuthTokens = mod.clearStoredAuthTokens;
+});
+
+beforeEach(() => {
+	localStorage.clear();
+	sessionStorage.clear();
+	window.location.search = '';
 });
 
 describe('getSafeRedirectUrl', () => {
@@ -62,5 +84,44 @@ describe('getSafeRedirectUrl', () => {
 		expect(getSafeRedirectUrl('https://evil.com/phish')).toBe('/');
 		expect(getSafeRedirectUrl('https://attacker.org')).toBe('/');
 		expect(getSafeRedirectUrl('javascript:alert(1)')).toBe('/');
+	});
+});
+
+describe('app parameter storage', () => {
+	it('stores access tokens only in sessionStorage', () => {
+		window.location.search = '?access_token=short-lived-secret';
+
+		expect(getAppParamValue('access_token')).toBe('short-lived-secret');
+		expect(sessionStorage.getItem('base44_access_token')).toBe('short-lived-secret');
+		expect(localStorage.getItem('base44_access_token')).toBeNull();
+	});
+
+	it('keeps non-sensitive application parameters in localStorage', () => {
+		window.location.search = '?app_id=app-123';
+
+		expect(getAppParamValue('app_id')).toBe('app-123');
+		expect(getStorageBackend('app_id')).toBe(localStorage);
+		expect(localStorage.getItem('base44_app_id')).toBe('app-123');
+		expect(sessionStorage.getItem('base44_app_id')).toBeNull();
+	});
+
+	it('clears legacy and session-scoped auth keys', () => {
+		for (const storage of [localStorage, sessionStorage]) {
+			storage.setItem('base44_access_token', 'secret');
+			storage.setItem('base44_token', 'secret');
+			storage.setItem('token', 'secret');
+		}
+
+		clearStoredAuthTokens();
+
+		for (const storage of [localStorage, sessionStorage]) {
+			expect(storage.getItem('base44_access_token')).toBeNull();
+			expect(storage.getItem('base44_token')).toBeNull();
+			expect(storage.getItem('token')).toBeNull();
+		}
+	});
+
+	it('does not classify unrelated parameter names as credentials', () => {
+		expect(getStorageBackend('tokenizer_theme')).toBe(localStorage);
 	});
 });
