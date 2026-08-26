@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { Flame, Zap } from 'lucide-react';
 
@@ -63,11 +62,12 @@ export default function DailyStreakCard({ companion }) {
 
         {!revealed ? (
           <button
+            type="button"
             onClick={() => setRevealed(true)}
-            className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-all"
+            className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
             style={{ borderColor: `${color}40`, background: `${color}08` }}
           >
-            <div className="text-4xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300">
+            <div className="text-4xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300 motion-reduce:transition-none">
               ❓
             </div>
             <div className="text-[11px] uppercase tracking-[0.3em] font-bold"
@@ -77,7 +77,7 @@ export default function DailyStreakCard({ companion }) {
             <div className="text-[10px] text-white/30 mt-1">
               {mineral.rarity} · learn something wild
             </div>
-            <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+            <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity motion-reduce:transition-none"
               style={{ background: `radial-gradient(ellipse at center, ${color}15 0%, transparent 70%)` }} />
           </button>
         ) : (
