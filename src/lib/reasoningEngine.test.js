@@ -1,10 +1,12 @@
-import { vi, describe, it, expect, beforeAll } from 'vitest';
+import { vi, describe, it, expect, beforeAll, afterEach } from 'vitest';
+
+const { invokeLLM } = vi.hoisted(() => ({ invokeLLM: vi.fn() }));
 
 vi.mock('@/api/base44Client', () => ({
   base44: {
     integrations: {
       Core: {
-        InvokeLLM: vi.fn(),
+        InvokeLLM: invokeLLM,
       },
     },
   },
@@ -12,6 +14,7 @@ vi.mock('@/api/base44Client', () => ({
 
 let scoreToBand;
 let bandLabel;
+let reason;
 
 beforeAll(async () => {
   globalThis.window = {
@@ -34,6 +37,11 @@ beforeAll(async () => {
   const mod = await import('./reasoningEngine.js');
   scoreToBand = mod.scoreToBand;
   bandLabel = mod.bandLabel;
+  reason = mod.reason;
+});
+
+afterEach(() => {
+  invokeLLM.mockReset();
 });
 
 describe('scoreToBand', () => {
@@ -76,5 +84,77 @@ describe('bandLabel', () => {
     expect(bandLabel('unknown')).toBeUndefined();
     expect(bandLabel('')).toBeUndefined();
     expect(bandLabel(null)).toBeUndefined();
+  });
+});
+
+describe('reason fallback behavior', () => {
+  it('halts before the remote model when the client is offline', async () => {
+    const result = await reason({
+      task: 'identify',
+      isOffline: true,
+      imageUrls: ['https://example.test/specimen.jpg'],
+    });
+
+    expect(result).toMatchObject({
+      primaryResult: 'Unknown specimen',
+      confidenceBand: 'low',
+      isOfflineFallback: true,
+    });
+    expect(result.reasoningSummary).toContain('offline');
+    expect(invokeLLM).not.toHaveBeenCalled();
+  });
+
+  it('halts on insufficient evidence without spending a model request', async () => {
+    const result = await reason({ task: 'identify', imageUrls: [] });
+
+    expect(result).toMatchObject({
+      primaryResult: 'Unknown specimen',
+      needsMoreEvidence: true,
+      isOfflineFallback: false,
+    });
+    expect(invokeLLM).not.toHaveBeenCalled();
+  });
+
+  it('returns a safe fallback when the model request fails', async () => {
+    invokeLLM.mockRejectedValueOnce(new Error('network unavailable'));
+
+    const result = await reason({
+      task: 'identify',
+      imageUrls: ['https://example.test/specimen.jpg'],
+    });
+
+    expect(result).toMatchObject({
+      primaryResult: 'Identification unavailable',
+      confidenceBand: 'low',
+      confidenceScore: 0,
+      isOfflineFallback: true,
+    });
+    expect(result.reasoningSummary).toContain('unavailable');
+  });
+
+  it('preserves a successful model result and confidence band', async () => {
+    invokeLLM.mockResolvedValueOnce({
+      primary_result: 'Quartz',
+      confidence: 0.9,
+      reasoning: 'Hexagonal crystal habit is visible.',
+      observed_features: [{ feature: 'habit', value: 'hexagonal' }],
+      uncertainty: [],
+    });
+
+    const result = await reason({
+      task: 'identify',
+      imageUrls: ['https://example.test/specimen.jpg'],
+      locality: { lat: 45, lng: -90 },
+    });
+
+    expect(result).toMatchObject({
+      primaryResult: 'Quartz',
+      confidenceBand: 'high',
+      isOfflineFallback: false,
+      reasoningSummary: 'Hexagonal crystal habit is visible.',
+    });
+    expect(result.evidenceUsed).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'feature', label: 'habit', value: 'hexagonal' }),
+    ]));
   });
 });
