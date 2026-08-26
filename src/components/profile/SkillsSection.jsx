@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -119,10 +119,14 @@ const LEVEL_TEXT = {
 
 function SkillCard({ skill }) {
   const [open, setOpen] = useState(false);
+  const descriptionId = useId();
   return (
     <button
+      type="button"
       onClick={() => setOpen(o => !o)}
-      className="w-full text-left rounded-xl overflow-hidden transition-all"
+      aria-expanded={open}
+      aria-controls={descriptionId}
+      className="w-full text-left rounded-xl overflow-hidden transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 motion-reduce:transition-none"
       style={{
         background: `hsla(265,40%,5%,0.7)`,
         border: `1px solid ${skill.color}28`,
@@ -130,7 +134,7 @@ function SkillCard({ skill }) {
       }}
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        <span className="text-xl leading-none flex-shrink-0">{skill.emoji}</span>
+        <span className="text-xl leading-none flex-shrink-0" aria-hidden="true">{skill.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-white/90 leading-tight">{skill.title}</div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -151,7 +155,7 @@ function SkillCard({ skill }) {
         </div>
       </div>
       {open && (
-        <div className="px-4 pb-3 text-[11px] text-white/50 leading-relaxed border-t" style={{ borderColor: `${skill.color}20` }}>
+        <div id={descriptionId} className="px-4 pb-3 text-[11px] text-white/50 leading-relaxed border-t" style={{ borderColor: `${skill.color}20` }}>
           {skill.description}
         </div>
       )}
