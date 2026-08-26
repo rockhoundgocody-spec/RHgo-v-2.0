@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { chunkValues, collectPages, groupDigestRecords } from './operations.ts';
 
 /**
  * sendWeeklySummary — scheduled weekly digest.
@@ -22,6 +23,36 @@ Deno.serve(async (req) => {
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const users = await base44.asServiceRole.entities.User.list();
+    const userEmails = [...new Set(users.map((user) => user.email).filter(Boolean))];
+    const specimensByEmail = new Map();
+    const companionByEmail = new Map();
+
+    // Keep each `$in` query bounded and page every result so totals are never
+    // silently truncated for larger communities.
+    for (const emailBatch of chunkValues(userEmails, 100)) {
+      const [specimens, companions] = await Promise.all([
+        collectPages((limit, skip) => base44.asServiceRole.entities.Specimen.filter(
+          { created_by: { $in: emailBatch }, created_date: { $gte: since } },
+          '-created_date',
+          limit,
+          skip,
+        )),
+        collectPages((limit, skip) => base44.asServiceRole.entities.Companion.filter(
+          { owner_email: { $in: emailBatch } },
+          '-updated_date',
+          limit,
+          skip,
+        )),
+      ]);
+
+      const grouped = groupDigestRecords(specimens, companions);
+      for (const [email, records] of grouped.specimensByEmail) {
+        specimensByEmail.set(email, records);
+      }
+      for (const [email, companion] of grouped.companionByEmail) {
+        companionByEmail.set(email, companion);
+      }
+    }
 
     let sent = 0;
     const errors = [];
@@ -29,13 +60,8 @@ Deno.serve(async (req) => {
     for (const user of users) {
       if (!user.email) continue;
       try {
-        const [specimens, companions] = await Promise.all([
-          base44.asServiceRole.entities.Specimen.filter({ created_by: user.email }, '-created_date', 200),
-          base44.asServiceRole.entities.Companion.filter({ owner_email: user.email }, '-updated_date', 1),
-        ]);
-
-        const recent = specimens.filter((s) => (s.created_date || '') >= since);
-        const companion = companions?.[0];
+        const recent = specimensByEmail.get(user.email) || [];
+        const companion = companionByEmail.get(user.email);
 
         // Skip users with no activity AND no companion at all
         if (recent.length === 0 && !companion) continue;
