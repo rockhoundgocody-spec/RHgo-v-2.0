@@ -24,27 +24,32 @@ export const getSafeRedirectUrl = (targetUrl, defaultUrl = '/') => {
 		return defaultUrl;
 	}
 
-	// Relative path check: must start with single '/' and not be followed by '/' or '\'
-	if (trimmed.startsWith('/')) {
-		if (trimmed.startsWith('//') || trimmed.startsWith('/\\') || trimmed.startsWith('/#')) {
+	try {
+		const origin = (!isNode && typeof window !== 'undefined' && window.location?.origin)
+			? window.location.origin
+			: 'http://localhost';
+
+		const parsed = new URL(trimmed, origin);
+
+		// Must be http: or https: protocol
+		if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
 			return defaultUrl;
 		}
-		return trimmed;
-	}
 
-	// Absolute URL check: must match same origin
-	if (!isNode && typeof window !== 'undefined' && window.location?.origin) {
-		try {
-			const parsed = new URL(trimmed, window.location.origin);
-			if (parsed.origin === window.location.origin) {
-				return parsed.href;
-			}
-		} catch {
+		// Must match current origin
+		if (parsed.origin !== origin) {
 			return defaultUrl;
 		}
-	}
 
-	return defaultUrl;
+		// Relative path: preserve pathname, query params, and hash
+		if (trimmed.startsWith('/')) {
+			return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+		}
+
+		return parsed.href;
+	} catch {
+		return defaultUrl;
+	}
 };
 
 const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
