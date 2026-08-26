@@ -15,16 +15,18 @@ const LAYERS = [
 ];
 
 const ACTIVE_COLORS = {
-  all:    'border-amethyst/60 text-amethyst-glow bg-amethyst/10',
-  rare:   'border-sky-400/60 text-sky-300 bg-sky-500/10',
-  gaps:   'border-amber-400/60 text-amber-300 bg-amber-500/10',
-  public: 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10',
-  mine:   'border-hud-cyan/60 text-hud-cyan bg-hud-cyan/10',
+  all:    'border-amethyst/60 text-amethyst-glow bg-amethyst/10 focus-visible:ring-amethyst/70',
+  rare:   'border-sky-400/60 text-sky-300 bg-sky-500/10 focus-visible:ring-sky-400/70',
+  gaps:   'border-amber-400/60 text-amber-300 bg-amber-500/10 focus-visible:ring-amber-400/70',
+  public: 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10 focus-visible:ring-emerald-400/70',
+  mine:   'border-hud-cyan/60 text-hud-cyan bg-hud-cyan/10 focus-visible:ring-hud-cyan/70',
 };
 
 export default function MapLayerBar({ activeLayer = 'all', onChange }) {
   return (
     <div
+      role="group"
+      aria-label="Map result filters"
       className="flex gap-1.5 px-3 py-2 rounded-2xl overflow-x-auto"
       style={{
         background: 'hsla(240,30%,8%,0.88)',
@@ -38,13 +40,16 @@ export default function MapLayerBar({ activeLayer = 'all', onChange }) {
         return (
           <button
             key={id}
+            type="button"
             onClick={() => onChange(id)}
+            aria-pressed={active}
             className={cn(
-              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all',
-              active ? ACTIVE_COLORS[id] : 'border-white/8 text-white/35 hover:text-white/60 hover:border-white/20'
+              'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80',
+              active ? ACTIVE_COLORS[id] : 'border-white/8 text-white/35 hover:text-white/60 hover:border-white/20 focus-visible:ring-white/70'
             )}
           >
-            <Icon size={10} />
+            <Icon size={10} aria-hidden="true" />
             {label}
           </button>
         );
