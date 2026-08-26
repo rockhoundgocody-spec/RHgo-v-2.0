@@ -85,6 +85,7 @@
         "approximate",
         "private"
       ],
+      "default": "private",
       "description": "How precisely this find's location is stored/shared"
     },
     "rarity_quality_score": {

@@ -397,6 +397,7 @@ export default function Scan() {
       lng,
       save: true,
       share_to_map: false,
+      geo_privacy: choice.geoPrivacy,
       prefilled_result: result,
       wet_dry: wetDry,
       beach_name: beachName,
@@ -415,6 +416,7 @@ export default function Scan() {
         notes:         buildSpecimenNotes(result),
         rarity:        result.rarity,
         found_date:    new Date().toISOString().split('T')[0],
+        geo_privacy:   choice.geoPrivacy,
         ...(lat != null ? { lat, lng } : {}),
       });
       specimenId = created.id;

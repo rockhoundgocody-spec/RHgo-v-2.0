@@ -1,12 +1,14 @@
 /**
  * QuickPinButton — one-tap "mark this spot" for offline hikes.
- * Saves current GPS coords as a Hotspot (name = "Field Pin · <date>")
- * via the offline queue so it survives zero-signal conditions.
+ * Saves current GPS coordinates only to the authenticated owner's private log.
+ * It never creates or updates a publicly readable hotspot.
  */
 import React, { useState } from 'react';
 import { MapPin, Check, Loader2, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { queueWrite, getQueueLength } from '@/lib/offlineQueue';
+import { base44 } from '@/api/base44Client';
+import { buildPrivatePinRecord } from '@/lib/privateLocation';
 
 export default function QuickPinButton({ userLocation }) {
   const reducedMotion = useReducedMotion();
@@ -23,21 +25,18 @@ export default function QuickPinButton({ userLocation }) {
     }
 
     setState('saving');
-    const now = new Date();
-    const label = `Field Pin · ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    let result;
+    try {
+      const user = await base44.auth.me();
+      const data = buildPrivatePinRecord(userLocation, user?.email);
+      result = await queueWrite({ entity: 'PrivateRockLog', op: 'create', data });
+    } catch {
+      setState('error');
+      setTimeout(() => setState('idle'), 2000);
+      return;
+    }
 
-    const { ok, offline } = await queueWrite({
-      entity: 'Hotspot',
-      op: 'create',
-      data: {
-        name: label,
-        lat: userLocation.lat,
-        lng: userLocation.lng,
-        land_type: 'unknown',
-        trust_score: 0.5,
-        source: 'quick_pin',
-      },
-    });
+    const { ok, offline } = result;
 
     if (ok) {
       setSavedOffline(offline);
@@ -73,7 +72,7 @@ export default function QuickPinButton({ userLocation }) {
           backdropFilter: 'blur(20px)',
           boxShadow: state === 'saved' ? '0 0 14px hsla(142,70%,50%,.3)' : 'none',
         }}
-        aria-label="Quick-pin this location"
+        aria-label="Save this location to my private rock log"
         aria-busy={state === 'saving'}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -122,7 +121,7 @@ export default function QuickPinButton({ userLocation }) {
             }}
           >
             {savedOffline && <WifiOff size={9} />}
-            {savedOffline ? 'Pinned offline — syncs on signal' : 'Pinned!'}
+            {savedOffline ? 'Private pin queued — syncs on signal' : 'Saved to private log'}
           </motion.div>
         )}
         {state === 'error' && (
