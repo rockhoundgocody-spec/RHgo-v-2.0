@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
+import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+import { detectLogIntent, getCurrentCoordinates } from './oracleActions';
 
 export default function OracleOverlay() {
   const { open, autoLive, closeOracle } = useOracle();
@@ -27,93 +28,34 @@ export default function OracleOverlay() {
   liveModeRef.current = liveMode;
 
   const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
-  const handleVoiceResult = useCallback((transcript) => {
-    setInput('');
-    setTimeout(() => sendMessage(transcript), 50);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const handleInterim = useCallback((partial) => {
-    setInput(partial);
-  }, []);
-  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, thinking]);
-
-  useEffect(() => {
-    if (!open) {
-      stopSpeak();
-      stopListen();
-      setLiveMode(false);
-    }
-  }, [open, stopSpeak, stopListen]);
-
-  // Auto-start live conversation when opened with live=true (tap-to-talk)
-  useEffect(() => {
-    if (open && autoLive && micSupported && !liveMode) {
-      setLiveMode(true);
-      setMuted(false);
-      const t = setTimeout(() => startListen(), 350);
-      return () => clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, autoLive, micSupported]);
-
-  // Live conversation: when oracle finishes speaking, auto-resume listening
-  useEffect(() => {
-    if (!liveMode) return;
-    if (!speaking && !thinking && !listening) {
-      const t = setTimeout(() => {
-        if (liveModeRef.current && !speaking && !thinking) startListen();
-      }, 400);
-      return () => clearTimeout(t);
-    }
-  }, [liveMode, speaking, thinking, listening, startListen]);
-
-  // Detect intents like "log a specimen", "save this find", "record this rock"
-  const detectLogIntent = (text) => {
-    const t = text.toLowerCase();
-    return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(t)
-      || /\b(new specimen|log this|save this|record this)\b/.test(t);
-  };
-
-  const getCoords = () =>
-    new Promise((resolve) => {
-      if (!navigator.geolocation) return resolve({});
-      navigator.geolocation.getCurrentPosition(
-        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => resolve({}),
-        { timeout: 4000, maximumAge: 60000 }
-      );
-    });
-
-  const handleDictation = async (transcript) => {
+  const handleDictation = useCallback(async (transcript) => {
     setThinking(true);
-    const coords = await getCoords();
-    const res = await base44.functions.invoke('parseSpecimenDictation', {
-      transcript,
-      create: true,
-      ...coords,
-    });
-    const data = res?.data || {};
-    const f = data.fields || {};
-    const ok = !!data.created;
-    const summary = ok
-      ? `Logged ${f.mineral_name}${f.found_at ? ` from ${f.found_at}` : ''}${
-          f.rarity && f.rarity !== 'common' ? ` — ${f.rarity}` : ''
-        }. Weather and lunar phase will fill in shortly.`
-      : `I couldn't save that one. Try again with the mineral name.`;
-    setMessages((m) => [...m, { role: 'assistant', content: summary }]);
-    setDictationMode(false);
-    setThinking(false);
+    let summary;
+    try {
+      const coords = await getCurrentCoordinates();
+      const res = await base44.functions.invoke('parseSpecimenDictation', {
+        transcript,
+        create: true,
+        ...coords,
+      });
+      const data = res?.data || {};
+      const fields = data.fields || {};
+      summary = data.created
+        ? `Logged ${fields.mineral_name}${fields.found_at ? ` from ${fields.found_at}` : ''}${
+            fields.rarity && fields.rarity !== 'common' ? ` — ${fields.rarity}` : ''
+          }. Weather and lunar phase will fill in shortly.`
+        : `I couldn't save that one. Try again with the mineral name.`;
+    } catch {
+      summary = `I couldn't reach the field log. Your description is still here—please try saving it again.`;
+    } finally {
+      setThinking(false);
+      setDictationMode(false);
+    }
+    setMessages((current) => [...current, { role: 'assistant', content: summary }]);
     if (!muted) speak(summary);
-  };
+  }, [muted, speak]);
 
-  const sendMessage = async (textOverride) => {
+  const sendMessage = useCallback(async (textOverride) => {
     const text = (textOverride ?? input).trim();
     if (!text || thinking) return;
     const next = [...messages, { role: 'user', content: text }];
@@ -136,29 +78,84 @@ export default function OracleOverlay() {
     }
 
     setThinking(true);
-    const res = await base44.functions.invoke('cloverChat', {
-      history: next.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'clover', content: m.content })),
-      companion: null,
-      todays_finds: 0,
-    });
-    const replyText = res?.data?.reply || "I'm here with you.";
+    let replyText;
+    try {
+      const res = await base44.functions.invoke('cloverChat', {
+        history: next.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'clover', content: m.content })),
+        companion: null,
+        todays_finds: 0,
+      });
+      replyText = res?.data?.reply || "I'm here with you.";
+    } catch {
+      replyText = "I couldn't reach the Oracle service. Please try again in a moment.";
+    } finally {
+      setThinking(false);
+    }
     setMessages((m) => [...m, { role: 'assistant', content: replyText }]);
-    setThinking(false);
     if (!muted) speak(replyText);
-  };
+  }, [handleDictation, input, messages, muted, speak, thinking]);
+
+  const handleVoiceResult = useCallback((transcript) => {
+    setInput('');
+    sendMessage(transcript);
+  }, [sendMessage]);
+  const handleInterim = useCallback((partial) => setInput(partial), []);
+  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
+    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, thinking]);
+
+  useEffect(() => {
+    if (!open) {
+      stopSpeak();
+      stopListen();
+      setLiveMode(false);
+    }
+  }, [open, stopListen, stopSpeak]);
+
+  const hasAutoStartedRef = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      hasAutoStartedRef.current = false;
+      return undefined;
+    }
+    if (autoLive && micSupported && !liveMode && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      setLiveMode(true);
+      setMuted(false);
+      const timer = setTimeout(startListen, 350);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [autoLive, liveMode, micSupported, open, startListen]);
+
+  useEffect(() => {
+    if (!liveMode || speaking || thinking || listening) return undefined;
+    const timer = setTimeout(() => {
+      if (liveModeRef.current && !speaking && !thinking) startListen();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [listening, liveMode, speaking, startListen, thinking]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4">
-      <div className="glass-panel w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl flex flex-col max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="oracle-title"
+        className="glass-panel w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl flex flex-col max-h-[90vh] sm:max-h-[80vh] overflow-hidden"
+      >
         {/* header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
           <div className="w-10 h-10 shrink-0">
             <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white font-semibold tracking-wide flex items-center gap-2">
+            <div id="oracle-title" className="text-white font-semibold tracking-wide flex items-center gap-2">
               Clover 🍀 Cole
               {dictationMode && (
                 <span className="text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-amethyst/30 text-white border border-amethyst/50 flex items-center gap-1">
@@ -198,7 +195,7 @@ export default function OracleOverlay() {
               aria-label={liveMode ? 'End live conversation' : 'Start live conversation'}
               title={liveMode ? 'End live conversation' : 'Start live conversation'}
             >
-              <Radio size={16} className={liveMode ? 'animate-pulse' : ''} />
+              <Radio size={16} className={liveMode ? 'animate-pulse motion-reduce:animate-none' : ''} aria-hidden="true" />
             </button>
           )}
           <button
@@ -218,7 +215,7 @@ export default function OracleOverlay() {
         </div>
 
         {/* messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        <div ref={scrollRef} aria-live="polite" aria-relevant="additions" className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.map((m, i) => (
             <div
               key={i}
@@ -238,7 +235,7 @@ export default function OracleOverlay() {
           {thinking && (
             <div className="flex justify-start">
               <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10 text-amethyst/70">
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin motion-reduce:animate-none" aria-label="Oracle is thinking" />
               </div>
             </div>
           )}
@@ -262,7 +259,7 @@ export default function OracleOverlay() {
               <span className="relative flex items-center justify-center">
                 <Mic size={16} />
                 {listening && (
-                  <span className="absolute -inset-1 rounded-full border-2 border-rose-400 animate-ping opacity-60" />
+                  <span className="absolute -inset-1 rounded-full border-2 border-rose-400 animate-ping motion-reduce:animate-none opacity-60" />
                 )}
               </span>
             </button>
