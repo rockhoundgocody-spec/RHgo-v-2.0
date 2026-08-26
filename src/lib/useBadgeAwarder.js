@@ -14,6 +14,7 @@ import { BADGES, evaluateEarnedCodes, getBadgeDefinition } from './badgeDefiniti
  */
 export function useBadgeAwarder() {
   const [earnedCodes, setEarnedCodes] = useState(new Set());
+  const [specimens, setSpecimens] = useState([]);
   const [queue, setQueue] = useState([]);
   const evaluatingRef = useRef(false);
 
@@ -24,13 +25,15 @@ export function useBadgeAwarder() {
       const me = await base44.auth.me();
       if (!me?.email) return;
 
-      const [specimens, ownedRecords] = await Promise.all([
+      const [fetchedSpecimens, ownedRecords] = await Promise.all([
         base44.entities.Specimen.list(),
         base44.entities.Badge.filter({ owner_email: me.email }),
       ]);
+      const nextSpecimens = fetchedSpecimens || [];
+      setSpecimens(nextSpecimens);
 
       const ownedCodes = new Set((ownedRecords || []).map((b) => b.code));
-      const qualifiedCodes = evaluateEarnedCodes(specimens || []);
+      const qualifiedCodes = evaluateEarnedCodes(nextSpecimens);
       const newCodes = qualifiedCodes.filter((c) => !ownedCodes.has(c));
 
       if (newCodes.length) {
@@ -68,5 +71,5 @@ export function useBadgeAwarder() {
     setQueue((q) => q.slice(1));
   }, []);
 
-  return { earnedCodes, pendingBadge, dismissPending, refresh, allBadges: BADGES };
+  return { earnedCodes, specimens, pendingBadge, dismissPending, refresh, allBadges: BADGES };
 }
