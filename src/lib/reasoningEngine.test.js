@@ -17,6 +17,7 @@ let bandLabel;
 let reason;
 let shouldHalt;
 let recommendAction;
+let highLevelPlan;
 
 beforeAll(async () => {
   globalThis.window = {
@@ -42,6 +43,7 @@ beforeAll(async () => {
   reason = mod.reason;
   shouldHalt = mod.shouldHalt;
   recommendAction = mod.recommendAction;
+  highLevelPlan = mod.highLevelPlan;
 });
 
 afterEach(() => {
@@ -88,6 +90,70 @@ describe('bandLabel', () => {
     expect(bandLabel('unknown')).toBeUndefined();
     expect(bandLabel('')).toBeUndefined();
     expect(bandLabel(null)).toBeUndefined();
+  });
+});
+
+describe('highLevelPlan', () => {
+  it('returns actionable hints for an empty identification', () => {
+    expect(highLevelPlan({ task: 'identify' })).toEqual({
+      evidenceScore: 0,
+      evidenceList: [],
+      hints: [
+        'Add at least one clear photo',
+        'Share your location for geological context',
+        'Note color, luster, or crystal habit',
+      ],
+      needsMoreEvidence: true,
+      isOffline: false,
+    });
+  });
+
+  it('scores and caps photo evidence using its actual contribution', () => {
+    const single = highLevelPlan({ task: 'identify', imageUrls: ['one.jpg'] });
+    expect(single.evidenceScore).toBe(0.25);
+    expect(single.evidenceList[0]).toEqual({ type: 'image', label: '1 photo', weight: 0.25 });
+    expect(single.hints).toContain('Multiple angles improve accuracy');
+
+    const multiple = highLevelPlan({ task: 'identify', imageUrls: ['one.jpg', 'two.jpg', 'three.jpg'] });
+    expect(multiple.evidenceScore).toBe(0.5);
+    expect(multiple.evidenceList[0].weight).toBe(0.5);
+  });
+
+  it('combines valid locality and capped feature evidence', () => {
+    const result = highLevelPlan({
+      task: 'identify',
+      imageUrls: ['one.jpg', 'two.jpg'],
+      locality: { lat: 45.12345, lng: -85.67891 },
+      features: Array.from({ length: 10 }, () => ({ feature: 'color', value: 'green' })),
+    });
+
+    expect(result.evidenceScore).toBe(1);
+    expect(result.evidenceList).toEqual([
+      { type: 'image', label: '2 photos', weight: 0.5 },
+      { type: 'locality', label: 'Location: 45.123, -85.679', weight: 0.2 },
+      { type: 'feature', label: '10 observed features', weight: 0.3 },
+    ]);
+    expect(result.hints).toEqual([]);
+    expect(result.needsMoreEvidence).toBe(false);
+  });
+
+  it('requires a photo for identification but not other sufficiently supported tasks', () => {
+    const evidence = {
+      locality: { lat: 45, lng: -85 },
+      features: Array.from({ length: 10 }, () => ({ feature: 'habit', value: 'cubic' })),
+    };
+    expect(highLevelPlan({ task: 'identify', ...evidence }).needsMoreEvidence).toBe(true);
+    expect(highLevelPlan({ task: 'field_note', ...evidence }).needsMoreEvidence).toBe(false);
+  });
+
+  it('ignores malformed evidence instead of throwing before fallback', () => {
+    expect(highLevelPlan({
+      task: 'identify',
+      imageUrls: null,
+      features: 'not-an-array',
+      locality: { lat: '45', lng: Number.NaN },
+      isOffline: true,
+    })).toMatchObject({ evidenceScore: 0, evidenceList: [], needsMoreEvidence: true, isOffline: true });
   });
 });
 

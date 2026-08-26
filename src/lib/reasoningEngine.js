@@ -60,21 +60,40 @@ export function bandLabel(band) {
  *  - what would improve the result
  *  - whether offline fallback applies
  */
-function highLevelPlan({ task, imageUrls = [], locality = null, features = [], userTier = 'free', isOffline = false }) {
+export function highLevelPlan(input = {}) {
+  const {
+    task,
+    imageUrls: rawImageUrls = [],
+    locality: rawLocality = null,
+    features: rawFeatures = [],
+    isOffline = false,
+  } = input || {};
+  const imageUrls = Array.isArray(rawImageUrls) ? rawImageUrls : [];
+  const features = Array.isArray(rawFeatures) ? rawFeatures : [];
+  const locality = Number.isFinite(rawLocality?.lat)
+    && Number.isFinite(rawLocality?.lng)
+    && rawLocality.lat >= -90
+    && rawLocality.lat <= 90
+    && rawLocality.lng >= -180
+    && rawLocality.lng <= 180
+    ? rawLocality
+    : null;
   const evidenceList = [];
   let evidenceScore = 0;
 
   if (imageUrls.length > 0) {
-    evidenceList.push({ type: 'image', label: `${imageUrls.length} photo${imageUrls.length > 1 ? 's' : ''}`, weight: 0.5 });
-    evidenceScore += Math.min(imageUrls.length * 0.25, 0.5);
+    const imageWeight = Math.min(imageUrls.length * 0.25, 0.5);
+    evidenceList.push({ type: 'image', label: `${imageUrls.length} photo${imageUrls.length > 1 ? 's' : ''}`, weight: imageWeight });
+    evidenceScore += imageWeight;
   }
   if (locality) {
     evidenceList.push({ type: 'locality', label: `Location: ${locality.lat?.toFixed(3)}, ${locality.lng?.toFixed(3)}`, weight: 0.2 });
     evidenceScore += 0.2;
   }
   if (features.length > 0) {
-    evidenceList.push({ type: 'feature', label: `${features.length} observed feature${features.length > 1 ? 's' : ''}`, weight: 0.3 });
-    evidenceScore += Math.min(features.length * 0.05, 0.3);
+    const featureWeight = Math.min(features.length * 0.05, 0.3);
+    evidenceList.push({ type: 'feature', label: `${features.length} observed feature${features.length > 1 ? 's' : ''}`, weight: featureWeight });
+    evidenceScore += featureWeight;
   }
 
   const hints = [];
