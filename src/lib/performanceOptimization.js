@@ -18,10 +18,10 @@ export function debounce(fn, delayMs = 300) {
  * Throttle utility (scroll events, resize)
  */
 export function throttle(fn, intervalMs = 100) {
-  let lastCall = 0;
+  let lastCall = null;
   return function throttled(...args) {
     const now = Date.now();
-    if (now - lastCall >= intervalMs) {
+    if (lastCall === null || now - lastCall >= intervalMs) {
       lastCall = now;
       fn.apply(this, args);
     }

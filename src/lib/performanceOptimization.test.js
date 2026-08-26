@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { debounce, VirtualScroller, ResponseCache } from './performanceOptimization';
+import { debounce, throttle, VirtualScroller, ResponseCache } from './performanceOptimization';
 
 describe('debounce', () => {
   afterEach(() => vi.useRealTimers());
@@ -42,6 +42,61 @@ describe('debounce', () => {
     expect(callback).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(callback).toHaveBeenCalledOnce();
+  });
+});
+
+describe('throttle', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('executes the first call immediately, including at the Unix epoch', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const callback = vi.fn();
+
+    throttle(callback, 100)('first');
+
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith('first');
+  });
+
+  it('ignores calls inside the interval and permits the boundary call', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const callback = vi.fn();
+    const throttled = throttle(callback, 100);
+
+    throttled('first');
+    vi.advanceTimersByTime(99);
+    throttled('blocked');
+    expect(callback).toHaveBeenCalledOnce();
+
+    vi.advanceTimersByTime(1);
+    throttled('boundary');
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveBeenLastCalledWith('boundary');
+  });
+
+  it('uses the 100ms default interval', () => {
+    vi.useFakeTimers();
+    const callback = vi.fn();
+    const throttled = throttle(callback);
+
+    throttled();
+    vi.advanceTimersByTime(99);
+    throttled();
+    expect(callback).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(1);
+    throttled();
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves the caller context', () => {
+    const callback = vi.fn(function () { return this.name; });
+    const owner = { name: 'Clover', run: throttle(callback, 10) };
+
+    owner.run();
+
+    expect(callback.mock.instances[0]).toBe(owner);
   });
 });
 
