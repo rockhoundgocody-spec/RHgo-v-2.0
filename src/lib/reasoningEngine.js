@@ -151,11 +151,13 @@ async function lowLevelExecute({ task, imageUrls, locality, features, notes }) {
 
 // ─── Halting Logic ────────────────────────────────────────────────────────────
 
-function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
+export function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, isOffline }) {
   if (needsMoreEvidence) return { halt: true, reason: 'insufficient_evidence' };
   if (isOffline) return { halt: true, reason: 'offline' };
   // High enough combined signal — stop iterating
-  const combined = evidenceScore * 0.4 + (modelConfidence || 0) * 0.6;
+  const evidence = Number.isFinite(evidenceScore) ? Math.max(0, Math.min(1, evidenceScore)) : 0;
+  const model = Number.isFinite(modelConfidence) ? Math.max(0, Math.min(1, modelConfidence)) : 0;
+  const combined = evidence * 0.4 + model * 0.6;
   if (combined >= 0.7) return { halt: true, reason: 'sufficient_confidence' };
   return { halt: false, reason: null };
 }
