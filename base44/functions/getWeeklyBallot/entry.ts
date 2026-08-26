@@ -74,12 +74,12 @@ export default async function (req: Request): Promise<Response> {
       if (ra !== rb) return ra - rb;
       return 0;
     });
-    const ranked = result.map((r, i) => ({ ...r, rank: i + 1 }));
+    result.forEach((r, i) => { Object.assign(r, { rank: i + 1 }); });
 
     return Response.json({
       week_key: wk,
       closes_at: end.toISOString(),
-      entries: ranked,
+      entries: result,
       my_vote: myVote,
       total_votes: votes.length,
     });
