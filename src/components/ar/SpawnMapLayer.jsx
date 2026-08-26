@@ -6,7 +6,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary'];
+// Static index map for O(1) rarity weight lookup during SpawnPin rendering
+const RARITY_INDEX = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  legendary: 3,
+};
 
 function DailyCapBanner() {
   return (
@@ -45,7 +51,7 @@ function HeatRings() {
 }
 
 function SpawnPin({ spawn, index, totalSpawns, cappedOut, isHovered, onSpawnTap, setHovered }) {
-  const rarityIdx = RARITY_ORDER.indexOf(spawn.rarity);
+  const rarityIdx = RARITY_INDEX[spawn.rarity] ?? 0;
   const angle = (index / totalSpawns) * 2 * Math.PI;
   const radius = 28 + rarityIdx * 8;
   const x = 50 + Math.cos(angle) * radius;

@@ -2,7 +2,7 @@
  * Top3BadgesStrip — Shows top 3 most recently earned badges as large 3D photorealistic orbs.
  * No descriptions. Tap any badge or "View All" to go to the full Badges page.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Lock } from 'lucide-react';
 import LiquidMineralBadge from './LiquidMineralBadge.jsx';
@@ -16,16 +16,27 @@ const RARITY_GLOW = {
   legendary: 'hsla(45,100%,55%,0.55)',
 };
 
+// Static index mapping for O(1) rarity weight comparisons during sorting
+const RARITY_INDEX = {
+  legendary: 0,
+  epic: 1,
+  rare: 2,
+  uncommon: 3,
+  common: 4,
+};
+
 export default function Top3BadgesStrip() {
   const navigate = useNavigate();
   const { earnedCodes, allBadges } = useBadgeAwarder();
 
   // Top 3 earned, highest rarity first
-  const RARITY_ORDER = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
-  const top3 = allBadges
-    .filter((b) => earnedCodes.has(b.code))
-    .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity))
-    .slice(0, 3);
+  // Performance Optimization: Memoized filter/sort with O(1) hash map rarity lookups instead of O(R) indexOf
+  const top3 = useMemo(() => {
+    return allBadges
+      .filter((b) => earnedCodes.has(b.code))
+      .sort((a, b) => (RARITY_INDEX[a.rarity] ?? 5) - (RARITY_INDEX[b.rarity] ?? 5))
+      .slice(0, 3);
+  }, [allBadges, earnedCodes]);
 
   // Pad with locked placeholders if fewer than 3 earned
   const slots = [0, 1, 2].map((i) => ({ badge: top3[i] || null, earned: !!top3[i] }));

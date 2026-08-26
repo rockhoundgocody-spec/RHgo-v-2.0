@@ -2,7 +2,7 @@
  * Badges — Liquid Mineral Badges collection screen
  * 2-column grid, rarity filter tabs, dark/light/AR mode toggle, detail modal, unlock animation.
  */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Award, Lock, CheckCircle2, X, Gem, Share2, Check, AlertCircle, Sun, Moon, Eye } from 'lucide-react';
 import { buildSharePayload, executeShare } from '@/lib/shareAchievement';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
@@ -14,6 +14,15 @@ import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 
 const RARITY_ORDER  = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const FILTER_TABS   = ['all', ...RARITY_ORDER];
+
+// Static index mapping for O(1) rarity weight comparisons during sorting
+const RARITY_INDEX = {
+  legendary: 4,
+  epic: 3,
+  rare: 2,
+  uncommon: 1,
+  common: 0,
+};
 
 const RARITY_PILL = {
   common:    'bg-white/8 text-white/50 border-white/12',
@@ -222,16 +231,19 @@ https://rhgo.base44.app`,
     else if (result === 'error') { setPageCopied('error'); setTimeout(() => setPageCopied(false), 2200); }
   };
 
-  const filtered = rarityFilter === 'all'
-    ? allBadges
-    : allBadges.filter((b) => b.rarity === rarityFilter);
+  // Performance Optimization: Memoized filter & sort with O(1) hash map rarity lookups instead of O(R) indexOf
+  const sorted = useMemo(() => {
+    const filtered = rarityFilter === 'all'
+      ? allBadges
+      : allBadges.filter((b) => b.rarity === rarityFilter);
 
-  const sorted = [...filtered].sort((a, b) => {
-    const ae = earnedCodes.has(a.code) ? 0 : 1;
-    const be = earnedCodes.has(b.code) ? 0 : 1;
-    if (ae !== be) return ae - be;
-    return RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity);
-  });
+    return [...filtered].sort((a, b) => {
+      const ae = earnedCodes.has(a.code) ? 0 : 1;
+      const be = earnedCodes.has(b.code) ? 0 : 1;
+      if (ae !== be) return ae - be;
+      return (RARITY_INDEX[b.rarity] ?? 0) - (RARITY_INDEX[a.rarity] ?? 0);
+    });
+  }, [allBadges, earnedCodes, rarityFilter]);
 
   const activeVariant = mode === 'light' ? 'light' : 'dark';
   const isArMode      = mode === 'ar';
