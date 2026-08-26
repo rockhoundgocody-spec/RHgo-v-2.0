@@ -8,7 +8,7 @@
  *   4. Shimmer flash bursts (occasional cross-shaped sparkles)
  */
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const AMETHYST_COLORS = [
   'hsla(280,100%,75%,0.9)',  // bright amethyst glow
@@ -55,7 +55,7 @@ export function generateShimmers(intensity) {
   }));
 }
 
-function PulsingAura({ size }) {
+function PulsingAura({ size, reduceMotion }) {
   return (
     <motion.div
       className="absolute rounded-full"
@@ -67,8 +67,8 @@ function PulsingAura({ size }) {
         background: 'radial-gradient(circle, hsla(280,100%,70%,0.22) 0%, hsla(270,80%,50%,0.08) 40%, transparent 70%)',
         filter: 'blur(16px)',
       }}
-      animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
-      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+      animate={reduceMotion ? { scale: 1, opacity: 0.7 } : { scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
     />
   );
 }
@@ -185,9 +185,10 @@ function ShimmerFlash({ shimmer }) {
 }
 
 export default function AmethystParticleField({ intensity = 1, size = 320 }) {
-  const orbiters = useMemo(() => generateOrbiters(intensity), [intensity]);
-  const risers = useMemo(() => generateRisers(intensity), [intensity]);
-  const shimmers = useMemo(() => generateShimmers(intensity), [intensity]);
+  const reduceMotion = useReducedMotion();
+  const orbiters = useMemo(() => reduceMotion ? [] : generateOrbiters(intensity), [intensity, reduceMotion]);
+  const risers = useMemo(() => reduceMotion ? [] : generateRisers(intensity), [intensity, reduceMotion]);
+  const shimmers = useMemo(() => reduceMotion ? [] : generateShimmers(intensity), [intensity, reduceMotion]);
 
   const center = size / 2;
 
@@ -196,7 +197,7 @@ export default function AmethystParticleField({ intensity = 1, size = 320 }) {
       className="absolute pointer-events-none"
       style={{ width: size, height: size, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
     >
-      <PulsingAura size={size} />
+      <PulsingAura size={size} reduceMotion={reduceMotion} />
 
       {orbiters.map((o, i) => (
         <OrbiterMote key={`orbit-${i}`} mote={o} center={center} />

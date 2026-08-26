@@ -1,5 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 
+const motionPreference = vi.hoisted(() => ({ reduced: false }));
+
+vi.mock('framer-motion', () => ({
+  motion: new Proxy({}, { get: (_target, property) => property }),
+  useReducedMotion: () => motionPreference.reduced,
+}));
+
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
@@ -67,6 +74,7 @@ describe('AmethystParticleField generator functions', () => {
 
 describe('AmethystParticleField component function', () => {
   it('returns a JSX element without throwing', () => {
+    motionPreference.reduced = false;
     const element = AmethystParticleField({ intensity: 1, size: 300 });
     expect(element).toBeDefined();
     expect(element.type).toBe('div');
@@ -77,5 +85,15 @@ describe('AmethystParticleField component function', () => {
       top: '50%',
       transform: 'translate(-50%, -50%)',
     });
+  });
+
+  it('omits continuously animated particle layers when reduced motion is requested', () => {
+    motionPreference.reduced = true;
+    const element = AmethystParticleField({ intensity: 1, size: 300 });
+
+    expect(element.props.children[1]).toEqual([]);
+    expect(element.props.children[2]).toEqual([]);
+    expect(element.props.children[3]).toEqual([]);
+    motionPreference.reduced = false;
   });
 });

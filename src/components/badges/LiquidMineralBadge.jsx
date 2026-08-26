@@ -16,7 +16,9 @@
  *   L12 Inner border + inset glow
  */
 import React, { useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import './liquidMineralBadge.css';
 import {
   Gem, Eye, Package, Layers, Footprints, CheckCircle2, BookOpen,
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
@@ -198,7 +200,7 @@ const FiligreeOverlay = ({ size, color, isLight }) => (
 const OCT = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)';
 
 // ── Badge Body (all visual layers) ────────────────────────────────────────────
-function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow }) {
+function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, reduceMotion }) {
   const isLight = variant === 'light';
   const matPat  = matPattern(mat, scheme, isLight);
 
@@ -242,7 +244,11 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow }) {
         style={{
           inset: '20%',
           background: `radial-gradient(ellipse at 42% 38%, ${scheme.crystal} 0%, ${scheme.glow.replace('0.9','0.45')} 35%, transparent 65%)`,
-          animation: arGlow ? 'lmb-glow 1.5s ease-in-out infinite' : 'lmb-glow 3.5s ease-in-out infinite',
+          animation: reduceMotion
+            ? 'none'
+            : arGlow
+              ? 'lmb-glow 1.5s ease-in-out infinite'
+              : 'lmb-glow 3.5s ease-in-out infinite',
         }}
       />
 
@@ -300,8 +306,8 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow }) {
       {/* AR Scanning Reticle Overlay */}
       {arGlow && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="w-full h-full border border-cyan-400/50 animate-pulse" style={{ clipPath: OCT }} />
-          <div className="absolute w-3/4 h-0.5 bg-gradient-to-r from-transparent via-cyan-300 to-transparent animate-bounce opacity-80" />
+          <div className={cn('w-full h-full border border-cyan-400/50', !reduceMotion && 'animate-pulse')} style={{ clipPath: OCT }} />
+          <div className={cn('absolute w-3/4 h-0.5 bg-gradient-to-r from-transparent via-cyan-300 to-transparent opacity-80', !reduceMotion && 'animate-bounce')} />
         </div>
       )}
     </div>
@@ -319,6 +325,7 @@ export default function LiquidMineralBadge({
   onClick,
   className = '',
 }) {
+  const reduceMotion = useReducedMotion();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [hovered, setHovered]   = useState(false);
 
@@ -340,11 +347,11 @@ export default function LiquidMineralBadge({
 
   return (
     <div
-      className={cn('relative flex flex-col items-center select-none transition-transform duration-300', className)}
+      className={cn('relative flex flex-col items-center select-none', !reduceMotion && 'transition-transform duration-300', className)}
       style={{
         width: totalSize,
         cursor: onClick ? 'pointer' : 'default',
-        transform: hovered && !locked
+        transform: hovered && !locked && !reduceMotion
           ? `perspective(600px) rotateX(${mousePos.y * -18}deg) rotateY(${mousePos.x * 18}deg) scale(1.08)`
           : 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)',
       }}
@@ -353,21 +360,13 @@ export default function LiquidMineralBadge({
       onMouseLeave={() => { setHovered(false); setMousePos({ x: 0, y: 0 }); }}
       onMouseMove={handleMouseMove}
     >
-      <style>{`
-        @keyframes lmb-glow     { 0%,100%{opacity:.55} 50%{opacity:1} }
-        @keyframes lmb-breathe  { 0%,100%{filter:brightness(1) saturate(1)} 50%{filter:brightness(1.14) saturate(1.22)} }
-        @keyframes lmb-ring     { 0%,100%{opacity:.32;transform:scale(1)} 50%{opacity:.78;transform:scale(1.06)} }
-        @keyframes lmb-particle { 0%{transform:translate(0,0) scale(1);opacity:.55} 50%{transform:translate(var(--px),var(--py)) scale(1.6);opacity:.92} 100%{transform:translate(calc(var(--px)*-0.4),calc(var(--py)*0.7)) scale(.6);opacity:.25} }
-        @keyframes lmb-spin-ring{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-      `}</style>
-
       {/* Outer glow rings */}
       {Array.from({ length: rarityConf.rings }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none" style={{
           inset: -(i + 1) * 11 + offset,
           clipPath: OCT,
           background: `radial-gradient(ellipse at center, ${scheme.glow.replace('0.9', String(0.13 - i * 0.035))} 0%, transparent 68%)`,
-          animation: `lmb-ring ${2.8 + i * 0.7}s ${i * 0.4}s ease-in-out infinite`,
+          animation: reduceMotion ? 'none' : `lmb-ring ${2.8 + i * 0.7}s ${i * 0.4}s ease-in-out infinite`,
         }} />
       ))}
 
@@ -377,7 +376,7 @@ export default function LiquidMineralBadge({
           inset: -offset - 4,
           clipPath: OCT,
           border: `1px solid ${scheme.rim.replace('0.6','0.25')}`,
-          animation: 'lmb-spin-ring 12s linear infinite',
+          animation: reduceMotion ? 'none' : 'lmb-spin-ring 12s linear infinite',
           borderTopColor: scheme.secondary,
           borderRightColor: 'transparent',
           borderRadius: '4px',
@@ -386,7 +385,7 @@ export default function LiquidMineralBadge({
 
       {/* Badge body */}
       <div style={{
-        animation: locked ? 'none' : 'lmb-breathe 4.5s ease-in-out infinite',
+        animation: locked || reduceMotion ? 'none' : 'lmb-breathe 4.5s ease-in-out infinite',
         filter: locked
           ? 'grayscale(0.9) brightness(0.35)'
           : isArActive
@@ -403,6 +402,7 @@ export default function LiquidMineralBadge({
           iconSize={iconSize}
           variant={variant}
           arGlow={isArActive}
+          reduceMotion={reduceMotion}
         />
 
         {locked && (
@@ -413,7 +413,7 @@ export default function LiquidMineralBadge({
       </div>
 
       {/* Ambient floating particles */}
-      {!locked && rarityConf.particles > 0 && (
+      {!locked && !reduceMotion && rarityConf.particles > 0 && (
         <div className="absolute pointer-events-none" style={{ inset: -offset, width: totalSize, height: totalSize }}>
           {Array.from({ length: rarityConf.particles }).map((_, i) => {
             const angle  = (i / rarityConf.particles) * Math.PI * 2;
