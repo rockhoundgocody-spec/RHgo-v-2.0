@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Gem, MapPin, Calendar, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getTileMotion } from './galleryMotion';
 
 const RARITY_GLOW = {
   common:    { color: '#94a3b8', glow: 'hsla(215,20%,60%,0.5)' },
@@ -12,13 +13,16 @@ const RARITY_GLOW = {
 
 export function SpecimenGridTile({ specimen, index, onSelect }) {
   const r = RARITY_GLOW[specimen.rarity] || RARITY_GLOW.common;
+  const reducedMotion = useReducedMotion();
+  const tileMotion = getTileMotion(index, reducedMotion);
   return (
     <motion.button
+      type="button"
       key={specimen.id}
-      initial={{ opacity: 0, scale: 0.88 }}
+      initial={tileMotion.initial}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.025, type: 'spring', stiffness: 320, damping: 22 }}
-      whileTap={{ scale: 0.93 }}
+      transition={tileMotion.transition}
+      whileTap={reducedMotion ? undefined : { scale: 0.93 }}
       onClick={() => onSelect(specimen)}
       aria-label={`View specimen: ${specimen.mineral_name}`}
       className="relative aspect-square rounded-2xl overflow-hidden cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
@@ -31,7 +35,9 @@ export function SpecimenGridTile({ specimen, index, onSelect }) {
         <img
           src={specimen.image_url}
           alt={specimen.mineral_name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:transform-none"
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center"
@@ -51,9 +57,10 @@ export function SpecimenGridTile({ specimen, index, onSelect }) {
       {/* Tap glow ring (amethyst for rare+) */}
       {(specimen.rarity === 'rare' || specimen.rarity === 'legendary') && (
         <div className="absolute inset-0 rounded-2xl pointer-events-none"
+          data-gallery-rarity-pulse
           style={{
             boxShadow: `inset 0 0 0 1px ${r.color}60`,
-            animation: 'gallery-rare-pulse 3s ease-in-out infinite',
+            animation: reducedMotion ? 'none' : 'gallery-rare-pulse 3s ease-in-out infinite',
           }}
         />
       )}
@@ -70,12 +77,26 @@ export function SpecimenGridTile({ specimen, index, onSelect }) {
 }
 
 export function SpecimenLightboxModal({ specimen, onClose }) {
+  const reducedMotion = useReducedMotion();
+  const closeRef = useRef(null);
+
+  useEffect(() => {
+    if (!specimen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    closeRef.current?.focus();
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, specimen]);
+
   if (!specimen) return null;
   const r = RARITY_GLOW[specimen.rarity] || RARITY_GLOW.common;
+  const titleId = `specimen-lightbox-${specimen.id}`;
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
@@ -83,10 +104,13 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.88, y: 24 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        initial={reducedMotion ? false : { scale: 0.88, y: 24 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.88, y: 24 }}
-        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+        exit={reducedMotion ? { opacity: 0 } : { scale: 0.88, y: 24 }}
+        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 280, damping: 22 }}
         onClick={e => e.stopPropagation()}
         className="relative w-full max-w-sm rounded-3xl overflow-hidden"
         style={{
@@ -97,7 +121,7 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
         {/* Image */}
         <div className="relative aspect-square bg-black">
           {specimen.image_url ? (
-            <img src={specimen.image_url} alt={specimen.mineral_name} className="w-full h-full object-cover" />
+            <img src={specimen.image_url} alt={specimen.mineral_name} decoding="async" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"
               style={{ background: `radial-gradient(circle, ${r.color}12, hsla(245,30%,6%,1))` }}>
@@ -117,7 +141,7 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
         <div className="p-4" style={{ background: 'linear-gradient(180deg,hsla(245,30%,10%,.99),hsla(240,25%,7%,1))' }}>
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h3 className="text-white font-bold text-lg leading-tight">{specimen.mineral_name}</h3>
+              <h3 id={titleId} className="text-white font-bold text-lg leading-tight">{specimen.mineral_name}</h3>
               {specimen.common_name && <p className="text-white/40 text-xs">{specimen.common_name}</p>}
             </div>
             <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
@@ -161,7 +185,7 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
           </Link>
         </div>
 
-        <button onClick={onClose}
+        <button ref={closeRef} type="button" onClick={onClose}
           aria-label="Close details"
           className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           style={{ background: 'hsla(240,30%,8%,.8)', border: '1px solid hsla(255,30%,40%,.25)' }}>
@@ -174,6 +198,7 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
 
 export default function GalleryGrid({ specimens }) {
   const [selected, setSelected] = useState(null);
+  const closeLightbox = useCallback(() => setSelected(null), []);
 
   if (!specimens.length) return null;
 
@@ -188,7 +213,7 @@ export default function GalleryGrid({ specimens }) {
       {/* Lightbox */}
       <AnimatePresence>
         {selected && (
-          <SpecimenLightboxModal specimen={selected} onClose={() => setSelected(null)} />
+          <SpecimenLightboxModal specimen={selected} onClose={closeLightbox} />
         )}
       </AnimatePresence>
 
@@ -196,6 +221,9 @@ export default function GalleryGrid({ specimens }) {
         @keyframes gallery-rare-pulse {
           0%,100% { opacity: 0.4; }
           50% { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [data-gallery-rarity-pulse] { animation: none !important; }
         }
       `}</style>
     </>
