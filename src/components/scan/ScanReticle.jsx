@@ -1,5 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
+const MAX_DEVICE_SCALE = 2;
+
+export function normalizeSignal(value) {
+  const signal = Number(value);
+  if (!Number.isFinite(signal)) return 0;
+  return Math.min(1, Math.max(0, signal));
+}
+
 /**
  * ScanReticle — animated targeting ring that reacts to scan state.
  * States: idle | scanning | processing | locked
@@ -19,10 +27,12 @@ export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
+    if (!ctx) return;
+    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), MAX_DEVICE_SCALE);
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const cx = size / 2;
     const cy = size / 2;
@@ -34,11 +44,17 @@ export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
       locked:     { main: 'hsla(145,80%,55%,0.8)',   arc: 'hsl(145,80%,70%)',         glow: 'hsla(145,80%,55%,0.8)' },
     };
 
+    let lastReducedMotionDraw = Number.NEGATIVE_INFINITY;
     const draw = (ts) => {
-      tRef.current = ts / 1000;
+      frameRef.current = requestAnimationFrame(draw);
+      if (document.visibilityState === 'hidden') return;
+      if (reducedMotion && ts - lastReducedMotionDraw < 250) return;
+      lastReducedMotionDraw = ts;
+
+      tRef.current = reducedMotion ? 0 : ts / 1000;
       const t = tRef.current;
       const s = stateRef.current;
-      const sig = liveSignalRef.current || 0;
+      const sig = normalizeSignal(liveSignalRef.current);
       const col = COLORS[s] || COLORS.idle;
 
       ctx.clearRect(0, 0, size, size);
@@ -160,16 +176,18 @@ export default function ScanReticle({ state = 'idle', signalRef, size = 220 }) {
       ctx.fill();
       ctx.restore();
 
-      frameRef.current = requestAnimationFrame(draw);
     };
 
     frameRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(frameRef.current);
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
   }, [size]);
 
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{ width: size, height: size, pointerEvents: 'none' }}
     />
   );

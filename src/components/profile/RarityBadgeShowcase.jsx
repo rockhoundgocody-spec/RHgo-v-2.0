@@ -16,7 +16,7 @@
 import React, { useMemo } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
-import { Gem, Sparkles, Diamond, Crown, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 // Milestone thresholds per tier (controls visual "power level")
 const MILESTONES = [1, 5, 25, 100];
@@ -91,12 +91,12 @@ const BRACKET_LABEL = ['Starter', 'Collector', 'Expert', 'Master'];
 function MilestoneBar({ count }) {
   return (
     <div className="flex items-center gap-0.5">
-      {MILESTONES.map((m, i) => {
+      {MILESTONES.map((m) => {
         const hit = count >= m;
         return (
           <div key={m} className="relative group">
             <div
-              className="w-3 h-3 rounded-sm transition-all duration-500"
+              className="w-3 h-3 rounded-sm transition-all duration-500 motion-reduce:transition-none motion-reduce:transform-none"
               style={{
                 background: hit ? 'hsla(280,80%,65%,0.8)' : 'hsla(255,20%,30%,0.6)',
                 boxShadow: hit ? '0 0 6px hsla(280,80%,65%,0.5)' : 'none',
@@ -128,6 +128,7 @@ function TierCard({ tier, count, earned }) {
         {earned && (
           <div
             className="absolute inset-0 pointer-events-none rounded-full"
+            data-rarity-animation
             style={{
               background: `radial-gradient(circle, ${badge.glow} 0%, transparent 65%)`,
               animation: `rbs-pulse ${ringCfg.dur}s ease-in-out infinite`,
@@ -139,6 +140,7 @@ function TierCard({ tier, count, earned }) {
         {earned && ringCfg.rings >= 1 && (
           <div
             className="absolute pointer-events-none"
+            data-rarity-animation
             style={{
               inset: 4,
               clipPath: OCT,
@@ -150,6 +152,7 @@ function TierCard({ tier, count, earned }) {
         {earned && ringCfg.rings >= 2 && (
           <div
             className="absolute pointer-events-none"
+            data-rarity-animation
             style={{
               inset: -2,
               clipPath: OCT,
@@ -237,6 +240,9 @@ export default function RarityBadgeShowcase({ earnedCodes, rarityCounts = {} }) 
         @keyframes rbs-breathe   { 0%,100%{opacity:.35}                      50%{opacity:.75} }
         @keyframes rbs-spin      { from{transform:rotate(0deg)}               to{transform:rotate(360deg)} }
         @keyframes rbs-spin-rev  { from{transform:rotate(0deg)}               to{transform:rotate(-360deg)} }
+        @media (prefers-reduced-motion: reduce) {
+          [data-rarity-animation] { animation: none !important; }
+        }
       `}</style>
 
       {/* Header */}

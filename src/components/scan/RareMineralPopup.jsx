@@ -9,7 +9,7 @@
  * floating gem shards, gold sparkle burst on entry.
  */
 import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sparkles, Crown, Gem, X } from 'lucide-react';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 
