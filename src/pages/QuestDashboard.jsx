@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -42,8 +42,9 @@ function xpToLevel(xp) {
 }
 
 // ── Quest Card ───────────────────────────────────────────────────────────────
-function QuestCard({ q }) {
+export function QuestCard({ q }) {
   const [expanded, setExpanded] = useState(false);
+  const detailsId = useId();
   const pct  = Math.min((q.progress / q.target_count) * 100, 100);
   const done = q.status === 'completed' || pct >= 100;
   const color  = TYPE_COLOR[q.quest_type]  || '#94a3b8';
@@ -58,11 +59,25 @@ function QuestCard({ q }) {
     ? hoursLeft > 48 ? `${Math.floor(hoursLeft / 24)}d left` : `${hoursLeft}h left`
     : null;
 
+  const toggleExpanded = () => setExpanded(current => !current);
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleExpanded();
+    }
+  };
+
   return (
     <div
-      className="rounded-2xl p-4 transition-all cursor-pointer select-none"
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      aria-controls={detailsId}
+      className="rounded-2xl p-4 transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
       style={{ background: bg, border: `1px solid ${border}`, opacity: done ? 0.7 : 1 }}
-      onClick={() => setExpanded(e => !e)}
+      onClick={toggleExpanded}
+      onKeyDown={handleKeyDown}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -89,13 +104,19 @@ function QuestCard({ q }) {
             <span className="text-base font-black leading-none" style={{ color }}>+{q.xp_reward}</span>
             <span className="text-[8px] uppercase tracking-widest text-white/30">XP</span>
           </div>
-          <span className="text-white/25 text-[10px]" style={{ transform: expanded ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
+          <span aria-hidden="true" className="text-white/25 text-[10px] motion-reduce:transition-none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
         </div>
       </div>
 
       {/* Progress bar */}
       <div className="h-2 rounded-full bg-white/6 overflow-hidden mb-2">
-        <div className="h-full rounded-full transition-all duration-700"
+        <div
+          role="progressbar"
+          aria-label={`${q.title} progress`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+          className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none"
           style={{ width: `${pct}%`, background: done ? '#34d399' : color, boxShadow: `0 0 8px ${color}60` }} />
       </div>
 
@@ -110,7 +131,7 @@ function QuestCard({ q }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+        <div id={detailsId} className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
           {q.clover_message && (
             <div className="flex items-start gap-2 px-3 py-2 rounded-xl"
               style={{ background: `${color}08`, borderLeft: `2px solid ${color}40` }}>
@@ -308,7 +329,7 @@ export default function QuestDashboard() {
               <span className="text-[10px] font-mono text-white/35">{xpProgress.toLocaleString()} / {xpToNext.toLocaleString()} XP</span>
             </div>
             <div className="h-2.5 rounded-full bg-white/6 overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700"
+              <div className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none"
                 style={{
                   width: `${lvlPct}%`,
                   background: 'linear-gradient(90deg, hsl(270,80%,55%), hsl(280,100%,75%))',
