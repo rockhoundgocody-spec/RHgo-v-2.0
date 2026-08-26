@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -16,6 +16,42 @@ export default function DeleteAccountDialog({ onClose }) {
   const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [error, setError] = useState('');
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    const dialog = dialogRef.current;
+    const getControls = () => Array.from(dialog?.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ) || []);
+    (getControls()[0] || dialog)?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const controls = getControls();
+      if (controls.length === 0) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [onClose]);
 
   const handleDelete = async () => {
     setConfirming(true);
@@ -36,12 +72,15 @@ export default function DeleteAccountDialog({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-md rounded-2xl overflow-hidden"
         style={{ background: 'hsl(240 20% 8%)' }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-account-title"
+        aria-describedby="delete-account-description"
+        tabIndex={-1}
       >
         <div className="p-5">
           <div className="flex items-start justify-between mb-4">
@@ -51,7 +90,7 @@ export default function DeleteAccountDialog({ onClose }) {
               </div>
               <div>
                 <h2 id="delete-account-title" className="text-white font-bold text-lg">Delete Account</h2>
-                <p className="text-white/40 text-xs">This cannot be undone</p>
+                <p id="delete-account-description" className="text-white/40 text-xs">This cannot be undone</p>
               </div>
             </div>
             <button type="button" onClick={onClose} aria-label="Close" className="rounded text-white/40 hover:text-white transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
@@ -127,6 +166,7 @@ export default function DeleteAccountDialog({ onClose }) {
                   type="button"
                   onClick={handleDelete}
                   disabled={confirmText !== 'DELETE' || confirming}
+                  aria-busy={confirming}
                   className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
                 >
                   {confirming ? 'Deleting…' : 'Delete My Account'}
