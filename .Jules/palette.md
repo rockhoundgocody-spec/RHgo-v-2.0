@@ -39,7 +39,3 @@
 ## 2026-08-24 - Accessible Disclosure Widgets
 **Learning:** In a highly themed UI, standard focus indicators might clash or be invisible. However, combining focus rings (`focus-visible:ring-2`) with a slight border radius (`rounded-sm`) improves the visual box for textual toggle buttons that sit flush with their containers.
 **Action:** When adding ARIA expanded states to inline text toggle buttons, include a subtle border radius if applying focus rings, ensuring the ring outlines a neat rectangle rather than clipping awkwardly against text boundaries.
-
-## 2026-03-30 - Permissions Prompt Focus & ARIA Accessibility
-**Learning:** Dismiss buttons on banner/card prompt components often rely on icon-only indicators without ARIA labels or focus ring styling. Adding `aria-label` and custom theme focus rings (`focus-visible:ring-amethyst-glow/50`) ensures seamless screen reader support and keyboard visibility without breaking dark/glass styling.
-**Action:** Always provide explicit `aria-label` text to icon-only dismiss/close buttons in cards, and pair them with theme-matched `focus-visible:ring-2` focus indicators.
