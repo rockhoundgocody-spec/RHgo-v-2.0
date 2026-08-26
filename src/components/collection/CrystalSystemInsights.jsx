@@ -62,19 +62,31 @@ const FALLBACKS = {
   labradorite: { system: 'Triclinic' },
 };
 
+const EMPTY_MINERALS = Object.freeze([]);
+const mineralLookupCache = new WeakMap();
+
+export function getMineralLookup(minerals) {
+  if (!Array.isArray(minerals)) return new Map();
+
+  const cached = mineralLookupCache.get(minerals);
+  if (cached) return cached;
+
+  const lookup = new Map();
+  for (const mineral of minerals) {
+    if (mineral.name && mineral.crystal_system) {
+      lookup.set(mineral.name.toLowerCase().trim(), mineral.crystal_system);
+    }
+  }
+  mineralLookupCache.set(minerals, lookup);
+  return lookup;
+}
+
 export default function CrystalSystemInsights({ specimens }) {
-  const { data: minerals = [], isLoading: loading } = useEntityList('Mineral');
+  const { data: mineralData, isLoading: loading } = useEntityList('Mineral');
+  const minerals = mineralData ?? EMPTY_MINERALS;
 
   // Build name → crystal_system lookup map (case-insensitive & trimmed)
-  const mineralLookup = useMemo(() => {
-    const lookup = new Map();
-    for (const m of minerals) {
-      if (m.name && m.crystal_system) {
-        lookup.set(m.name.toLowerCase().trim(), m.crystal_system);
-      }
-    }
-    return lookup;
-  }, [minerals]);
+  const mineralLookup = useMemo(() => getMineralLookup(minerals), [minerals]);
 
   const data = useMemo(() => {
     if (!specimens?.length) return [];
