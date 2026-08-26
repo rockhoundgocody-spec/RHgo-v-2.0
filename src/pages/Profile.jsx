@@ -129,9 +129,16 @@ export default function Profile() {
           <div className="text-3xl font-bold text-amethyst-glow tabular-nums">{stats.findings}</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Finds</div>
         </GlassPanel>
-        <GlassPanel className="p-5 text-center cursor-pointer hover:bg-white/5 transition" onClick={() => navigate('/badges')}>
-          <div className="text-3xl font-bold text-emerald-400 tabular-nums">{stats.badges}</div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Badges</div>
+        <GlassPanel className="text-center overflow-hidden">
+          <button
+            type="button"
+            onClick={() => navigate('/badges')}
+            className="w-full p-5 hover:bg-white/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-inset motion-reduce:transition-none"
+            aria-label={`View ${stats.badges} earned badges`}
+          >
+            <span className="block text-3xl font-bold text-emerald-400 tabular-nums">{stats.badges}</span>
+            <span className="block text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Badges</span>
+          </button>
         </GlassPanel>
         <GlassPanel className="p-5 text-center">
           <div className="text-[13px] font-bold text-hud-cyan tracking-widest mt-1">{user?.role === 'admin' ? 'ADMIN' : 'MEMBER'}</div>
