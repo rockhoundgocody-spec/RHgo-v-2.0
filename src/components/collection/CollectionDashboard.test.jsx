@@ -18,7 +18,7 @@ globalThis.window = globalThis.window || {
 };
 globalThis.document = globalThis.document || { title: '' };
 
-let computeRarityData, computeTopMinerals, computeWeeklyFinds, computeGeoStates, computeRarestFinds, computeSummaryStats;
+let computeRarityData, computeTopMinerals, computeWeeklyFinds, computeGeoStates, computeRarestFinds, computeSummaryStats, computeCollectionStats;
 
 beforeAll(async () => {
   const mod = await import('./CollectionDashboard.jsx');
@@ -28,6 +28,7 @@ beforeAll(async () => {
   computeGeoStates = mod.computeGeoStates;
   computeRarestFinds = mod.computeRarestFinds;
   computeSummaryStats = mod.computeSummaryStats;
+  computeCollectionStats = mod.computeCollectionStats;
 });
 
 describe('CollectionDashboard data helpers', () => {
@@ -117,5 +118,19 @@ describe('CollectionDashboard data helpers', () => {
     expect(stats.uniqueNames).toBe(3);
     expect(stats.rarePlus).toBe(2);
     expect(stats.avgConf).toBeCloseTo((0.95 + 0.85 + 0.99 + 0.9) / 4);
+  });
+
+  it('computes all rendered dashboard data in one aggregate pass', () => {
+    const stats = computeCollectionStats([
+      ...sampleSpecimens,
+      { id: '5', mineral_name: '__proto__', found_at: '__proto__, Test', ai_confidence: 0 },
+      { id: '6', mineral_name: '__proto__', found_at: '__proto__, Test', ai_confidence: 'invalid' },
+    ]);
+
+    expect(stats.topMinerals[0]).toEqual({ name: 'Quartz', count: 2 });
+    expect(stats.topMinerals).toContainEqual({ name: '__proto__', count: 2 });
+    expect(stats.geoStates).toContainEqual(['__proto__', 2]);
+    expect(stats.summaryStats.uniqueNames).toBe(4);
+    expect(stats.summaryStats.avgConf).toBeCloseTo((0.95 + 0.85 + 0.99 + 0.9) / 5);
   });
 });
