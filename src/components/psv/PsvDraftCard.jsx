@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Atom, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -11,6 +11,7 @@ const bandColor = (pct) => {
 export default function PsvDraftCard({ draft, revisions, confidencePct }) {
   const bc = bandColor(confidencePct);
   const [showDetails, setShowDetails] = useState(false);
+  const detailsId = useId();
   const observedTraits = draft.review_results?._observed_traits || [];
   const uncertaintyFlags = draft.review_results?._uncertainty_flags || [];
 
@@ -86,15 +87,18 @@ export default function PsvDraftCard({ draft, revisions, confidencePct }) {
       {/* Expandable: verification plan */}
       {(draft.verification_plan?.length > 0) && (
         <button
+          type="button"
           onClick={() => setShowDetails(p => !p)}
-          className="mt-3 w-full flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-white/30 hover:text-white/50 transition py-1"
+          aria-expanded={showDetails}
+          aria-controls={detailsId}
+          className="mt-3 w-full flex items-center justify-between rounded-sm text-[10px] uppercase tracking-[0.2em] text-white/30 hover:text-white/50 transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
         >
           <span>Verification plan · {draft.verification_plan.length} tests</span>
           {showDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </button>
       )}
       {showDetails && draft.verification_plan?.length > 0 && (
-        <div className="mt-2 space-y-1.5">
+        <div id={detailsId} className="mt-2 space-y-1.5">
           {draft.verification_plan.slice(0, 5).map((t, i) => (
             <div key={i} className="flex items-start gap-2 text-xs">
               <span className="text-amethyst/40 font-mono shrink-0">{t.priority ?? i + 1}.</span>
