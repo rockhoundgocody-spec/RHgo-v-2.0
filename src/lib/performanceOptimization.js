@@ -189,19 +189,40 @@ export class ResponseCache {
 export function offloadWork(workerScript, data) {
   return new Promise((resolve, reject) => {
     const blob = new Blob([workerScript], { type: 'application/javascript' });
-    const worker = new Worker(URL.createObjectURL(blob));
+    const workerUrl = URL.createObjectURL(blob);
+    let worker;
+
+    try {
+      worker = new Worker(workerUrl);
+    } catch (error) {
+      URL.revokeObjectURL(workerUrl);
+      reject(error);
+      return;
+    }
+
+    const cleanup = () => {
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.terminate();
+      URL.revokeObjectURL(workerUrl);
+    };
 
     worker.onmessage = (e) => {
+      cleanup();
       resolve(e.data);
-      worker.terminate();
     };
 
     worker.onerror = (e) => {
+      cleanup();
       reject(e);
-      worker.terminate();
     };
 
-    worker.postMessage(data);
+    try {
+      worker.postMessage(data);
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
   });
 }
 
@@ -229,6 +250,8 @@ export function detectMemoryLeaks() {
  * Network information API (adaptive quality)
  */
 export function getNetworkInfo() {
+  if (typeof navigator === 'undefined') return null;
+
   const connection =
     navigator.connection ||
     navigator.mozConnection ||
