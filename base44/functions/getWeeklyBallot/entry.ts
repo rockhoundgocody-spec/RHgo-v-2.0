@@ -56,7 +56,7 @@ export default async function (req: Request): Promise<Response> {
       if (user && v.voter_email === user.email) myVote = v.entry_id;
     }
 
-    const result = entries.map((p) => ({
+    const unrankedResult = entries.map((p) => ({
       id: p.id,
       mineral_name: p.mineral_name,
       image_url: p.image_url,
@@ -67,14 +67,18 @@ export default async function (req: Request): Promise<Response> {
       votes: tally[p.id] || 0,
     }));
 
-    result.sort((a, b) => {
+    unrankedResult.sort((a, b) => {
       if (b.votes !== a.votes) return b.votes - a.votes;
       const ra = RARITY_RANK[b.rarity] || 1;
       const rb = RARITY_RANK[a.rarity] || 1;
       if (ra !== rb) return ra - rb;
       return 0;
     });
-    result.forEach((r, i) => { (r as any).rank = i + 1; });
+
+    const result = unrankedResult.map((r, i) => ({
+      ...r,
+      rank: i + 1,
+    }));
 
     return Response.json({
       week_key: wk,
@@ -84,6 +88,6 @@ export default async function (req: Request): Promise<Response> {
       total_votes: votes.length,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }
