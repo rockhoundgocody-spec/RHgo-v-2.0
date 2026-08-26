@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortBadgesForDisplay } from './badgeSorting.js';
+import { selectTopBadges, sortBadgesForDisplay } from './badgeSorting.js';
 
 const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const badges = [
@@ -18,5 +18,25 @@ describe('sortBadgesForDisplay', () => {
     const original = [...badges];
     expect(sortBadgesForDisplay(badges, new Set(), 'rare', rarityOrder)).toEqual([badges[1]]);
     expect(badges).toEqual(original);
+  });
+});
+
+describe('selectTopBadges', () => {
+  it('selects earned badges by rarity without mutating input', () => {
+    const catalog = [
+      { code: 'common', rarity: 'common' },
+      { code: 'legendary', rarity: 'legendary' },
+      { code: 'rare', rarity: 'rare' },
+      { code: 'epic', rarity: 'epic' },
+      { code: 'locked', rarity: 'legendary' },
+    ];
+    const original = [...catalog];
+
+    expect(selectTopBadges(catalog, new Set(['common', 'legendary', 'rare', 'epic']))).toEqual([
+      catalog[1],
+      catalog[3],
+      catalog[2],
+    ]);
+    expect(catalog).toEqual(original);
   });
 });

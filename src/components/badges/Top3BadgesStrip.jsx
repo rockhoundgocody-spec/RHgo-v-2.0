@@ -2,11 +2,12 @@
  * Top3BadgesStrip — Shows top 3 most recently earned badges as large 3D photorealistic orbs.
  * No descriptions. Tap any badge or "View All" to go to the full Badges page.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Lock } from 'lucide-react';
 import LiquidMineralBadge from './LiquidMineralBadge.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { selectTopBadges } from '@/lib/badgeSorting';
 
 const RARITY_GLOW = {
   common:    'hsla(255,30%,60%,0.35)',
@@ -21,11 +22,10 @@ export default function Top3BadgesStrip() {
   const { earnedCodes, allBadges } = useBadgeAwarder();
 
   // Top 3 earned, highest rarity first
-  const RARITY_ORDER = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
-  const top3 = allBadges
-    .filter((b) => earnedCodes.has(b.code))
-    .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity))
-    .slice(0, 3);
+  const top3 = useMemo(
+    () => selectTopBadges(allBadges, earnedCodes),
+    [allBadges, earnedCodes],
+  );
 
   // Pad with locked placeholders if fewer than 3 earned
   const slots = [0, 1, 2].map((i) => ({ badge: top3[i] || null, earned: !!top3[i] }));
@@ -35,6 +35,7 @@ export default function Top3BadgesStrip() {
       <div className="flex items-center justify-center gap-6">
         {slots.map((slot, i) => (
           <button
+            type="button"
             key={i}
             onClick={() => navigate('/badges')}
             className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
@@ -72,6 +73,7 @@ export default function Top3BadgesStrip() {
       </div>
 
       <button
+        type="button"
         onClick={() => navigate('/badges')}
         className="flex items-center gap-1 text-[10px] uppercase tracking-[0.3em] text-white/35 hover:text-white/60 transition mt-1"
       >
