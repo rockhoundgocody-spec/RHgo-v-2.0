@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Check, Loader2 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { getLocalDayKey, getLocalTimezone } from '@/lib/dayKey';
 
 const moods = [
   { key: 'great', label: 'Great', emoji: '✨' },
@@ -20,8 +21,8 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
   const [intention, setIntention] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const localDayKey = new Intl.DateTimeFormat('en-CA').format(new Date());
-  if (!companion || companion.last_check_in_date === localDayKey) return null;
+  const today = getLocalDayKey();
+  if (companion?.last_check_in_date === today) return null;
 
   const submit = async () => {
     if (!picked) return;
@@ -30,8 +31,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
       await base44.functions.invoke('dailyCheckIn', {
         mood_label: picked,
         intention: intention.trim() || undefined,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        local_day_key: localDayKey,
+        timezone: getLocalTimezone(),
       });
       onCheckedIn?.({ mood_label: picked, intention: intention.trim() });
     } finally {
@@ -39,7 +39,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
     }
   };
 
-  const name = companion.name || 'Amethyst';
+  const name = companion?.name || 'Clover 🍀 Cole';
 
   return (
     <GlassPanel className="mb-10 p-5">
@@ -50,7 +50,7 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         <div className="flex-1 h-px bg-gradient-to-r from-hud-cyan/40 to-transparent" />
       </div>
       <p className="text-white/85 text-[15px] leading-relaxed mb-4">
-        {name} has been waiting for you. <span className="text-amethyst-glow">How are you feeling today?</span>
+        Clover has been thinking of you. <span className="text-amethyst-glow">How are you feeling today?</span>
       </p>
 
       <div className="flex gap-2 flex-wrap mb-4">
@@ -59,13 +59,14 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
             key={m.key}
             type="button"
             onClick={() => setPicked(m.key)}
-            className={`min-h-[44px] px-3.5 py-2 rounded-full border text-sm transition-all ${
+            aria-pressed={picked === m.key}
+            className={`min-h-[44px] px-3.5 py-2 rounded-full border text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ${
               picked === m.key
                 ? 'border-amethyst-glow bg-amethyst/20 text-white'
                 : 'border-white/10 bg-white/5 text-white/70 hover:border-amethyst/40 hover:text-white'
             }`}
           >
-            <span className="mr-1.5">{m.emoji}</span>
+            <span className="mr-1.5" aria-hidden="true">{m.emoji}</span>
             {m.label}
           </button>
         ))}
@@ -76,14 +77,15 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         value={intention}
         onChange={(e) => setIntention(e.target.value)}
         placeholder="One small intention for today (optional)…"
-        className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amethyst/50"
+        aria-label="Daily intention"
+        className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amethyst/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
       />
 
       <button
         type="button"
         onClick={submit}
         disabled={!picked || submitting}
-        className="mt-4 w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg border border-amethyst/40 bg-amethyst/15 hover:bg-amethyst/25 disabled:opacity-40 disabled:cursor-not-allowed text-amethyst-glow text-xs uppercase tracking-[0.3em] transition"
+        className="mt-4 w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg border border-amethyst/40 bg-amethyst/15 hover:bg-amethyst/25 disabled:opacity-40 disabled:cursor-not-allowed text-amethyst-glow text-xs uppercase tracking-[0.3em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
       >
         {submitting ? (
           <>

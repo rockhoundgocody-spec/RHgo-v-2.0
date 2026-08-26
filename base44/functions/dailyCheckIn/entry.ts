@@ -1,15 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
-const DAY_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-function getDayKeyForTimezone(timezone: string): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { resolveDayKey } from './dayKey.ts';
 
 /**
  * Records the user's daily mood + intention, refills companion energy,
@@ -18,14 +8,11 @@ function getDayKeyForTimezone(timezone: string): string {
  * Payload: {
  *   mood_label: string,
  *   intention?: string,
- *   timezone?: string,      // IANA timezone from client (ex: "America/Los_Angeles")
- *   local_day_key?: string, // Client day key in YYYY-MM-DD
+ *   timezone?: string, // IANA timezone from client (ex: "America/Los_Angeles")
  * }
  *
- * Fallback behavior when timezone/day key are missing or invalid:
- * - Try validating timezone and deriving day key from it.
- * - Otherwise use a valid local_day_key if provided.
- * - Otherwise fall back to server UTC day key.
+ * The server derives the date from the timezone rather than trusting a
+ * client-supplied day key. Missing and invalid timezones fall back to UTC.
  *
  * Returns: { companion, leveled_up: boolean }
  */
@@ -37,31 +24,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { mood_label, intention, timezone, local_day_key } = await req.json();
+    const { mood_label, intention, timezone } = await req.json();
     if (!mood_label || typeof mood_label !== 'string') {
       return Response.json({ error: 'mood_label required' }, { status: 400 });
     }
 
-    const trimmedTimezone = typeof timezone === 'string' ? timezone.trim() : '';
-    const normalizedLocalDayKey =
-      typeof local_day_key === 'string' && DAY_KEY_PATTERN.test(local_day_key)
-        ? local_day_key
-        : null;
-
-    let today = new Date().toISOString().slice(0, 10);
-
-    if (trimmedTimezone) {
-      try {
-        today = getDayKeyForTimezone(trimmedTimezone);
-      } catch {
-        // Invalid timezone; continue with day-key/server fallback.
-        if (normalizedLocalDayKey) {
-          today = normalizedLocalDayKey;
-        }
-      }
-    } else if (normalizedLocalDayKey) {
-      today = normalizedLocalDayKey;
-    }
+    const today = resolveDayKey(timezone);
 
     const existing = await base44.entities.Companion.filter({ owner_email: user.email });
     let companion =
@@ -95,7 +63,8 @@ Deno.serve(async (req) => {
     let xp = (companion.xp || 0) + xpGain;
     let level = companion.level || 1;
     let leveled = false;
-    // Simple curve: each level needs level*50 xp
+    // Shared curve (same formula as promoteVerifiedSpecimen):
+    // Each level costs level*50 XP (L1→L2=50, L2→L3=100, …)
     while (xp >= level * 50) {
       xp -= level * 50;
       level += 1;
