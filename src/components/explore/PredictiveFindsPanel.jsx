@@ -80,22 +80,23 @@ Based on regional geology, predict 4-6 minerals the rockhound is REALISTICALLY l
             type="button"
             onClick={predict}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 min-h-[44px] rounded-lg border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 disabled:opacity-50 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition"
+            aria-busy={loading}
+            className="w-full flex items-center justify-center gap-2 min-h-[44px] rounded-lg border border-amethyst/40 bg-amethyst/10 hover:bg-amethyst/20 disabled:opacity-50 text-amethyst-glow text-xs uppercase tracking-[0.3em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 motion-reduce:transition-none"
           >
             {loading ? (
               <>
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
                 Reading the rocks…
               </>
             ) : (
               <>
-                <Sparkles size={14} />
+                <Sparkles size={14} aria-hidden="true" />
                 Predict Likely Finds
               </>
             )}
           </button>
 
-          {error && <div className="mt-3 text-rose-300 text-xs">{error}</div>}
+          {error && <div className="mt-3 text-rose-300 text-xs" role="alert">{error}</div>}
 
           {predictions?.region_summary && (
             <p className="mt-3 text-white/70 text-xs leading-relaxed">

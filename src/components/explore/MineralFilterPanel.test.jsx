@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 
+vi.mock('framer-motion', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, useReducedMotion: () => false };
+});
+
 let MineralFilterPanel;
 
 beforeAll(async () => {
@@ -29,6 +34,8 @@ describe('MineralFilterPanel', () => {
     });
 
     expect(tree).not.toBeNull();
+    expect(tree.props.role).toBe('group');
+    expect(tree.props['aria-label']).toBe('Mineral filters');
     const [allChip, quartzChip, agateChip] = tree.props.children.flat();
 
     expect(allChip.props['aria-pressed']).toBe(true);
