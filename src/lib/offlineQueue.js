@@ -176,6 +176,7 @@ export async function saveQueue(items) {
       if (typeof localStorage !== "undefined") {
         localStorage.setItem(STORAGE_KEY, encrypted);
       }
+      cachedQueue = batch;
       return;
     } catch {
       batch = batch.slice(Math.ceil(batch.length / 2));
@@ -185,6 +186,7 @@ export async function saveQueue(items) {
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
     }
+    cachedQueue = [];
   } catch { /* nothing more we can do */ }
 }
 

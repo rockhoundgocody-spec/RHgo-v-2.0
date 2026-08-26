@@ -96,6 +96,41 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(getQueueLength()).toBe(0);
   });
 
+  it("returns an empty queue when storage has no queue payload", async () => {
+    localStorage.removeItem("rh-offline-queue-v1");
+    await expect(loadQueue()).resolves.toEqual([]);
+    expect(getQueueLength()).toBe(0);
+  });
+
+  it("keeps the cached count consistent when quota pressure trims the queue", async () => {
+    const originalSetItem = localStorage.setItem;
+    let queueWrites = 0;
+    localStorage.setItem = (key, value) => {
+      if (key === "rh-offline-queue-v1" && queueWrites++ === 0) {
+        const error = new Error("Storage quota exceeded");
+        error.name = "QuotaExceededError";
+        throw error;
+      }
+      originalSetItem.call(localStorage, key, value);
+    };
+
+    try {
+      const items = Array.from({ length: 8 }, (_, index) => ({
+        entity: "Specimen",
+        op: "create",
+        data: { mineral_name: `Specimen ${index}` },
+      }));
+      await saveQueue(items);
+
+      expect(getQueueLength()).toBe(4);
+      const persisted = await loadQueue();
+      expect(persisted).toHaveLength(4);
+      expect(persisted[0].data.mineral_name).toBe("Specimen 4");
+    } finally {
+      localStorage.setItem = originalSetItem;
+    }
+  });
+
   it("flushes queue when network returns", async () => {
     base44.entities.Specimen.create.mockResolvedValueOnce({ id: "spec-123" });
 
