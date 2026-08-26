@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { fetchAndCacheTile } from './offlineTileFetch';
 
 /**
  * useOfflineTiles — prefetch a bounding-box tile pack into Cache Storage
@@ -68,29 +69,34 @@ export default function useOfflineTiles() {
     }
     setTileCount(allTiles.length);
 
-    const cache = await caches.open(CACHE_NAME);
-    let done = 0;
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      let done = 0;
+      let failures = 0;
 
-    // Batch fetch — 8 concurrent to avoid saturating the network
-    const BATCH = 8;
-    for (let i = 0; i < allTiles.length; i += BATCH) {
-      const batch = allTiles.slice(i, i + BATCH);
-      await Promise.allSettled(
-        batch.map(async ({ z, x, y }) => {
-          const url = TILE_URL(z, x, y);
-          // skip if already cached
-          const existing = await cache.match(url);
-          if (!existing) {
-            const res = await fetch(url, { mode: 'no-cors' });
-            await cache.put(url, res);
-          }
-          done++;
-          setProgress(Math.round((done / allTiles.length) * 100));
-        })
-      );
+      // Batch fetch — 8 concurrent to avoid saturating the network
+      const BATCH = 8;
+      for (let i = 0; i < allTiles.length; i += BATCH) {
+        const batch = allTiles.slice(i, i + BATCH);
+        const results = await Promise.allSettled(
+          batch.map(async ({ z, x, y }) => {
+            const url = TILE_URL(z, x, y);
+            try {
+              const existing = await cache.match(url);
+              if (!existing) await fetchAndCacheTile(url, cache);
+            } finally {
+              done++;
+              setProgress(Math.round((done / allTiles.length) * 100));
+            }
+          })
+        );
+        failures += results.filter((result) => result.status === 'rejected').length;
+      }
+
+      setStatus(failures === 0 ? 'done' : 'error');
+    } catch {
+      setStatus('error');
     }
-
-    setStatus('done');
   }, []);
 
   const clear = useCallback(async () => {
