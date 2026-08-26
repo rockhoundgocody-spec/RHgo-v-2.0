@@ -164,10 +164,11 @@ export function shouldHalt({ evidenceScore, modelConfidence, needsMoreEvidence, 
 
 // ─── Action Recommendation ────────────────────────────────────────────────────
 
-function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
+export function recommendAction({ band, task, isOffline, needsMoreEvidence }) {
   if (isOffline || needsMoreEvidence) return 'rescan';
   if (band === 'low') return 'rescan';
   if (band === 'medium') return 'compare';
+  if (band !== 'high') return 'rescan';
   if (task === 'identify') return 'save';
   if (task === 'value_estimate') return 'list';
   return 'save';

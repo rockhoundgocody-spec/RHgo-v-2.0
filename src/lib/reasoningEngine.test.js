@@ -16,6 +16,7 @@ let scoreToBand;
 let bandLabel;
 let reason;
 let shouldHalt;
+let recommendAction;
 
 beforeAll(async () => {
   globalThis.window = {
@@ -40,6 +41,7 @@ beforeAll(async () => {
   bandLabel = mod.bandLabel;
   reason = mod.reason;
   shouldHalt = mod.shouldHalt;
+  recommendAction = mod.recommendAction;
 });
 
 afterEach(() => {
@@ -208,5 +210,32 @@ describe('shouldHalt', () => {
       needsMoreEvidence: false,
       isOffline: false,
     })).toEqual({ halt: true, reason: 'sufficient_confidence' });
+  });
+});
+
+describe('recommendAction', () => {
+  it('rescans when offline or missing evidence regardless of confidence', () => {
+    expect(recommendAction({ band: 'high', task: 'identify', isOffline: true })).toBe('rescan');
+    expect(recommendAction({ band: 'high', task: 'identify', needsMoreEvidence: true })).toBe('rescan');
+  });
+
+  it('maps low and medium confidence to rescan and compare', () => {
+    expect(recommendAction({ band: 'low', task: 'identify' })).toBe('rescan');
+    expect(recommendAction({ band: 'medium', task: 'identify' })).toBe('compare');
+  });
+
+  it('saves a high-confidence identification and lists a high-confidence valuation', () => {
+    expect(recommendAction({ band: 'high', task: 'identify' })).toBe('save');
+    expect(recommendAction({ band: 'high', task: 'value_estimate' })).toBe('list');
+  });
+
+  it('saves other supported high-confidence tasks', () => {
+    expect(recommendAction({ band: 'high', task: 'field_note' })).toBe('save');
+    expect(recommendAction({ band: 'high', task: 'locality_check' })).toBe('save');
+  });
+
+  it('fails safely to rescan when the confidence band is missing or invalid', () => {
+    expect(recommendAction({ task: 'identify' })).toBe('rescan');
+    expect(recommendAction({ band: 'unknown', task: 'identify' })).toBe('rescan');
   });
 });
