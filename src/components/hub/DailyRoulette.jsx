@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Dices, Zap, Timer, CheckCircle2, Share2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { executeShare } from '@/lib/shareAchievement';
 
 const CHALLENGES = [
   { emoji: '✨', text: 'Find something that sparkles within 500ft', xp: 500, sticker: '🌟 Holographic Star', difficulty: 'easy' },
@@ -38,22 +39,27 @@ function getDailyChallenge() {
   return CHALLENGES[idx];
 }
 
-function MemeCard({ challenge, onClose }) {
+function MemeCard({ challenge, onClose, reducedMotion }) {
   const caption = MEME_CAPTIONS[new Date().getDate() % MEME_CAPTIONS.length];
+  const [shareStatus, setShareStatus] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleShare = async () => {
     const text = `${challenge.emoji} Daily Rock Challenge: "${challenge.text}" +${challenge.xp} XP earned! ${challenge.sticker}\n\n"${caption}"\n\nPlay RockHound GO 🪨`;
-    if (navigator.share) {
-      await navigator.share({ title: 'RockHound GO Daily Win!', text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert('Copied to clipboard! 📋');
-    }
+    const method = await executeShare({ title: 'RockHound GO Daily Win!', text });
+    setShareStatus(method === 'error' ? 'Sharing failed. Please try again.' : method === 'clipboard' ? 'Copied to clipboard.' : 'Share sheet opened.');
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85 }}
+      initial={reducedMotion ? false : { opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.85 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -61,6 +67,9 @@ function MemeCard({ challenge, onClose }) {
       onClick={onClose}
     >
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="daily-roulette-share-title"
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-xs rounded-3xl overflow-hidden shadow-2xl"
         style={{ background: 'linear-gradient(135deg, hsla(280,80%,15%,0.95) 0%, hsla(30,80%,12%,0.95) 100%)', border: '2px solid hsla(280,80%,55%,0.4)' }}
@@ -68,11 +77,11 @@ function MemeCard({ challenge, onClose }) {
         {/* Meme header */}
         <div className="relative px-6 pt-8 pb-4 text-center"
           style={{ background: 'linear-gradient(180deg, hsla(30,90%,50%,0.15) 0%, transparent 100%)' }}>
-          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition">
+          <button type="button" autoFocus onClick={onClose} aria-label="Close daily win" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
             <X size={16} />
           </button>
           <div className="text-6xl mb-3">{challenge.emoji}</div>
-          <div className="text-white font-black text-lg leading-tight mb-1">{challenge.sticker}</div>
+          <div id="daily-roulette-share-title" className="text-white font-black text-lg leading-tight mb-1">{challenge.sticker}</div>
           <div className="text-white/60 text-xs italic">"{caption}"</div>
         </div>
 
@@ -91,12 +100,14 @@ function MemeCard({ challenge, onClose }) {
         {/* Share button */}
         <div className="px-4 pb-6">
           <button
+            type="button"
             onClick={handleShare}
-            className="w-full py-3 rounded-2xl font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="w-full py-3 rounded-2xl font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             style={{ background: 'linear-gradient(135deg, hsl(280,80%,55%), hsl(30,90%,50%))', color: 'white', boxShadow: '0 4px 20px -4px hsla(280,80%,55%,0.5)' }}
           >
             <Share2 size={15} /> Share This Win!
           </button>
+          {shareStatus && <p role="status" className="mt-2 text-center text-xs text-white/70">{shareStatus}</p>}
         </div>
       </motion.div>
     </motion.div>
@@ -107,16 +118,29 @@ export default function DailyRoulette() {
   const [spinning, setSpinning] = useState(false);
   const [override, setOverride] = useState(null);
   const [showMeme, setShowMeme] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(() => {
     return sessionStorage.getItem(`roulette_claimed_${new Date().toDateString()}`) === '1';
   });
   const spinRef = useRef(null);
+  const memeTimerRef = useRef(null);
+  const claimRef = useRef(false);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => () => {
+    if (spinRef.current) clearInterval(spinRef.current);
+    if (memeTimerRef.current) clearTimeout(memeTimerRef.current);
+  }, []);
 
   const challenge = override || getDailyChallenge();
   const diff = DIFFICULTY_STYLE[challenge.difficulty];
 
   const spin = () => {
     if (spinning) return;
+    if (reducedMotion) {
+      setOverride(CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)]);
+      return;
+    }
     setSpinning(true);
     let count = 0;
     const interval = setInterval(() => {
@@ -131,6 +155,9 @@ export default function DailyRoulette() {
   };
 
   const claim = async () => {
+    if (claimed || claimRef.current) return;
+    claimRef.current = true;
+    setClaiming(true);
     sessionStorage.setItem(`roulette_claimed_${new Date().toDateString()}`, '1');
     setClaimed(true);
 
@@ -155,7 +182,12 @@ export default function DailyRoulette() {
     if (window.__rhgo_addXP) window.__rhgo_addXP(challenge.xp);
 
     // Show meme share card after a beat
-    setTimeout(() => setShowMeme(true), 400);
+    if (reducedMotion) {
+      setShowMeme(true);
+    } else {
+      memeTimerRef.current = setTimeout(() => setShowMeme(true), 400);
+    }
+    setClaiming(false);
   };
 
   return (
@@ -216,30 +248,32 @@ export default function DailyRoulette() {
               <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-emerald-400 text-xs font-bold"
                 style={{ background: 'hsla(145,60%,15%,0.4)', border: '1px solid hsla(145,60%,40%,0.3)' }}>
                 <CheckCircle2 size={13} /> Challenge Claimed!
-                <button onClick={() => setShowMeme(true)} aria-label="Share" className="ml-1 text-white/40 hover:text-white/70 transition">
+                <button type="button" onClick={() => setShowMeme(true)} aria-label="Share claimed challenge" className="ml-1 text-white/40 hover:text-white/70 transition rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
                   <Share2 size={11} />
                 </button>
               </div>
             ) : (
-              <button onClick={claim}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.2em] transition-all active:scale-95"
+              <button type="button" onClick={claim} disabled={claiming}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
                 style={{ background: 'hsla(30,90%,45%,0.3)', border: '1px solid hsla(30,90%,55%,0.4)', color: '#fb923c' }}>
                 ✓ I Found It! Claim XP
               </button>
             )}
             <button
+              type="button"
               onClick={spin}
               disabled={spinning || claimed}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all active:scale-95 disabled:opacity-40"
+              aria-label="Spin for a new challenge"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{ background: 'hsla(270,60%,20%,0.4)', border: '1px solid hsla(270,60%,45%,0.3)', color: 'hsl(280,80%,75%)' }}>
-              <Dices size={13} className={spinning ? 'animate-spin' : ''} />
+              <Dices size={13} className={spinning ? 'animate-spin motion-reduce:animate-none' : ''} />
             </button>
           </div>
         </div>
       </div>
 
       <AnimatePresence>
-        {showMeme && <MemeCard challenge={challenge} onClose={() => setShowMeme(false)} />}
+        {showMeme && <MemeCard challenge={challenge} onClose={() => setShowMeme(false)} reducedMotion={reducedMotion} />}
       </AnimatePresence>
     </>
   );

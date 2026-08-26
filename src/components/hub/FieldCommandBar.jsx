@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ArrowRight, MapPin, Zap, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  FIELD_COMMAND_MAX_LENGTH,
+  getSafeInternalRoute,
+  normalizeFieldCommand,
+} from './fieldCommandSafety';
 
 const EXAMPLE_COMMANDS = [
   'Find fluorite near me',
@@ -34,6 +39,7 @@ export default function FieldCommandBar({ collectionCount }) {
   const [result, setResult] = useState(null);
   const [location, setLocation] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState('');
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -49,27 +55,37 @@ export default function FieldCommandBar({ collectionCount }) {
   }, []);
 
   const submit = async (cmd) => {
-    const text = (cmd || command).trim();
-    if (!text) return;
+    const text = normalizeFieldCommand(cmd || command);
+    if (!text || loading) return;
     setLoading(true);
     setResult(null);
+    setError('');
     setExpanded(true);
-    const res = await base44.functions.invoke('fieldCommand.js', {
-      command: text,
-      lat: location?.lat ?? null,
-      lng: location?.lng ?? null,
-      collection_count: collectionCount ?? 0,
-    });
-    setResult(res.data);
-    setLoading(false);
+    try {
+      const res = await base44.functions.invoke('fieldCommand.js', {
+        command: text,
+        lat: location?.lat ?? null,
+        lng: location?.lng ?? null,
+        collection_count: collectionCount ?? 0,
+      });
+      setResult(res.data);
+    } catch {
+      setError('Field Command could not complete that request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter') submit();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submit();
+    }
   };
 
   const handleNavigate = () => {
-    if (result?.route) navigate(result.route);
+    const route = getSafeInternalRoute(result?.route);
+    if (route) navigate(route);
   };
 
   return (
@@ -88,6 +104,9 @@ export default function FieldCommandBar({ collectionCount }) {
         <div className="flex gap-2">
           <input
             ref={inputRef}
+            type="text"
+            aria-label="Field command"
+            maxLength={FIELD_COMMAND_MAX_LENGTH}
             value={command}
             onChange={(e) => setCommand(e.target.value)}
             onKeyDown={handleKey}
@@ -95,9 +114,11 @@ export default function FieldCommandBar({ collectionCount }) {
             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/25 focus:outline-none focus:border-amethyst/40 min-w-0"
           />
           <button
+            type="button"
             onClick={() => submit()}
             disabled={loading || !command.trim()}
-            className="px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white transition flex items-center gap-1.5 text-sm font-medium shrink-0"
+            aria-label="Submit field command"
+            className="px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst disabled:opacity-30 text-white transition flex items-center gap-1.5 text-sm font-medium shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
           >
             {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
           </button>
@@ -105,11 +126,12 @@ export default function FieldCommandBar({ collectionCount }) {
 
         {/* Example chips */}
         <div className="flex gap-1.5 mt-2 flex-wrap">
-          {EXAMPLE_COMMANDS.slice(0, 3).map((ex, i) => (
+          {EXAMPLE_COMMANDS.slice(0, 3).map((ex) => (
             <button
-              key={i}
+              type="button"
+              key={ex}
               onClick={() => { setCommand(ex); submit(ex); }}
-              className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-amethyst/30 transition"
+              className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-amethyst/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             >
               {ex}
             </button>
@@ -145,16 +167,19 @@ export default function FieldCommandBar({ collectionCount }) {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setExpanded(p => !p)}
                   aria-label={expanded ? 'Collapse details' : 'Expand details'}
-                  className="text-white/30 hover:text-white/60 transition shrink-0 mt-0.5"
+                  aria-expanded={expanded}
+                  aria-controls="field-command-details"
+                  className="text-white/30 hover:text-white/60 transition shrink-0 mt-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 >
                   {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
               </div>
 
               {expanded && (
-                <>
+                <div id="field-command-details" className="contents">
                   {/* Geological brief */}
                   {result.result?.geological_brief && (
                     <p className="text-white/70 text-xs leading-relaxed border-l-2 border-amethyst/25 pl-3">
@@ -182,13 +207,15 @@ export default function FieldCommandBar({ collectionCount }) {
                       <p className="text-amber-300 text-xs">{result.result.safety_note}</p>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {/* Navigate CTA */}
               <button
+                type="button"
                 onClick={handleNavigate}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amethyst/30 text-amethyst/80 hover:text-white hover:bg-amethyst/10 text-xs font-medium uppercase tracking-[0.25em] transition"
+                disabled={!getSafeInternalRoute(result.route)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amethyst/30 text-amethyst/80 hover:text-white hover:bg-amethyst/10 text-xs font-medium uppercase tracking-[0.25em] transition disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               >
                 {INTENT_LABEL[result.intent] || 'Open'} <ArrowRight size={11} />
               </button>
@@ -196,6 +223,7 @@ export default function FieldCommandBar({ collectionCount }) {
           )}
         </div>
       )}
+      {error && <p role="alert" className="px-4 py-3 text-xs text-rose-300">{error}</p>}
     </div>
   );
 }
