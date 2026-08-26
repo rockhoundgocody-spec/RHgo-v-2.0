@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { debounce, throttle, VirtualScroller, ResponseCache } from './performanceOptimization';
+import { debounce, throttle, measureRenderTime, VirtualScroller, ResponseCache } from './performanceOptimization';
 
 describe('debounce', () => {
   afterEach(() => vi.useRealTimers());
@@ -208,5 +208,23 @@ describe('ResponseCache', () => {
 
     expect(cache.get('a')).toBeNull();
     expect(cache.get('b')).toBeNull();
+  });
+});
+
+describe('measureRenderTime', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    performance.clearMarks();
+    performance.clearMeasures();
+  });
+
+  it('returns a duration without writing routine timings to the console', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const finish = measureRenderTime('collection-card');
+
+    const duration = finish();
+
+    expect(duration).toBeGreaterThanOrEqual(0);
+    expect(log).not.toHaveBeenCalled();
   });
 });
