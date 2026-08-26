@@ -1,5 +1,13 @@
-import { afterEach, describe, it, expect, vi } from 'vitest';
-import { debounce, throttle, measureRenderTime, VirtualScroller, ResponseCache } from './performanceOptimization';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import {
+  debounce,
+  throttle,
+  measureRenderTime,
+  VirtualScroller,
+  ResponseCache,
+  offloadWork,
+  getNetworkInfo,
+} from './performanceOptimization';
 
 describe('debounce', () => {
   afterEach(() => vi.useRealTimers());
@@ -208,6 +216,99 @@ describe('ResponseCache', () => {
 
     expect(cache.get('a')).toBeNull();
     expect(cache.get('b')).toBeNull();
+  });
+});
+
+describe('offloadWork', () => {
+  const workerUrl = 'blob:worker-script';
+  let worker;
+  let workerConstructor;
+
+  beforeEach(() => {
+    worker = {
+      onmessage: null,
+      onerror: null,
+      postMessage: vi.fn(),
+      terminate: vi.fn(),
+    };
+    workerConstructor = vi.fn(function WorkerMock() {
+      return worker;
+    });
+    vi.stubGlobal('Worker', workerConstructor);
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => workerUrl),
+      revokeObjectURL: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('releases the worker and object URL after a successful result', async () => {
+    const result = offloadWork('self.onmessage = () => {}', { mineral: 'quartz' });
+
+    expect(worker.postMessage).toHaveBeenCalledWith({ mineral: 'quartz' });
+    worker.onmessage({ data: 42 });
+
+    await expect(result).resolves.toBe(42);
+    expect(worker.terminate).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(workerUrl);
+  });
+
+  it('releases resources when the worker reports an error', async () => {
+    const result = offloadWork('throw new Error()', null);
+    const failure = new Error('worker failed');
+
+    worker.onerror(failure);
+
+    await expect(result).rejects.toBe(failure);
+    expect(worker.terminate).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(workerUrl);
+  });
+
+  it('revokes the object URL when worker construction fails', async () => {
+    workerConstructor.mockImplementationOnce(function FailingWorkerMock() {
+      throw new Error('worker unavailable');
+    });
+
+    await expect(offloadWork('postMessage(1)', null)).rejects.toThrow('worker unavailable');
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(workerUrl);
+  });
+
+  it('releases resources when posting data fails synchronously', async () => {
+    worker.postMessage.mockImplementationOnce(() => {
+      throw new Error('clone failed');
+    });
+
+    await expect(offloadWork('postMessage(1)', Symbol('unsupported'))).rejects.toThrow('clone failed');
+    expect(worker.terminate).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(workerUrl);
+  });
+});
+
+describe('getNetworkInfo', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null outside a browser environment', () => {
+    vi.stubGlobal('navigator', undefined);
+
+    expect(getNetworkInfo()).toBeNull();
+  });
+
+  it('returns normalized browser connection details', () => {
+    vi.stubGlobal('navigator', {
+      connection: { effectiveType: '3g', downlink: 1.5, rtt: 180, saveData: true },
+    });
+
+    expect(getNetworkInfo()).toEqual({
+      effectiveType: '3g',
+      downlink: 1.5,
+      rtt: 180,
+      saveData: true,
+    });
   });
 });
 
