@@ -7,12 +7,13 @@
  * Each fired rule = one node in the derivation DAG.
  * Unfired rules show what evidence would still improve confidence.
  */
-import React, { useState } from 'react';
-import { GitBranch, ChevronDown, ChevronUp, CheckCircle2, Circle, TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useId, useState } from 'react';
+import { GitBranch, ChevronDown, ChevronUp, Circle, TrendingUp, TrendingDown } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
 export default function PsvProvenancePanel({ engine, revision }) {
   const [open, setOpen] = useState(false);
+  const contentId = useId();
   if (!engine || !engine.fired_rules) return null;
 
   const { fired_rules = [], unfired_rules = [], base_llm_score, rule_contribution, final_score } = engine;
@@ -21,8 +22,11 @@ export default function PsvProvenancePanel({ engine, revision }) {
   return (
     <GlassPanel variant="hud" className="p-4">
       <button
+        type="button"
         onClick={() => setOpen(p => !p)}
-        className="w-full flex items-center justify-between gap-2"
+        aria-expanded={open}
+        aria-controls={contentId}
+        className="w-full flex items-center justify-between gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
       >
         <div className="flex items-center gap-2">
           <GitBranch size={13} className="text-hud-cyan" />
@@ -37,7 +41,7 @@ export default function PsvProvenancePanel({ engine, revision }) {
       </button>
 
       {open && (
-        <div className="mt-4 space-y-4">
+        <div id={contentId} className="mt-4 space-y-4">
           {/* Score decomposition */}
           <div className="bg-black/20 rounded-xl p-3 space-y-2">
             <div className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-2">Score Derivation</div>
