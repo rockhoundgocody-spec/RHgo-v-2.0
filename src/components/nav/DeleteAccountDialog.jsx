@@ -2,29 +2,31 @@ import React, { useState } from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
+export function deleteUserData(client, email) {
+  return Promise.all([
+    client.entities.Specimen.deleteMany({ created_by: email }),
+    client.entities.Companion.deleteMany({ owner_email: email }),
+    client.entities.SpecimenDraft.deleteMany({ owner_email: email }),
+    client.entities.Badge.deleteMany({ owner_email: email }),
+  ]);
+}
+
 export default function DeleteAccountDialog({ onClose }) {
   const [step, setStep] = useState(1); // 1=info, 2=confirm
   const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [error, setError] = useState('');
 
   const handleDelete = async () => {
     setConfirming(true);
-    // Delete user's data entities
+    setError('');
     try {
       const user = await base44.auth.me();
-      const [specimens, companions, drafts, badges] = await Promise.all([
-        base44.entities.Specimen.filter({ created_by: user.email }),
-        base44.entities.Companion.filter({ owner_email: user.email }),
-        base44.entities.SpecimenDraft.filter({ owner_email: user.email }),
-        base44.entities.Badge.filter({ owner_email: user.email }),
-      ]);
-      await Promise.all([
-        ...specimens.map((r) => base44.entities.Specimen.delete(r.id)),
-        ...companions.map((r) => base44.entities.Companion.delete(r.id)),
-        ...drafts.map((r) => base44.entities.SpecimenDraft.delete(r.id)),
-        ...badges.map((r) => base44.entities.Badge.delete(r.id)),
-      ]);
-      base44.auth.logout('/');
+      if (!user?.email) throw new Error('Authenticated user email is unavailable');
+      await deleteUserData(base44, user.email);
+      await base44.auth.logout('/');
+    } catch {
+      setError('We could not delete your account data. Nothing else was changed—please try again.');
     } finally {
       setConfirming(false);
     }
@@ -37,6 +39,9 @@ export default function DeleteAccountDialog({ onClose }) {
         className="relative w-full max-w-md rounded-2xl overflow-hidden"
         style={{ background: 'hsl(240 20% 8%)' }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
       >
         <div className="p-5">
           <div className="flex items-start justify-between mb-4">
@@ -45,11 +50,11 @@ export default function DeleteAccountDialog({ onClose }) {
                 <Trash2 size={18} className="text-rose-400" />
               </div>
               <div>
-                <h2 className="text-white font-bold text-lg">Delete Account</h2>
+                <h2 id="delete-account-title" className="text-white font-bold text-lg">Delete Account</h2>
                 <p className="text-white/40 text-xs">This cannot be undone</p>
               </div>
             </div>
-            <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white transition select-none">
+            <button type="button" onClick={onClose} aria-label="Close" className="rounded text-white/40 hover:text-white transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
               <X size={20} />
             </button>
           </div>
@@ -73,14 +78,16 @@ export default function DeleteAccountDialog({ onClose }) {
               </div>
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-semibold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                 >
                   Continue
                 </button>
@@ -93,25 +100,34 @@ export default function DeleteAccountDialog({ onClose }) {
               <p className="text-sm text-white/60 mb-3">
                 Type <span className="text-white font-mono font-bold">DELETE</span> to confirm.
               </p>
+              <label htmlFor="delete-account-confirmation" className="sr-only">Type DELETE to confirm account deletion</label>
               <input
+                id="delete-account-confirmation"
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 focus:outline-none focus:border-rose-500/60 mb-4 text-sm"
+                className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 focus:outline-none focus:border-rose-500/60 focus-visible:ring-2 focus-visible:ring-rose-400 mb-4 text-sm"
                 autoFocus
               />
+              {error && (
+                <p role="alert" className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                  {error}
+                </p>
+              )}
               <div className="flex gap-3">
                 <button
-                  onClick={() => setStep(1)}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none"
+                  type="button"
+                  onClick={() => { setStep(1); setError(''); }}
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                 >
                   Back
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={confirmText !== 'DELETE' || confirming}
-                  className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none"
+                  className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
                 >
                   {confirming ? 'Deleting…' : 'Delete My Account'}
                 </button>
