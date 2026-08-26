@@ -153,7 +153,10 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
         }}
       >
         {/* Header label — tappable, navigates to profile */}
-        <Link to="/profile" className="flex items-center justify-between px-4 pt-4 pb-3 border-b"
+        <Link
+          to="/profile"
+          aria-label="View profile"
+          className="flex items-center justify-between px-4 pt-4 pb-3 border-b rounded-t-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 focus-visible:ring-inset"
           style={{ borderColor: 'hsla(280,40%,40%,0.15)' }}>
           <div className="flex items-center gap-2">
             <Trophy size={13} className="text-amethyst-glow" />
@@ -173,7 +176,8 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
             {/* Avatar — tap navigates to profile, upload button is separate */}
             <div className="relative flex-shrink-0">
               <Link to="/profile"
-                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95"
+                aria-label="View profile"
+                className="block w-16 h-16 rounded-2xl overflow-hidden border-2 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 motion-reduce:transform-none motion-reduce:transition-none"
                 style={{
                   borderColor: level > 2 ? 'hsla(280,90%,65%,0.6)' : 'hsla(255,30%,50%,0.35)',
                   background: 'hsla(260,40%,12%,0.9)',
@@ -181,7 +185,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
                 }}
               >
                 {player.avatarUrl ? (
-                  <img src={player.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                  <img src={player.avatarUrl} alt="Profile avatar" className="w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
                     <User size={22} className="text-white/30" />
@@ -229,11 +233,19 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
               <span className="text-[8px] text-white/30 uppercase tracking-wider">Rank Progress</span>
               <span className="text-[8px] text-white/30">{Math.floor(progress)}%</span>
             </div>
-            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'hsla(265,40%,20%,0.4)' }}>
+            <div
+              className="h-2.5 rounded-full overflow-hidden"
+              style={{ background: 'hsla(265,40%,20%,0.4)' }}
+              role="progressbar"
+              aria-label="Rank progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={Math.floor(progress)}
+            >
               <motion.div
                 className="h-full rounded-full"
                 animate={{ width: `${Math.max(progress, player.totalXP > 0 ? 2 : 0)}%` }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                transition={reducedMotion ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' }}
                 style={{ background: 'linear-gradient(90deg, hsl(265,80%,55%), hsl(280,100%,75%))' }}
               />
             </div>
@@ -261,14 +273,15 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
           {/* Action buttons */}
           <div className="flex gap-2 mt-3">
             <Link to="/badges"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 motion-reduce:transform-none motion-reduce:transition-none"
               style={{ background: 'hsla(265,50%,20%,0.7)', border: '1px solid hsla(280,60%,50%,0.3)', color: 'hsl(280,100%,90%)' }}
             >
               <Trophy size={10} /> Achievements
             </Link>
             <button
+              type="button"
               onClick={handleShare}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] uppercase tracking-wider font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/70 motion-reduce:transform-none motion-reduce:transition-none"
               style={{ background: 'hsla(195,60%,20%,0.7)', border: '1px solid hsla(195,80%,50%,0.3)', color: 'hsl(195,100%,82%)' }}
             >
               {shared === 'copied' ? <><Check size={10} /> Copied!</>
