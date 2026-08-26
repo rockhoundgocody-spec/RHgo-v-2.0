@@ -107,7 +107,7 @@ export default function PermissionsPrompt({ onDismiss }) {
           Enable Features
         </span>
         {onDismiss && (
-          <button onClick={onDismiss} className="text-white/25 hover:text-white/60 transition">
+          <button onClick={onDismiss} aria-label="Dismiss feature prompt" className="text-white/25 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-md">
             <X size={14} />
           </button>
         )}
@@ -149,7 +149,7 @@ export default function PermissionsPrompt({ onDismiss }) {
                 <button
                   onClick={item.onRequest}
                   disabled={loading || item.denied}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold transition active:scale-95 disabled:opacity-40"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
                   style={{
                     background: item.isUpdate
                       ? 'hsla(38,90%,40%,0.25)'
