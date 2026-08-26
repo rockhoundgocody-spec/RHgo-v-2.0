@@ -8,11 +8,12 @@
  * Phase 5 — Complete:  Soft ambient chime visual + particles settle, share UI & material breakdown
  */
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Share2, Copy, Check, Sparkles, Volume2 } from 'lucide-react';
 import LiquidMineralBadge, { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
 import BadgeMaterialPanel from './BadgeMaterialPanel.jsx';
 import AmethystParticleField from './AmethystParticleField.jsx';
+import StarField from './StarField.jsx';
 
 const PHASES  = ['initiate', 'charge', 'burst', 'reveal', 'complete'];
 const PHASE_LABELS = {
@@ -213,19 +214,22 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
   const [phase, setPhase]                 = useState('initiate');
   const [showMaterials, setShowMaterials] = useState(false);
   const timers = useRef([]);
+  const prefersReducedMotion = useReducedMotion();
 
   const jumpToPhase = (targetPhase) => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setPhase(targetPhase);
+    setPhase(prefersReducedMotion ? 'complete' : targetPhase);
   };
 
   useEffect(() => {
     if (!badge) return;
-    setPhase('initiate');
+    setPhase(prefersReducedMotion ? 'complete' : 'initiate');
     setShowMaterials(false);
     timers.current.forEach(clearTimeout);
     timers.current = [];
+
+    if (prefersReducedMotion) return undefined;
 
     let elapsed = TIMINGS.initiate;
     PHASES.slice(1).forEach((p) => {
@@ -236,7 +240,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
     timers.current.push(setTimeout(() => setPhase('complete'), elapsed));
 
     return () => timers.current.forEach(clearTimeout);
-  }, [badge]);
+  }, [badge, prefersReducedMotion]);
 
   if (!badge) return null;
 
@@ -249,29 +253,19 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
     <AnimatePresence>
       <motion.div
         key="unlock-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="badge-unlock-title"
         className="fixed inset-0 z-[9000] flex flex-col items-center justify-center overflow-hidden"
         style={{
           background: 'radial-gradient(ellipse at center, hsla(260,90%,4%,0.96) 0%, hsla(250,80%,2%,0.98) 100%)',
           backdropFilter: 'blur(12px)',
         }}
-        initial={{ opacity: 0 }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Star-field background dots */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <div key={i} className="absolute rounded-full bg-white"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: Math.random() * 1.5 + 0.5,
-                height: Math.random() * 1.5 + 0.5,
-                opacity: Math.random() * 0.25 + 0.05,
-              }}
-            />
-          ))}
-        </div>
+        <StarField seed={badge.code || badge.title} />
 
         {/* Phase selector scrubber bar */}
         <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
@@ -279,7 +273,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             <button
               key={p}
               onClick={() => jumpToPhase(p)}
-              className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase transition ${
+              className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none ${
                 phase === p
                   ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/40'
                   : 'text-white/40 hover:text-white/80'
@@ -293,7 +287,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         {/* Close button */}
         <motion.button onClick={onClose}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-          className="absolute top-5 right-5 p-2 rounded-full text-white/40 hover:text-white/80 transition z-20"
+          className="absolute top-5 right-5 p-2 rounded-full text-white/40 hover:text-white/80 transition z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)' }}
           aria-label="Close unlock animation"
         >
@@ -326,24 +320,24 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
           {showBurst && (
             <>
               <CrystalBurst scheme={scheme} />
-              <AmethystParticleField intensity={1.5} size={320} />
+              {!prefersReducedMotion && <AmethystParticleField intensity={1.5} size={320} />}
             </>
           )}
 
           {/* Phase 4 + 5: Badge + particle aura */}
-          {showBadge && <AmethystParticleField intensity={1} size={300} />}
+          {showBadge && !prefersReducedMotion && <AmethystParticleField intensity={1} size={300} />}
           <AnimatePresence>
             {showBadge && (
               <motion.div
                 key="badge-reveal"
                 className="relative flex flex-col items-center"
-                initial={{ scale: 0.25, opacity: 0, rotateY: -90, filter: 'brightness(3)' }}
+                initial={prefersReducedMotion ? false : { scale: 0.25, opacity: 0, rotateY: -90, filter: 'brightness(3)' }}
                 animate={{ scale: 1, opacity: 1, rotateY: 0, filter: 'brightness(1)' }}
                 transition={{ duration: 1.1, ease: [0.12, 1, 0.28, 1] }}
               >
                 <motion.div
-                  animate={completed ? { y: [0, -10, 0], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] } : {}}
-                  transition={completed ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' } : {}}
+                  animate={completed && !prefersReducedMotion ? { y: [0, -10, 0], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] } : {}}
+                  transition={completed && !prefersReducedMotion ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >
                   <LiquidMineralBadge badge={badge} size={172} locked={false} arGlow={completed} />
                 </motion.div>
@@ -352,7 +346,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
           </AnimatePresence>
 
           {/* Settling particles + chime visual indicator on complete */}
-          {completed && (
+          {completed && !prefersReducedMotion && (
             <>
               <SettlingParticles scheme={scheme} />
               <AmethystParticleField intensity={1.2} size={360} />
@@ -365,17 +359,17 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
           {showBadge && (
             <motion.div
               className="flex flex-col items-center text-center px-8 mt-2"
-              initial={{ opacity: 0, y: 28 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="text-[10px] uppercase tracking-[0.5em] mb-2 flex items-center gap-2"
                 style={{ color: scheme.secondary }}>
-                {completed ? <Volume2 size={12} className="animate-pulse" /> : <Sparkles size={10} />}
+                {completed ? <Volume2 size={12} className="animate-pulse motion-reduce:animate-none" /> : <Sparkles size={10} />}
                 {completed ? 'Unlock Complete · Soft Chime' : 'Badge Unlocked'}
                 <Sparkles size={10} />
               </div>
-              <h2 className="text-white text-[26px] font-black tracking-wide mb-1.5 leading-tight"
+              <h2 id="badge-unlock-title" className="text-white text-[26px] font-black tracking-wide mb-1.5 leading-tight"
                 style={{ textShadow: `0 0 24px ${scheme.glow}, 0 0 48px ${scheme.glow.replace('0.9','0.3')}` }}>
                 {badge.title}
               </h2>
@@ -397,7 +391,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         {completed && (
           <motion.div
             className="flex flex-col items-center gap-3 mt-4 w-full px-8"
-            initial={{ opacity: 0, y: 18 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
