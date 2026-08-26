@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Users, ThumbsUp, ThumbsDown, HelpCircle, ChevronRight, CheckCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import {
+  buildCommunityVoteUpdate,
+  SUGGESTION_MAX_LENGTH,
+  TIP_MAX_LENGTH,
+} from './communityVerification';
 
 /**
  * Shows low-confidence finds that need community votes.
@@ -14,6 +19,9 @@ export default function CommunityVerificationQueue({ userEmail }) {
   const [suggestion, setSuggestion] = useState('');
   const [tip, setTip] = useState('');
   const [voted, setVoted] = useState({});
+  const [submittingId, setSubmittingId] = useState(null);
+  const [voteError, setVoteError] = useState('');
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (!userEmail) return;
@@ -28,39 +36,23 @@ export default function CommunityVerificationQueue({ userEmail }) {
   }, [userEmail]);
 
   const handleVote = async (item, voteType) => {
-    if (voted[item.id]) return;
+    if (voted[item.id] || submittingId) return;
 
-    const newVote = {
-      voter_email: userEmail,
-      vote: voteType,
-      suggested_name: suggestion || null,
-      tip: tip || null,
-      voted_at: new Date().toISOString(),
-    };
-    const updatedVotes = [...(item.votes || []), newVote];
-    const agreeCount = updatedVotes.filter((v) => v.vote === 'agree').length;
-    const totalVotes = updatedVotes.length;
-    const newStatus = agreeCount >= 2 ? 'verified'
-      : totalVotes >= 3 && agreeCount < totalVotes / 2 ? 'corrected'
-      : 'pending';
-    const finalGuess = voteType === 'disagree' && suggestion
-      ? suggestion
-      : item.original_ai_guess;
-
-    await base44.entities.SpecimenVerification.update(item.id, {
-      votes: updatedVotes,
-      vote_count: totalVotes,
-      agree_count: agreeCount,
-      status: newStatus,
-      final_community_guess: finalGuess,
-    });
-
-    setVoted((v) => ({ ...v, [item.id]: voteType }));
-    setSuggestion('');
-    setTip('');
-    setActiveId(null);
-    // Remove from queue after vote
-    setTimeout(() => setQueue((q) => q.filter((i) => i.id !== item.id)), 600);
+    setSubmittingId(item.id);
+    setVoteError('');
+    try {
+      const vote = buildCommunityVoteUpdate({ item, userEmail, voteType, suggestion, tip });
+      await base44.entities.SpecimenVerification.update(item.id, vote.update);
+      setVoted((current) => ({ ...current, [item.id]: vote.voteType }));
+      setSuggestion('');
+      setTip('');
+      setActiveId(null);
+      setTimeout(() => setQueue((current) => current.filter((entry) => entry.id !== item.id)), 600);
+    } catch {
+      setVoteError('Your vote could not be saved. Please try again.');
+    } finally {
+      setSubmittingId(null);
+    }
   };
 
   if (loading) return null;
@@ -94,6 +86,8 @@ export default function CommunityVerificationQueue({ userEmail }) {
                 <img
                   src={item.specimen_image_url}
                   alt="Specimen"
+                  loading="lazy"
+                  decoding="async"
                   className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                   style={{ border: '1px solid hsla(195,80%,50%,0.2)' }}
                 />
@@ -126,45 +120,53 @@ export default function CommunityVerificationQueue({ userEmail }) {
             <AnimatePresence>
               {voted[item.id] ? (
                 <motion.div
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  role="status"
+                  initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }}
                   className="mt-3 flex items-center gap-2 text-[11px] text-emerald-400/70"
                 >
                   <CheckCircle size={13} /> Vote recorded — thanks!
                 </motion.div>
               ) : activeId === item.id ? (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                  id={`verification-vote-${item.id}`}
+                  aria-busy={submittingId === item.id}
+                  initial={reducedMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                   className="mt-3 space-y-2"
                 >
                   <input
                     type="text"
+                    aria-label="Suggested mineral name"
+                    maxLength={SUGGESTION_MAX_LENGTH}
+                    autoComplete="off"
                     placeholder="Suggest mineral name (optional)"
                     value={suggestion}
                     onChange={(e) => setSuggestion(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10"
-                    style={{ outline: 'none' }}
+                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                   />
                   <input
                     type="text"
+                    aria-label="Community field tip"
+                    maxLength={TIP_MAX_LENGTH}
+                    autoComplete="off"
                     placeholder="Field tip for the community (optional)"
                     value={tip}
                     onChange={(e) => setTip(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10"
-                    style={{ outline: 'none' }}
+                    className="w-full px-3 py-2 rounded-lg text-[11px] text-white/70 bg-white/5 border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => handleVote(item, 'agree')}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-emerald-400"
+                    <button type="button" disabled={Boolean(submittingId)} onClick={() => handleVote(item, 'agree')}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-emerald-400 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                       style={{ background: 'hsla(145,70%,40%,0.15)', border: '1px solid hsla(145,70%,50%,0.3)' }}>
                       <ThumbsUp size={12} /> Agree
                     </button>
-                    <button onClick={() => handleVote(item, 'disagree')}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-rose-400"
+                    <button type="button" disabled={Boolean(submittingId)} onClick={() => handleVote(item, 'disagree')}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-rose-400 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                       style={{ background: 'hsla(0,70%,50%,0.12)', border: '1px solid hsla(0,70%,55%,0.3)' }}>
                       <ThumbsDown size={12} /> Disagree
                     </button>
-                    <button onClick={() => handleVote(item, 'unsure')}
-                      className="flex items-center justify-center px-2.5 py-2 rounded-lg text-amber-400"
+                    <button type="button" disabled={Boolean(submittingId)} onClick={() => handleVote(item, 'unsure')}
+                      aria-label="Unsure or need more information"
+                      className="flex items-center justify-center px-2.5 py-2 rounded-lg text-amber-400 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                       style={{ background: 'hsla(40,80%,50%,0.12)', border: '1px solid hsla(40,80%,55%,0.3)' }}>
                       <HelpCircle size={12} />
                     </button>
@@ -172,8 +174,11 @@ export default function CommunityVerificationQueue({ userEmail }) {
                 </motion.div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setActiveId(item.id)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-[0.18em] text-hud-cyan/70 hover:text-hud-cyan transition-colors"
+                  aria-expanded={activeId === item.id}
+                  aria-controls={`verification-vote-${item.id}`}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-[0.18em] text-hud-cyan/70 hover:text-hud-cyan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
                   style={{ background: 'hsla(195,80%,40%,0.1)', border: '1px solid hsla(195,100%,60%,0.15)' }}>
                   Vote on this find <ChevronRight size={11} />
                 </button>
@@ -182,6 +187,7 @@ export default function CommunityVerificationQueue({ userEmail }) {
           </div>
         ))}
       </div>
+      {voteError && <p role="alert" className="px-4 pb-3 text-xs text-rose-300">{voteError}</p>}
     </div>
   );
 }
