@@ -82,8 +82,9 @@ function SubrouteBackButton({ onBack }) {
       style={{ background: 'hsla(240,20%,4%,0.85)', backdropFilter: 'blur(12px)' }}
     >
       <button
+        type="button"
         onClick={onBack}
-        className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1"
+        className="flex items-center gap-1 text-amethyst-glow hover:text-white transition select-none min-h-[44px] px-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         aria-label="Go back"
       >
         <ChevronLeft size={22} />

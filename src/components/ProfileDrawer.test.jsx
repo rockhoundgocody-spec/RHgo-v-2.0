@@ -79,7 +79,10 @@ describe('ProfileDrawer', () => {
     expect(tree.type).toBe(React.Fragment);
     const triggerBtn = tree.props.children[0];
     expect(triggerBtn.type).toBe('button');
-    expect(triggerBtn.props['aria-label']).toBe('Account menu');
+    expect(triggerBtn.props.type).toBe('button');
+    expect(triggerBtn.props['aria-label']).toBe('Open account menu');
+    expect(triggerBtn.props['aria-haspopup']).toBe('dialog');
+    expect(triggerBtn.props['aria-expanded']).toBe(false);
   });
 
   it('opens drawer on trigger click and renders user header and menu', async () => {
@@ -100,6 +103,10 @@ describe('ProfileDrawer', () => {
     const drawerPanel = drawerFragment[1];
 
     expect(drawerOverlay.props.className).toContain('fixed inset-0');
+    expect(drawerOverlay.props['aria-hidden']).toBe('true');
+    expect(drawerPanel.props.role).toBe('dialog');
+    expect(drawerPanel.props['aria-modal']).toBe('true');
+    expect(drawerPanel.props['aria-labelledby']).toBe('profile-drawer-title');
     expect(drawerPanel.props.children.length).toBe(4); // Header, UserInfo, MenuList, LogoutButton
   });
 
