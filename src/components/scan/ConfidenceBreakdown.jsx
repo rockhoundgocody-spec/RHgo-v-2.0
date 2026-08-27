@@ -48,16 +48,19 @@ export default function ConfidenceBreakdown({ topCandidate, candidates = [], sou
       {/* Candidates list */}
       {candidates.length > 1 && (
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between py-2 text-[11px] uppercase tracking-[0.2em] text-white/40 hover:text-white/60 transition"
+          aria-expanded={expanded}
+          aria-controls="confidence-candidates-list"
+          className="w-full flex items-center justify-between py-2 px-1 text-[11px] uppercase tracking-[0.2em] text-white/40 hover:text-white/60 transition rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/50"
         >
           <span>{candidates.length} Candidates</span>
-          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {expanded ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
         </button>
       )}
 
       {expanded && candidates.length > 1 && (
-        <div className="space-y-2">
+        <div id="confidence-candidates-list" className="space-y-2">
           {candidates.slice(1).map((cand, i) => (
             <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg border border-white/10 bg-white/5">
               <span className="text-xs text-white/70">{cand.name}</span>
