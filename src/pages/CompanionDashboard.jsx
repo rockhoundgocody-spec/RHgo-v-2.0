@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
+import CloverFieldBackground from '@/components/companion/CloverFieldBackground.jsx';
 
 export default function CompanionDashboard() {
   const [companion, setCompanion] = useState(null);
@@ -16,8 +17,10 @@ export default function CompanionDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen px-4 pt-6 max-w-2xl mx-auto space-y-6"
-      style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="relative min-h-screen">
+      <CloverFieldBackground />
+      <div className="relative px-4 pt-6 max-w-2xl mx-auto space-y-6"
+        style={{ zIndex: 10, paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* Header */}
       <div className="mb-2">
@@ -40,6 +43,7 @@ export default function CompanionDashboard() {
           <CompanionProgressDashboard companion={companion} />
         </>
       )}
+      </div>
     </div>
   );
 }
