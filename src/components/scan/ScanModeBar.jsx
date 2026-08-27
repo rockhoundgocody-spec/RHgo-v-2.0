@@ -44,7 +44,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
                 color: active ? 'hsl(280,100%,88%)' : 'hsla(0,0%,100%,0.4)',
               }}
             >
-              <Icon size={11} />
+              <Icon size={11} aria-hidden="true" />
               {m.label}
             </button>
           );
@@ -56,6 +56,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
         <button
           onClick={() => setTipsOpen(true)}
           aria-expanded={tipsOpen}
+          aria-controls="lighting-tips-dialog"
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
           style={{
             background: 'hsla(45,80%,40%,0.15)',
@@ -63,7 +64,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             color: 'hsl(45,90%,70%)',
           }}
         >
-          <Lightbulb size={11} />
+          <Lightbulb size={11} aria-hidden="true" />
           Lighting Tips
         </button>
 
@@ -77,7 +78,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             color: scaleOn ? 'hsl(195,100%,75%)' : 'hsla(0,0%,100%,0.4)',
           }}
         >
-          <Ruler size={11} />
+          <Ruler size={11} aria-hidden="true" />
           Scale Ref
         </button>
       </div>
@@ -94,6 +95,10 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             onClick={() => setTipsOpen(false)}
           >
             <motion.div
+              id="lighting-tips-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="lighting-tips-title"
               initial={{ y: 300 }}
               animate={{ y: 0 }}
               exit={{ y: 300 }}
@@ -108,15 +113,15 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Lightbulb size={16} className="text-amber-300" />
-                  <h3 className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
+                  <Lightbulb size={16} className="text-amber-300" aria-hidden="true" />
+                  <h3 id="lighting-tips-title" className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
                 </div>
                 <button
                   onClick={() => setTipsOpen(false)}
-                  aria-label="Close tips"
+                  aria-label="Close lighting tips"
                   className="text-white/30 hover:text-white/70 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 >
-                  <X size={18} />
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
               <div className="space-y-3">
