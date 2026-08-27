@@ -25,9 +25,25 @@ export function useBadgeAwarder() {
       const me = await base44.auth.me();
       if (!me?.email) return;
 
+      // ⚡ Bolt Performance Optimization:
+      // Use SDK field projection to select only required fields for badge metric evaluation and ownership checks.
+      // This dramatically reduces payload size and memory parsing overhead when users have large collections.
+      const SPECIMEN_FIELDS = [
+        'id',
+        'mineral_name',
+        'found_at',
+        'rarity',
+        'verified',
+        'ai_confidence',
+        'notes',
+        'found_date',
+        'created_date',
+      ];
+      const BADGE_FIELDS = ['id', 'code', 'owner_email'];
+
       const [fetchedSpecimens, ownedRecords] = await Promise.all([
-        base44.entities.Specimen.list(),
-        base44.entities.Badge.filter({ owner_email: me.email }),
+        base44.entities.Specimen.list(null, null, null, SPECIMEN_FIELDS),
+        base44.entities.Badge.filter({ owner_email: me.email }, null, null, null, BADGE_FIELDS),
       ]);
       const nextSpecimens = fetchedSpecimens || [];
       setSpecimens(nextSpecimens);
