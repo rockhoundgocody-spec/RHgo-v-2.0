@@ -43,6 +43,9 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
         className="w-full max-w-sm rounded-3xl p-5 relative"
         style={{
           background: 'linear-gradient(160deg, hsla(265,42%,11%,0.99), hsla(240,30%,7%,0.99))',
@@ -58,7 +61,7 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
         {shared ? (
           <div className="flex flex-col items-center text-center py-4">
             <CheckCircle2 size={40} className="text-emerald-400 mb-3" />
-            <div className="text-white font-bold text-base">Submitted for Review</div>
+            <div id="share-modal-title" className="text-white font-bold text-base">Submitted for Review</div>
             <p className="text-white/50 text-sm mt-1">Nothing was published. A moderator must verify the site, entrance, and rules first.</p>
           </div>
         ) : (
@@ -69,7 +72,7 @@ export default function ShareToMapModal({ open, specimen, result, onClose, onSha
                 <ClipboardCheck size={18} className="text-hud-cyan" />
               </div>
               <div>
-                <div className="text-white font-bold text-sm">Submit Location for Review?</div>
+                <div id="share-modal-title" className="text-white font-bold text-sm">Submit Location for Review?</div>
                 <div className="text-white/40 text-xs">Suggest evidence for a future reviewed site</div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Zap, Trophy, RefreshCw, X, Shield, Flame, Camera, Loader2 } from 'lucide-react';
+import { Swords, Trophy, RefreshCw, X, Flame, Camera, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import BattleLeaderboard from './BattleLeaderboard.jsx';
 
