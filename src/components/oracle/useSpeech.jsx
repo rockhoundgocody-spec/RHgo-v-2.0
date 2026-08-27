@@ -142,7 +142,9 @@ export function useSpeechSynthesis() {
 
   useEffect(() => () => {
     stop();
-    try { audioCtxRef.current?.close(); } catch {}
+    const ctx = audioCtxRef.current;
+    if (ctx && ctx.state !== 'closed') { try { ctx.close().catch(() => {}); } catch {} }
+    audioCtxRef.current = null;
   }, [stop]);
 
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum };

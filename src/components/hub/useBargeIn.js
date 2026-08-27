@@ -28,8 +28,9 @@ export default function useBargeIn(onBargeIn) {
       streamRef.current = null;
     }
     if (ctxRef.current) {
-      try { ctxRef.current.close(); } catch {}
+      const ctx = ctxRef.current;
       ctxRef.current = null;
+      if (ctx.state !== 'closed') { try { ctx.close().catch(() => {}); } catch {} }
     }
   }, []);
 
