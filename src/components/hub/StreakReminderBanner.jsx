@@ -34,14 +34,40 @@ export default function StreakReminderBanner() {
     const lastShown = localStorage.getItem(STORAGE_KEY);
     if (lastShown === getTodayStr()) return;
 
-    const dayIndex = new Date().getDay() % MESSAGES.length;
-    setMsg(MESSAGES[dayIndex]);
+    let cancelled = false;
+    let timer;
 
-    // Delay appearance; also wait for slot to be free
-    const t = setTimeout(() => {
-      if (tryAcquire()) setVisible(true);
-    }, 3500);
-    return () => clearTimeout(t);
+    const schedule = (chosen) => {
+      if (!chosen) return;
+      setMsg(chosen);
+      timer = setTimeout(() => {
+        if (tryAcquire()) setVisible(true);
+      }, 3500);
+    };
+
+    // Don't nag with a "Check In" CTA if the user already checked in today —
+    // it would land them on /companion where the mood card is already hidden.
+    base44.functions
+      .invoke('getCompanionState', {})
+      .then((res) => {
+        if (cancelled) return;
+        const checkedInToday = res?.data?.companion?.last_check_in_date === getTodayStr();
+        const dayIndex = new Date().getDay() % MESSAGES.length;
+        let chosen = MESSAGES[dayIndex];
+        if (checkedInToday && chosen.cta === 'Check In') {
+          chosen = MESSAGES.find((m) => m.cta !== 'Check In');
+        }
+        schedule(chosen);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [tryAcquire]);
 
   const dismiss = () => {
