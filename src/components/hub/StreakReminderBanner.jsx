@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, X, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useBannerSlot } from '@/lib/bannerMutex';
 
@@ -27,12 +27,24 @@ export default function StreakReminderBanner() {
   const [visible, setVisible] = useState(false);
   const [msg, setMsg] = useState(null);
   const { tryAcquire, release } = useBannerSlot('streak');
+  const location = useLocation();
+
+  // The banner is a bridge to /companion — once you're there, it should vanish.
+  useEffect(() => {
+    if (location.pathname === '/companion') {
+      setVisible(false);
+      release();
+    }
+  }, [location.pathname, release]);
 
   useEffect(() => {
     // Only show once per day, and not if already dismissed this session
     if (sessionStorage.getItem(SESSION_KEY)) return;
     const lastShown = localStorage.getItem(STORAGE_KEY);
     if (lastShown === getTodayStr()) return;
+
+    // Already on the check-in page — no need to nag.
+    if (location.pathname === '/companion') return;
 
     let cancelled = false;
     let timer;
@@ -45,19 +57,15 @@ export default function StreakReminderBanner() {
       }, 3500);
     };
 
-    // Don't nag with a "Check In" CTA if the user already checked in today —
-    // it would land them on /companion where the mood card is already hidden.
+    // If the user already checked in today, the streak is already safe —
+    // don't show the reminder at all.
     base44.functions
       .invoke('getCompanionState', {})
       .then((res) => {
         if (cancelled) return;
         const checkedInToday = res?.data?.companion?.last_check_in_date === getTodayStr();
-        const dayIndex = new Date().getDay() % MESSAGES.length;
-        let chosen = MESSAGES[dayIndex];
-        if (checkedInToday && chosen.cta === 'Check In') {
-          chosen = MESSAGES.find((m) => m.cta !== 'Check In');
-        }
-        schedule(chosen);
+        if (checkedInToday) return;
+        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
       })
       .catch(() => {
         if (cancelled) return;
