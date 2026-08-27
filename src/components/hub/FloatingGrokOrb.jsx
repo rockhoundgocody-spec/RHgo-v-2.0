@@ -149,8 +149,6 @@ export default function FloatingGrokOrb() {
 
   if (shouldHide) return null;
 
-  const style = MOOD_STYLES[mood];
-
   const orbState = clover.phase === 'thinking' ? 'thinking'
     : clover.phase === 'speaking' ? 'speaking'
     : clover.phase === 'listening' ? 'listening'
@@ -243,12 +241,15 @@ export default function FloatingGrokOrb() {
           />
         </div>
       ) : (
-        <motion.button
+        <motion.div
           onClick={handleTap}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleTap(e)}
           animate={mood === 'excited'
             ? { scale: [1, 1.22, 0.93, 1.12, 1], rotate: [0, -6, 4, -2, 0] }
             : mood === 'wise'
-            ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.25)', 'brightness(1)'] }
+            ? { scale: [1, 1.06, 1] }
             : { scale: [1, 1.035, 1] }
           }
           transition={mood !== 'idle'
@@ -256,25 +257,17 @@ export default function FloatingGrokOrb() {
             : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
           }
           whileTap={{ scale: 0.85 }}
-          className="relative w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer"
-          style={{
-            background: style.bg,
-            boxShadow: `0 0 20px ${style.glow}, 0 0 42px hsla(265,80%,45%,0.22), inset 0 1.5px 0 hsla(290,100%,90%,0.28)`,
-            border: `1.5px solid ${style.border}`,
-            transition: 'background 0.4s, border-color 0.4s, box-shadow 0.4s',
-          }}
+          className="relative cursor-pointer select-none"
+          style={{ width: 48, height: 48 }}
           aria-label="Chat with Clover"
         >
-          {/* Inner crystal facet shimmer */}
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'conic-gradient(from 90deg, hsla(280,100%,80%,0.12) 0deg, transparent 90deg, hsla(195,100%,70%,0.1) 200deg, transparent 270deg)',
-              borderRadius: '50%',
-            }}
+          <AmethystOrb
+            size={48}
+            orbState="idle"
+            level={companion?.level || 1}
+            getInteraction={getInteraction}
           />
-          <style.Icon size={18} strokeWidth={1.75} className="relative z-10" style={{ color: style.iconColor }} />
-        </motion.button>
+        </motion.div>
       )}
     </div>
   );
