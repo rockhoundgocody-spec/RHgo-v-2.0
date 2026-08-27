@@ -25,9 +25,23 @@ export function useBadgeAwarder() {
       const me = await base44.auth.me();
       if (!me?.email) return;
 
+      // Optimization (Bolt): Pass explicit field projection arrays to Specimen.list() and Badge.filter()
+      // to avoid fetching large unused fields (e.g. heavy image URLs/blobs, AI candidates, detailed descriptions),
+      // drastically reducing network JSON payload size and JS memory parsing overhead.
+      const SPECIMEN_FIELDS = [
+        'id',
+        'mineral_name',
+        'found_at',
+        'rarity',
+        'verified',
+        'ai_confidence',
+        'notes',
+        'found_date',
+        'created_date',
+      ];
       const [fetchedSpecimens, ownedRecords] = await Promise.all([
-        base44.entities.Specimen.list(),
-        base44.entities.Badge.filter({ owner_email: me.email }),
+        base44.entities.Specimen.list(undefined, undefined, undefined, SPECIMEN_FIELDS),
+        base44.entities.Badge.filter({ owner_email: me.email }, undefined, undefined, undefined, ['code']),
       ]);
       const nextSpecimens = fetchedSpecimens || [];
       setSpecimens(nextSpecimens);
