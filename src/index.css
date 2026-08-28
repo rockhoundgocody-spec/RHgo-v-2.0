@@ -235,4 +235,9 @@
     0%, 100% { opacity: 0.5; transform: scale(1); }
     50%      { opacity: 0.85; transform: scale(1.04); }
   }
+  @keyframes marii-ping {
+    0%   { box-shadow: 0 0 0 0 hsla(280, 90%, 65%, 0.5); }
+    80%  { box-shadow: 0 0 0 18px hsla(280, 90%, 65%, 0); }
+    100% { box-shadow: 0 0 0 0 hsla(280, 90%, 65%, 0); }
+  }
 }
