@@ -53,8 +53,8 @@ export default function ShareSpecimenButton({ specimen, className = '' }) {
       aria-label="Share specimen"
       className={`inline-flex items-center justify-center gap-1.5 min-h-[36px] min-w-[36px] px-2.5 rounded-lg border border-amethyst/30 bg-amethyst/10 hover:bg-amethyst/20 text-amethyst-glow text-[10px] uppercase tracking-wider transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ${className}`}
     >
-      {copied ? <Check size={12} /> : <Share2 size={12} />}
-      <span>{copied ? 'Copied' : 'Share'}</span>
+      {copied ? <Check size={12} aria-hidden="true" /> : <Share2 size={12} aria-hidden="true" />}
+      <span role="status" aria-live="polite">{copied ? 'Copied' : 'Share'}</span>
     </button>
   );
 }
