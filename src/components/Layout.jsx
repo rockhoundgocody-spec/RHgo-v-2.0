@@ -12,6 +12,8 @@ import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
 import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 import CrystalNav from '@/components/nav/CrystalNav.jsx';
+import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
+import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
@@ -156,6 +158,7 @@ export default function Layout() {
 
   return (
     <OracleProvider>
+      <BadgeAwarderProvider>
       <div className="w-full min-h-screen text-foreground flex flex-col overflow-x-hidden">
         {isAdminOrDocs && <AdminHeader pathname={location.pathname} />}
         {!isAdminOrDocs && !isRoot && <SubrouteBackButton onBack={() => navigate(-1)} />}
@@ -174,7 +177,9 @@ export default function Layout() {
         <StreakReminderBanner />
         <OracleOverlays />
         <FloatingGrokOrb />
+        <BadgeUnlockWatcher />
       </div>
+      </BadgeAwarderProvider>
     </OracleProvider>
   );
 }

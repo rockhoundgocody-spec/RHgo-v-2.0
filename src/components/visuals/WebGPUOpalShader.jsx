@@ -113,7 +113,7 @@ export default function WebGPUOpalShader({
             .add(uHueShift)
             .add(t.mul(0.6))
             .add(length(warp2).mul(1.2));
-          const h = fract(float(0.6).add(sin(band).mul(0.5)).add(warp1.x.mul(0.25)).add(uTreble.mul(0.25)));
+          const h = fract(float(0.5).add(sin(band).mul(0.6)).add(warp1.x.mul(0.28)).add(uTreble.mul(0.3)));
 
           // Pooling + shimmer
           const pool = smoothstep(
@@ -126,26 +126,26 @@ export default function WebGPUOpalShader({
           );
 
           const s = float(0.95).add(uAmp.mul(0.05));
-          const v = pool.mul(float(0.55).add(uBass.mul(0.4)))
-            .add(shimmer.mul(float(0.16).add(uTreble.mul(0.3))))
+          const v = pool.mul(float(0.72).add(uBass.mul(0.4)))
+            .add(shimmer.mul(float(0.24).add(uTreble.mul(0.35))))
             .mul(uIntensity);
 
           const liquid = hsv2rgb(vec3(h, s, v));
 
           // Deep violet-black core
-          const base = vec3(0.02, 0.012, 0.05).add(
-            vec3(0.25, 0.15, 0.55).mul(0.06).mul(float(1.0).sub(d.mul(1.2))),
+          const base = vec3(0.03, 0.04, 0.06).add(
+            vec3(0.2, 0.28, 0.32).mul(0.05).mul(float(1.0).sub(d.mul(1.2))),
           );
           let col = base.add(liquid);
 
           // Inner shadow
           const shade = smoothstep(0.5, 0.05, d);
-          col = col.mul(mix(float(0.4), float(0.78), shade));
+          col = col.mul(mix(float(0.55), float(1.0), shade));
 
           // Tiny specular highlight
           const specP = p.sub(vec2(-0.15, 0.18));
           const spec = smoothstep(0.28, 0.0, length(specP));
-          col = col.add(spec.mul(0.04));
+          col = col.add(spec.mul(0.09));
 
           // Edge alpha + circular mask
           const a = smoothstep(0.5, 0.46, d);

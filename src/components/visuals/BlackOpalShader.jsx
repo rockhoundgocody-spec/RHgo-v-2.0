@@ -124,7 +124,7 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
           // iridescent palette — treble widens hue spread, mid shifts band frequency
           float band = flow * (4.5 + treble * 4.0) + u_hueShift + t * 0.6 + length(warp2) * 1.2;
-          float h = fract(0.6 + 0.5 * sin(band) + warp1.x * 0.25 + treble * 0.25);
+          float h = fract(0.5 + 0.6 * sin(band) + warp1.x * 0.28 + treble * 0.3);
 
           // pooling — bass thickens, treble adds high-freq shimmer
           float pool = smoothstep(0.1 - bass * 0.05, 0.95 - bass * 0.1, flow);
@@ -132,22 +132,22 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
           // higher saturation + lower brightness = neon UV glow vs. white wash
           float s = 0.95 + amp * 0.05;
-          float v = (pool * (0.55 + bass * 0.4) + shimmer * (0.16 + treble * 0.3)) * u_intensity;
+          float v = (pool * (0.72 + bass * 0.4) + shimmer * (0.24 + treble * 0.35)) * u_intensity;
 
           vec3 liquid = hsv2rgb(vec3(h, s, v));
 
           // darker base — deep violet-black core
-          vec3 base = vec3(0.02, 0.012, 0.05) + 0.06 * vec3(0.25, 0.15, 0.55) * (1.0 - d * 1.2);
+          vec3 base = vec3(0.03, 0.04, 0.06) + 0.05 * vec3(0.2, 0.28, 0.32) * (1.0 - d * 1.2);
 
           vec3 col = base + liquid;
 
           // deeper inner shadow for richer contrast — darker exposure
           float shade = smoothstep(0.5, 0.05, d);
-          col *= mix(0.4, 0.78, shade);
+          col *= mix(0.55, 1.0, shade);
 
           // very dim specular — almost gone, preserves UV mood
           float spec = smoothstep(0.28, 0.0, length(uv - vec2(-0.15, 0.18)));
-          col += spec * 0.04;
+          col += spec * 0.09;
 
           // alpha falls off at the very edge for clean rim
           float a = smoothstep(0.5, 0.46, d);

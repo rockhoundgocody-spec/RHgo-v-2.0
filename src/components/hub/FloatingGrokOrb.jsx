@@ -65,7 +65,9 @@ export default function FloatingGrokOrb() {
   });
 
   const open = clover.phase !== 'idle';
-  const shouldHide = HIDDEN_ROUTES.some(r => location.pathname.startsWith(r));
+  const shouldHide = HIDDEN_ROUTES.some(r =>
+    r === '/' ? location.pathname === '/' : location.pathname.startsWith(r)
+  );
 
   // Fetch companion state once for conversation context
   useEffect(() => {

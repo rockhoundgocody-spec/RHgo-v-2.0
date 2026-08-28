@@ -307,19 +307,19 @@ export default function AmethystOrb({
           </div>
         )}
 
-        {/* Amethyst tint wash — light touch so opal iridescence shines through */}
+        {/* Multi-color mineral shimmer wash — bright cyan/teal/rose/gold instead of purple tint */}
         <div
-          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-40"
+          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30"
           style={{
             background:
-              'radial-gradient(circle at 35% 30%, hsla(190,100%,72%,0.22) 0%, hsla(330,90%,62%,0.16) 40%, hsla(175,90%,45%,0.14) 70%, hsla(265,90%,18%,0.4) 100%)',
+              'radial-gradient(circle at 35% 30%, hsla(190,100%,72%,0.26) 0%, hsla(330,90%,62%,0.2) 40%, hsla(175,90%,50%,0.18) 70%, hsla(45,100%,60%,0.14) 100%)',
           }}
         />
         <div
-          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-25"
+          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-30"
           style={{
             background:
-              'radial-gradient(circle at 65% 70%, hsla(45,100%,68%,0.26) 0%, hsla(330,90%,65%,0.16) 35%, transparent 60%)',
+              'radial-gradient(circle at 65% 70%, hsla(45,100%,68%,0.3) 0%, hsla(330,90%,65%,0.2) 35%, hsla(160,90%,55%,0.16) 60%, transparent 80%)',
           }}
         />
 

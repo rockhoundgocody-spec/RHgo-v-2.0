@@ -6,7 +6,7 @@ import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swor
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
-import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { useBadgeAwarderContext } from '@/lib/BadgeAwarderContext';
 import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
 
 export default function Profile() {
@@ -18,7 +18,7 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [battleHistory, setBattleHistory] = useState([]);
   const [shareState, setShareState] = useState(null); // null | 'copied' | 'error'
-  const { earnedCodes, allBadges } = useBadgeAwarder();
+  const { earnedCodes, allBadges } = useBadgeAwarderContext();
   const fileInputRef = useRef(null);
 
   useEffect(() => {

@@ -11,7 +11,7 @@ import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { COLOR_SCHEMES } from '@/components/badges/LiquidMineralBadge.jsx';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
 import BadgeMaterialPanel from '@/components/badges/BadgeMaterialPanel.jsx';
-import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
+import { useBadgeAwarderContext } from '@/lib/BadgeAwarderContext';
 import { sortBadgesForDisplay } from '@/lib/badgeSorting';
 
 const RARITY_ORDER  = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
@@ -206,7 +206,7 @@ function BadgeCard({ badge, earned, variant, arMode, onClick, index }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Badges() {
-  const { earnedCodes, pendingBadge, dismissPending, allBadges, badgeMetrics, earnedRecords } = useBadgeAwarder();
+  const { earnedCodes, allBadges, badgeMetrics, earnedRecords } = useBadgeAwarderContext();
   const [selected,     setSelected]     = useState(null);
   const [replayBadge,  setReplayBadge]  = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
@@ -427,10 +427,7 @@ https://rhgo.base44.app`,
         <BadgeUnlockAnimation badge={replayBadge} onClose={() => setReplayBadge(null)} />
       )}
 
-      {/* Auto-trigger for newly earned */}
-      {pendingBadge && (
-        <BadgeUnlockAnimation badge={pendingBadge} onClose={dismissPending} />
-      )}
+      {/* Newly-earned badges now trigger the global unlock pop-up via Layout */}
     </div>
   );
 }
