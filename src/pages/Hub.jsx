@@ -263,6 +263,16 @@ export default function Hub() {
       </div>
 
       <CompanionMilestoneToast notification={milestone} onDismiss={() => setMilestone(null)} />
+
+      {/* ── LEGAL FOOTER ── */}
+      <footer className="w-full max-w-md px-6 mt-6 pb-4 flex flex-col items-center gap-1.5">
+        <div className="flex items-center gap-4 text-white/35 text-[11px]">
+          <Link to="/privacy-policy" className="hover:text-white/70 transition">Privacy Policy</Link>
+          <span className="text-white/20">\u00b7</span>
+          <Link to="/terms" className="hover:text-white/70 transition">Terms of Service</Link>
+        </div>
+        <p className="text-white/25 text-[10px]">\u00a9 2026 RockHound-GO</p>
+      </footer>
     </div>
   );
 }

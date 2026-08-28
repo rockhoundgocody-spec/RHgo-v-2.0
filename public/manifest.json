@@ -1,15 +1,26 @@
 {
   "name": "RockHound-GO",
   "short_name": "RockHound-GO",
-  "description": "AI-powered field companion for rockhounds — identify minerals, discover hotspots, build your Geo-DEX.",
+  "description": "AI-powered field companion for rockhounds — identify minerals instantly, discover hotspots, and build your Geo-DEX collection.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0f1e",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait",
+  "background_color": "#0a0a14",
   "theme_color": "#0a0a14",
+  "categories": ["education", "lifestyle", "travel", "productivity"],
   "icons": [
     {
       "src": "https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png",
-      "sizes": "1024x1024",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },

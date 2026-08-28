@@ -59,6 +59,8 @@ const Demo = lazy(() => import('@/pages/Demo'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const Auth = lazy(() => import('@/pages/Auth'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const Terms = lazy(() => import('@/pages/Terms'));
 
 const RouteFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -93,6 +95,8 @@ const AuthenticatedApp = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="*" element={<Landing />} />
@@ -117,6 +121,8 @@ const AuthenticatedApp = () => {
         <Route path="/pricing" element={<Pricing />} />
         {/* Guest demo — no auth required */}
         <Route path="/demo" element={<Demo />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
 
         <Route element={<Layout />}>
           <Route path="/" element={<Hub />} />
