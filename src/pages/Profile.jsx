@@ -179,7 +179,9 @@ export default function Profile() {
           <Heart size={16} className="text-white/40 flex-shrink-0" />
           <span>Saved Sites & Favorites</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left">
+        <button
+          onClick={() => navigate('/market')}
+          className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left">
           <TrendingUp size={16} className="text-white/40 flex-shrink-0" />
           <span>Marketplace Activity</span>
         </button>
@@ -228,7 +230,7 @@ export default function Profile() {
         `}</style>
 
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Liquid Mineral Codex</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Geo-Badge Codex</span>
           <Link to="/badges" className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow transition">
             View all →
           </Link>
@@ -245,6 +247,7 @@ export default function Profile() {
               rare: 'hsla(195,100%,60%,0.65)',
               epic: 'hsla(270,90%,72%,0.7)',
               legendary: 'hsla(45,100%,60%,0.8)',
+              mythic: 'hsla(20,100%,55%,0.85)',
             };
             const glowColor = glowMap[b.rarity] || glowMap.common;
             const animDelay = `${(index % 5) * 0.6}s`;
