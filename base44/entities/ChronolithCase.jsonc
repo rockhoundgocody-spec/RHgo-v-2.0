@@ -259,6 +259,11 @@
         "closed"
       ],
       "default": "investigating"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this chronolith case (up to 1000 characters)"
     }
   },
   "required": [

@@ -53,6 +53,11 @@
       "type": "number",
       "default": 0,
       "description": "Cumulative rarity weight drained from this record \u2014 feeds the Global Entropy Counter"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this geo depletion record (up to 1000 characters)"
     }
   },
   "required": [
