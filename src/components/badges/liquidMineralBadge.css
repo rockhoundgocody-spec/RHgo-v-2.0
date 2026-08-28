@@ -23,3 +23,36 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Locked-badge diagonal light sweep — like light passing through a dark crystal */
+@keyframes lmb-shimmer {
+  0% { transform: translateX(-150%) rotate(25deg); opacity: 0; }
+  45% { opacity: 0.5; }
+  100% { transform: translateX(150%) rotate(25deg); opacity: 0; }
+}
+
+/* Liquid-metal flowing fill for progress bars */
+@keyframes lmb-liquid-metal {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.lmb-liquid-bar {
+  animation: lmb-liquid-metal 2.4s linear infinite;
+}
+
+/* Crystalline grow-in entrance for badge cards (staggered via animation-delay) */
+@keyframes lmb-crystallize {
+  0% { transform: scale(0) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.05) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.lmb-crystallize-in {
+  animation: lmb-crystallize 0.5s ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lmb-liquid-bar,
+  .lmb-crystallize-in {
+    animation: none !important;
+  }
+}

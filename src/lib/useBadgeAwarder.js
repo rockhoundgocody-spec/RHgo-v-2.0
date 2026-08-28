@@ -1,20 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { BADGES, evaluateEarnedCodes, getBadgeDefinition } from './badgeDefinitions';
+import { BADGES, evaluateEarnedCodes, getBadgeDefinition, computeBadgeMetrics } from './badgeDefinitions';
 
 /**
- * Evaluates the user's specimens against the badge catalog,
- * persists newly-earned badges, and queues them for unlock animation.
+ * Evaluates the user's specimens (+ community/quest/profile context) against the
+ * Geo-Badge catalog, persists newly-earned badges, and queues them for unlock.
  *
  * Returns:
- *   - earnedCodes:  Set of codes the user owns
- *   - pendingBadge: badge def to show in the unlock overlay (or null)
+ *   - earnedCodes:    Set of codes the user owns
+ *   - earnedRecords:  { [code]: BadgeRecord } (includes earned_at for date sorting)
+ *   - specimens:      raw specimen list
+ *   - badgeMetrics:   precomputed metrics (with context) for progress bars
+ *   - pendingBadge:   badge def to show in the unlock overlay (or null)
  *   - dismissPending(): clears the current pending badge
- *   - refresh(): re-runs evaluation
+ *   - refresh():      re-runs evaluation
  */
 export function useBadgeAwarder() {
   const [earnedCodes, setEarnedCodes] = useState(new Set());
+  const [earnedRecords, setEarnedRecords] = useState({});
   const [specimens, setSpecimens] = useState([]);
+  const [badgeMetrics, setBadgeMetrics] = useState({});
   const [queue, setQueue] = useState([]);
   const evaluatingRef = useRef(false);
 
@@ -25,20 +30,30 @@ export function useBadgeAwarder() {
       const me = await base44.auth.me();
       if (!me?.email) return;
 
-      const [fetchedSpecimens, ownedRecords] = await Promise.all([
+      const [fetchedSpecimens, ownedRecords, posts, profileRecords, questRecords] = await Promise.all([
         base44.entities.Specimen.list(),
         base44.entities.Badge.filter({ owner_email: me.email }),
+        base44.entities.Post.list('-created_date', 200).catch(() => []),
+        base44.entities.PlayerProfile.filter({ owner_email: me.email }).catch(() => []),
+        base44.entities.Quest.filter({ owner_email: me.email }).catch(() => []),
       ]);
       const nextSpecimens = fetchedSpecimens || [];
       setSpecimens(nextSpecimens);
 
-      const ownedCodes = new Set((ownedRecords || []).map((b) => b.code));
-      const qualifiedCodes = evaluateEarnedCodes(nextSpecimens);
+      const playerProfile = (profileRecords || [])[0] || null;
+      const context = { posts: posts || [], playerProfile, quests: questRecords || [], ownerEmail: me.email };
+      const metrics = computeBadgeMetrics(nextSpecimens, context);
+      setBadgeMetrics(metrics);
+
+      const recordsByCode = {};
+      (ownedRecords || []).forEach((r) => { recordsByCode[r.code] = r; });
+      const ownedCodes = new Set(Object.keys(recordsByCode));
+      const qualifiedCodes = evaluateEarnedCodes(nextSpecimens, context);
       const newCodes = qualifiedCodes.filter((c) => !ownedCodes.has(c));
 
       if (newCodes.length) {
         const now = new Date().toISOString();
-        const created = await base44.entities.Badge.bulkCreate(
+        await base44.entities.Badge.bulkCreate(
           newCodes.map((code) => {
             const def = getBadgeDefinition(code);
             return {
@@ -54,9 +69,13 @@ export function useBadgeAwarder() {
         );
         const newDefs = newCodes.map((c) => getBadgeDefinition(c));
         setQueue((q) => [...q, ...newDefs]);
-        newCodes.forEach((c) => ownedCodes.add(c));
+        newCodes.forEach((c) => {
+          ownedCodes.add(c);
+          recordsByCode[c] = { code: c, earned_at: now };
+        });
       }
       setEarnedCodes(ownedCodes);
+      setEarnedRecords(recordsByCode);
     } finally {
       evaluatingRef.current = false;
     }
@@ -71,5 +90,5 @@ export function useBadgeAwarder() {
     setQueue((q) => q.slice(1));
   }, []);
 
-  return { earnedCodes, specimens, pendingBadge, dismissPending, refresh, allBadges: BADGES };
+  return { earnedCodes, earnedRecords, specimens, badgeMetrics, pendingBadge, dismissPending, refresh, allBadges: BADGES };
 }

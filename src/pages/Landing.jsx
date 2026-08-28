@@ -34,7 +34,7 @@ const FEATURES = [
   {
     icon: Trophy,
     title: 'XP, Quests & Badges',
-    desc: 'Level up from Pebble Scout to Mythic Earth Wizard. Earn rare liquid mineral badges for epic finds.',
+    desc: 'Level up from Pebble Scout to Mythic Earth Wizard. Earn rare Geo-Badges for epic finds.',
     color: 'hsl(45,90%,75%)',
     glow: 'hsla(45,90%,60%,0.4)',
     border: 'hsla(45,80%,60%,0.18)',

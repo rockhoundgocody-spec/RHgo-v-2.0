@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { BADGES, computeBadgeMetrics, getBadgeDefinition, evaluateEarnedCodes } from './badgeDefinitions';
 
-describe('Liquid Mineral Badge System - badgeDefinitions', () => {
+describe('Geo-Badge System - badgeDefinitions', () => {
   it('should contain all 15 required core badges', () => {
     const requiredCodes = [
       'crystal_whisperer',

@@ -27,7 +27,7 @@ const PHASE_LABELS = {
 const TIMINGS = { initiate: 1000, charge: 1200, burst: 700, reveal: 1400, complete: Infinity };
 
 const RARITY_LABEL = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary',
+  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic',
 };
 
 // ── Dust motes (Phase 1) ──────────────────────────────────────────────────────

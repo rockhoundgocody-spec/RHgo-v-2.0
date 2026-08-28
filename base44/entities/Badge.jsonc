@@ -19,7 +19,8 @@
         "uncommon",
         "rare",
         "epic",
-        "legendary"
+        "legendary",
+        "mythic"
       ],
       "default": "common"
     },

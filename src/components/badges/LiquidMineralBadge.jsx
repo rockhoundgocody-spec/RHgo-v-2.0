@@ -24,6 +24,7 @@ import {
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
   Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
   Sprout, Trophy, Route, Atom, Leaf, Shield, PenLine, FlaskConical,
+  CalendarCheck,
 } from 'lucide-react';
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ const ICON_MAP = {
   Library, Sparkles, GitBranch, Map, Hexagon, Globe, MapPin,
   Mountain, Target, Crown, Zap, Share2, Lock, Diamond, Star,
   Sprout, Trophy, Route, Atom, Leaf, Shield, PenLine, FlaskConical,
+  CalendarCheck,
 };
 
 // ── Color Schemes ─────────────────────────────────────────────────────────────
@@ -108,6 +110,13 @@ export const COLOR_SCHEMES = {
     dark:      'hsl(218,65%,7%)',  mid:    'hsl(214,55%,18%)', rim: 'hsla(218,78%,66%,0.55)',
     vein:      'hsla(213,75%,45%,0.2)',
   },
+  // Mythic — obsidian base with liquid fire veins
+  mythic: {
+    primary:   'hsl(20,100%,50%)',  secondary: 'hsl(35,100%,60%)',
+    glow:      'hsla(25,100%,55%,0.95)', crystal: 'hsla(30,100%,70%,0.7)',
+    dark:      'hsl(0,0%,4%)',       mid:    'hsl(15,40%,12%)', rim: 'hsla(25,90%,60%,0.65)',
+    vein:      'hsla(20,100%,50%,0.35)',
+  },
 };
 
 // ── Material overlays ─────────────────────────────────────────────────────────
@@ -126,6 +135,7 @@ const RARITY_CFG = {
   rare:      { rings: 1, particles: 10, glowBlur: 20 },
   epic:      { rings: 2, particles: 14, glowBlur: 28 },
   legendary: { rings: 2, particles: 22, glowBlur: 38 },
+  mythic:    { rings: 3, particles: 28, glowBlur: 46 },
 };
 
 // Material texture patterns (CSS gradients)
@@ -408,6 +418,20 @@ export default function LiquidMineralBadge({
         {locked && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ clipPath: OCT }}>
             <Lock size={iconSize * 0.6} className="text-white/22" />
+          </div>
+        )}
+
+        {/* Locked crystalline shimmer sweep */}
+        {locked && !reduceMotion && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ clipPath: OCT }}>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(115deg, transparent 35%, hsla(0,0%,100%,0.16) 50%, transparent 65%)',
+                animation: 'lmb-shimmer 3s ease-in-out infinite',
+              }}
+            />
           </div>
         )}
       </div>
