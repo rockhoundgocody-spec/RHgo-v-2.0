@@ -194,8 +194,8 @@ export default function Login() {
               </div>
             </div>
 
-            <Button type="submit" disabled={loading}
-              className="w-full h-12 font-bold text-sm rounded-xl mt-1 text-white"
+            <Button type="submit" disabled={loading || !email || !password}
+              className="w-full h-12 font-bold text-sm rounded-xl mt-1 text-white disabled:opacity-40 disabled:saturate-50"
               style={{
                 background: 'linear-gradient(135deg, hsl(265,70%,52%), hsl(280,90%,62%))',
                 boxShadow: '0 4px 24px -4px hsla(270,80%,60%,0.55)',
