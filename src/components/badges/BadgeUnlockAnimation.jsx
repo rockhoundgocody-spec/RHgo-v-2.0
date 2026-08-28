@@ -14,6 +14,7 @@ import LiquidMineralBadge, { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
 import BadgeMaterialPanel from './BadgeMaterialPanel.jsx';
 import AmethystParticleField from './AmethystParticleField.jsx';
 import StarField from './StarField.jsx';
+import LiquidOrbGlow from './LiquidOrbGlow.jsx';
 
 const PHASES  = ['initiate', 'charge', 'burst', 'reveal', 'complete'];
 const PHASE_LABELS = {
@@ -335,7 +336,9 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
                 animate={{ scale: 1, opacity: 1, rotateY: 0, filter: 'brightness(1)' }}
                 transition={{ duration: 1.1, ease: [0.12, 1, 0.28, 1] }}
               >
+                <LiquidOrbGlow size={210} color={scheme.glow} reduceMotion={prefersReducedMotion} />
                 <motion.div
+                  className="relative"
                   animate={completed && !prefersReducedMotion ? { y: [0, -10, 0], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] } : {}}
                   transition={completed && !prefersReducedMotion ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >

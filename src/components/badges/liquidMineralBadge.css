@@ -56,3 +56,18 @@
     animation: none !important;
   }
 }
+
+/* ── Liquid Orb Glow (earn-moment halo) ─────────────────────────────────── */
+@keyframes log-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes log-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.88; transform: scale(1.09); }
+}
+@keyframes log-shimmer {
+  0%   { transform: rotate(0deg) scale(1); opacity: 0; }
+  45%  { opacity: 1; }
+  100% { transform: rotate(360deg) scale(1.06); opacity: 0; }
+}
