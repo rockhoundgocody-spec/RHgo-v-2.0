@@ -50,6 +50,7 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
+      base44.analytics.track({ eventName: "user_registered" });
       window.location.href = "/onboarding";
     } catch (err) {
       setError(err.message || "Invalid code — check your email and try again");
