@@ -4,6 +4,7 @@
  * Includes legal-access confirmation and geo-privacy controls.
  */
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gem, MapPin, ShieldCheck } from 'lucide-react';
 import useReducedMotion from '@/lib/useReducedMotion';
@@ -38,16 +39,16 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, open]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pt-4 pb-safe"
+          className="fixed inset-0 z-[6000] flex items-end sm:items-center justify-center px-4 pt-4 pb-safe"
           style={{
-            paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+            paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))',
             background: 'hsla(245,30%,4%,0.8)',
             backdropFilter: 'blur(8px)',
           }}
@@ -156,7 +157,8 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

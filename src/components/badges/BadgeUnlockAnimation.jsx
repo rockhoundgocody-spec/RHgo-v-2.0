@@ -8,6 +8,7 @@
  * Phase 5 — Complete:  Soft ambient chime visual + particles settle, share UI & material breakdown
  */
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Share2, Copy, Check, Sparkles, Volume2 } from 'lucide-react';
 import LiquidMineralBadge, { COLOR_SCHEMES } from './LiquidMineralBadge.jsx';
@@ -250,14 +251,14 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
   const showBadge = phase === 'reveal' || phase === 'complete';
   const showBurst = phase === 'burst';
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="unlock-overlay"
         role="dialog"
         aria-modal="true"
         aria-labelledby="badge-unlock-title"
-        className="fixed inset-0 z-[9000] flex flex-col items-center justify-center overflow-hidden"
+        className="fixed inset-0 z-[9000] overflow-y-auto"
         style={{
           background: 'radial-gradient(ellipse at center, hsla(260,90%,4%,0.96) 0%, hsla(250,80%,2%,0.98) 100%)',
           backdropFilter: 'blur(12px)',
@@ -269,7 +270,7 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         <StarField seed={badge.code || badge.title} />
 
         {/* Phase selector scrubber bar */}
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
           {PHASES.map((p) => (
             <button
               key={p}
@@ -288,13 +289,16 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         {/* Close button */}
         <motion.button onClick={onClose}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-          className="absolute top-5 right-5 p-2 rounded-full text-white/40 hover:text-white/80 transition z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none"
+          className="fixed top-5 right-5 p-2 rounded-full text-white/40 hover:text-white/80 transition z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)' }}
           aria-label="Close unlock animation"
         >
           <X size={18} />
         </motion.button>
 
+        {/* Scrollable content — centers when it fits, scrolls when it overflows.
+             pt clears the scrubber/close; pb clears the bottom nav. */}
+        <div className="min-h-full w-full flex flex-col items-center justify-center px-4 pt-20 pb-44">
         {/* ── Centre Stage ── */}
         <div className="relative flex items-center justify-center mt-8" style={{ width: 320, height: 320 }}>
 
@@ -429,7 +433,9 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
             </button>
           </motion.div>
         )}
+        </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
