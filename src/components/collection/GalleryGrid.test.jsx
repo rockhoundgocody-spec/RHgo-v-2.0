@@ -6,24 +6,33 @@ vi.mock('react', async (importOriginal) => {
   return {
     ...actual,
     useState: (initial) => [initial, vi.fn()],
+    useCallback: (fn) => fn,
+    useMemo: (factory) => factory(),
+    useRef: (initial) => ({ current: initial }),
+    useEffect: vi.fn(),
   };
 });
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    button: ({ children, onClick, 'aria-label': ariaLabel, className, style, ...props }) => (
-      <button onClick={onClick} aria-label={ariaLabel} className={className} style={style} {...props}>
-        {children}
-      </button>
-    ),
-    div: ({ children, onClick, className, style, ...props }) => (
-      <div onClick={onClick} className={className} style={style} {...props}>
-        {children}
-      </div>
-    ),
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
+vi.mock('framer-motion', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useReducedMotion: () => false,
+    motion: {
+      button: ({ children, onClick, 'aria-label': ariaLabel, className, style, ...props }) => (
+        <button onClick={onClick} aria-label={ariaLabel} className={className} style={style} {...props}>
+          {children}
+        </button>
+      ),
+      div: ({ children, onClick, className, style, ...props }) => (
+        <div onClick={onClick} className={className} style={style} {...props}>
+          {children}
+        </div>
+      ),
+    },
+    AnimatePresence: ({ children }) => <>{children}</>,
+  };
+});
 
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to, className, style, onClick }) => (
