@@ -6,6 +6,10 @@ vi.mock('react', async (importOriginal) => {
   return {
     ...actual,
     useState: (initial) => [initial, vi.fn()],
+    useCallback: (fn) => fn,
+    useMemo: (fn) => fn(),
+    useRef: (initial) => ({ current: initial }),
+    useEffect: vi.fn(),
   };
 });
 
@@ -23,6 +27,7 @@ vi.mock('framer-motion', () => ({
     ),
   },
   AnimatePresence: ({ children }) => <>{children}</>,
+  useReducedMotion: () => false,
 }));
 
 vi.mock('react-router-dom', () => ({

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, ImagePlus, Send } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { stripExif } from '@/lib/stripExif';
 
 export default function PostComposer({ onPosted }) {
   const [open, setOpen] = useState(false);
@@ -28,7 +29,8 @@ export default function PostComposer({ onPosted }) {
     if (!file) return;
     setBusy(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const cleanFile = await stripExif(file);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: cleanFile });
       setImageUrl(file_url);
     } finally {
       setBusy(false);

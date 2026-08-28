@@ -20,8 +20,12 @@ vi.mock('@/api/base44Client', () => ({
   base44: {
     auth: { me: vi.fn() },
     entities: { Specimen: { list: vi.fn() }, Post: { create: vi.fn() } },
-    integrations: { Core: { UploadFile: vi.fn() } },
+    integrations: { Core: { UploadFile: vi.fn().mockResolvedValue({ file_url: 'http://example.com/clean.jpg' }) } },
   },
+}));
+
+vi.mock('@/lib/stripExif', () => ({
+  stripExif: vi.fn().mockImplementation((file) => Promise.resolve(file)),
 }));
 
 function findByProp(node, prop, value, matches = []) {
@@ -49,6 +53,8 @@ beforeEach(() => {
   reactState.forceOpen = false;
 });
 
+import { stripExif } from '@/lib/stripExif';
+
 describe('PostComposer accessibility', () => {
   it('exposes an accessible, focus-visible collapsed trigger', () => {
     const tree = PostComposer({ onPosted: vi.fn() });
@@ -69,5 +75,17 @@ describe('PostComposer accessibility', () => {
     expect(findByProp(tree, 'aria-label', 'Cancel post')).toHaveLength(1);
     expect(findByProp(tree, 'aria-label', 'Post text')).toHaveLength(1);
     expect(findByProp(tree, 'aria-controls', 'post-composer-finds')).toHaveLength(1);
+  });
+
+  it('sanitizes EXIF metadata when an image is selected', async () => {
+    reactState.forceOpen = true;
+    const tree = PostComposer({ onPosted: vi.fn() });
+    const fileInputs = findByProp(tree, 'aria-label', 'Upload image');
+    expect(fileInputs).toHaveLength(1);
+
+    const mockFile = new File(['dummy content'], 'photo.jpg', { type: 'image/jpeg' });
+    await fileInputs[0].props.onChange({ target: { files: [mockFile] } });
+
+    expect(stripExif).toHaveBeenCalledWith(mockFile);
   });
 });
