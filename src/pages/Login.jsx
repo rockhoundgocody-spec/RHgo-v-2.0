@@ -20,10 +20,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
     setLoading(true);
     try {
@@ -34,6 +36,12 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOAuth = (provider) => {
+    if (oauthLoading || loading) return;
+    setOauthLoading(provider);
+    base44.auth.loginWithProvider(provider, "/");
   };
 
   return (
@@ -129,14 +137,18 @@ export default function Login() {
           {/* OAuth buttons */}
           <div className="space-y-3 mb-6">
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("google", "/")}>
-              <GoogleIcon className="w-4 h-4 mr-2" />
-              Continue with Google
+              disabled={!!oauthLoading} onClick={() => handleOAuth("google")}>
+              {oauthLoading === 'google'
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <GoogleIcon className="w-4 h-4 mr-2" />}
+              {oauthLoading === 'google' ? 'Connecting…' : 'Continue with Google'}
             </Button>
             <Button variant="outline" className="w-full h-11 text-sm font-semibold border-white/15 bg-white/5 hover:bg-white/10 text-white rounded-xl"
-              onClick={() => base44.auth.loginWithProvider("facebook", "/")}>
-              <FacebookIcon className="w-4 h-4 mr-2" />
-              Continue with Facebook
+              disabled={!!oauthLoading} onClick={() => handleOAuth("facebook")}>
+              {oauthLoading === 'facebook'
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <FacebookIcon className="w-4 h-4 mr-2" />}
+              {oauthLoading === 'facebook' ? 'Connecting…' : 'Continue with Facebook'}
             </Button>
           </div>
 
