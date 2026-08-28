@@ -1,0 +1,40 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "publish_hotspot_instagram",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "publish": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "publishHotspotToInstagram",
+            "args": {
+              "hotspot_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Publish hotspot to Instagram",
+            "description": "Post the new hotspot to the IG feed"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Publish Hotspot to Instagram",
+  "description": "When an admin creates a new hotspot, automatically post its coordinates to the connected Instagram Business feed.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Hotspot"
+    }
+  }
+}
