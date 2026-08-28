@@ -5,6 +5,7 @@
  * Best-effort: on any failure the caller keeps the original photo.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isValidImageHost } from './imageValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,10 +18,7 @@ Deno.serve(async (req) => {
 
     // Only process images we host. Without this, any authenticated user could
     // point this at an arbitrary external URL and burn image-generation credits.
-    let host = '';
-    try { host = new URL(image_url).hostname; } catch { /* invalid URL */ }
-    const allowed = host.endsWith('base44.app') || host.endsWith('base44.com') || host.endsWith('amazonaws.com');
-    if (!allowed) {
+    if (!isValidImageHost(image_url)) {
       return Response.json({ error: 'image_url must be an uploaded app file' }, { status: 400 });
     }
 
