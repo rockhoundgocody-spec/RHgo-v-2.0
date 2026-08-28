@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Zap, Trophy, RefreshCw, X, Shield, Flame, Camera, Loader2 } from 'lucide-react';
+import { Swords, Trophy, RefreshCw, X, Flame, Camera, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import BattleLeaderboard from './BattleLeaderboard.jsx';
+import { stripExif } from '@/lib/stripExif';
 
 // Rock fighters with stats derived from real mineral properties
 const ROCK_FIGHTERS = [
@@ -109,9 +110,13 @@ function AvatarUpload({ avatarUrl, onUpload }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    onUpload(file_url);
-    setUploading(false);
+    try {
+      const cleanFile = await stripExif(file);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: cleanFile });
+      onUpload(file_url);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
