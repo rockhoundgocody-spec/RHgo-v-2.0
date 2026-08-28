@@ -4,13 +4,13 @@ import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SectionHeader from './SectionHeader.jsx';
 
-const DEFAULT_VOICE = { voice: 'honey', rate: 0.88, pitch: 1.06, volume: 0.95 };
+const DEFAULT_VOICE = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
 const VOICE_PERSONAS = [
-  { id: 'honey', label: 'Honey', desc: 'Warm & Soft' },
-  { id: 'river', label: 'River', desc: 'Relaxed & Natural' },
-  { id: 'sunny', label: 'Sunny', desc: 'Upbeat & Energetic' },
-  { id: 'storm', label: 'Storm', desc: 'Deep & Steady' },
-  { id: 'spark', label: 'Spark', desc: 'Lively & Bright' },
+  { id: 'honey', label: 'Clover', desc: 'Irish lilt · educated' },
+  { id: 'river', label: 'River', desc: 'American · calm' },
+  { id: 'sunny', label: 'Sunny', desc: 'American · bright' },
+  { id: 'storm', label: 'Storm', desc: 'American · steady' },
+  { id: 'spark', label: 'Spark', desc: 'American · lively' },
 ];
 
 function loadVoice() {

@@ -1,61 +1,75 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { secrets } from 'base44:runtime';
 
 /**
- * Text-to-Speech proxy using Base44's built-in GenerateSpeech integration.
- * Returns base64 MP3 audio content as { audioContent: string }.
- * No external API key restrictions — works from any server context.
+ * Text-to-Speech proxy using Google Cloud TTS.
+ * Clover's default voice (honey) is an educated Irish-English female
+ * (en-IE-Wavenet-A) — warm, articulate, and distinctly not British.
+ * Returns base64 MP3 as { audioContent } for the frontend Web Audio pipeline.
  */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { text, voice = 'honey', rate = 0.92 } = await req.json();
-
+    const { text, voice = 'honey', rate = 0.95, pitch = 1.0 } = await req.json();
     if (!text || typeof text !== 'string') {
       return Response.json({ error: 'Missing text' }, { status: 400 });
     }
 
-    // Map legacy Google voice names to Base44 voice names
+    // Persona → Google Cloud TTS voice. Default is Clover's signature Irish female.
     const voiceMap = {
-      'en-US-Neural2-F': 'honey',
-      'en-US-Neural2-J': 'storm',
-      'honey': 'honey',
-      'river': 'river',
-      'sunny': 'sunny',
-      'storm': 'storm',
-      'spark': 'spark',
+      honey: 'en-IE-Wavenet-A',  // Irish female, warm & educated — Clover's voice
+      river: 'en-US-Wavenet-F',  // American female, conversational
+      sunny: 'en-US-Wavenet-G',  // American female, bright
+      storm: 'en-US-Wavenet-H',  // American female, steady
+      spark: 'en-US-Wavenet-E',  // American female, lively
     };
-    const resolvedVoice = voiceMap[voice] || 'honey';
+    const voiceName = voiceMap[voice] || voiceMap.honey;
+    const languageCode = voiceName.startsWith('en-IE') ? 'en-IE' : 'en-US';
 
-    const result = await base44.asServiceRole.integrations.Core.GenerateSpeech({
-      text: text.slice(0, 800),
-      voice: resolvedVoice,
-      language_code: 'en',
-    });
+    // Frontend pitch is a multiplier (0.8–1.5, 1.0 = neutral). Google expects
+    // semitones relative to the default pitch (-20..+20).
+    const googlePitch = Math.max(-20, Math.min(20, ((pitch || 1.0) - 1.0) * 20));
 
-    if (!result?.url) {
-      return Response.json({ error: 'No audio URL returned' }, { status: 500 });
+    const apiKey = secrets.get('GOOGLE_TTS_API_KEY');
+    if (!apiKey) return Response.json({ error: 'TTS key not configured' }, { status: 500 });
+
+    // The TTS API key is HTTP-referer restricted; the backend has no natural
+    // Referer, so send the app's origin to satisfy the restriction.
+    const ttsRes = await fetch(
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Referer': 'https://rhgo.base44.app/',
+        },
+        body: JSON.stringify({
+          input: { text: text.slice(0, 800) },
+          voice: { languageCode, name: voiceName, ssmlGender: 'FEMALE' },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            speakingRate: Math.max(0.25, Math.min(4.0, rate || 0.95)),
+            pitch: googlePitch,
+          },
+        }),
+      }
+    );
+
+    if (!ttsRes.ok) {
+      const errDetail = await ttsRes.text();
+      console.error('Google TTS error:', errDetail);
+      return Response.json({ error: 'TTS synthesis failed', detail: errDetail }, { status: 502 });
     }
 
-    // Fetch the MP3 and convert to base64 so the frontend can decode it the same way
-    const audioRes = await fetch(result.url);
-    if (!audioRes.ok) {
-      return Response.json({ error: 'Failed to fetch audio' }, { status: 500 });
+    const data = await ttsRes.json();
+    if (!data.audioContent) {
+      return Response.json({ error: 'No audio content returned' }, { status: 502 });
     }
 
-    const buffer = await audioRes.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const b64 = btoa(binary);
-
-    return Response.json({ audioContent: b64 });
+    return Response.json({ audioContent: data.audioContent });
   } catch (error) {
     console.error('synthesizeSpeech exception:', error);
     return Response.json({ error: error.message }, { status: 500 });

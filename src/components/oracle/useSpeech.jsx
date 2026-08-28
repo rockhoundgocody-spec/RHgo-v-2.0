@@ -73,7 +73,7 @@ export function useSpeechSynthesis() {
 
     setSpeaking(true);
 
-    let voiceConfig = { voice: 'honey', rate: 0.92, pitch: 1.18, volume: 0.95 };
+    let voiceConfig = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
     try {
       const stored = localStorage.getItem('clover_voice');
       if (stored) voiceConfig = { ...voiceConfig, ...JSON.parse(stored) };
@@ -83,7 +83,8 @@ export function useSpeechSynthesis() {
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
         voice: voiceConfig.voice || 'honey',
-        rate:  voiceConfig.rate || 0.92,
+        rate:  voiceConfig.rate || 0.95,
+        pitch: voiceConfig.pitch || 1.0,
       });
 
       const b64 = res?.data?.audioContent;
@@ -107,7 +108,9 @@ export function useSpeechSynthesis() {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      source.playbackRate.value = voiceConfig.rate || 0.92;
+      // Rate is baked into the MP3 by Google TTS (speakingRate) — keep playback
+      // at 1x so we don't double-speed it or shift the pitch.
+      source.playbackRate.value = 1.0;
 
       const gainNode = ctx.createGain();
       gainNode.gain.value = voiceConfig.volume ?? 0.95;
