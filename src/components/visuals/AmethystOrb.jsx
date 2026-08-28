@@ -16,10 +16,10 @@ import usePageVisible from '@/lib/usePageVisible';
  */
 // orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
 const STATE_CONFIG = {
-  idle:      { haloBase: 'hsla(280,100%,65%,0.45)', auraBase: 'hsla(280,100%,52%,0.5)',  innerBase: 'hsla(280,100%,55%,0.55)', boxShadow: '0 0 80px hsla(280,100%,55%,0.4), 0 0 30px hsla(195,100%,55%,0.2), inset 0 0 50px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.0, idleAuraScale: 1.0 },
-  listening: { haloBase: 'hsla(160,90%,55%,0.55)',  auraBase: 'hsla(145,100%,50%,0.55)', innerBase: 'hsla(150,100%,58%,0.6)',  boxShadow: '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(160,100%,60%,0.3), inset 0 0 55px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.4, idleAuraScale: 1.6 },
-  thinking:  { haloBase: 'hsla(210,100%,65%,0.5)',  auraBase: 'hsla(220,100%,55%,0.5)',  innerBase: 'hsla(215,100%,58%,0.55)', boxShadow: '0 0 80px hsla(215,100%,60%,0.45), 0 0 35px hsla(200,100%,55%,0.25), inset 0 0 50px hsla(265,90%,8%,0.55)', idlePulseScale: 1.8, idleAuraScale: 2.0 },
-  speaking:  { haloBase: 'hsla(145,90%,55%,0.5)',   auraBase: 'hsla(280,100%,55%,0.55)', innerBase: 'hsla(280,100%,58%,0.6)',  boxShadow: '0 0 90px hsla(145,90%,55%,0.5), 0 0 40px hsla(280,100%,70%,0.35), inset 0 0 60px hsla(265,90%,8%,0.6)', idlePulseScale: 2.0, idleAuraScale: 2.2 },
+  idle:      { haloBase: 'hsla(190,100%,62%,0.42)',  auraBase: 'hsla(175,90%,52%,0.42)',   innerBase: 'hsla(330,90%,60%,0.5)',   boxShadow: '0 0 80px hsla(190,100%,55%,0.35), 0 0 30px hsla(330,90%,60%,0.22), 0 0 20px hsla(45,100%,60%,0.15), inset 0 0 50px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.0, idleAuraScale: 1.0 },
+  listening: { haloBase: 'hsla(160,90%,55%,0.5)',    auraBase: 'hsla(145,100%,50%,0.5)',   innerBase: 'hsla(190,100%,58%,0.55)', boxShadow: '0 0 90px hsla(145,90%,55%,0.45), 0 0 40px hsla(175,100%,60%,0.3), 0 0 20px hsla(45,100%,60%,0.18), inset 0 0 55px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.4, idleAuraScale: 1.6 },
+  thinking:  { haloBase: 'hsla(210,100%,65%,0.45)',  auraBase: 'hsla(260,80%,60%,0.42)',    innerBase: 'hsla(195,100%,58%,0.5)',  boxShadow: '0 0 80px hsla(210,100%,60%,0.4), 0 0 35px hsla(330,90%,60%,0.22), 0 0 20px hsla(45,100%,60%,0.15), inset 0 0 50px hsla(265,90%,8%,0.55)', idlePulseScale: 1.8, idleAuraScale: 2.0 },
+  speaking:  { haloBase: 'hsla(330,90%,62%,0.45)',   auraBase: 'hsla(175,90%,55%,0.5)',    innerBase: 'hsla(45,100%,62%,0.55)',  boxShadow: '0 0 90px hsla(330,90%,60%,0.42), 0 0 40px hsla(175,100%,60%,0.3), 0 0 25px hsla(45,100%,65%,0.22), inset 0 0 60px hsla(265,90%,8%,0.6)', idlePulseScale: 2.0, idleAuraScale: 2.2 },
 };
 
 // Growth tiers — the orb visually evolves as the user's companion levels up.
@@ -209,7 +209,7 @@ export default function AmethystOrb({
         style={{
           inset: `-${Math.round(size * 0.30)}px`,
           willChange: 'transform, opacity',
-          background: `radial-gradient(circle, transparent 22%, ${cfg.auraBase} 38%, hsla(270,95%,42%,0.35) 54%, hsla(265,85%,32%,0.18) 72%, transparent 92%)`,
+          background: `radial-gradient(circle, transparent 22%, ${cfg.auraBase} 38%, hsla(190,90%,42%,0.28) 54%, hsla(330,85%,40%,0.18) 72%, transparent 92%)`,
         }}
       />
       {/* Inner aura ring — tighter, color-coded per state */}
@@ -220,7 +220,7 @@ export default function AmethystOrb({
         style={{
           inset: `-${Math.round(size * 0.12)}px`,
           willChange: 'opacity',
-          background: `radial-gradient(circle, transparent 40%, ${cfg.innerBase} 54%, hsla(270,98%,45%,0.35) 68%, transparent 88%)`,
+          background: `radial-gradient(circle, transparent 40%, ${cfg.innerBase} 54%, hsla(175,90%,45%,0.3) 68%, transparent 88%)`,
         }}
       />
 
@@ -312,14 +312,14 @@ export default function AmethystOrb({
           className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-40"
           style={{
             background:
-              'radial-gradient(circle at 35% 30%, hsla(280,100%,75%,0.25) 0%, hsla(270,90%,50%,0.15) 45%, hsla(265,90%,20%,0.35) 80%, hsla(260,90%,8%,0.5) 100%)',
+              'radial-gradient(circle at 35% 30%, hsla(190,100%,72%,0.22) 0%, hsla(330,90%,62%,0.16) 40%, hsla(175,90%,45%,0.14) 70%, hsla(265,90%,18%,0.4) 100%)',
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none mix-blend-screen opacity-25"
           style={{
             background:
-              'radial-gradient(circle at 65% 70%, hsla(290,100%,70%,0.3) 0%, transparent 60%)',
+              'radial-gradient(circle at 65% 70%, hsla(45,100%,68%,0.26) 0%, hsla(330,90%,65%,0.16) 35%, transparent 60%)',
           }}
         />
 

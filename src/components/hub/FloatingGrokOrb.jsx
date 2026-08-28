@@ -39,7 +39,7 @@ const MOOD_STYLES = {
   sleepy:  { bg: 'linear-gradient(160deg, hsl(250 18% 14%) 0%, hsl(248 22% 7%) 100%)', glow: 'hsla(240,50%,50%,0.25)', border: 'hsla(240,40%,60%,0.3)', Icon: Moon, iconColor: 'hsla(240,50%,80%,0.8)' },
 };
 
-const HIDDEN_ROUTES = ['/scan', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password'];
+const HIDDEN_ROUTES = ['/', '/scan', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password'];
 
 export default function FloatingGrokOrb() {
   const location = useLocation();
