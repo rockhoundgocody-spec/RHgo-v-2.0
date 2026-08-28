@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import React, { memo, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, ChevronDown, ChevronUp, Gem } from 'lucide-react';
 import ShareSpecimenButton from './ShareSpecimenButton.jsx';
@@ -32,7 +32,8 @@ function buildLore(specimen) {
   return `Formed approximately ${age} years ago. Discovered at ${loc}. Each specimen carries the geological memory of its formation environment.`;
 }
 
-export default function SpecimenCard({ specimen, index }) {
+// Bolt Optimization: Memoize SpecimenCard to prevent unnecessary card re-renders during list updates/scrolling
+export function SpecimenCard({ specimen, index }) {
   const [expanded, setExpanded] = useState(false);
   const loreId = useId();
   const rarity = RARITY_CONFIG[specimen.rarity] || RARITY_CONFIG.common;
@@ -179,6 +180,8 @@ export default function SpecimenCard({ specimen, index }) {
     </Link>
   );
 }
+
+export default memo(SpecimenCard);
 
 function StatCell({ label, value, color }) {
   return (

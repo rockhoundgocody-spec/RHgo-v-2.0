@@ -24,7 +24,7 @@ vi.mock('@/api/base44Client', () => ({
   },
 }));
 
-import SpecimenCard from './SpecimenCard.jsx';
+import SpecimenCardDefault, { SpecimenCard } from './SpecimenCard.jsx';
 
 describe('SpecimenCard', () => {
   const mockSpecimen = {
@@ -39,6 +39,11 @@ describe('SpecimenCard', () => {
     image_url: 'https://example.com/amethyst.jpg',
     notes: 'Beautiful violet crystals with hematite inclusions.',
   };
+
+  it('exports memoized component as default', () => {
+    expect(SpecimenCardDefault).toBeDefined();
+    expect(SpecimenCardDefault.type).toBe(SpecimenCard);
+  });
 
   it('renders specimen information correctly with accessible attributes', () => {
     const card = SpecimenCard({ specimen: mockSpecimen, index: 0 });
