@@ -132,6 +132,16 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
+    /* Hide the visible scrollbar gutter on the right while staying scrollable */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  #root::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; /* Chrome / Safari / Edge */
   }
 }
 
