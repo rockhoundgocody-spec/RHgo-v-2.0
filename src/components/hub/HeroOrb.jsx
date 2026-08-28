@@ -5,7 +5,7 @@
  * to be typed or pressed.
  */
 import React, { useState, useRef, useEffect } from 'react';
-import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import useCloverConversation from './useCloverConversation';
@@ -117,14 +117,16 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOrbTap(e)}
           style={{ width: size, height: size }}
         >
-          <AmethystOrb
-            size={size}
-            orbState={orbState}
-            level={companion?.level || 1}
-            getInteraction={getInteraction}
-            getAmplitude={clover.getAmplitude}
-            getSpectrum={clover.getSpectrum}
-          />
+          <React.Suspense fallback={<div style={{ width: size, height: size }} />}>
+            <AmethystOrb
+              size={size}
+              orbState={orbState}
+              level={companion?.level || 1}
+              getInteraction={getInteraction}
+              getAmplitude={clover.getAmplitude}
+              getSpectrum={clover.getSpectrum}
+            />
+          </React.Suspense>
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples((rs) => rs.filter((rp) => rp.id !== r.id))} />
           ))}

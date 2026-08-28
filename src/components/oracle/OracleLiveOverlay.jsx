@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Mic, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
-import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 
@@ -171,12 +171,14 @@ export default function OracleLiveOverlay() {
           className="rounded-full transition active:scale-95 focus:outline-none"
           aria-label={listening ? 'Stop listening' : 'Start listening'}
         >
-          <AmethystOrb
-            size={300}
-            speaking={speaking}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-          />
+          <React.Suspense fallback={<div style={{ width: 300, height: 300 }} />}>
+            <AmethystOrb
+              size={300}
+              speaking={speaking}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+            />
+          </React.Suspense>
         </button>
 
         {/* HUD state indicator */}

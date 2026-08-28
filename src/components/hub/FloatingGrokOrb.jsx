@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { Sparkles, Zap, Compass, Moon } from 'lucide-react';
 import useCloverConversation from './useCloverConversation';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
-import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import { base44 } from '@/api/base44Client';
 
@@ -231,14 +231,16 @@ export default function FloatingGrokOrb() {
           style={{ width: 56, height: 56 }}
           aria-label="Clover active conversation"
         >
-          <AmethystOrb
-            size={56}
-            orbState={orbState}
-            level={companion?.level || 1}
-            getInteraction={getInteraction}
-            getAmplitude={clover.getAmplitude}
-            getSpectrum={clover.getSpectrum}
-          />
+          <React.Suspense fallback={<div style={{ width: 56, height: 56 }} />}>
+            <AmethystOrb
+              size={56}
+              orbState={orbState}
+              level={companion?.level || 1}
+              getInteraction={getInteraction}
+              getAmplitude={clover.getAmplitude}
+              getSpectrum={clover.getSpectrum}
+            />
+          </React.Suspense>
         </div>
       ) : (
         <motion.div
@@ -261,12 +263,14 @@ export default function FloatingGrokOrb() {
           style={{ width: 48, height: 48 }}
           aria-label="Chat with Clover"
         >
-          <AmethystOrb
-            size={48}
-            orbState="idle"
-            level={companion?.level || 1}
-            getInteraction={getInteraction}
-          />
+          <React.Suspense fallback={<div style={{ width: 48, height: 48 }} />}>
+            <AmethystOrb
+              size={48}
+              orbState="idle"
+              level={companion?.level || 1}
+              getInteraction={getInteraction}
+            />
+          </React.Suspense>
         </motion.div>
       )}
     </div>

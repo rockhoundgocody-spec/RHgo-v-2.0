@@ -9,14 +9,11 @@ declare module 'react-leaflet';
 declare module 'react-day-picker';
 declare module 'react-resizable-panels';
 declare module 'react-markdown';
-declare module '@stripe/react-stripe-js';
 declare module 'three';
 declare module 'leaflet';
 declare module 'sonner';
 declare module 'input-otp';
-declare module 'html2canvas';
 declare module '@googlemaps/markerclusterer';
-declare module 'react-hot-toast';
 declare module 'cmdk';
 
 declare global {

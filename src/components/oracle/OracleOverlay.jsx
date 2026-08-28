@@ -4,7 +4,7 @@ import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-reac
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
 import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
-import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
+const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import { detectLogIntent, getCurrentCoordinates } from './oracleActions';
 
 export default function OracleOverlay() {
@@ -152,7 +152,9 @@ export default function OracleOverlay() {
         {/* header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
           <div className="w-10 h-10 shrink-0">
-            <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
+            <React.Suspense fallback={<div style={{ width: 40, height: 40 }} />}>
+              <AmethystOrb size={40} speaking={speaking} getAmplitude={getAmplitude} />
+            </React.Suspense>
           </div>
           <div className="flex-1 min-w-0">
             <div id="oracle-title" className="text-white font-semibold tracking-wide flex items-center gap-2">
