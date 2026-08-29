@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, FlaskConical, XCircle, Atom } from 'lucide-react';
 
@@ -32,6 +32,7 @@ function MetricBar({ label, value, color }) {
 
 export default function HypothesisCard({ hypothesis, isLeading, rank }) {
   const [expanded, setExpanded] = useState(isLeading);
+  const contentId = useId();
   const h = hypothesis;
   const cat = CATEGORY_CFG[h.category] || CATEGORY_CFG.unknown;
   const prob = h.probability ?? 0;
@@ -55,7 +56,9 @@ export default function HypothesisCard({ hypothesis, isLeading, rank }) {
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-start gap-3 p-4 text-left"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        className="w-full flex items-start gap-3 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-2xl"
       >
         {/* Probability ring */}
         <div className="relative shrink-0 mt-0.5">
@@ -94,13 +97,14 @@ export default function HypothesisCard({ hypothesis, isLeading, rank }) {
         </div>
 
         {expanded
-          ? <ChevronUp size={14} className="text-white/30 shrink-0 mt-1" />
-          : <ChevronDown size={14} className="text-white/30 shrink-0 mt-1" />}
+          ? <ChevronUp size={14} className="text-white/30 shrink-0 mt-1" aria-hidden="true" />
+          : <ChevronDown size={14} className="text-white/30 shrink-0 mt-1" aria-hidden="true" />}
       </button>
 
       {/* Expanded body */}
       {expanded && (
         <motion.div
+          id={contentId}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="px-4 pb-4 space-y-3"
