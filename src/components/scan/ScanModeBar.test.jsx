@@ -67,6 +67,7 @@ describe('ScanModeBar', () => {
     const [lightingTipsBtn, scaleRefBtn] = utilityToggles.props.children;
 
     expect(lightingTipsBtn.props['aria-expanded']).toBe(false);
+    expect(lightingTipsBtn.props['aria-controls']).toBe('scan-lighting-tips-dialog');
     expect(lightingTipsBtn.props.className).toContain('focus-visible:ring-2');
     expect(lightingTipsBtn.props.className).toContain('focus-visible:ring-amber-400/50');
 
