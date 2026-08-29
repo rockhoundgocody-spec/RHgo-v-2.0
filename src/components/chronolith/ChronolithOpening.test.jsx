@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import ChronolithOpening, {
   PointOfLight,
   OpeningText,
   HypothesesList,
   InvestigationSummary,
   EnterTrialButton,
+  getSkipButtonProps,
 } from './ChronolithOpening.jsx';
 
 describe('ChronolithOpening subcomponents & module exports', () => {
@@ -63,5 +64,13 @@ describe('ChronolithOpening subcomponents & module exports', () => {
     expect(typeof EnterTrialButton).toBe('function');
     const element = EnterTrialButton({ phase: 4, onEnter: () => {} });
     expect(element).toBeDefined();
+  });
+
+  it('returns proper skip button accessibility props from getSkipButtonProps', () => {
+    const onSkip = vi.fn();
+    const props = getSkipButtonProps(onSkip);
+    expect(props['aria-label']).toBe('Skip introduction');
+    expect(props.className).toContain('focus-visible:ring-amethyst-glow/60');
+    expect(props.onClick).toBe(onSkip);
   });
 });
