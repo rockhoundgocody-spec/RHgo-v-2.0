@@ -56,6 +56,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
         <button
           onClick={() => setTipsOpen(true)}
           aria-expanded={tipsOpen}
+          aria-controls="scan-lighting-tips-dialog"
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
           style={{
             background: 'hsla(45,80%,40%,0.15)',
@@ -92,8 +93,17 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             className="fixed inset-0 z-[100] flex items-end justify-center"
             style={{ background: 'hsla(265,50%,3%,0.8)', backdropFilter: 'blur(8px)' }}
             onClick={() => setTipsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setTipsOpen(false);
+              }
+            }}
           >
             <motion.div
+              id="scan-lighting-tips-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="lighting-tips-title"
               initial={{ y: 300 }}
               animate={{ y: 0 }}
               exit={{ y: 300 }}
@@ -109,7 +119,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Lightbulb size={16} className="text-amber-300" />
-                  <h3 className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
+                  <h3 id="lighting-tips-title" className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
                 </div>
                 <button
                   onClick={() => setTipsOpen(false)}
