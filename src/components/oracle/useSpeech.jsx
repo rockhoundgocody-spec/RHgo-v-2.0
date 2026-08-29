@@ -80,27 +80,28 @@ export function useSpeechSynthesis() {
     } catch {}
 
     try {
-      const res = await base44.functions.invoke('synthesizeSpeech', {
-        text:  String(text).slice(0, 800),
-        voice: voiceConfig.voice || 'honey',
-        rate:  voiceConfig.rate || 0.95,
-        pitch: voiceConfig.pitch || 1.0,
-      });
-
-      const b64 = res?.data?.audioContent;
-      if (!b64) throw new Error('No audio content returned');
-
-      const binary = atob(b64);
-      const bytes  = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
+      // Create/resume the AudioContext FIRST — on mobile it may only be
+      // unlocked while the originating user gesture is still fresh.
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
       const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') await ctx.resume();
+      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
 
-      const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
+      const res = await base44.functions.invoke('synthesizeSpeech', {
+        text:  String(text).slice(0, 800),
+        voice: voiceConfig.voice || 'honey',
+      });
+
+      const audioUrl = res?.data?.audioUrl;
+      if (!audioUrl) throw new Error('No audio URL returned');
+
+      const audioRes = await fetch(audioUrl);
+      if (!audioRes.ok) throw new Error('Audio fetch failed');
+      const arrayBuf = await audioRes.arrayBuffer();
+
+      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
+      const audioBuffer = await ctx.decodeAudioData(arrayBuf);
 
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
@@ -108,9 +109,9 @@ export function useSpeechSynthesis() {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      // Rate is baked into the MP3 by Google TTS (speakingRate) — keep playback
-      // at 1x so we don't double-speed it or shift the pitch.
-      source.playbackRate.value = 1.0;
+      // The engine renders at a natural pace — apply the user's rate preference
+      // here, clamped so Clover never sounds rushed or slurred.
+      source.playbackRate.value = Math.max(0.7, Math.min(1.3, voiceConfig.rate || 1.0));
 
       const gainNode = ctx.createGain();
       gainNode.gain.value = voiceConfig.volume ?? 0.95;
