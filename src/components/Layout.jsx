@@ -14,7 +14,6 @@ import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
-import MariiChatWidget from '@/components/MariiChatWidget.jsx';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
@@ -178,7 +177,6 @@ export default function Layout() {
         <StreakReminderBanner />
         <OracleOverlays />
         <FloatingGrokOrb />
-        <MariiChatWidget />
         <BadgeUnlockWatcher />
       </div>
       </BadgeAwarderProvider>
