@@ -183,7 +183,7 @@ export function EnterTrialButton({ phase, onEnter }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           onClick={onEnter}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 z-20"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/80"
           style={{
             background: 'linear-gradient(135deg, hsl(265,70%,52%), hsl(280,90%,62%))',
             boxShadow: '0 4px 24px -4px hsla(270,80%,60%,0.55)',
@@ -204,6 +204,15 @@ export function EnterTrialButton({ phase, onEnter }) {
  * Phase 3: Investigation summary animates in (age, environments, locations, hypotheses)
  * Phase 4: "Enter the Trial" button
  */
+export function getSkipButtonProps(onSkip) {
+  return {
+    onClick: onSkip,
+    'aria-label': 'Skip introduction',
+    className:
+      'absolute top-4 right-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/50 transition z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 rounded-md px-1 py-0.5',
+  };
+}
+
 export default function ChronolithOpening({ caseData, imageUrl, onEnter, onSkip }) {
   const [phase, setPhase] = useState(0); // 0=black, 1=light, 2=text, 3=summary, 4=enter
 
@@ -225,7 +234,7 @@ export default function ChronolithOpening({ caseData, imageUrl, onEnter, onSkip 
       style={{ background: phase === 0 ? '#000' : 'radial-gradient(ellipse at center, hsl(250,30%,8%) 0%, #000 70%)' }}>
 
       {/* Skip button */}
-      <button onClick={onSkip} className="absolute top-4 right-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/50 transition z-10">
+      <button {...getSkipButtonProps(onSkip)}>
         Skip →
       </button>
 
