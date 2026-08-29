@@ -53,7 +53,12 @@ export default function StreakReminderBanner() {
       if (!chosen) return;
       setMsg(chosen);
       timer = setTimeout(() => {
-        if (tryAcquire()) setVisible(true);
+        if (tryAcquire()) {
+          // Mark as shown the moment it appears — guarantees once per day
+          // even if the user never taps the X.
+          localStorage.setItem(STORAGE_KEY, getTodayStr());
+          setVisible(true);
+        }
       }, 3500);
     };
 
@@ -77,6 +82,17 @@ export default function StreakReminderBanner() {
       clearTimeout(timer);
     };
   }, [tryAcquire]);
+
+  // Auto-hide after 8 seconds — the banner shouldn't linger.
+  useEffect(() => {
+    if (!visible) return;
+    const hideTimer = setTimeout(() => {
+      setVisible(false);
+      release();
+      sessionStorage.setItem(SESSION_KEY, '1');
+    }, 8000);
+    return () => clearTimeout(hideTimer);
+  }, [visible, release]);
 
   const dismiss = () => {
     setVisible(false);
