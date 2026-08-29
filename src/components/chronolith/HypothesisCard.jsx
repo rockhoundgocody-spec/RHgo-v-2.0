@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, FlaskConical, XCircle, Atom } from 'lucide-react';
 
@@ -32,10 +32,10 @@ function MetricBar({ label, value, color }) {
 
 export default function HypothesisCard({ hypothesis, isLeading, rank }) {
   const [expanded, setExpanded] = useState(isLeading);
+  const contentId = useId();
   const h = hypothesis;
   const cat = CATEGORY_CFG[h.category] || CATEGORY_CFG.unknown;
   const prob = h.probability ?? 0;
-  const isStrong = prob > 0.5;
 
   return (
     <motion.div
@@ -54,8 +54,12 @@ export default function HypothesisCard({ hypothesis, isLeading, rank }) {
     >
       {/* Header */}
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-start gap-3 p-4 text-left"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        aria-label={expanded ? `Collapse ${h.name} hypothesis details` : `Expand ${h.name} hypothesis details`}
+        className="w-full flex items-start gap-3 p-4 text-left rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
       >
         {/* Probability ring */}
         <div className="relative shrink-0 mt-0.5">
@@ -101,6 +105,7 @@ export default function HypothesisCard({ hypothesis, isLeading, rank }) {
       {/* Expanded body */}
       {expanded && (
         <motion.div
+          id={contentId}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="px-4 pb-4 space-y-3"
