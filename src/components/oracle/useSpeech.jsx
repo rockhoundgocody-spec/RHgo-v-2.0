@@ -109,9 +109,9 @@ export function useSpeechSynthesis() {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      // The engine renders at a natural pace — apply the user's rate preference
-      // here, clamped so Clover never sounds rushed or slurred.
-      source.playbackRate.value = Math.max(0.7, Math.min(1.3, voiceConfig.rate || 1.0));
+      // Play at the engine's natural pace — slowing playback pitch-shifts the
+      // voice down and makes it sound robotic/computerized.
+      source.playbackRate.value = 1.0;
 
       const gainNode = ctx.createGain();
       gainNode.gain.value = voiceConfig.volume ?? 0.95;
