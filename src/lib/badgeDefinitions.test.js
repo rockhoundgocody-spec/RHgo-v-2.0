@@ -67,6 +67,11 @@ describe('Geo-Badge System - badgeDefinitions', () => {
 
     const earned = evaluateEarnedCodes(mockSpecimens);
     expect(earned).toContain('crystal_whisperer');
+
+    // Verify passing precomputed metrics works directly without recomputing
+    const metrics = computeBadgeMetrics(mockSpecimens);
+    const earnedWithMetrics = evaluateEarnedCodes(metrics);
+    expect(earnedWithMetrics).toEqual(earned);
   });
 
   it('should correctly calculate progress for badges', () => {

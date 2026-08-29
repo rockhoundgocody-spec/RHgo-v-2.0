@@ -366,7 +366,10 @@ export const getBadgeDefinition = code => {
   return BADGES.find(b => b.code === resolvedCode) || BADGES.find(b => b.code === code) || BADGES[0];
 };
 
-export const evaluateEarnedCodes = (specimens, context = {}) => {
-  const metrics = computeBadgeMetrics(specimens, context);
+// Performance Optimization: Accept specimens array or precomputed metrics object to avoid redundant O(N) computeBadgeMetrics calculation when caller already has metrics.
+export const evaluateEarnedCodes = (specimensOrMetrics, context = {}) => {
+  const metrics = specimensOrMetrics?.[BADGE_METRICS]
+    ? specimensOrMetrics
+    : computeBadgeMetrics(specimensOrMetrics, context);
   return BADGES.filter(badge => badge.check(metrics)).map(badge => badge.code);
 };
