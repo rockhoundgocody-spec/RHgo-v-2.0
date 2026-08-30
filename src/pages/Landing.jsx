@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 const FEATURES = [
   {
@@ -81,6 +82,7 @@ function CrystalParticle({ style }) {
 }
 
 export default function Landing() {
+  useSeoRobots(true);
   const [heroVisible, setHeroVisible] = useState(false);
   const navigate = useNavigate();
   useEffect(() => { setHeroVisible(true); }, []);

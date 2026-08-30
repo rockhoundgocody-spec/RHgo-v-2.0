@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 // ─── STRIPE CONFIGURATION ─────────────────────────────────────────────────
 const STRIPE_CONFIG = {
@@ -98,6 +99,7 @@ const TIERS = [
 ];
 
 export default function Pricing() {
+  useSeoRobots(true);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(null);

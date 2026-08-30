@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Scale, AlertTriangle, Ban, RefreshCw, Mail } from 'lucide-react';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 const SECTIONS = [
   {
@@ -69,6 +70,7 @@ const SECTIONS = [
 ];
 
 export default function Terms() {
+  useSeoRobots(true);
   return (
     <div className="min-h-screen w-full text-foreground" style={{ background: 'radial-gradient(ellipse at top, hsl(265 45% 14%) 0%, hsl(250 30% 8%) 50%, hsl(245 25% 5%) 100%)' }}>
       <div className="max-w-2xl mx-auto px-5 py-10 pb-24">
