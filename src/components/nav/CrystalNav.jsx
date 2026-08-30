@@ -3,10 +3,12 @@
  * Clean lucide icons in HUD-cyan / amethyst duotone, refined hero Scan button.
  */
 import React from 'react';
+import { useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Home, Map, Gem, Store, ScanLine } from 'lucide-react';
 import useKidMode from '@/lib/useKidMode';
+import { onboardingStore } from '@/lib/onboardingStore';
 
 const NAV_TABS = [
   { to: '/', label: 'Home', Icon: Home },
@@ -18,6 +20,9 @@ const NAV_TABS = [
 
 export default function CrystalNav({ activeTab, onTabClick, pathname }) {
   const isKid = useKidMode();
+  const onboardingActive = useSyncExternalStore(onboardingStore.subscribe, onboardingStore.get, () => false);
+  // Hide the nav entirely during the onboarding/intro cinematic
+  if (onboardingActive) return null;
   // Kids don't see the trade/market surface (peer commerce + money).
   const tabs = isKid ? NAV_TABS.filter((t) => t.to !== '/market') : NAV_TABS;
   // Rendered into document.body via portal — escapes the app's internal
