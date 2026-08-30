@@ -1,12 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 
+let idCount = 0;
+let mockTipsOpen = false;
+
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useState: (initial) => [initial, vi.fn()],
+    useState: (initial) => [mockTipsOpen, vi.fn()],
     useMemo: (factory) => factory(),
+    useId: () => `:r${idCount++}:`,
   };
 });
 
@@ -67,11 +71,46 @@ describe('ScanModeBar', () => {
     const [lightingTipsBtn, scaleRefBtn] = utilityToggles.props.children;
 
     expect(lightingTipsBtn.props['aria-expanded']).toBe(false);
+    expect(lightingTipsBtn.props['aria-controls']).toBeDefined();
     expect(lightingTipsBtn.props.className).toContain('focus-visible:ring-2');
     expect(lightingTipsBtn.props.className).toContain('focus-visible:ring-amber-400/50');
 
     expect(scaleRefBtn.props['aria-pressed']).toBe(true);
     expect(scaleRefBtn.props.className).toContain('focus-visible:ring-2');
     expect(scaleRefBtn.props.className).toContain('focus-visible:ring-hud-cyan/50');
+  });
+
+  it('renders modal sheet with correct dialog ARIA attributes when tipsOpen is true', () => {
+    mockTipsOpen = true;
+
+    const element = ScanModeBar({
+      mode: 'rock',
+      onModeChange: vi.fn(),
+      scaleOn: false,
+      onScaleToggle: vi.fn(),
+    });
+
+    const [, utilityToggles, tipSheetContainer] = element.props.children;
+    const [lightingTipsBtn] = utilityToggles.props.children;
+    const dialogId = lightingTipsBtn.props['aria-controls'];
+
+    // AnimatePresence children when tipsOpen is true
+    const backdrop = tipSheetContainer.props.children;
+    expect(backdrop).toBeDefined();
+
+    const modalPanel = backdrop.props.children;
+    expect(modalPanel.props.id).toBe(dialogId);
+    expect(modalPanel.props.role).toBe('dialog');
+    expect(modalPanel.props['aria-modal']).toBe('true');
+    expect(modalPanel.props['aria-labelledby']).toBeDefined();
+
+    const titleId = modalPanel.props['aria-labelledby'];
+    const headerContainer = modalPanel.props.children[0];
+    const headerTitleGroup = headerContainer.props.children[0];
+    const h3Title = headerTitleGroup.props.children[1];
+
+    expect(h3Title.props.id).toBe(titleId);
+
+    mockTipsOpen = false;
   });
 });

@@ -3,7 +3,7 @@
  * Scan mode selector (Rock/Mineral, Crystal, Fossil, Mixed Matrix),
  * lighting tips panel, and scale reference toggle.
  */
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +24,8 @@ const LIGHTING_TIPS = [
 
 export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle }) {
   const [tipsOpen, setTipsOpen] = useState(false);
+  const dialogId = useId();
+  const titleId = useId();
 
   return (
     <div className="space-y-2">
@@ -56,6 +58,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
         <button
           onClick={() => setTipsOpen(true)}
           aria-expanded={tipsOpen}
+          aria-controls={dialogId}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-[0.1em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
           style={{
             background: 'hsla(45,80%,40%,0.15)',
@@ -94,6 +97,10 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             onClick={() => setTipsOpen(false)}
           >
             <motion.div
+              id={dialogId}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
               initial={{ y: 300 }}
               animate={{ y: 0 }}
               exit={{ y: 300 }}
@@ -109,7 +116,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Lightbulb size={16} className="text-amber-300" />
-                  <h3 className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
+                  <h3 id={titleId} className="text-sm font-bold text-white">Lighting & Capture Tips</h3>
                 </div>
                 <button
                   onClick={() => setTipsOpen(false)}
