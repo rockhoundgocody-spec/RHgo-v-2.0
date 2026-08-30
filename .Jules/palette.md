@@ -42,3 +42,6 @@
 ## 2026-08-25 - Accessible Nearby Places Panel
 **Learning:** The NearbyPlacesPanel component had interactive category chips functioning as toggles but lacked ARIA properties to communicate their active state to screen readers. Focus rings should use context-specific colors (e.g. hud-cyan) to match the dark UI.
 **Action:** Apply `aria-pressed` to toggle buttons, ensure external links have descriptive `aria-label` attributes, and always use themed focus-visible states (`focus-visible:ring-hud-cyan/60`) for keyboard accessibility.
+## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
+**Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
+**Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
