@@ -5,6 +5,7 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    useMemo: (fn) => fn(),
     useRef: (initial) => ({ current: initial }),
     useState: (initial) => [typeof initial === 'function' ? initial() : initial, vi.fn()],
     useEffect: vi.fn(),

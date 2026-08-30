@@ -8,7 +8,7 @@
  * Visual language: deep amethyst void, crystal growth lines, pulsing glow rings,
  * floating gem shards, gold sparkle burst on entry.
  */
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Crown, Gem, X } from 'lucide-react';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
@@ -118,6 +118,8 @@ export default function RareMineralPopup({
   const cfg = RARITY_CFG[rarity] || RARITY_CFG.rare;
   const [showBurst, setShowBurst] = useState(true);
   const timerRef = useRef(null);
+  const titleId = useId();
+  const descId = useId();
 
   useEffect(() => {
     // Hide the burst after it completes
@@ -135,6 +137,10 @@ export default function RareMineralPopup({
 
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
       className="fixed bottom-24 left-3 right-3 z-[8000] rounded-3xl overflow-hidden"
       style={{
         background: cfg.bg,
@@ -207,17 +213,19 @@ export default function RareMineralPopup({
         {/* Right: Text */}
         <div className="flex-1 min-w-0">
           <motion.div
+            id={descId}
             className="text-[9px] font-black uppercase tracking-[0.35em] mb-0.5 flex items-center gap-1.5"
             style={{ color: cfg.color }}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Sparkles size={9} />
+            <Sparkles size={9} aria-hidden="true" />
             {cfg.label}
           </motion.div>
 
           <motion.div
+            id={titleId}
             className="text-white font-black text-base leading-tight truncate"
             style={{ textShadow: `0 0 16px ${cfg.glow}` }}
             initial={{ opacity: 0, x: -10 }}
@@ -256,12 +264,13 @@ export default function RareMineralPopup({
 
         {/* Close */}
         <button
+          type="button"
           onClick={onClose}
-          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90"
+          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
           style={{ background: 'hsla(0,0%,100%,0.07)', border: '1px solid hsla(0,0%,100%,0.12)', color: 'hsla(0,0%,100%,0.45)' }}
-          aria-label="Dismiss"
+          aria-label="Dismiss rare mineral popup"
         >
-          <X size={13} />
+          <X size={13} aria-hidden="true" />
         </button>
       </div>
     </motion.div>
