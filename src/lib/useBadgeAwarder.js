@@ -30,8 +30,12 @@ export function useBadgeAwarder() {
       const me = await base44.auth.me();
       if (!me?.email) return;
 
+      // Performance optimization: pass fields projection array to base44.entities.Specimen.list()
+      // to exclude heavy attributes (e.g. high-res image_url payloads) and load only attributes needed for badge evaluation.
       const [fetchedSpecimens, ownedRecords, posts, profileRecords, questRecords] = await Promise.all([
-        base44.entities.Specimen.list(),
+        base44.entities.Specimen.list('-created_date', 1000, 0, [
+          'id', 'mineral_name', 'found_at', 'rarity', 'verified', 'ai_confidence', 'notes', 'found_date', 'created_date'
+        ]),
         base44.entities.Badge.filter({ owner_email: me.email }),
         base44.entities.Post.list('-created_date', 200).catch(() => []),
         base44.entities.PlayerProfile.filter({ owner_email: me.email }).catch(() => []),

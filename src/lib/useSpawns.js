@@ -28,8 +28,9 @@ export default function useSpawns({ userLocation, hotspots = [] }) {
   const collectedRef = useRef(new Set());
 
   // Load user's collected minerals for dupe-awareness
+  // Performance optimization: pass fields projection array to fetch only mineral_name & id
   useEffect(() => {
-    base44.entities.Specimen.list('-created_date', 500)
+    base44.entities.Specimen.list('-created_date', 500, 0, ['id', 'mineral_name'])
       .then(s => {
         collectedRef.current = new Set((s || []).map(x => (x.mineral_name || '').toLowerCase()));
       })
