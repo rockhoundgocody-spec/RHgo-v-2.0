@@ -81,9 +81,7 @@ function LogoutButton({ onLogout }) {
   );
 }
 
-export default function ProfileDrawer() {
-  const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+function useUserProfile() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -100,6 +98,10 @@ export default function ProfileDrawer() {
     };
   }, []);
 
+  return user;
+}
+
+function useDrawerFocusTrap(isOpen, setIsOpen) {
   useEffect(() => {
     if (!isOpen || typeof document === 'undefined') return undefined;
 
@@ -133,14 +135,11 @@ export default function ProfileDrawer() {
       document.removeEventListener('keydown', handleKeyDown);
       trigger?.focus();
     };
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
+}
 
-  const handleLogout = async () => {
-    setIsOpen(false);
-    await base44.auth.logout('/');
-  };
-
-  const menuItems = [
+function createMenuItems(navigate, setIsOpen) {
+  return [
     {
       label: 'Profile',
       icon: User,
@@ -158,6 +157,21 @@ export default function ProfileDrawer() {
       },
     },
   ];
+}
+
+export default function ProfileDrawer() {
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const user = useUserProfile();
+
+  useDrawerFocusTrap(isOpen, setIsOpen);
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await base44.auth.logout('/');
+  };
+
+  const menuItems = createMenuItems(navigate, setIsOpen);
 
   return (
     <>
