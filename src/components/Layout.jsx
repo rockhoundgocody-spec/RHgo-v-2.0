@@ -10,6 +10,7 @@ import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 import ProfileDrawer from '@/components/ProfileDrawer.jsx';
 import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
@@ -132,6 +133,8 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  // Every authenticated app route is private — keep it out of search results.
+  useSeoRobots(false);
 
   const isAdminOrDocs = ['/admin', '/docs', '/dev'].some((p) =>
     location.pathname.startsWith(p)
