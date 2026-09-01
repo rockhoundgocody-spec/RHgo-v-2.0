@@ -520,7 +520,7 @@ export default function Explore() {
                 }}>
                 {loading ? <Loader2 size={14} className="text-amethyst-glow animate-spin"/> : <Zap size={14} className="text-amethyst-glow"/>}
                 <span className="text-white/80 text-sm font-semibold">
-                  {loading ? 'Loading hotspots…' : `${filteredHotspots.length} hotspots`}
+                  {loading ? 'Loading hotspots…' : 'Hotspots'}
                 </span>
                 <ChevronUp size={14} className="text-white/40"/>
               </motion.button>
