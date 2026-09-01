@@ -53,4 +53,31 @@ describe('getDeviceId', () => {
 
     expect(id).toBe('dev_existing_12345');
   });
+
+  it('uses crypto.randomUUID when available', () => {
+    const origCrypto = globalThis.window.crypto;
+    globalThis.window.crypto = {
+      randomUUID: () => '12345678-1234-4234-8234-123456789abc'
+    };
+
+    const id = getDeviceId();
+    expect(id).toBe('dev_12345678-1234-4234-8234-123456789abc');
+
+    globalThis.window.crypto = origCrypto;
+  });
+
+  it('falls back to crypto.getRandomValues when crypto.randomUUID is not available', () => {
+    const origCrypto = globalThis.window.crypto;
+    globalThis.window.crypto = {
+      getRandomValues: (arr) => {
+        arr.fill(0xab);
+        return arr;
+      }
+    };
+
+    const id = getDeviceId();
+    expect(id).toMatch(/^dev_[a-z0-9]+_abababababababababababababababab$/);
+
+    globalThis.window.crypto = origCrypto;
+  });
 });
