@@ -67,9 +67,8 @@ export default function Profile() {
     try {
       const profiles = await base44.entities.PlayerProfile.filter({ owner_email: user?.email }, '-created_date', 1);
       if (profiles[0]?.total_xp != null) xp = profiles[0].total_xp;
-      const LEVEL_TITLES = ['Pebble Scout','Crystal Apprentice','Geode Guardian','Titan Rockhound','Legendary Specimen Hunter','Mythic Earth Wizard'];
-      const level = Math.min(Math.floor(xp / 1200), LEVEL_TITLES.length - 1);
-      rank = LEVEL_TITLES[level];
+      const { getLevel, getTitle } = await import('@/lib/leveling');
+      rank = getTitle(getLevel(xp));
     } catch {}
     const result = await shareAchievement({ rank, xp, extra: `${stats.findings} finds · ${stats.badges} badges` });
     if (result === 'clipboard') { setShareState('copied'); setTimeout(() => setShareState(null), 2400); }
@@ -175,7 +174,10 @@ export default function Profile() {
           <Settings size={16} className="text-white/40 flex-shrink-0" />
           <span>Settings & Preferences</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left">
+        <button
+          onClick={() => navigate('/private-log')}
+          className="w-full flex items-center gap-3 px-5 py-4 text-white/80 hover:text-white hover:bg-white/5 transition text-sm text-left"
+        >
           <Heart size={16} className="text-white/40 flex-shrink-0" />
           <span>Saved Sites & Favorites</span>
         </button>
@@ -325,7 +327,7 @@ export default function Profile() {
         {battleHistory.length === 0 ? (
           <div className="px-5 py-6 text-center">
             <p className="text-white/40 text-sm font-semibold">No battle records etched yet.</p>
-            <p className="text-white/25 text-xs mt-1">Enable Chaos Mode on the Hub to start mineral battles.</p>
+            <p className="text-white/25 text-xs mt-1">Win a Rock Battle from the Hub to start your battle record.</p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">

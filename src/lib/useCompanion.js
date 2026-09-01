@@ -20,6 +20,7 @@ export default function useCompanion({ onMilestone } = {}) {
     } catch { return null; }
   });
   const [todaysSpecimenCount, setTodaysSpecimenCount] = useState(0);
+  const [offline, setOffline] = useState(false);
   const [loading, setLoading] = useState(() => {
     try { return !localStorage.getItem(COMPANION_CACHE_KEY); } catch { return true; }
   });
@@ -63,6 +64,7 @@ export default function useCompanion({ onMilestone } = {}) {
         prevRef.current = next;
         setCompanion(next);
         setTodaysSpecimenCount(res?.data?.todays_specimens || 0);
+        setOffline(false);
         setLoading(false);
         // Persist to device so the orb's evolved state loads instantly next open
         if (next) {
@@ -71,7 +73,14 @@ export default function useCompanion({ onMilestone } = {}) {
         return;
       } catch {
         if (attempt === maxRetries) {
-          setCompanion(null);
+          // Keep the cached companion if we have one — don't blank the orb
+          // just because the network is down. Mark as offline so the UI can
+          // show a subtle "last known state" indicator.
+          try {
+            const cached = localStorage.getItem(COMPANION_CACHE_KEY);
+            if (cached) setCompanion(JSON.parse(cached));
+          } catch {}
+          setOffline(true);
           setLoading(false);
           return;
         }
@@ -84,5 +93,5 @@ export default function useCompanion({ onMilestone } = {}) {
     refresh();
   }, [refresh]);
 
-  return { companion, todaysSpecimenCount, loading, refresh };
+  return { companion, todaysSpecimenCount, loading, offline, refresh };
 }

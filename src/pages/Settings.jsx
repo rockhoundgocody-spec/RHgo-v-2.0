@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronRight, Gem } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import PermissionsPrompt from '@/components/PermissionsPrompt.jsx';
 import CloverVoiceSection from '@/components/settings/CloverVoiceSection.jsx';
 import DangerZoneSection from '@/components/settings/DangerZoneSection.jsx';
@@ -39,9 +40,11 @@ export default function Settings() {
   const handleToggle = (key) => setSettings((previous) => ({ ...previous, [key]: !previous[key] }));
   const handleChange = (key, value) => setSettings((previous) => ({ ...previous, [key]: value }));
 
-  const saveSettings = () => {
+  const saveSettings = async () => {
     try {
       localStorage.setItem('rhgo_settings', JSON.stringify(settings));
+      // Also persist to the user profile so settings survive device switches.
+      await base44.auth.updateMe({ app_settings: settings }).catch(() => {});
     } catch {}
     setSettingsSaved(true);
     if (savedTimer.current) clearTimeout(savedTimer.current);

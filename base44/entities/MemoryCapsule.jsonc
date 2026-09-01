@@ -1,0 +1,119 @@
+{
+  "name": "MemoryCapsule",
+  "type": "object",
+  "description": "A temporal snapshot of a field trip \u2014 an expedition memory capsule with companions, finds, mood, story, and highlight photos.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the rockhound who logged this expedition"
+    },
+    "expedition_name": {
+      "type": "string",
+      "description": "Title of the trip, e.g. 'Agate Beach Weekend'"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Where the trip happened"
+    },
+    "expedition_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the trip happened (YYYY-MM-DD)"
+    },
+    "total_finds": {
+      "type": "integer",
+      "default": 0,
+      "description": "Number of specimens found on this trip"
+    },
+    "companion_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of companions who joined the trip"
+    },
+    "mood_snapshot": {
+      "type": "string",
+      "enum": [
+        "excited",
+        "adventurous",
+        "peaceful",
+        "playful",
+        "curious",
+        "satisfied"
+      ],
+      "default": "curious",
+      "description": "Vibe of the trip"
+    },
+    "story": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Free-form trip narrative"
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Highlight photo URLs from the trip"
+    },
+    "family_profile_id": {
+      "type": "string",
+      "description": "Optional FamilyProfile id if this was a family trip"
+    }
+  },
+  "required": [
+    "owner_email",
+    "expedition_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

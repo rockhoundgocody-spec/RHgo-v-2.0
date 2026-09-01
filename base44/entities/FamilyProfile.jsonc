@@ -1,0 +1,89 @@
+{
+  "name": "FamilyProfile",
+  "type": "object",
+  "description": "A family profile for co-op expedition planning \u2014 tracks family members, shared trip history, and parental oversight.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the family account owner"
+    },
+    "family_name": {
+      "type": "string",
+      "description": "Display name for the family, e.g. 'The Rockhounding Robinsons'"
+    },
+    "member_count": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of family members on the profile"
+    },
+    "home_base_label": {
+      "type": "string",
+      "description": "City/State where the family is based"
+    },
+    "child_ages": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Ages of child members for kid-friendly filtering"
+    },
+    "shared_trip_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Number of shared family expeditions logged"
+    }
+  },
+  "required": [
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import StreamCard from '@/components/live/StreamCard.jsx';
 import BroadcastStudio from '@/components/live/BroadcastStudio.jsx';
+import usePageVisible from '@/lib/usePageVisible';
 
 export default function Live() {
   const [me, setMe] = useState(null);
@@ -21,15 +22,21 @@ export default function Live() {
     );
   }, []);
 
+  const pageVisible = usePageVisible();
+
   useEffect(() => {
     let alive = true;
     const load = () => base44.entities.LiveStream
       .filter({ status: 'live' }, '-created_date', 30)
       .then((list) => { if (alive) setStreams(list); });
     load();
-    const t = setInterval(load, 10000);
-    return () => { alive = false; clearInterval(t); };
-  }, [studioOpen]);
+    // Only poll while the tab is visible — saves battery and backend calls.
+    let t;
+    if (pageVisible) {
+      t = setInterval(load, 10000);
+    }
+    return () => { alive = false; if (t) clearInterval(t); };
+  }, [studioOpen, pageVisible]);
 
   return (
     <div className="w-full max-w-md mx-auto px-3 pb-28 pt-3">

@@ -553,7 +553,7 @@ export default function Scan() {
             modelVersion="gemini-flash"
             onSave={() => setChoiceOpen(true)}
             onReset={reset}
-            onCompare={() => navigate('/compare')}
+            onCompare={() => navigate('/compare', { state: { result, primaryImageUrl } })}
             onShareMap={() => setShareMapOpen(true)}
             onDeepAnalysis={handleDeepAnalysis}
             deepAnalysis={deepAnalysis}

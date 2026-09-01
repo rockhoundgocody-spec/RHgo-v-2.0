@@ -1,16 +1,44 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Smartphone, Gem } from 'lucide-react';
 
 const MOBILE_MAX_WIDTH = 768; // px — anything wider is treated as desktop
+
+// Public routes that must stay reachable on desktop for app-store review,
+// SEO, and auditor access — these bypass the mobile-only gate.
+const PUBLIC_ROUTES = [
+  '/',
+  '/pricing',
+  '/privacy-policy',
+  '/terms',
+  '/about',
+  '/contact',
+  '/demo',
+  '/agate-guide',
+  '/clubs',
+  '/find-of-the-week',
+  '/live',
+];
+
+function isPublicPath(pathname) {
+  if (PUBLIC_ROUTES.includes(pathname)) return true;
+  // /live/:streamId is public
+  if (pathname.startsWith('/live/')) return true;
+  return false;
+}
 
 /**
  * MobileOnlyGate — RockHound-GO is a field companion built for phones.
  * On any viewport wider than a mobile breakpoint, the app is replaced with
  * a branded "mobile only" screen so desktop visitors get a clear message
  * instead of a stretched, broken layout.
+ *
+ * Public-facing routes (landing, legal, pricing, clubs, live) are exempt so
+ * desktop reviewers, auditors, and search engines can reach them.
  */
 export default function MobileOnlyGate({ children }) {
+  const location = useLocation();
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' ? window.innerWidth > MOBILE_MAX_WIDTH : false
   );
@@ -21,7 +49,7 @@ export default function MobileOnlyGate({ children }) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  if (!isDesktop) return children;
+  if (!isDesktop || isPublicPath(location.pathname)) return children;
 
   return (
     <div

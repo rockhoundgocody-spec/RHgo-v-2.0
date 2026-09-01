@@ -4,35 +4,7 @@ import { User, Upload, Trophy, Share2, ChevronRight, Check, AlertCircle } from '
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { shareAchievement } from '@/lib/shareAchievement';
-
-const LEVEL_TITLES = [
-  'Pebble Scout',
-  'Crystal Apprentice',
-  'Geode Guardian',
-  'Titan Rockhound',
-  'Legendary Specimen Hunter',
-  'Mythic Earth Wizard',
-];
-
-const XP_PER_LEVEL = 1200;
-
-function getLevel(xp) {
-  return Math.min(Math.floor(xp / XP_PER_LEVEL) + 1, LEVEL_TITLES.length);
-}
-
-function getTitle(level) {
-  return LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
-}
-
-function xpProgress(xp) {
-  return ((xp % XP_PER_LEVEL) / XP_PER_LEVEL) * 100;
-}
-
-function xpToNext(xp) {
-  const level = getLevel(xp);
-  if (level >= LEVEL_TITLES.length) return 0;
-  return level * XP_PER_LEVEL - xp;
-}
+import { LEVEL_TITLES, XP_PER_LEVEL, getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 
 // Level-up celebration overlay
 function LevelUpModal({ title, onClose, reducedMotion }) {

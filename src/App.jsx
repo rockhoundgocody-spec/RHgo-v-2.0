@@ -40,6 +40,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries'));
 
 const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
+const Compare = lazy(() => import('@/pages/Compare'));
 const Chronolith = lazy(() => import('@/pages/Chronolith'));
 const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -143,6 +144,7 @@ const AuthenticatedApp = () => {
           <Route path="/expedition/:expeditionId" element={<ExpeditionDetail />} />
           <Route path="/market" element={<Market />} />
           <Route path="/specimen/:id" element={<SpecimenDetail />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="/chronolith" element={<Chronolith />} />
           <Route path="/quests" element={<QuestDashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />

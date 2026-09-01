@@ -15,6 +15,7 @@ import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
+import { useAuth } from '@/lib/AuthContext';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
@@ -133,8 +134,15 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   // Every authenticated app route is private — keep it out of search results.
   useSeoRobots(false);
+
+  // Reset the module-level tab back-stacks when the authenticated user
+  // changes so a new user never inherits the previous user's navigation history.
+  useEffect(() => {
+    for (const key of Object.keys(tabStacks)) delete tabStacks[key];
+  }, [user?.email]);
 
   const isAdminOrDocs = ['/admin', '/docs', '/dev'].some((p) =>
     location.pathname.startsWith(p)

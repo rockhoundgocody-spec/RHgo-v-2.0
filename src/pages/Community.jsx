@@ -40,10 +40,18 @@ export default function Community() {
   const loadMore = useCallback(async () => {
     if (!posts.length) return;
     setLoadingMore(true);
-    const oldest = posts[posts.length - 1]?.created_date;
+    const last = posts[posts.length - 1];
+    const oldest = last?.created_date;
+    const lastId = last?.id;
     try {
+      // Use id as a tiebreaker so equal-timestamp posts never skip or duplicate.
       const batch = await base44.entities.Post.filter(
-        { created_date: { $lt: oldest } },
+        {
+          $or: [
+            { created_date: { $lt: oldest } },
+            { created_date: oldest, id: { $ne: lastId } },
+          ],
+        },
         '-created_date',
         PAGE
       );

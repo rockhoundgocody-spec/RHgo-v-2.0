@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   Calendar, MapPin, Star, Gem,
-  Zap, TrendingUp, ChevronLeft, BookOpen
+  Zap, TrendingUp, ChevronLeft, BookOpen, BadgeCheck, Loader2
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
@@ -61,6 +61,8 @@ export default function SpecimenDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('story');
+  const [verifying, setVerifying] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: specimen, isLoading } = useQuery({
     queryKey: ['specimen', id],
@@ -68,6 +70,20 @@ export default function SpecimenDetail() {
     select: (rows) => rows?.[0],
     enabled: !!id,
   });
+
+  const handleVerify = async () => {
+    if (verifying || !id) return;
+    setVerifying(true);
+    try {
+      await base44.functions.invoke('progressiveVerify', { specimen_id: id });
+      await base44.entities.Specimen.update(id, { verified: true });
+      queryClient.invalidateQueries(['specimen', id]);
+    } catch (e) {
+      console.error('Verification failed:', e);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -232,8 +248,6 @@ export default function SpecimenDetail() {
           {[
             { icon: '➕', label: 'Add to Collection', color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)' },
             { icon: '🛡️', label: 'Mark Private', color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)' },
-            { icon: '🧪', label: 'Run Field Test', color: '#38bdf8', bg: 'hsla(205,60%,12%,0.6)', border: 'hsla(195,80%,50%,0.3)' },
-            { icon: '⏳', label: 'Verify Later', color: '#fbbf24', bg: 'hsla(40,50%,10%,0.6)', border: 'hsla(45,80%,50%,0.3)' },
           ].map(({ icon, label, color, bg, border }) => (
             <button key={label}
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
@@ -242,6 +256,23 @@ export default function SpecimenDetail() {
               <span className="leading-tight text-left">{label}</span>
             </button>
           ))}
+          <button
+            onClick={handleVerify}
+            disabled={verifying || specimen?.verified}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] disabled:opacity-50"
+            style={{ background: 'hsla(150,60%,12%,0.6)', border: '1px solid hsla(150,80%,45%,0.35)', color: '#34d399' }}
+          >
+            {verifying ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
+            <span className="leading-tight text-left">{specimen?.verified ? 'Verified ✓' : 'Request Verification'}</span>
+          </button>
+          <button
+            onClick={() => navigate('/scan')}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
+            style={{ background: 'hsla(205,60%,12%,0.6)', border: '1px solid hsla(195,80%,50%,0.3)', color: '#38bdf8' }}
+          >
+            <span>🧪</span>
+            <span className="leading-tight text-left">Run Field Test</span>
+          </button>
         </div>
 
         {/* Evolution tracker */}

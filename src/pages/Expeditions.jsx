@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Users, Gem, Plus, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import CreateCapsuleSheet from '@/components/expeditions/CreateCapsuleSheet.jsx';
 
 /**
  * Expeditions / Memory Capsules
@@ -11,6 +12,8 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
  */
 export default function Expeditions() {
   const [filterMode, setFilterMode] = useState('all');
+  const [createOpen, setCreateOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: capsules = [], isLoading } = useQuery({
     queryKey: ['memoryCapsules'],
@@ -53,7 +56,10 @@ export default function Expeditions() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Expeditions</h1>
           <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-1">Field trips & memory capsules</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amethyst/20 border border-amethyst/30 hover:bg-amethyst/30 text-amethyst-glow text-sm font-semibold transition">
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amethyst/20 border border-amethyst/30 hover:bg-amethyst/30 text-amethyst-glow text-sm font-semibold transition"
+        >
           <Plus size={15} /> New
         </button>
       </div>
@@ -139,11 +145,20 @@ export default function Expeditions() {
       {!isLoading && filteredCapsules.length === 0 && (
         <GlassPanel className="p-12 text-center">
           <p className="text-white/50 mb-4">No expeditions yet.</p>
-          <button className="px-6 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-semibold transition">
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="px-6 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-semibold transition"
+          >
             Log Your First Trip
           </button>
         </GlassPanel>
       )}
+
+      <CreateCapsuleSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={() => queryClient.invalidateQueries(['memoryCapsules'])}
+      />
     </div>
   );
 }
