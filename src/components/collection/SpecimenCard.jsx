@@ -11,7 +11,7 @@ const RARITY_CONFIG = {
 };
 
 // Specimen evolution: Unknown → Identified → Verified → Documented → Museum Grade
-function getEvolutionLevel(specimen) {
+export function getEvolutionLevel(specimen) {
   if (!specimen.mineral_name || specimen.mineral_name === 'Unknown') return 0;
   if (!specimen.ai_confidence) return 1;
   if (specimen.verified) return 4;
@@ -23,8 +23,34 @@ function getEvolutionLevel(specimen) {
 const EVOLUTION_LABELS = ['Unknown', 'Identified', 'Verified', 'Documented', 'Museum Grade'];
 const EVOLUTION_COLORS = ['text-white/30', 'text-white/60', 'text-sky-400', 'text-emerald-400', 'text-amethyst-glow'];
 
+export function formatSpecimenNumber(index) {
+  return String(index + 1).padStart(3, '0');
+}
+
+export function getConfidenceDetails(conf) {
+  if (conf == null) {
+    return { purity: null, confLabel: null, confColor: '#94a3b8' };
+  }
+  const purity = (conf * 100).toFixed(0);
+  // Honest confidence label — never over-state certainty
+  const confLabel = conf >= 0.88 ? 'Near certain'
+    : conf >= 0.72 ? 'High confidence'
+    : conf >= 0.52 ? 'Moderate'
+    : 'Needs field test';
+  const confColor = conf >= 0.88 ? '#34d399'
+    : conf >= 0.72 ? '#38bdf8'
+    : conf >= 0.52 ? '#fbbf24'
+    : '#f87171';
+  return { purity, confLabel, confColor };
+}
+
+export function calculateCollectionScore(conf, evoLevel) {
+  if (!conf) return '—';
+  return ((conf * 0.7 + (evoLevel / 4) * 0.3) * 5).toFixed(1);
+}
+
 // Pseudo-lore from available data
-function buildLore(specimen) {
+export function buildLore(specimen) {
   const age = specimen.mineral_name?.toLowerCase().includes('quartz') ? '2.5 billion' :
               specimen.mineral_name?.toLowerCase().includes('flint') ? '70 million' :
               specimen.mineral_name?.toLowerCase().includes('obsidian') ? '10,000' : '280 million';
@@ -32,30 +58,16 @@ function buildLore(specimen) {
   return `Formed approximately ${age} years ago. Discovered at ${loc}. Each specimen carries the geological memory of its formation environment.`;
 }
 
-export default function SpecimenCard({ specimen, index }) {
+export function SpecimenCard({ specimen, index }) {
   const [expanded, setExpanded] = useState(false);
   const loreId = useId();
   const rarity = RARITY_CONFIG[specimen.rarity] || RARITY_CONFIG.common;
   const evoLevel = getEvolutionLevel(specimen);
   const evoLabel = EVOLUTION_LABELS[evoLevel];
   const evoColor = EVOLUTION_COLORS[evoLevel];
-  const specNum = String(index + 1).padStart(3, '0');
-  const conf = specimen.ai_confidence;
-  const purity = conf ? (conf * 100).toFixed(0) : null;
-  // Honest confidence label — never over-state certainty
-  const confLabel = conf == null ? null
-    : conf >= 0.88 ? 'Near certain'
-    : conf >= 0.72 ? 'High confidence'
-    : conf >= 0.52 ? 'Moderate'
-    : 'Needs field test';
-  const confColor = conf == null ? '#94a3b8'
-    : conf >= 0.88 ? '#34d399'
-    : conf >= 0.72 ? '#38bdf8'
-    : conf >= 0.52 ? '#fbbf24'
-    : '#f87171';
-  const collectionScore = conf
-    ? ((conf * 0.7 + (evoLevel / 4) * 0.3) * 5).toFixed(1)
-    : '—';
+  const specNum = formatSpecimenNumber(index);
+  const { purity, confLabel, confColor } = getConfidenceDetails(specimen.ai_confidence);
+  const collectionScore = calculateCollectionScore(specimen.ai_confidence, evoLevel);
 
   return (
     <Link
@@ -179,6 +191,8 @@ export default function SpecimenCard({ specimen, index }) {
     </Link>
   );
 }
+
+export default SpecimenCard;
 
 function StatCell({ label, value, color }) {
   return (
