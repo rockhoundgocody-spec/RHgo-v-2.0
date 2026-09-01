@@ -74,16 +74,32 @@ export default function useOfflineTiles() {
       let done = 0;
       let failures = 0;
 
+      // Bulk check existing cached URLs once to avoid N+1 cache queries
+      const existingKeys = await cache.keys();
+      const cachedSet = new Set(existingKeys.map((req) => req.url));
+
+      const uncachedTiles = [];
+      for (const tile of allTiles) {
+        const url = TILE_URL(tile.z, tile.x, tile.y);
+        if (cachedSet.has(url)) {
+          done++;
+        } else {
+          uncachedTiles.push({ tile, url });
+        }
+      }
+
+      if (allTiles.length > 0) {
+        setProgress(Math.round((done / allTiles.length) * 100));
+      }
+
       // Batch fetch — 8 concurrent to avoid saturating the network
       const BATCH = 8;
-      for (let i = 0; i < allTiles.length; i += BATCH) {
-        const batch = allTiles.slice(i, i + BATCH);
+      for (let i = 0; i < uncachedTiles.length; i += BATCH) {
+        const batch = uncachedTiles.slice(i, i + BATCH);
         const results = await Promise.allSettled(
-          batch.map(async ({ z, x, y }) => {
-            const url = TILE_URL(z, x, y);
+          batch.map(async ({ url }) => {
             try {
-              const existing = await cache.match(url);
-              if (!existing) await fetchAndCacheTile(url, cache);
+              await fetchAndCacheTile(url, cache);
             } finally {
               done++;
               setProgress(Math.round((done / allTiles.length) * 100));
