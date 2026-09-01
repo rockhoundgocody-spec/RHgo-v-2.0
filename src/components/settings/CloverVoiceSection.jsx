@@ -4,9 +4,9 @@ import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SectionHeader from './SectionHeader.jsx';
 
-const DEFAULT_VOICE = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
+const DEFAULT_VOICE = { voice: 'honey', rate: 0.96, pitch: 1.02, volume: 0.95 };
 const VOICE_PERSONAS = [
-  { id: 'honey', label: 'Clover', desc: 'Irish lilt · educated' },
+  { id: 'honey', label: 'Clover', desc: 'Irish-American · warm & melodic' },
   { id: 'river', label: 'River', desc: 'American · calm' },
   { id: 'sunny', label: 'Sunny', desc: 'American · bright' },
   { id: 'storm', label: 'Storm', desc: 'American · steady' },
