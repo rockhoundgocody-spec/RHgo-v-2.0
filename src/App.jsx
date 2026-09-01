@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
+import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import Hub from '@/pages/Hub';
 const Landing = lazy(() => import('@/pages/Landing'));
 
@@ -179,12 +180,14 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AuthenticatedApp />
-        </AuthProvider>
-        <Toaster />
-      </BrowserRouter>
+      <MobileOnlyGate>
+        <BrowserRouter>
+          <AuthProvider>
+            <AuthenticatedApp />
+          </AuthProvider>
+          <Toaster />
+        </BrowserRouter>
+      </MobileOnlyGate>
     </QueryClientProvider>
   )
 }
