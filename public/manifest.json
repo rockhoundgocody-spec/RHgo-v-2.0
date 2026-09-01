@@ -1,16 +1,15 @@
 {
-  "name": "RockHound-GO",
-  "short_name": "RockHound-GO",
-  "description": "AI-powered field companion for rockhounds — identify minerals instantly, discover hotspots, and build your Geo-DEX collection.",
-  "id": "/",
+  "name": "RockHound-GO — Field Companion for Rockhounds",
+  "short_name": "RockHound GO",
+  "description": "AI-powered field companion. Identify minerals instantly, discover nearby hotspots, and build your Geo-DEX collection.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#0a0a14",
   "theme_color": "#0a0a14",
-  "categories": ["education", "lifestyle", "travel", "productivity"],
+  "categories": ["education", "lifestyle", "navigation", "utilities"],
   "icons": [
     {
       "src": "https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png",
@@ -29,6 +28,26 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan a specimen",
+      "short_name": "Scan",
+      "description": "Open the AI mineral scanner",
+      "url": "/scan"
+    },
+    {
+      "name": "Explore the map",
+      "short_name": "Explore",
+      "description": "Find nearby hotspots",
+      "url": "/explore"
+    },
+    {
+      "name": "My collection",
+      "short_name": "Collection",
+      "description": "View your Geo-DEX",
+      "url": "/collection"
     }
   ]
 }

@@ -89,6 +89,7 @@ export default function IntroCinematic({ onDone }) {
   const [step, setStep] = useState(0); // 0=splash, 1-4=scenes, 5=name, 6=role, 7=choice, 8=tutorial
   const [name, setName] = useState('');
   const [nameInput, setNameInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [tutorialStep, setTutorialStep] = useState(0);
   const [orbPulse, setOrbPulse] = useState(0);
   const audio = useIntroAudio();
@@ -96,8 +97,12 @@ export default function IntroCinematic({ onDone }) {
 
   const finish = useCallback(() => {
     localStorage.setItem('rhgo_intro_seen', '1');
+    // The orb never forgets — remember who they are for next time
+    try {
+      localStorage.setItem('rhgo_intro_identity', JSON.stringify({ name, email: emailInput.trim() }));
+    } catch {}
     onDone();
-  }, [onDone]);
+  }, [onDone, name, emailInput]);
 
   const handleSplash = useCallback(() => {
     audio.initAudio();
@@ -110,9 +115,9 @@ export default function IntroCinematic({ onDone }) {
       audio.playClick();
       setOrbPulse((p) => p + 1);
       setStep((s) => s + 1);
-    } else if (step === 6) {
+    } else if (step === 7) {
       audio.playClick();
-      setStep(7);
+      setStep(8);
     }
   }, [step, audio]);
 
@@ -122,14 +127,19 @@ export default function IntroCinematic({ onDone }) {
     setName(trimmed);
     audio.playChime();
     base44.auth.updateMe({ full_name: trimmed }).catch(() => {});
-    setStep(6);
+    setStep(6); // → email step
   }, [nameInput, audio]);
+
+  const handleEmailSubmit = useCallback(() => {
+    audio.playChime();
+    setStep(7); // → role scene
+  }, [audio]);
 
   const handleChoice = useCallback(
     (choice) => {
       audio.playWhoosh();
       if (choice === 'in') finish();
-      else setStep(8);
+      else setStep(9);
     },
     [audio, finish]
   );
@@ -149,15 +159,16 @@ export default function IntroCinematic({ onDone }) {
   const isSplash = step === 0;
   const isStory = step >= 1 && step <= 4;
   const isName = step === 5;
-  const isRole = step === 6;
-  const isChoice = step === 7;
-  const isTutorial = step === 8;
+  const isEmail = step === 6;
+  const isRole = step === 7;
+  const isChoice = step === 8;
+  const isTutorial = step === 9;
   const scene = isStory ? SCENES[step - 1] : null;
   const showTapPrompt = isStory || isRole;
-  const showDots = step >= 1 && step <= 7;
-  const showSkip = step >= 1 && step <= 7;
+  const showDots = step >= 1 && step <= 8;
+  const showSkip = step >= 1 && step <= 8;
   const dotIndex = step - 1;
-  const bgStyle = scene ? scene.bg : isRole ? ROLE_BG : isName || isChoice || isTutorial ? DEFAULT_BG : 'radial-gradient(ellipse at 50% 50%, hsl(250 40% 5%) 0%, hsl(240 30% 2%) 100%)';
+  const bgStyle = scene ? scene.bg : isRole ? ROLE_BG : isName || isEmail || isChoice || isTutorial ? DEFAULT_BG : 'radial-gradient(ellipse at 50% 50%, hsl(250 40% 5%) 0%, hsl(240 30% 2%) 100%)';
 
   return (
     <motion.div
@@ -351,6 +362,64 @@ export default function IntroCinematic({ onDone }) {
         </div>
       )}
 
+      {/* ── Email input — the orb wants a way to remember you ── */}
+      {isEmail && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="w-full max-w-sm flex flex-col items-center gap-6"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            >
+              <LiquidMetalOrb size={70} awakened />
+            </motion.div>
+            <p className="text-white/85 text-[15px] leading-relaxed font-light text-center">
+              And where shall I send word, {name}, when the earth offers something rare for you?
+            </p>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleEmailSubmit(); }}
+              maxLength={80}
+              placeholder="you@email.com (optional)"
+              autoFocus
+              className="w-full px-5 py-4 rounded-2xl text-white text-center text-base font-medium outline-none placeholder:text-white/25"
+              style={{
+                background: 'hsla(255, 30%, 12%, 0.7)',
+                border: '1px solid hsla(280, 80%, 65%, 0.4)',
+                boxShadow: '0 0 24px hsla(280, 80%, 50%, 0.15), inset 0 1px 0 hsla(280, 80%, 90%, 0.1)',
+                backdropFilter: 'blur(12px)',
+              }}
+            />
+            <div className="w-full space-y-3">
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={handleEmailSubmit}
+                className="w-full h-14 rounded-2xl text-white font-bold text-base"
+                style={{
+                  background: 'linear-gradient(135deg, hsla(280, 80%, 50%, 0.85), hsla(265, 70%, 40%, 0.9))',
+                  boxShadow: '0 0 30px hsla(280, 80%, 50%, 0.3)',
+                  border: '1px solid hsla(280, 80%, 65%, 0.4)',
+                }}
+              >
+                Remember me
+              </motion.button>
+              <button
+                onClick={handleEmailSubmit}
+                className="w-full text-center text-white/45 text-[13px] font-light hover:text-white/70 transition"
+              >
+                I'll tell you later
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* ── Choice ── */}
       {isChoice && (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 z-10">
@@ -462,7 +531,7 @@ export default function IntroCinematic({ onDone }) {
       {/* ── Progress dots ── */}
       {showDots && (
         <div className="absolute bottom-[6%] inset-x-0 flex justify-center gap-2 z-10 pointer-events-none">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <motion.div
               key={i}
               animate={{ width: i === dotIndex ? 20 : 6, opacity: i === dotIndex ? 1 : 0.3 }}

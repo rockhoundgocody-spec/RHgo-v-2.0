@@ -27,6 +27,7 @@ import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
+import AddToHomeScreenPrompt from '@/components/hub/AddToHomeScreenPrompt.jsx';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
@@ -66,6 +67,7 @@ export default function Hub() {
     <div className="relative min-h-screen flex flex-col items-center pb-28">
 
       <NewUserTour />
+      <AddToHomeScreenPrompt />
       {/* Storm window alert — weather-based, near Great Lakes beaches */}
       <StormWindowBanner />
 

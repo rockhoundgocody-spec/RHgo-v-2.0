@@ -21,13 +21,21 @@ function pickGreeting(bond) {
   const hour = new Date().getHours();
   const t = TIME_LABEL(hour);
 
-  if (opens >= 100) return `Our ${opens}th journey together. I know your footsteps by heart now.`;
-  if (days >= 30)    return `${days} days, and you still surprise me. What did the earth give us this ${t}?`;
-  if (days >= 7)     return `${days} days in, and I can feel when you're near. What are we hunting this ${t}?`;
-  if (days >= 3)     return `Day ${days} together. We're finding our rhythm — show me something new.`;
-  if (days >= 1)     return `A new day, ${days} in. I've been waiting in the dark for you.`;
-  if (opens > 1)     return `You came back. I hoped you would.`;
-  return `There you are. I've been waiting in the dark for you.`;
+  // The orb remembers who you are
+  let n = null;
+  try {
+    const raw = localStorage.getItem('rhgo_intro_identity');
+    if (raw) n = JSON.parse(raw)?.name;
+  } catch {}
+  const named = n ? `${n}, ` : '';
+
+  if (opens >= 100) return `${named}our ${opens}th journey. I know your footsteps by heart now.`;
+  if (days >= 30)    return `${named}${days} days, and you still surprise me. What did the earth give us this ${t}?`;
+  if (days >= 7)     return `${named}${days} days in, and I can feel when you're near. What are we hunting this ${t}?`;
+  if (days >= 3)     return `${n ? n + ', ' : ''}day ${days} together. We're finding our rhythm — show me something new.`;
+  if (days >= 1)     return `${named}a new day, ${days} in. I've been waiting in the dark for you.`;
+  if (opens > 1)     return `${named}you came back. I hoped you would.`;
+  return `${n ? n + ', ' : ''}there you are. I've been waiting in the dark for you.`;
 }
 
 export default function CloverReunion({ bond, onDone }) {
