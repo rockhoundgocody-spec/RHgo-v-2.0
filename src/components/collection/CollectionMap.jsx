@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Gem, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getPinnedSpecimens } from './mapSpecimens';
