@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 
 describe('getDeviceId', () => {
   let getDeviceId;
@@ -52,5 +52,53 @@ describe('getDeviceId', () => {
     const id = getDeviceId();
 
     expect(id).toBe('dev_existing_12345');
+  });
+
+  it('uses crypto.randomUUID when available', () => {
+    const spy = vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('12345678-abcd-ef01-2345-6789abcdef01');
+    try {
+      const id = getDeviceId();
+      expect(id).toBe('dev_12345678-abcd-ef01-2345-6789abcdef01');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('uses crypto.getRandomValues when randomUUID is not available', () => {
+    const desc = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID') || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(globalThis.crypto), 'randomUUID');
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true, writable: true });
+    const getValuesSpy = vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation((arr) => {
+      for (let i = 0; i < arr.length; i++) arr[i] = i;
+      return arr;
+    });
+    try {
+      const id = getDeviceId();
+      expect(id).toMatch(/^dev_[a-z0-9]+_000102030405060708090a0b0c0d0e0f$/);
+    } finally {
+      if (desc) Object.defineProperty(globalThis.crypto, 'randomUUID', desc);
+      getValuesSpy.mockRestore();
+    }
+  });
+
+  it('handles fallback when crypto APIs are absent without using Math.random', () => {
+    const descUUID = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID') || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(globalThis.crypto), 'randomUUID');
+    const descGetRandomValues = Object.getOwnPropertyDescriptor(globalThis.crypto, 'getRandomValues') || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(globalThis.crypto), 'getRandomValues');
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true, writable: true });
+    Object.defineProperty(globalThis.crypto, 'getRandomValues', { value: undefined, configurable: true, writable: true });
+    const origMathRandom = Math.random;
+    let mathRandomCalled = false;
+    Math.random = () => {
+      mathRandomCalled = true;
+      return 0.5;
+    };
+    try {
+      const id = getDeviceId();
+      expect(id).toMatch(/^dev_/);
+      expect(mathRandomCalled).toBe(false);
+    } finally {
+      if (descUUID) Object.defineProperty(globalThis.crypto, 'randomUUID', descUUID);
+      if (descGetRandomValues) Object.defineProperty(globalThis.crypto, 'getRandomValues', descGetRandomValues);
+      Math.random = origMathRandom;
+    }
   });
 });

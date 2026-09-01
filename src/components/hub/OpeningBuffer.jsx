@@ -382,12 +382,13 @@ export function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
   if (!id) {
     let uuid;
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      uuid = crypto.randomUUID();
-    } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      uuid = Date.now().toString(36) + '_' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+    const gCrypto = typeof crypto !== 'undefined' ? crypto : (typeof window !== 'undefined' ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null));
+    if (gCrypto && typeof gCrypto.randomUUID === 'function') {
+      uuid = gCrypto.randomUUID();
+    } else if (gCrypto && typeof gCrypto.getRandomValues === 'function') {
+      uuid = Date.now().toString(36) + '_' + Array.from(gCrypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
     } else {
-      uuid = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      uuid = Date.now().toString(36) + '_' + Date.now().toString(16) + performance.now().toString(16).replace('.', '');
     }
     id = 'dev_' + uuid;
     localStorage.setItem(DEVICE_KEY, id);
