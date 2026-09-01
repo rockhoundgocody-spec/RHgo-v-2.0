@@ -17,7 +17,6 @@ import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
 import HotspotMap from '@/components/explore/GoogleHotspotMap.jsx';
 import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
-import MineralFilterPanel from '@/components/explore/MineralFilterPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
 import ExpeditionPlanner from '@/components/explore/ExpeditionPlanner.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
@@ -199,28 +198,11 @@ export default function Explore() {
     return (detailHotspot.minerals||[]).filter(m => !collectedMinerals.has(m.toLowerCase()));
   }, [detailHotspot, collectedMinerals]);
 
-  // All unique minerals across hotspots — drives the filter chips
-  const allMinerals = useMemo(() => {
-    const set = new Set();
-    hotspots.forEach(h => (h.minerals || []).forEach(m => { if (m?.trim()) set.add(m.trim()); }));
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [hotspots]);
-
   // Sorted lowercase lookup for filtering
   const selectedMineralsLower = useMemo(
     () => new Set([...selectedMinerals].map(m => m.toLowerCase())),
     [selectedMinerals]
   );
-
-  const toggleMineral = useCallback((mineral) => {
-    setSelectedMinerals(prev => {
-      const next = new Set(prev);
-      if (next.has(mineral)) next.delete(mineral); else next.add(mineral);
-      return next;
-    });
-  }, []);
-
-  const clearMineralFilter = useCallback(() => setSelectedMinerals(new Set()), []);
 
   // Search filter
   const filteredHotspots = useMemo(() => {
@@ -421,18 +403,6 @@ export default function Explore() {
         <div className="pointer-events-auto mb-2">
           <MapLayerPanel activeLayer={activeLayer} onLayerChange={setActiveLayer} />
         </div>
-
-        {/* Mineral type filter chips */}
-        {allMinerals.length > 0 && (
-          <div className="pointer-events-auto mb-2">
-            <MineralFilterPanel
-              minerals={allMinerals}
-              selected={selectedMinerals}
-              onToggle={toggleMineral}
-              onClearAll={clearMineralFilter}
-            />
-          </div>
-        )}
 
         {/* Expedition planner */}
         <div className="pointer-events-auto relative">
