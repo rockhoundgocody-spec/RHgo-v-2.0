@@ -20,10 +20,22 @@ export default function ProfileBadgeStrip() {
   const total = allBadges.length;
   const count = earnedCodes.size;
 
+  const handleClick = () => navigate('/badges');
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <GlassPanel
-      className="px-4 py-3 cursor-pointer active:scale-[0.98] transition-transform"
-      onClick={() => navigate('/badges')}
+      role="button"
+      tabIndex={0}
+      aria-label="View all earned badges"
+      className="px-4 py-3 cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 rounded-2xl"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
