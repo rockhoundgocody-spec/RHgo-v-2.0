@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
+import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
 
 /**
  * useCloverConversation — the open, hands-free conversation loop.
@@ -75,10 +76,12 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
     let reply = "Sorry, I missed that — one more time?";
     try {
+      const cognitiveContext = getCognitiveMemoryContext();
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
         todays_finds: todaysSpecimens,
+        cognitive_context: cognitiveContext,
       });
       const data = res?.data;
       reply = data?.reply || reply;
