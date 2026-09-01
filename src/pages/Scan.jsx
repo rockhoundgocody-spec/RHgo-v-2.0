@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { fetchGeologyAt, formatGeologyContext } from '@/lib/macrostrat';
+import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
@@ -173,12 +174,13 @@ export default function Scan() {
       .then((res) => res?.data?.cutout_url || null)
       .catch(() => null);
 
-    // Local bedrock geology context (Macrostrat) — improves ID plausibility
-    let geologyContext = '';
-    if (gpsRef.current) {
-      const units = await fetchGeologyAt(gpsRef.current.lat, gpsRef.current.lng).catch(() => []);
-      geologyContext = formatGeologyContext(units);
-    }
+    // AGI Multi-Agent Deliberative Reasoning Preparation
+    const agiDeliberation = await deliberateGeologicalSpecimen({
+      imageUrls: uploads.map((u) => u.file_url),
+      locality: gpsRef.current,
+      scanMode,
+      userTier: isPaid ? 'pro' : 'free',
+    });
 
     // Multi-image identification — explainable observational geology mode.
     const modeContext = {
@@ -190,6 +192,7 @@ export default function Scan() {
     const r = await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt:
+        agiDeliberation.systemPrompt + '\n\n' +
         'You are an expert field geologist and mineralogist analyzing specimen photos. ' +
         `${modeContext[scanMode] || modeContext.rock} ` +
         'Study every visual detail carefully: crystal habit, surface luster (vitreous/metallic/pearly/resinous), ' +
@@ -218,7 +221,7 @@ export default function Scan() {
         'and up to 3 ranked candidates each with confidence, key distinguishing features, and one-sentence rationale. ' +
         'If image quality is poor, say so and still give your best attempt. Never say "I cannot identify" — always give a best guess with appropriate confidence. ' +
         AGATE_PROMPT_BLOCK +
-        geologyContext,
+        agiDeliberation.geologyContext,
       file_urls: uploads.map((u) => u.file_url),
       response_json_schema: {
         type: 'object',
@@ -327,7 +330,9 @@ export default function Scan() {
     const cutoutUrl = await cutoutPromise;
     if (cutoutUrl) primaryRef.current = cutoutUrl;
 
-    return { result: r, uploads, reasoningResult };
+    const enriched = enrichWithScientificValidation(r);
+
+    return { result: enriched, uploads, reasoningResult };
   }, []);
 
   const handleDeepAnalysis = async () => {
