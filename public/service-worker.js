@@ -4,10 +4,10 @@
  * Strategy:
  *   install  → pre-cache the app shell
  *   activate → purge stale caches
- *   fetch    → cache-first for same-origin static assets,
- *              network-first for API / backend-function calls
+ *   fetch    → network-first for navigations (HTML) + API calls,
+ *              cache-first for hashed static assets (immutable by hash)
  */
-const SHELL_CACHE = 'rhgo-shell-v1';
+const SHELL_CACHE = 'rhgo-shell-v2';
 const SHELL_URLS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -24,6 +24,7 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
+        // Purge every old shell cache so stale index.html / bundles are evicted.
         Promise.all(keys.filter((k) => k !== SHELL_CACHE).map((k) => caches.delete(k)))
       )
       .then(() => self.clients.claim())
@@ -52,7 +53,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for same-origin static assets (app shell + hashed bundles).
+  // Network-first for navigations (HTML documents) — guarantees the newest
+  // index.html, which references the newest hashed bundle. Falling back to
+  // cache only when offline. This is what stops stale UI (e.g. removed debug
+  // buttons) from persisting after a deploy.
+  if (req.mode === 'navigate' || (url.origin === self.location.origin && req.headers.get('accept')?.includes('text/html'))) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok && res.type === 'basic') {
+            const copy = res.clone();
+            caches.open(SHELL_CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || Response.error()))
+    );
+    return;
+  }
+
+  // Cache-first for same-origin static assets (hashed bundles are immutable).
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(req).then((cached) => {
@@ -65,7 +85,7 @@ self.addEventListener('fetch', (event) => {
             }
             return res;
           })
-          .catch(() => cached);
+          .catch(() => cached)
       })
     );
   }
