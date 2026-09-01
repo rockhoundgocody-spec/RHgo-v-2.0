@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Gem, ShieldCheck, Award, ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gem, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { triggerOrbHaptic } from '@/lib/orbAudio';
 

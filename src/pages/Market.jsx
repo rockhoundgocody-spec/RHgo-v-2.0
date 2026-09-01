@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, ChevronRight, Loader2, ArrowRightLeft } from 'lucide-react';
-import GlassPanel from '@/components/visuals/GlassPanel.jsx';
+import { Search, Filter, Plus, Loader2, ArrowRightLeft } from 'lucide-react';
 import EmptyState from '@/components/visuals/EmptyState.jsx';
 import ListingCard from '@/components/market/ListingCard.jsx';
 import CreateListingSheet from '@/components/market/CreateListingSheet.jsx';

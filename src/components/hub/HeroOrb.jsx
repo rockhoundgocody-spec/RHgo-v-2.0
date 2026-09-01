@@ -16,7 +16,7 @@ import CloverVoicePanel from './CloverVoicePanel.jsx';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import { playOrbChime, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { base44 } from '@/api/base44Client';
-import { Gem, Zap, Compass, Sparkles } from 'lucide-react';
+import { Gem, Zap, Compass } from 'lucide-react';
 
 const GREETINGS = (c, name) => {
   const hour = new Date().getHours();

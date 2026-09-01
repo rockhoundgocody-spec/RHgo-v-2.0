@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Hammer, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { Hammer, Sparkles } from 'lucide-react';
 import { triggerOrbHaptic } from '@/lib/orbAudio';
 
 const TEST_TOOLS = [

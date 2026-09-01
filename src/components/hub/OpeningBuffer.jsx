@@ -71,7 +71,7 @@ function BirthSequence({ onDone }) {
     }, SPEAK_AT));
     timers.current.push(setTimeout(() => setPhase('exit'), EXIT_AT));
     return () => { clearTimers(); stop(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {

@@ -12,7 +12,7 @@ import useKidMode from '@/lib/useKidMode';
 import {
   Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2,
   Zap, FlaskConical, BookOpen, Star, Shield, Cloud, Gem, Hammer,
-  Compass, Camera, ArrowRight, Check, Award, Eye, MapPin
+  Compass, Camera, Award, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionModal from './CorrectionModal.jsx';

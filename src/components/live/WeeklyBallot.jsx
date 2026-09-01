@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Trophy, Heart, Loader2, Sparkles, Crown, MapPin } from 'lucide-react';
+import { Trophy, Heart, Loader2, Sparkles, Crown } from 'lucide-react';
 
 const RARITY_COLOR = {
   common: '#94a3b8',

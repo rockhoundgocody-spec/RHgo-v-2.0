@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ShieldCheck, X, Share2, Gem, Check, Sparkles, MapPin } from 'lucide-react';
+import { Award, ShieldCheck, X, Share2, Check, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ProvenanceCertificateModal({ open, result, savedId, gpsCoords, onClose }) {

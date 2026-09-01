@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, BookOpen, Sparkles } from 'lucide-react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
