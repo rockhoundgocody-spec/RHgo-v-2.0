@@ -235,6 +235,17 @@
   .animate-hud-scan { animation: hud-scan 3s linear infinite; }
   .animate-liquid-shift { animation: liquid-shift 12s ease-in-out infinite; }
 
+  /* Hide scrollbars on any element that opts in — keeps the Hub and other
+     clean surfaces free of the gutter while staying scrollable. */
+  .scrollbar-none {
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; /* Chrome / Safari / Edge */
+  }
+
   @keyframes pp-breath {
     0%, 100% { opacity: 0.5; transform: scale(1); }
     50%      { opacity: 0.85; transform: scale(1.04); }

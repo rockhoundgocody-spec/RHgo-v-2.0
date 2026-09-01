@@ -8,6 +8,8 @@
  * - Cross-session conversational episodic memory
  */
 
+const MEMORY_STORAGE_KEY = 'rhgo_clover_memory';
+
 let inMemoryFallback = null;
 
 export function clearCloverMemoryForTest() {

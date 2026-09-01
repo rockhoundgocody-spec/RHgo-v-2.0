@@ -3,29 +3,16 @@ import { flushWhenStable } from '@/lib/offlineQueue.js';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import useCompanion from '@/lib/useCompanion.js';
 import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
-import SpecimenTypeChart from '@/components/hub/SpecimenTypeChart.jsx';
 import QuestEngine from '@/components/hub/QuestEngine.jsx';
 import LiveStatStrip from '@/components/hub/LiveStatStrip.jsx';
 import DailyStreakCard from '@/components/hub/DailyStreakCard.jsx';
-
 import RockStarLeaderboard from '@/components/hub/RockStarLeaderboard.jsx';
-import SeasonBanner from '@/components/hub/SeasonBanner.jsx';
-import DiscoveryChain from '@/components/hub/DiscoveryChain.jsx';
-import GeologicalAtlas from '@/components/hub/GeologicalAtlas.jsx';
+import StormWindowBanner from '@/components/hub/StormWindowBanner.jsx';
+import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Sword, Trophy, Lock, Users, Atom, Building2 } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
-import DiscoveryTrendChart from '@/components/hub/DiscoveryTrendChart.jsx';
-import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
-import StormWindowBanner from '@/components/hub/StormWindowBanner.jsx';
-import CollectionWeightTracker from '@/components/hub/CollectionWeightTracker.jsx';
-import CommunityVerificationQueue from '@/components/scan/CommunityVerificationQueue.jsx';
-import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
-import { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
-import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
-import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
-import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import AddToHomeScreenPrompt from '@/components/hub/AddToHomeScreenPrompt.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
@@ -38,7 +25,6 @@ export default function Hub() {
   const [userEmail, setUserEmail] = useState(null);
   const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
-  const { chaos } = useChaosMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
   const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: handleMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
@@ -63,7 +49,7 @@ export default function Hub() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center pb-28">
+    <div className="relative min-h-screen flex flex-col items-center pb-28 scrollbar-none">
 
       <NewUserTour />
       <AddToHomeScreenPrompt />
@@ -170,8 +156,8 @@ export default function Hub() {
         </Link>
       </section>
 
-      {/* ── DASHBOARD FEED ── deferred: components mount only when scrolled into view */}
-      <div className="w-full max-w-md mt-6 px-4 space-y-4">
+      {/* ── DASHBOARD FEED ── trimmed to the core engagement loop */}
+      <div className="w-full max-w-md mt-6 px-4 space-y-4 scrollbar-none">
 
         {/* Player Legend — persistent XP, level, avatar */}
         {userEmail && (
@@ -185,47 +171,6 @@ export default function Hub() {
           <LiveStatStrip />
         </DeferredSection>
 
-        {/* Daily discovery trend chart */}
-        <DeferredSection minHeight={180}>
-          <DiscoveryTrendChart />
-        </DeferredSection>
-
-        {/* Michigan annual weight tracker */}
-        {userEmail && (
-          <DeferredSection minHeight={90}>
-            <CollectionWeightTracker userEmail={userEmail} />
-          </DeferredSection>
-        )}
-
-        {/* Community verification queue */}
-        {userEmail && (
-          <DeferredSection minHeight={120}>
-            <CommunityVerificationQueue userEmail={userEmail} />
-          </DeferredSection>
-        )}
-
-        {/* Companion Progress Dashboard */}
-        <DeferredSection minHeight={140}>
-          <CompanionProgressDashboard companion={companion} />
-        </DeferredSection>
-
-        {/* Daily Rock Roulette — Chaos mode only */}
-        {chaos && (
-          <DeferredSection minHeight={120}>
-            <DailyRoulette />
-          </DeferredSection>
-        )}
-
-        {/* Intention Roulette — Randonautica-style wildcard, always visible */}
-        <DeferredSection minHeight={120}>
-          <IntentionRoulette />
-        </DeferredSection>
-
-        {/* AR Rock Battle — always visible */}
-        <DeferredSection minHeight={80}>
-          <ARRockBattle />
-        </DeferredSection>
-
         {/* Quests */}
         {userEmail && (
           <DeferredSection minHeight={120}>
@@ -236,26 +181,6 @@ export default function Hub() {
         {/* Mystery mineral of the day */}
         <DeferredSection minHeight={120}>
           <DailyStreakCard companion={companion} />
-        </DeferredSection>
-
-        {/* Specimen type chart */}
-        <DeferredSection minHeight={200}>
-          <SpecimenTypeChart />
-        </DeferredSection>
-
-        {/* Active geological season */}
-        <DeferredSection minHeight={80}>
-          <SeasonBanner />
-        </DeferredSection>
-
-        {/* Discovery chain / streak */}
-        <DeferredSection minHeight={80}>
-          <DiscoveryChain streak={companion?.streak_days || 0} />
-        </DeferredSection>
-
-        {/* Geological Atlas — community contribution map */}
-        <DeferredSection minHeight={130}>
-          <GeologicalAtlas userSpecimens={specimens} />
         </DeferredSection>
 
         {/* Rock Star leaderboard */}
