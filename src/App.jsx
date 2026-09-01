@@ -98,6 +98,12 @@ const AuthenticatedApp = () => {
             <Route path="/demo" element={<Demo />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/agate-guide" element={<AgateGuide />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="/clubs" element={<Clubs />} />
+            <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="*" element={<Landing />} />

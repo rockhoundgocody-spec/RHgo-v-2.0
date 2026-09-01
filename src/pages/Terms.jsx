@@ -80,7 +80,7 @@ export default function Terms() {
     <div className="min-h-screen w-full text-foreground" style={{ background: 'radial-gradient(ellipse at top, hsl(265 45% 14%) 0%, hsl(250 30% 8%) 50%, hsl(245 25% 5%) 100%)' }}>
       <div className="max-w-2xl mx-auto px-5 py-10 pb-24">
         <Link to="/" className="text-amethyst-glow text-sm hover:text-white transition mb-6 inline-block">
-          \u2190 Back to RockHound-GO
+          ← Back to RockHound-GO
         </Link>
 
         <header className="mb-8">
@@ -94,7 +94,7 @@ export default function Terms() {
             </div>
           </div>
           <p className="text-white/60 text-sm leading-relaxed">
-            These terms govern your use of RockHound-GO. Please read them carefully \u2014 they reflect our commitment to responsible, legal, and respectful rockhounding.
+            These terms govern your use of RockHound-GO. Please read them carefully — they reflect our commitment to responsible, legal, and respectful rockhounding.
           </p>
         </header>
 
@@ -108,7 +108,7 @@ export default function Terms() {
               <ul className="space-y-2">
                 {body.map((line, i) => (
                   <li key={i} className="text-white/55 text-[13px] leading-relaxed flex gap-2">
-                    <span className="text-amethyst-glow/60 mt-1">\u2022</span>
+                    <span className="text-amethyst-glow/60 mt-1">•</span>
                     <span>{line}</span>
                   </li>
                 ))}

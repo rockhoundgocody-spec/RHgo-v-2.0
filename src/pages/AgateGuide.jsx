@@ -8,6 +8,7 @@ import {
   AGATE_STRUCTURAL,
   AGATE_VARIETIES,
 } from '@/lib/agateData';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 const RARITY_STYLES = {
   common:    { color: '#94a3b8', bg: 'hsla(210,20%,30%,0.3)',  label: 'Common' },
@@ -17,6 +18,7 @@ const RARITY_STYLES = {
 };
 
 export default function AgateGuide() {
+  useSeoRobots(true);
   const [selected, setSelected] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [rarityFilter, setRarityFilter] = useState('all');
@@ -202,11 +204,12 @@ export default function AgateGuide() {
                 }}
               >
                 {/* Image */}
-                <div className="relative h-32 overflow-hidden">
+                <div className="relative h-32 overflow-hidden flex items-center justify-center bg-purple-950/40">
+                  <span className="text-3xl select-none opacity-30">💎</span>
                   <img
                     src={v.image_url}
                     alt={v.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
@@ -261,11 +264,12 @@ export default function AgateGuide() {
             className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[85vh] overflow-y-auto"
             style={{ background: 'hsla(255,30%,14%,0.97)', border: '1px solid hsla(270,40%,40%,0.3)' }}
           >
-            <div className="relative h-48 overflow-hidden">
+            <div className="relative h-48 overflow-hidden flex items-center justify-center bg-purple-950/40">
+              <span className="text-4xl select-none opacity-30">💎</span>
               <img
                 src={selected.image_url}
                 alt={selected.name}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
               <div
