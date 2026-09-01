@@ -7,6 +7,8 @@ import DeepAnalysisPanel from './DeepAnalysisPanel.jsx';
 import CrystalLatticeViewer from './CrystalLatticeViewer.jsx';
 import MohsScratchLab from './MohsScratchLab.jsx';
 import ProvenanceCertificateModal from './ProvenanceCertificateModal.jsx';
+import JuniorExplorerCard from './JuniorExplorerCard.jsx';
+import useKidMode from '@/lib/useKidMode';
 import {
   Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2,
   Zap, FlaskConical, BookOpen, Star, Shield, Cloud, Gem, Hammer,
@@ -59,12 +61,22 @@ export default function HolographicResult({
   const navigate = useNavigate();
   const tiltRef = useRef(null);
   const tabRefs = useRef(new Map());
-  const reduceMotion = useReducedMotion();
+  const isKidDefault = useKidMode();
+  const [kidMode, setKidMode] = useState(isKidDefault);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [certOpen, setCertOpen] = useState(false);
   const [uvMode, setUvMode] = useState(false);
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState('overview'); // overview | candidates | tests | deep
+
+  const toggleKidMode = () => {
+    const next = !kidMode;
+    setKidMode(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('rhgo_mode', next ? 'kid' : 'pro');
+      window.dispatchEvent(new Event('rhgo-mode-change'));
+    }
+  };
 
   useEffect(() => {
     if (saved) setFireworksTrigger((n) => n + 1);
@@ -413,6 +425,15 @@ export default function HolographicResult({
         </motion.div>
       )}
 
+      {/* ── JUNIOR EXPLORER CARD (KID-FRIENDLY SUPERPOWERS & DINOSAUR ERA) ── */}
+      <div className="mt-3">
+        <JuniorExplorerCard
+          mineralName={result?.top_match}
+          isKidMode={kidMode}
+          onToggleMode={toggleKidMode}
+        />
+      </div>
+
       {/* ── TAB BAR ── */}
       <div
         role="tablist"
@@ -597,6 +618,7 @@ export default function HolographicResult({
               specimenHardness={result?.hardness_mohs || 7.0}
               mineralName={result?.top_match}
               streakColor={tests[0]?.expected || 'White'}
+              isKidMode={kidMode}
             />
 
             {tests.length === 0 ? (
