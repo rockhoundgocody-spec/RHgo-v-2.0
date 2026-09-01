@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { appParams } from "@/lib/app-params";
+import { appParams, getSafeRedirectUrl } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
@@ -120,8 +120,26 @@ export default function OAuthConsent() {
         throw new Error("Could not complete authorization. Please try again.");
       }
       const data = await res.json();
-      window.location.href = data.redirect_url;
-      if (!/^https?:/i.test(data.redirect_url)) {
+      const rawUrl = data.redirect_url || "";
+      const isHttpOrHttps = /^https?:/i.test(rawUrl);
+      let targetUrl = "/";
+
+      if (isHttpOrHttps || rawUrl.startsWith("/")) {
+        targetUrl = getSafeRedirectUrl(rawUrl, "/");
+      } else {
+        try {
+          const parsed = new URL(rawUrl);
+          const dangerousProtocols = ["javascript:", "data:", "vbscript:", "file:", "about:"];
+          if (!dangerousProtocols.includes(parsed.protocol.toLowerCase())) {
+            targetUrl = rawUrl;
+          }
+        } catch {
+          targetUrl = "/";
+        }
+      }
+
+      window.location.href = targetUrl;
+      if (!isHttpOrHttps) {
         // Custom-scheme redirect (native AI clients, e.g. cursor://): browsers
         // may block or not visibly navigate, so show a terminal state instead
         // of an eternal spinner.
