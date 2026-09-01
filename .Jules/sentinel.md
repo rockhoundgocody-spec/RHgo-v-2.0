@@ -13,3 +13,11 @@
 **Learning:** Using string `endsWith` for hostname domain checking without an exact match or leading dot (`.`) allows domain suffix spoofing bypasses.
 
 **Prevention:** Ensure URL hostname validation checks exact domain equality (`host === domain`) or subdomains with a leading dot (`host.endsWith('.' + domain)`), and strictly enforce HTTP/HTTPS protocols.
+
+## 2026-09-01 - Replace Insecure PRNG (Math.random) for Identifier Generation
+
+**Vulnerability:** Device ID generation fallback in `src/components/hub/OpeningBuffer.jsx` used `Math.random().toString(36)`, which relies on a pseudo-random number generator (PRNG) whose outputs can be predicted.
+
+**Learning:** Using `Math.random()` to generate identifiers or keys creates predictable strings that can lead to session/device hijacking or collision vulnerabilities.
+
+**Prevention:** Always use cryptographically secure random number generation APIs (`crypto.randomUUID()` or `crypto.getRandomValues()`) when constructing device identifiers or unique tokens, and avoid falling back to non-cryptographic PRNGs.
