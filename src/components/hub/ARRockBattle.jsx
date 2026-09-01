@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Zap, Trophy, RefreshCw, X, Shield, Flame, Camera, Loader2 } from 'lucide-react';
+import { Swords, Trophy, RefreshCw, X, Flame, Camera, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import BattleLeaderboard from './BattleLeaderboard.jsx';
 
 // Rock fighters with stats derived from real mineral properties
-const ROCK_FIGHTERS = [
+export const ROCK_FIGHTERS = [
+
   { id: 'quartz',    name: 'Quartz',    emoji: '🔷', hp: 85,  atk: 70, def: 65, spd: 75, ability: 'Crystal Strike',   color: '#38bdf8', rarity: 'common'   },
   { id: 'obsidian',  name: 'Obsidian',  emoji: '⚫', hp: 75,  atk: 90, def: 55, spd: 80, ability: 'Volcanic Slash',   color: '#6b7280', rarity: 'uncommon' },
   { id: 'amethyst',  name: 'Amethyst',  emoji: '💜', hp: 90,  atk: 65, def: 80, spd: 60, ability: 'Mystic Shield',    color: '#a78bfa', rarity: 'uncommon' },
@@ -15,6 +16,8 @@ const ROCK_FIGHTERS = [
   { id: 'diamond',   name: 'Diamond',   emoji: '💎', hp: 100, atk: 80, def: 100,spd: 90, ability: 'Unbreakable',      color: '#e2e8f0', rarity: 'legendary'},
   { id: 'lava',      name: 'Lava Rock', emoji: '🌋', hp: 88,  atk: 88, def: 50, spd: 95, ability: 'Magma Surge',      color: '#f97316', rarity: 'uncommon' },
 ];
+
+export const FIGHTER_EMOJI_MAP = new Map(ROCK_FIGHTERS.map(r => [r.name, r.emoji]));
 
 const RARITY_GLOW = {
   common:    'hsla(200,60%,50%,0.3)',
@@ -171,7 +174,7 @@ export default function ARRockBattle() {
       const battles = await base44.entities.BattleResult.filter({ owner_email: me.email }, '-created_date', 20).catch(() => []);
       const mapped = battles.map(b => ({
         mineral: b.winner_mineral,
-        emoji: ROCK_FIGHTERS.find(r => r.name === b.winner_mineral)?.emoji || '🪨',
+        emoji: FIGHTER_EMOJI_MAP.get(b.winner_mineral) || '🪨',
         xp: b.xp_awarded,
         avatarUrl: b.avatar_url_at_time,
         date: b.battle_date ? new Date(b.battle_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
