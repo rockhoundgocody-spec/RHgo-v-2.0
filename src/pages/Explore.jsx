@@ -15,7 +15,7 @@ import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
-import HotspotMap from '@/components/explore/HotspotMap.jsx';
+import GoogleHotspotMap from '@/components/explore/GoogleHotspotMap.jsx';
 import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
 import MineralFilterPanel from '@/components/explore/MineralFilterPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
@@ -278,7 +278,7 @@ export default function Explore() {
             onSpawnTap={(spawn) => setActiveSpawn(spawn)}
           />
         )}
-        <HotspotMap
+        <GoogleHotspotMap
           hotspots={filteredHotspots}
           specimens={specimens}
           clubs={clubs}
@@ -290,8 +290,6 @@ export default function Explore() {
           collectionGapIds={collectionGapIds}
           expeditionRoute={expeditionRoute}
           showGeology={showGeology}
-          earnedBadgeCodes={earnedCodes}
-          userMinerals={[...collectedMinerals]}
           hudMode={hudMode}
           selectedMineralFilter={selectedMineralsLower}
           showHeatMap={showHeatMap}

@@ -3,7 +3,6 @@ import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
-import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
 import HolographicResult from '@/components/scan/HolographicResult.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
@@ -73,7 +72,7 @@ export default function Scan() {
   const [shareMapOpen, setShareMapOpen] = useState(false);
   const [choiceOpen, setChoiceOpen] = useState(false);
   const [rarePopup, setRarePopup] = useState(null); // { rarity, mineralName, badge }
-  const [scanMode, setScanMode] = useState('rock');
+  const [scanMode] = useState('rock');
   const [deepAnalysis, setDeepAnalysis] = useState(null);
   const [deepLoading, setDeepLoading] = useState(false);
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
@@ -127,10 +126,10 @@ export default function Scan() {
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
   };
 
-  const handleCaptureComplete = (capturedAngles, mode) => {
+  // Single-frame capture from the simplified LiveScanStage — one snap, one ID.
+  const handleSingleCapture = (blob) => {
     if (!guardScan()) return;
-    if (mode) setScanMode(mode);
-    setAngles(capturedAngles);
+    setAngles([{ key: 'front', label: 'Primary', captured: true, blob }]);
     setStage('reconstruct');
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
   };
@@ -509,7 +508,7 @@ export default function Scan() {
       <div className="flex items-center justify-between mb-2 px-1">
         <div>
           <h1 className="text-lg font-black text-white tracking-tight leading-none">AI Scanner</h1>
-          <p className="text-white/55 text-[9px] uppercase tracking-[0.22em] mt-0.5">Vision · 3D Reconstruct · Field ID</p>
+          <p className="text-white/55 text-[9px] uppercase tracking-[0.22em] mt-0.5">Point · Snap · Identify</p>
         </div>
         <div className="flex items-center gap-2">
           {(stage === 'live' || stage === 'capture') && (
@@ -523,15 +522,8 @@ export default function Scan() {
       <div className="flex-1 min-h-0 overflow-y-auto -webkit-overflow-scrolling-touch">
         {stage === 'live' && (
           <LiveScanStage
-            onBeginCapture={(mode) => { if (mode) setScanMode(mode); setStage('capture'); }}
+            onCapture={handleSingleCapture}
             onUploadFallback={handleUploadFallback}
-          />
-        )}
-
-        {stage === 'capture' && (
-          <MultiAngleCapture
-            onComplete={handleCaptureComplete}
-            onCancel={() => setStage('live')}
           />
         )}
 
@@ -600,8 +592,7 @@ export default function Scan() {
 
 function StageStrip({ stage }) {
   const stages = [
-    { id: 'live', label: 'Vision' },
-    { id: 'capture', label: 'Capture' },
+    { id: 'live', label: 'Scan' },
     { id: 'reconstruct', label: 'AI' },
     { id: 'result', label: 'Result' },
   ];
