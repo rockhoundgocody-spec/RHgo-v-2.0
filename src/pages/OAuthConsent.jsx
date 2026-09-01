@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { appParams } from "@/lib/app-params";
+import { appParams, getSafeRedirectUrl } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
@@ -11,6 +11,64 @@ import AuthLayout from "@/components/AuthLayout";
 // the categories of access being granted, and posts the approve/deny decision.
 // Do not change the fetch calls, headers, or the `ctx` handle handling — styling
 // and copy are safe to edit.
+
+/**
+ * Validates a redirect URL for OAuth consent responses.
+ * Allows same-origin HTTP/HTTPS URLs (and relative paths) or safe custom desktop client schemes (e.g. cursor://).
+ * Rejects dangerous protocols (javascript:, data:, file:, etc.) and external HTTP/HTTPS origins.
+ */
+export function getSafeConsentRedirectUrl(
+  targetUrl,
+  currentOrigin = typeof window !== "undefined" && window.location?.origin
+    ? window.location.origin
+    : "https://rhgo.invalid"
+) {
+  if (!targetUrl || typeof targetUrl !== "string") {
+    return null;
+  }
+
+  const trimmed = targetUrl.trim();
+  if (!trimmed || /[\u0000-\u001f\u007f]/.test(trimmed)) {
+    return null;
+  }
+
+  // Reject dangerous pseudo-protocols explicitly before parsing
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("data:") ||
+    lower.startsWith("vbscript:") ||
+    lower.startsWith("file:") ||
+    lower.startsWith("blob:")
+  ) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(trimmed, currentOrigin);
+    const protocol = parsed.protocol.toLowerCase();
+
+    // Block dangerous protocols if URL parsing normalized something subtle
+    if (["javascript:", "data:", "vbscript:", "file:", "blob:"].includes(protocol)) {
+      return null;
+    }
+
+    if (protocol === "http:" || protocol === "https:") {
+      // For HTTP/HTTPS, delegate to getSafeRedirectUrl which validates same-origin / safe relative paths
+      return getSafeRedirectUrl(trimmed, null);
+    }
+
+    // For custom schemes (e.g. cursor://, vscode://), ensure scheme format is valid
+    if (/^[a-z][a-z0-9+.-]*:$/i.test(protocol)) {
+      return parsed.href;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function OAuthConsent() {
   const ctx = new URLSearchParams(window.location.search).get("ctx");
   const [info, setInfo] = useState(null);
@@ -67,7 +125,7 @@ export default function OAuthConsent() {
           const encoded = encodeURIComponent(returnTo);
           redirecting = true; // keep the spinner while the browser navigates
           window.location.href =
-            (data.login_path || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            getSafeRedirectUrl(data.login_path, "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         setInfo(data);
@@ -103,7 +161,7 @@ export default function OAuthConsent() {
           const returnTo = window.location.pathname + "?ctx=" + encodeURIComponent(ctx);
           const encoded = encodeURIComponent(returnTo);
           window.location.href =
-            ((info && info.login_path) || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            getSafeRedirectUrl(info && info.login_path, "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         // These all come AFTER the single-use handle is atomically consumed
@@ -120,8 +178,14 @@ export default function OAuthConsent() {
         throw new Error("Could not complete authorization. Please try again.");
       }
       const data = await res.json();
-      window.location.href = data.redirect_url;
-      if (!/^https?:/i.test(data.redirect_url)) {
+      const safeRedirectUrl = getSafeConsentRedirectUrl(data.redirect_url);
+      if (!safeRedirectUrl) {
+        setError("Invalid or untrusted redirect destination.");
+        setSubmitting(false);
+        return;
+      }
+      window.location.href = safeRedirectUrl;
+      if (!/^https?:/i.test(safeRedirectUrl)) {
         // Custom-scheme redirect (native AI clients, e.g. cursor://): browsers
         // may block or not visibly navigate, so show a terminal state instead
         // of an eternal spinner.
