@@ -11,7 +11,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
-import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
+import IntroOrb from '@/components/hub/IntroOrb.jsx';
 
 const TIME_LABEL = (h) => h < 5 ? 'these small hours' : h < 12 ? 'the morning' : h < 17 ? 'the afternoon' : h < 21 ? 'the evening' : 'the night';
 
@@ -114,7 +114,7 @@ export default function CloverReunion({ bond, onDone }) {
                 style={{ width: 90 + i * 22, height: 90 + i * 22, borderColor: i < level ? 'hsla(280,100%,75%,0.4)' : 'hsla(280,30%,50%,0.2)' }} />
             ))}
 
-            <LiquidMetalOrb awakened size={120} />
+            <IntroOrb size={120} />
           </div>
 
           {/* Wordmark */}
