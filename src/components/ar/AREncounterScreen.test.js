@@ -1,3 +1,4 @@
+import { EncounterParticles, EncounterThrowInstruction } from "./AREncounterScreen.jsx";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
 import { base44 } from "@/api/base44Client";
@@ -131,5 +132,31 @@ describe("saveCatchToCollection", () => {
     base44.auth.me.mockRejectedValue(new Error("Network error"));
 
     await expect(saveCatchToCollection({ mineral_name: "Gold", rarity: "rare" }, "success")).resolves.not.toThrow();
+  });
+});
+
+
+
+
+
+describe("EncounterThrowInstruction component", () => {
+  const spawn = { mineral_name: "Quartz", rarity: "common", catch_chance: 0.8 };
+
+  it("returns null when phase is not encounter", () => {
+    expect(EncounterThrowInstruction({ phase: "result", spawn, reduceMotion: false })).toBeNull();
+  });
+
+  it("returns JSX element tree when phase is encounter", () => {
+    const element = EncounterThrowInstruction({ phase: "encounter", spawn, reduceMotion: false });
+    expect(element).not.toBeNull();
+    expect(element.type).toBe("div");
+  });
+});
+
+describe("EncounterParticles component", () => {
+  it("renders container element with particle children", () => {
+    const particles = [{ id: 1, x: 50, y: 50, vx: 2, vy: -5, color: "#fff" }];
+    const element = EncounterParticles({ particles });
+    expect(element.type).toBe("div");
   });
 });
