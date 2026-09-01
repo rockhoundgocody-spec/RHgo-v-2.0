@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
