@@ -142,7 +142,7 @@ export default function PostCard({ post, myEmail, myVoteId }) {
       )}
 
       {post.image_url && (
-        <img src={post.image_url} alt="" className="w-full max-h-96 object-cover" />
+        <img src={post.image_url} alt={post.mineral_name ? `${post.mineral_name} specimen` : 'Post attachment'} className="w-full max-h-96 object-cover" />
       )}
 
       {isFind && post.mineral_name && (
