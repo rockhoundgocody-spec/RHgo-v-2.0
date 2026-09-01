@@ -13,3 +13,11 @@
 **Learning:** Using string `endsWith` for hostname domain checking without an exact match or leading dot (`.`) allows domain suffix spoofing bypasses.
 
 **Prevention:** Ensure URL hostname validation checks exact domain equality (`host === domain`) or subdomains with a leading dot (`host.endsWith('.' + domain)`), and strictly enforce HTTP/HTTPS protocols.
+
+## 2026-08-26 - Cryptographically Secure Random Number Generation for Device Identifiers
+
+**Vulnerability:** getDeviceId() fallback logic generated device identifiers using Math.random().toString(36).
+
+**Learning:** Math.random() is PRNG-based and non-cryptographic, making generated IDs predictable or vulnerable to collisions/spoofing.
+
+**Prevention:** Use standard Web Crypto APIs (crypto.randomUUID() or crypto.getRandomValues()) across globalThis, window, and self scopes to generate cryptographically secure identifiers.
