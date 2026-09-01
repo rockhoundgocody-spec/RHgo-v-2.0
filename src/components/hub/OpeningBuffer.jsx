@@ -13,7 +13,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import CloverReunion from '@/components/hub/CloverReunion.jsx';
-import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
+import IntroOrb from '@/components/hub/IntroOrb.jsx';
 
 // ── Emotionally bonding narration ───────────────────────────────────────────
 const STORY = [
@@ -48,7 +48,7 @@ function BirthSequence({ onDone }) {
   const [warmth, setWarmth] = useState(0);        // bonding warmth 0-3
   const timers = useRef([]);
   const spokenRef = useRef(false);
-  const { speak, stop } = useSpeechSynthesis();
+  const { speak, stop, unlock } = useSpeechSynthesis();
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
   const clearTimers = () => timers.current.forEach(clearTimeout);
@@ -93,6 +93,9 @@ function BirthSequence({ onDone }) {
 
   const handleTap = useCallback((e) => {
     if (phase === 'exit') return;
+    // Unlock audio on the first user gesture so the setTimeout-driven
+    // speak() at 19s can actually play on mobile.
+    unlock();
     if (phase === 'speak' || (e.detail && e.detail >= 2)) {
       clearTimers(); stop(); setPhase('exit'); return;
     }
@@ -109,7 +112,7 @@ function BirthSequence({ onDone }) {
     // Otherwise send a pulse of warmth
     setWarmth((w) => Math.min(w + 1, 3));
     setTimeout(() => setWarmth((w) => Math.max(w - 1, 0)), 1000);
-  }, [phase, stop, doHatch]);
+  }, [phase, stop, doHatch, unlock]);
 
   const hatched = phase === 'bond' || phase === 'speak';
   const orbVisible = phase !== 'void';
@@ -208,7 +211,7 @@ function BirthSequence({ onDone }) {
               <CrystalShell cracks={cracks} warmth={warmth} />
             )}
             {hatched && (
-              <LiquidMetalOrb speaking={phase === 'speak'} awakened={hatched} size={130} />
+              <IntroOrb size={130} speaking={phase === 'speak'} />
             )}
           </div>
 

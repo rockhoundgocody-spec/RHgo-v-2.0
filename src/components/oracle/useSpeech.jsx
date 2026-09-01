@@ -137,6 +137,20 @@ export function useSpeechSynthesis() {
     }
   }, [startAmpLoop, stopAmpLoop]);
 
+  // Warm up the AudioContext from within a user gesture — mobile browsers
+  // keep audio locked until a gesture creates/resumes the context. Call this
+  // on the first tap so later setTimeout-driven speak() calls can play.
+  const unlock = useCallback(() => {
+    try {
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    } catch {}
+  }, []);
+
   const stop = useCallback(() => {
     try { if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; } } catch {}
     window.speechSynthesis?.cancel();
@@ -151,7 +165,7 @@ export function useSpeechSynthesis() {
     audioCtxRef.current = null;
   }, [stop]);
 
-  return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum };
+  return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
 }
 
 function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig = {}) {

@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useIntroAudio } from '@/hooks/useIntroAudio';
-import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
+import IntroOrb from '@/components/hub/IntroOrb.jsx';
 
 // ── Scene definitions ───────────────────────────────────────────────────────
 const SCENES = [
@@ -220,7 +220,7 @@ export default function IntroCinematic({ onDone }) {
           style={{ opacity: scene.orbOpacity }}
         >
           {scene.orbSize >= 60 ? (
-            <LiquidMetalOrb size={scene.orbSize} awakened={scene.orbSize >= 80} />
+            <IntroOrb size={scene.orbSize} />
           ) : (
             <motion.div
               initial={{ scale: 0.3 }}
@@ -251,7 +251,7 @@ export default function IntroCinematic({ onDone }) {
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <LiquidMetalOrb size={60} awakened />
+            <IntroOrb size={60} />
           </motion.div>
         </motion.div>
       )}
@@ -324,7 +324,7 @@ export default function IntroCinematic({ onDone }) {
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 2.5, repeat: Infinity }}
             >
-              <LiquidMetalOrb size={70} awakened />
+              <IntroOrb size={70} />
             </motion.div>
             <p className="text-white/85 text-[15px] leading-relaxed font-light text-center">
               Welcome, traveler. What shall I call you?
@@ -375,7 +375,7 @@ export default function IntroCinematic({ onDone }) {
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 2.5, repeat: Infinity }}
             >
-              <LiquidMetalOrb size={70} awakened />
+              <IntroOrb size={70} />
             </motion.div>
             <p className="text-white/85 text-[15px] leading-relaxed font-light text-center">
               And where shall I send word, {name}, when the earth offers something rare for you?
@@ -433,7 +433,7 @@ export default function IntroCinematic({ onDone }) {
               animate={{ y: [0, -8, 0], scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <LiquidMetalOrb size={80} awakened />
+              <IntroOrb size={80} />
             </motion.div>
             <p className="text-white/85 text-[16px] leading-relaxed font-light text-center">
               Will you help me find my fragments, {name}?
