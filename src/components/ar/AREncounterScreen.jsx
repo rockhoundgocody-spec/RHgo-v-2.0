@@ -243,17 +243,14 @@ export function EncounterResultCard({ phase, result, theme, spawn, xp, onDismiss
   );
 }
 
-export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
+export function useEncounterState({ spawn, onCatch, theme, reduceMotion }) {
   const [phase, setPhase] = useState("encounter"); // encounter | throwing | result
   const [result, setResult] = useState(null); // success | critical | escape | shiny
   const [throwCount, setThrowCount] = useState(0);
   const [orbScale, setOrbScale] = useState(1);
   const [particles, setParticles] = useState([]);
-  const reduceMotion = useReducedMotion();
 
   const videoRef = useRef(null);
-
-  const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
   // Start camera for AR feel
   useARCamera(videoRef);
@@ -315,6 +312,61 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
     setResult(null);
   }, []);
 
+  return {
+    phase,
+    result,
+    orbScale,
+    particles,
+    videoRef,
+    handleThrow,
+    handleSwipe,
+    handleTryAgain,
+  };
+}
+
+export function EncounterParticles({ particles }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute w-2 h-2 rounded-full"
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+          animate={{ x: p.vx * 8, y: p.vy * 8, opacity: 0, scale: 0.25 }}
+          transition={{ duration: 1.35, ease: "easeOut" }}
+          style={{ left: `${p.x}%`, top: `${p.y}%`, marginLeft: "-0.25rem", background: p.color, boxShadow: `0 0 6px ${p.color}` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function EncounterThrowInstruction({ phase, spawn, reduceMotion }) {
+  if (phase !== "encounter") return null;
+
+  return (
+    <div className="relative z-10 mb-32 text-center">
+      <p className={`text-white/40 text-xs uppercase tracking-[0.25em] ${reduceMotion ? "" : "animate-pulse"}`}>Tap, swipe, or press Enter to throw Field Lens</p>
+      <p className="text-white/20 text-[10px] mt-1">{spawn.rarity === "legendary" ? "⚠️ Legendary — bonus answers improve catch chance" : `Catch chance: ${Math.round(spawn.catch_chance * 100)}%`}</p>
+    </div>
+  );
+}
+
+export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
+  const reduceMotion = useReducedMotion();
+  const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
+
+  const {
+    phase,
+    result,
+    orbScale,
+    particles,
+    videoRef,
+    handleThrow,
+    handleSwipe,
+    handleTryAgain,
+  } = useEncounterState({ spawn, onCatch, theme, reduceMotion });
+
   const xp = RARITY_XP_MAP[spawn.rarity] * (spawn.is_shiny || result === "critical" ? 2 : 1);
 
   return (
@@ -341,18 +393,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
         }} />
 
       {/* Particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {particles.map(p => (
-          <motion.div
-            key={p.id}
-            className="absolute w-2 h-2 rounded-full"
-            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-            animate={{ x: p.vx * 8, y: p.vy * 8, opacity: 0, scale: 0.25 }}
-            transition={{ duration: 1.35, ease: "easeOut" }}
-            style={{ left: `${p.x}%`, top: `${p.y}%`, marginLeft: "-0.25rem", background: p.color, boxShadow: `0 0 6px ${p.color}` }}
-          />
-        ))}
-      </div>
+      <EncounterParticles particles={particles} />
 
       {/* Top bar */}
       <EncounterTopBar spawn={spawn} theme={theme} onDismiss={onDismiss} />
@@ -380,12 +421,7 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
       />
 
       {/* Throw instruction */}
-      {phase === "encounter" && (
-        <div className="relative z-10 mb-32 text-center">
-          <p className={`text-white/40 text-xs uppercase tracking-[0.25em] ${reduceMotion ? "" : "animate-pulse"}`}>Tap, swipe, or press Enter to throw Field Lens</p>
-          <p className="text-white/20 text-[10px] mt-1">{spawn.rarity === "legendary" ? "⚠️ Legendary — bonus answers improve catch chance" : `Catch chance: ${Math.round(spawn.catch_chance * 100)}%`}</p>
-        </div>
-      )}
+      <EncounterThrowInstruction phase={phase} spawn={spawn} reduceMotion={reduceMotion} />
     </motion.div>
   );
 }
