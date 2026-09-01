@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import MineralStoryCard from './MineralStoryCard.jsx';
 import QuickIDStack from './QuickIDStack.jsx';
 import DeepAnalysisPanel from './DeepAnalysisPanel.jsx';
+import CrystalLatticeViewer from './CrystalLatticeViewer.jsx';
+import MohsScratchLab from './MohsScratchLab.jsx';
+import ProvenanceCertificateModal from './ProvenanceCertificateModal.jsx';
 import {
   Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2,
   Zap, FlaskConical, BookOpen, Star, Shield, Cloud, Gem, Hammer,
-  Compass, Camera, ArrowRight, Check
+  Compass, Camera, ArrowRight, Check, Award, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionModal from './CorrectionModal.jsx';
@@ -58,6 +61,8 @@ export default function HolographicResult({
   const tabRefs = useRef(new Map());
   const reduceMotion = useReducedMotion();
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [certOpen, setCertOpen] = useState(false);
+  const [uvMode, setUvMode] = useState(false);
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState('overview'); // overview | candidates | tests | deep
 
@@ -108,6 +113,7 @@ export default function HolographicResult({
   const luster = lusterFeature || 'Vitreous';
   const valueEstimate = result?.value_estimate || '$10 – $35';
   const scientificFormula = [result?.scientific_name, result?.chemical_formula].filter(Boolean).join(' · ');
+  const topMatchLower = (result?.top_match || '').toLowerCase();
 
   const focusTab = (index) => {
     const tab = TABS[(index + TABS.length) % TABS.length];
@@ -161,6 +167,24 @@ export default function HolographicResult({
                 className="absolute inset-0 pointer-events-none opacity-15 mix-blend-overlay"
                 style={{ backgroundImage: 'repeating-linear-gradient(0deg, hsla(195,100%,70%,0.3) 0 1px, transparent 1px 4px)' }}
               />
+              {/* 365nm UV Blacklight Excitation Overlay */}
+              {uvMode && (
+                <div
+                  className="absolute inset-0 pointer-events-none transition-opacity duration-500 animate-pulse"
+                  style={{
+                    background: `radial-gradient(circle at 50% 50%, ${
+                      topMatchLower.includes('yooperlite') || topMatchLower.includes('sodalite')
+                        ? 'hsla(35, 100%, 55%, 0.85)'
+                        : topMatchLower.includes('fluorite')
+                        ? 'hsla(260, 100%, 65%, 0.8)'
+                        : topMatchLower.includes('calcite')
+                        ? 'hsla(340, 100%, 60%, 0.75)'
+                        : 'hsla(280, 100%, 65%, 0.5)'
+                    } 0%, hsla(270, 100%, 25%, 0.7) 50%, hsla(250, 100%, 6%, 0.92) 100%)`,
+                    mixBlendMode: 'screen',
+                  }}
+                />
+              )}
             </div>
 
             {/* Rarity badge — top left */}
@@ -176,8 +200,8 @@ export default function HolographicResult({
               />
             </div>
 
-            {/* Calibrated confidence chip — top right */}
-            <div className="absolute top-3 right-3 z-10">
+            {/* Calibrated confidence chip & 365nm UV Mode Toggle — top right */}
+            <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
               <div
                 className="px-3 py-1 rounded-full text-[10px] font-mono font-bold flex items-center gap-1.5"
                 style={{
@@ -190,6 +214,23 @@ export default function HolographicResult({
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: confLabel.color }} />
                 {(conf * 100).toFixed(0)}% · {confLabel.text}
               </div>
+
+              {/* 365nm UV Blacklight Toggle */}
+              <button
+                type="button"
+                onClick={() => setUvMode(!uvMode)}
+                className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all shadow-md active:scale-95"
+                style={{
+                  background: uvMode ? 'hsl(280 90% 55%)' : 'hsla(240,40%,6%,0.88)',
+                  border: uvMode ? '1px solid hsl(280 100% 75%)' : '1px solid hsla(0,0%,100%,0.2)',
+                  color: uvMode ? '#fff' : 'hsla(0,0%,100%,0.7)',
+                  boxShadow: uvMode ? '0 0 15px hsla(280,100%,60%,0.6)' : 'none',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <Zap size={10} className={uvMode ? 'text-yellow-300 animate-pulse' : ''} />
+                <span>{uvMode ? '365nm UV' : 'UV Mode'}</span>
+              </button>
             </div>
 
             {/* Mineral name & formula overlay at bottom of photo */}
@@ -350,11 +391,20 @@ export default function HolographicResult({
             </Button>
           </div>
 
+          <button
+            onClick={() => setCertOpen(true)}
+            type="button"
+            className="mt-2.5 w-full py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition active:scale-98"
+          >
+            <Award size={14} />
+            Official Provenance Certificate
+          </button>
+
           {onShareMap && (
             <button
               onClick={onShareMap}
               type="button"
-              className="mt-2.5 w-full py-1.5 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-emerald-400/80 hover:text-emerald-300 transition-colors"
+              className="mt-2 w-full py-1.5 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-emerald-400/80 hover:text-emerald-300 transition-colors"
             >
               <MapPin size={12} />
               Submit find location for public map review
@@ -432,6 +482,12 @@ export default function HolographicResult({
                 </div>
               </div>
             )}
+
+            {/* 3D Crystal System Lattice Inspector */}
+            <CrystalLatticeViewer
+              crystalSystem={crystalSystem}
+              mineralName={result?.top_match}
+            />
 
             {/* Geological Formation & Origin */}
             {result?.formation && (
@@ -536,6 +592,13 @@ export default function HolographicResult({
             tabIndex={0}
             className="p-4 space-y-3 focus-visible:outline-none"
           >
+            {/* Interactive Mohs Scratch & Streak Lab */}
+            <MohsScratchLab
+              specimenHardness={result?.hardness_mohs || 7.0}
+              mineralName={result?.top_match}
+              streakColor={tests[0]?.expected || 'White'}
+            />
+
             {tests.length === 0 ? (
               <p className="text-white/35 text-sm text-center py-6">No verification tests available for this specimen.</p>
             ) : (
@@ -650,6 +713,14 @@ export default function HolographicResult({
         modelVersion={modelVersion}
         imageUrl={primaryImageUrl}
         specimenId={savedId}
+      />
+
+      <ProvenanceCertificateModal
+        open={certOpen}
+        result={result}
+        savedId={savedId}
+        gpsCoords={gpsCoords}
+        onClose={() => setCertOpen(false)}
       />
     </>
   );
