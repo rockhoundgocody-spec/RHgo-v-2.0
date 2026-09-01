@@ -168,4 +168,29 @@ describe('fetchGeologyAt', () => {
     const result = await fetchGeologyAt(45.5, -122.6);
     expect(result).toEqual([]);
   });
+  it('returns empty array when fetch times out with a TimeoutError/AbortError', async () => {
+    const timeoutError = new DOMException('The operation timed out.', 'TimeoutError');
+    globalThis.fetch = vi.fn().mockRejectedValue(timeoutError);
+
+    const result = await fetchGeologyAt(45.5, -122.6);
+    expect(result).toEqual([]);
+  });
+
+  it('passes AbortSignal.timeout(5000) to fetch request options', async () => {
+    const mockSignal = AbortSignal.abort('timeout');
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(mockSignal);
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: { data: [{ name: 'Basalt' }] } }),
+    });
+
+    await fetchGeologyAt(45.5, -122.6);
+
+    expect(timeoutSpy).toHaveBeenCalledWith(5000);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://macrostrat.org/api/v2/geologic_units/map?lat=45.5&lng=-122.6',
+      { signal: mockSignal }
+    );
+  });
 });
