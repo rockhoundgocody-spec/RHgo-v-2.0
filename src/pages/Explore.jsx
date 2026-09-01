@@ -20,7 +20,6 @@ import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
 import ExpeditionPlanner from '@/components/explore/ExpeditionPlanner.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
-import OfflineTopoSync from '@/components/explore/OfflineTopoSync.jsx';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
@@ -430,11 +429,6 @@ export default function Explore() {
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">
             <OfflineBanner cachedAt={cachedAt} count={hotspots.length} />
-          </div>
-        )}
-        {userLocation && (
-          <div className="mt-2 pointer-events-auto max-w-[280px]">
-            <OfflineTopoSync userLocation={userLocation} />
           </div>
         )}
       </div>
