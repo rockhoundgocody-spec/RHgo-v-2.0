@@ -79,7 +79,7 @@ function ObservationHeader({ onClose }) {
         <FlaskConical size={15} className="text-amber-400" />
         <span className="text-sm font-bold text-white/90">Enter Field Evidence</span>
       </div>
-      <button onClick={onClose} className="text-white/30 hover:text-white/60 transition">
+      <button onClick={onClose} aria-label="Close field evidence" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
         <X size={16} />
       </button>
     </div>

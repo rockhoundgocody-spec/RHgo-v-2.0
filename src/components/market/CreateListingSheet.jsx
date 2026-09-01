@@ -78,7 +78,7 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
 
             <div className="flex items-center justify-between px-5 pb-3">
               <h2 className="text-white font-black text-lg">List for Trade</h2>
-              <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'hsla(255,20%,20%,0.6)' }}>
+              <button onClick={onClose} aria-label="Close trade listing" className="w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" style={{ background: 'hsla(255,20%,20%,0.6)' }}>
                 <X size={16} className="text-white/50" />
               </button>
             </div>
