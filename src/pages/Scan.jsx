@@ -472,8 +472,6 @@ export default function Scan() {
     } else {
       refreshBadges();
     }
-
-    if (choice.geoPrivacy !== 'private') setTimeout(() => setShareMapOpen(true), 800);
   };
 
   const reset = () => {
@@ -546,6 +544,8 @@ export default function Scan() {
             modelVersion="gemini-flash"
             onSave={() => setChoiceOpen(true)}
             onReset={reset}
+            onCompare={() => navigate('/compare')}
+            onShareMap={() => setShareMapOpen(true)}
             onDeepAnalysis={handleDeepAnalysis}
             deepAnalysis={deepAnalysis}
             deepLoading={deepLoading}
