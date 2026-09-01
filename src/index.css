@@ -137,15 +137,27 @@
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     /* Hide the visible scrollbar gutter on the right while staying scrollable */
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
   }
 
-  #root::-webkit-scrollbar,
+  /* Universal Scrollbar Elimination:
+     Completely hides visible scrollbars (vertical, horizontal, nested, modals, sheets, drawers)
+     across WebKit (Chrome, Edge, Safari, iOS, Android), Gecko (Firefox), and legacy engines,
+     giving an ultra-clean native-app look while preserving 100% fluid touch, mousewheel,
+     trackpad, and keyboard scrolling on every single screen. */
+  html, body, #root, *, *::before, *::after {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  html::-webkit-scrollbar,
   body::-webkit-scrollbar,
-  html::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none; /* Chrome / Safari / Edge */
+  #root::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
+    background: transparent !important;
   }
 }
 
@@ -196,6 +208,16 @@
   .text-hud { color: hsl(var(--hud-cyan)); }
   .glow-amethyst { text-shadow: 0 0 20px hsla(280, 100%, 75%, 0.6), 0 0 40px hsla(265, 80%, 50%, 0.3); }
   .glow-hud { text-shadow: 0 0 12px hsla(195, 100%, 60%, 0.7); }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
 
   @keyframes amethyst-pulse {
     0%, 100% { transform: scale(1); filter: brightness(1) blur(0px); }
