@@ -87,6 +87,30 @@ export default function CloverVoicePanel({
           </div>
         )}
 
+        {/* Quick prompt chips for fast 1-tap inquiries */}
+        {messages.length <= 2 && !interim && phase !== 'thinking' && (
+          <div className="pt-1.5 pb-1 flex flex-wrap gap-1.5 justify-start">
+            {[
+              'Where can I hunt nearby?',
+              'How to spot agates?',
+              'Field hardness test tips',
+              'Tell me a rock secret',
+            ].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => onSend?.(chip)}
+                className="text-[10px] font-medium px-2 py-1 rounded-lg transition-all active:scale-95 text-white/70 hover:text-white"
+                style={{
+                  background: 'hsla(270,50%,25%,0.4)',
+                  border: '1px solid hsla(270,60%,50%,0.25)',
+                }}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
+
         {phase === 'thinking' && (
           <div className="flex justify-start">
             <div className="px-3 py-2 rounded-xl" style={{ background: 'hsla(255,25%,20%,0.6)' }}>
