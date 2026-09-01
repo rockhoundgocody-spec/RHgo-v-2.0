@@ -1,0 +1,98 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "description": "Gamified referral engine \u2014 when an invitee signs up via a referral code, the inviter's Companion gains XP. Tracks the full lifecycle from pending to completed, with companion evolution milestones.",
+  "properties": {
+    "referral_code": {
+      "type": "string",
+      "description": "Unique shareable code, e.g. 'CLOVER-ABC123'"
+    },
+    "inviter_email": {
+      "type": "string",
+      "description": "Email of the rockhound who shared the invite"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "Email of the invited person \u2014 set when they sign up"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "pending = code shared, no signup yet; completed = invitee signed up and XP awarded"
+    },
+    "companion_xp_bonus": {
+      "type": "integer",
+      "default": 50,
+      "description": "XP awarded to the inviter's Companion when the referral completes"
+    },
+    "milestone_triggered": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the companion evolution milestone toast was shown for this referral"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this referral (up to 1000 characters)"
+    }
+  },
+  "required": [
+    "referral_code",
+    "inviter_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.inviter_email": "{{user.email}}"
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.inviter_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

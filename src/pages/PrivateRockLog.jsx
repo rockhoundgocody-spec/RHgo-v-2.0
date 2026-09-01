@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpTip from '@/components/hub/HelpTip.jsx';
+import ExportBar from '@/components/collection/ExportBar.jsx';
 
 const RARITY_COLORS = {
   common:   'hsl(195,80%,70%)',
@@ -52,6 +53,11 @@ export default function PrivateRockLog() {
           </div>
           <p className="text-white/35 text-[11px] mt-0.5">Only visible to you · {logs.length} finds logged</p>
         </div>
+        {logs.length > 0 && (
+          <div className="w-40 shrink-0">
+            <ExportBar logs={logs} />
+          </div>
+        )}
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
@@ -63,6 +69,13 @@ export default function PrivateRockLog() {
           <Plus size={15} /> Log Rock
         </button>
       </div>
+
+      {/* Export bar (full width below header) */}
+      {logs.length > 0 && (
+        <div className="mb-4">
+          <ExportBar logs={logs} />
+        </div>
+      )}
 
       {/* List */}
       {loading ? (

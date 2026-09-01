@@ -1,0 +1,92 @@
+{
+  "name": "StreamBid",
+  "type": "object",
+  "description": "A viewer's bid on a specimen identified during a live stream field auction. The host sees bids in real time and can accept the highest bid, turning a find into a sale.",
+  "properties": {
+    "stream_id": {
+      "type": "string",
+      "description": "LiveStream this bid belongs to"
+    },
+    "bidder_email": {
+      "type": "string"
+    },
+    "bidder_name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Bid amount in USD"
+    },
+    "mineral_name": {
+      "type": "string",
+      "description": "The mineral/specimen being bid on"
+    },
+    "identification_id": {
+      "type": "string",
+      "description": "Optional StreamIdentification id this bid targets"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "accepted",
+        "outbid",
+        "withdrawn"
+      ],
+      "default": "active"
+    },
+    "bid_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description of this stream bid (up to 1000 characters)"
+    }
+  },
+  "required": [
+    "stream_id",
+    "bidder_name",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.bidder_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.bidder_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

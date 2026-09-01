@@ -30,6 +30,55 @@
       ],
       "default": "public"
     },
+    "access_status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "restricted",
+        "seasonal",
+        "closed",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Current land access status \u2014 open, restricted (permit/fee), seasonal closure, or fully closed"
+    },
+    "access_notes": {
+      "type": "string",
+      "description": "Human-readable access guidance \u2014 parking, road conditions, gate codes, seasonal details"
+    },
+    "permit_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a permit or pass is required to collect here"
+    },
+    "permit_url": {
+      "type": "string",
+      "description": "URL to purchase/obtain the required permit"
+    },
+    "permit_cost": {
+      "type": "string",
+      "description": "Human-readable permit cost, e.g. '$5/day, $35/year'"
+    },
+    "seasonal_dates": {
+      "type": "string",
+      "description": "Seasonal access window, e.g. 'May-Oct' or 'Closed Nov-Mar for nesting'"
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "unpatented",
+        "patented",
+        "active_mine",
+        "unknown"
+      ],
+      "default": "none",
+      "description": "Mining claim status \u2014 unpatented/patented claims mean collecting may require claimholder permission"
+    },
+    "collecting_rules": {
+      "type": "string",
+      "description": "Specific collecting rules for this site \u2014 tools allowed, weight limits, surface collection only, etc."
+    },
     "minerals": {
       "type": "array",
       "items": {

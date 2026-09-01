@@ -21,6 +21,7 @@ import MineralFilterPanel from '@/components/explore/MineralFilterPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
 import ExpeditionPlanner from '@/components/explore/ExpeditionPlanner.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
+import OfflineTopoSync from '@/components/explore/OfflineTopoSync.jsx';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
@@ -222,6 +223,7 @@ export default function Explore() {
     if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite'].includes(m.toLowerCase())));
     if (activeLayer === 'gaps')   list = list.filter(h => collectionGapIds.has(h.id));
     if (activeLayer === 'public') list = list.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
+    if (activeLayer === 'land')   list = list.filter(h => h.access_status && h.access_status !== 'unknown' && h.access_status !== 'open');
     if (activeLayer === 'mine')   list = list.filter(h => (h.minerals||[]).some(m => collectedMinerals.has(m.toLowerCase())));
     // Mineral type filter — only hotspots containing at least one selected mineral
     if (selectedMineralsLower.size > 0) {
@@ -445,6 +447,11 @@ export default function Explore() {
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">
             <OfflineBanner cachedAt={cachedAt} count={hotspots.length} />
+          </div>
+        )}
+        {userLocation && (
+          <div className="mt-2 pointer-events-auto max-w-[280px]">
+            <OfflineTopoSync userLocation={userLocation} />
           </div>
         )}
       </div>

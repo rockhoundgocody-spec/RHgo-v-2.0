@@ -5,6 +5,7 @@ import { Radio, Eye, ArrowLeft, Glasses } from 'lucide-react';
 import StreamChat from '@/components/live/StreamChat.jsx';
 import LiveIdFeed from '@/components/live/LiveIdFeed.jsx';
 import LiveIdOverlay from '@/components/live/LiveIdOverlay.jsx';
+import AuctionPanel from '@/components/live/AuctionPanel.jsx';
 
 export default function LiveStreamView() {
   const { streamId } = useParams();
@@ -102,6 +103,7 @@ export default function LiveStreamView() {
       </div>
 
       <LiveIdFeed streamId={streamId} />
+      <AuctionPanel streamId={streamId} me={me} hostEmail={stream?.owner_email} />
       <StreamChat streamId={streamId} me={me} />
     </div>
   );

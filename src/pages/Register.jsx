@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Gem, Mail, Lock, Loader2 } from "lucide-react";
+import { Gem, Mail, Lock, Loader2, Gift } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -19,6 +19,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [referralCode, setReferralCode] = useState(() => new URLSearchParams(window.location.search).get('ref') || '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,6 +52,12 @@ export default function Register() {
         base44.auth.setToken(result.access_token);
       }
       base44.analytics.track({ eventName: "user_registered" });
+      // Redeem referral code if present — awards companion XP to the inviter
+      if (referralCode) {
+        try {
+          await base44.functions.invoke('processReferral', { action: 'redeem', code: referralCode });
+        } catch {}
+      }
       window.location.href = "/onboarding";
     } catch (err) {
       setError(err.message || "Invalid code — check your email and try again");
@@ -179,6 +186,13 @@ export default function Register() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
+        {referralCode && (
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1"
+            style={{ background: 'hsla(280,60%,15%,0.4)', border: '1px solid hsla(280,70%,50%,0.3)' }}>
+            <Gift size={14} className="text-amethyst-glow" />
+            <span className="text-amethyst-glow text-xs font-semibold">Referred by {referralCode}</span>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="email" className="text-white/60 text-xs uppercase tracking-wider">Email</Label>
           <div className="relative">

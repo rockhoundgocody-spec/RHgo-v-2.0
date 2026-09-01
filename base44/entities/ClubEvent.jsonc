@@ -1,0 +1,135 @@
+{
+  "name": "ClubEvent",
+  "type": "object",
+  "description": "An event hosted by a gem & mineral club chapter \u2014 field trips, meetings, shows, auctions, and workshops. Members RSVP and organizers track attendance.",
+  "properties": {
+    "chapter_id": {
+      "type": "string",
+      "description": "ClubChapter this event belongs to"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the event organizer"
+    },
+    "title": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "field_trip",
+        "meeting",
+        "show",
+        "auction",
+        "workshop",
+        "social"
+      ],
+      "default": "meeting"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Event details \u2014 what to bring, what to expect, meeting point"
+    },
+    "start_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "location_label": {
+      "type": "string",
+      "description": "Human-readable event location"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "max_attendees": {
+      "type": "integer",
+      "description": "Maximum attendees, if limited"
+    },
+    "rsvp_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "rsvp_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of members who RSVP'd yes"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether non-members can see and RSVP to this event"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "ongoing",
+        "completed",
+        "cancelled"
+      ],
+      "default": "upcoming"
+    },
+    "description_long": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description (up to 1000 characters)"
+    }
+  },
+  "required": [
+    "chapter_id",
+    "owner_email",
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

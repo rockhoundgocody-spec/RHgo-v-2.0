@@ -4,6 +4,7 @@ import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashbo
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
 import CloverFieldBackground from '@/components/companion/CloverFieldBackground.jsx';
+import ReferralEngine from '@/components/companion/ReferralEngine.jsx';
 
 export default function CompanionDashboard() {
   const [companion, setCompanion] = useState(null);
@@ -41,6 +42,7 @@ export default function CompanionDashboard() {
         <>
           <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion(updated)} />
           <CompanionProgressDashboard companion={companion} />
+          <ReferralEngine companion={companion} />
         </>
       )}
       </div>

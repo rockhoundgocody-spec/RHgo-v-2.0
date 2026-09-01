@@ -50,6 +50,7 @@ const AgateGuide = lazy(() => import('@/pages/AgateGuide'));
 const Live = lazy(() => import('@/pages/Live'));
 const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
+const Clubs = lazy(() => import('@/pages/Clubs'));
 
 
 // Feature pages (moved to modals/drawers in main app, kept for legacy)
@@ -146,6 +147,7 @@ const AuthenticatedApp = () => {
           <Route path="/live" element={<Live />} />
           <Route path="/live/:streamId" element={<LiveStreamView />} />
           <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
+          <Route path="/clubs" element={<Clubs />} />
 
           {/* USER ROUTES */}
           <Route path="/profile" element={<Profile />} />

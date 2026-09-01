@@ -11,6 +11,7 @@ import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRig
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGES } from '@/lib/badgeDefinitions.js';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
+import LandAccessPanel from '@/components/explore/LandAccessPanel.jsx';
 import { base44 } from '@/api/base44Client';
 
 const LAND_LABEL = {
@@ -246,6 +247,9 @@ export default function HotspotDetailSheet({
               </p>
             </div>
           )}
+
+          {/* ── Land Access Status ── */}
+          <LandAccessPanel hotspot={hotspot} />
 
           {/* ── Description & Rules ── */}
           {hotspot.description && (

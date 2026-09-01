@@ -1,0 +1,116 @@
+{
+  "name": "ClubChapter",
+  "type": "object",
+  "description": "A gem & mineral club chapter \u2014 an institutional hub for club event management, member coordination, and community building. Clubs can post events, track RSVPs, and showcase their chapter.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Chapter name, e.g. 'Chicago Rocks & Minerals Society'"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly slug, e.g. 'chicago-rocks-minerals'"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the chapter admin/organizer"
+    },
+    "location_label": {
+      "type": "string",
+      "description": "City, State where the chapter is based"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "meeting_schedule": {
+      "type": "string",
+      "description": "Human-readable meeting cadence, e.g. '2nd Tuesday of each month, 7pm'"
+    },
+    "meeting_location": {
+      "type": "string",
+      "description": "Where meetings are held"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "member_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "founded_year": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Chapter description \u2014 what the club does, specialties, community focus"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Chapter logo or group photo"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin-verified chapters show a verification badge"
+    },
+    "testimonial": {
+      "type": "string",
+      "description": "A short member testimonial about the chapter"
+    },
+    "description_long": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional free-form description (up to 1000 characters)"
+    }
+  },
+  "required": [
+    "name",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

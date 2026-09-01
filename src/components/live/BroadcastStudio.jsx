@@ -11,6 +11,7 @@ import LiveIdOverlay from './LiveIdOverlay.jsx';
 import BroadcastHud from './BroadcastHud.jsx';
 import GlassesSource from './GlassesSource.jsx';
 import useAutoIdentify from './useAutoIdentify';
+import ClipGenerator from './ClipGenerator.jsx';
 
 export default function BroadcastStudio({ me, coords, onClose }) {
   const videoRef = useRef(null);
@@ -120,6 +121,7 @@ export default function BroadcastStudio({ me, coords, onClose }) {
             </Button>
           </div>
           <LiveIdFeed streamId={stream.id} />
+          <ClipGenerator stream={stream} me={me} latestId={lastId} />
           <DraftList stream={stream} me={me} />
           <StreamChat streamId={stream.id} me={me} />
         </>

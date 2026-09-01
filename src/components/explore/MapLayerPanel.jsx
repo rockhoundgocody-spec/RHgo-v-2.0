@@ -3,7 +3,7 @@
  * Layers: All Finds | Rare Minerals | Collection Gaps | Public Only | Expedition
  */
 import React from 'react';
-import { Layers, Gem, Package, MapPin, Route } from 'lucide-react';
+import { Layers, Gem, Package, MapPin, Route, Shield } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ const LAYERS = [
   { id: 'rare',       label: 'Rare',      icon: Gem,     color: '#a78bfa' },
   { id: 'gaps',       label: 'My Gaps',   icon: Package, color: '#c084fc' },
   { id: 'public',     label: 'Open',      icon: MapPin,  color: '#34d399' },
+  { id: 'land',       label: 'Land',      icon: Shield,  color: '#fbbf24' },
   { id: 'expedition', label: 'Route',     icon: Route,   color: '#f59e0b' },
 ];
 
