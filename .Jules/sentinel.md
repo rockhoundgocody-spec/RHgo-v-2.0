@@ -13,3 +13,11 @@
 **Learning:** Using string `endsWith` for hostname domain checking without an exact match or leading dot (`.`) allows domain suffix spoofing bypasses.
 
 **Prevention:** Ensure URL hostname validation checks exact domain equality (`host === domain`) or subdomains with a leading dot (`host.endsWith('.' + domain)`), and strictly enforce HTTP/HTTPS protocols.
+
+## 2026-09-01 - Open Redirect Mitigation in OAuth Consent Navigation
+
+**Vulnerability:** In `OAuthConsent.jsx`, the application assigned unvalidated `data.redirect_url` directly to `window.location.href` after completing an OAuth authorization grant, allowing attackers to redirect users to malicious off-site phishing destinations.
+
+**Learning:** Assigning backend-returned redirect URLs directly to `window.location.href` without validating origin or protocol allows open redirect attacks, especially when authorization responses accept or return caller-supplied callback destinations.
+
+**Prevention:** Always validate HTTP/HTTPS redirect targets using `getSafeRedirectUrl` against the application origin before assigning to `window.location.href`, while filtering dangerous schemes (`javascript:`, `data:`, `file:`) when handling valid deep-link custom app schemes (such as `cursor://`).
