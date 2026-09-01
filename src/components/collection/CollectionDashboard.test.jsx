@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 // Set up minimal browser environment globals before importing modules with side-effects
 globalThis.window = globalThis.window || {
@@ -18,6 +18,20 @@ globalThis.window = globalThis.window || {
 };
 globalThis.document = globalThis.document || { title: '' };
 
+vi.mock('recharts', () => ({
+  PieChart: () => null,
+  Pie: () => null,
+  Cell: () => null,
+  BarChart: () => null,
+  Bar: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  Tooltip: () => null,
+  ResponsiveContainer: ({ children }) => children,
+  LineChart: () => null,
+  Line: () => null,
+}));
+
 let computeRarityData, computeTopMinerals, computeWeeklyFinds, computeGeoStates, computeRarestFinds, computeSummaryStats, computeCollectionStats;
 
 beforeAll(async () => {
@@ -29,7 +43,7 @@ beforeAll(async () => {
   computeRarestFinds = mod.computeRarestFinds;
   computeSummaryStats = mod.computeSummaryStats;
   computeCollectionStats = mod.computeCollectionStats;
-});
+}, 30000);
 
 describe('CollectionDashboard data helpers', () => {
   const sampleSpecimens = [

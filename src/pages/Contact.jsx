@@ -22,7 +22,7 @@ export default function Contact() {
 
           <div className="space-y-3">
             <a
-              href="mailto:hello@rockhound-go.app"
+              href="mailto:hello@rhgo.me"
               className="flex items-center gap-3 p-4 rounded-lg border border-amethyst/30 bg-amethyst/10 hover:bg-amethyst/20 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-amethyst/30 flex items-center justify-center">
@@ -33,13 +33,13 @@ export default function Contact() {
                   Email
                 </div>
                 <div className="text-white font-semibold">
-                  hello@rockhound-go.app
+                  hello@rhgo.me
                 </div>
               </div>
             </a>
 
             <a
-              href="mailto:support@rockhound-go.app"
+              href="mailto:support@rhgo.me"
               className="flex items-center gap-3 p-4 rounded-lg border border-hud-cyan/30 bg-hud-cyan/10 hover:bg-hud-cyan/20 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-hud-cyan/30 flex items-center justify-center">
@@ -50,13 +50,13 @@ export default function Contact() {
                   Support
                 </div>
                 <div className="text-white font-semibold">
-                  support@rockhound-go.app
+                  support@rhgo.me
                 </div>
               </div>
             </a>
 
             <a
-              href="https://rockhound-go.app"
+              href="https://rhgo.me"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
@@ -69,7 +69,7 @@ export default function Contact() {
                   Website
                 </div>
                 <div className="text-white font-semibold">
-                  rockhound-go.app
+                  rhgo.me
                 </div>
               </div>
             </a>
