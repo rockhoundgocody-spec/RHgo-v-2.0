@@ -22,7 +22,7 @@ import StormWindowBanner from '@/components/hub/StormWindowBanner.jsx';
 import CollectionWeightTracker from '@/components/hub/CollectionWeightTracker.jsx';
 import CommunityVerificationQueue from '@/components/scan/CommunityVerificationQueue.jsx';
 import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
-import ChaosModeToggle, { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
+import { useChaosMode } from '@/components/hub/ChaosModeToggle.jsx';
 import ARRockBattle from '@/components/hub/ARRockBattle.jsx';
 import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
 import CompanionProgressDashboard from '@/components/hub/CompanionProgressDashboard.jsx';
@@ -30,7 +30,6 @@ import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
-import useKidMode from '@/lib/useKidMode';
 import DeferredSection from '@/components/DeferredSection.jsx';
 import { onboardingStore } from '@/lib/onboardingStore';
 
@@ -39,8 +38,7 @@ export default function Hub() {
   const [userEmail, setUserEmail] = useState(null);
   const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
-  const { chaos, toggle: toggleChaos, locked: chaosLocked } = useChaosMode();
-  const isKid = useKidMode();
+  const { chaos } = useChaosMode();
   const handleMilestone = useCallback((m) => setMilestone(m), []);
   const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: handleMilestone });
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
@@ -83,16 +81,6 @@ export default function Hub() {
 
       {/* ── HERO CENTERPIECE ── */}
       <section className="flex flex-col items-center text-center px-5 pt-4 w-full max-w-md overflow-hidden">
-        {/* Chaos / Scholar mode toggle — top right */}
-        <div className="w-full flex justify-end mb-2">
-          <ChaosModeToggle chaos={chaos} onToggle={toggleChaos} locked={chaosLocked} />
-        </div>
-        {isKid && (
-          <div className="mb-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]"
-            style={{ background: 'hsla(45,90%,50%,0.2)', border: '1px solid hsla(45,90%,60%,0.4)', color: '#fbbf24' }}>
-            🌟 Explorer Mode
-          </div>
-        )}
         <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} size={141} />
 
         <div className="mt-3 select-none">
