@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, MapPin, Camera, Users, Baby, Trash2, Mail } from 'lucide-react';
 import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const SECTIONS = [
   {
@@ -82,6 +83,10 @@ const SECTIONS = [
 
 export default function PrivacyPolicy() {
   useSeoRobots(true);
+  useSeoMeta(
+    'RockHound-GO Privacy Policy — Stealth Mode, Location & Child Safety',
+    'How RockHound-GO handles your data: permission-based location, Stealth Mode for hiding exact GPS coordinates, AI image processing, COPPA-aware child accounts, and your deletion rights.'
+  );
   return (
     <div className="min-h-screen w-full text-foreground" style={{ background: 'radial-gradient(ellipse at top, hsl(265 45% 14%) 0%, hsl(250 30% 8%) 50%, hsl(245 25% 5%) 100%)' }}>
       <div className="max-w-2xl mx-auto px-5 py-10 pb-24">

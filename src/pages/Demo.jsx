@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ScanLine, MapPin, Gem, Zap, Trophy, ArrowRight, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const MOCK_SPECIMENS = [
   { name: 'Amethyst', rarity: 'rare', emoji: '💜', conf: 94, location: 'Lake Superior, MI' },
@@ -61,6 +63,11 @@ function ScannerMock() {
 }
 
 export default function Demo() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'RockHound-GO Live Demo — Try AI Mineral ID & Hotspot Maps (No Sign-Up)',
+    'Try RockHound-GO free with no account. Demo the AI mineral scanner, explore interactive rockhounding hotspot maps, and preview the GeoDex specimen collection — all without signing up.'
+  );
   const [tab, setTab] = useState('collection');
 
   return (

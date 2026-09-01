@@ -17,6 +17,7 @@ import { Check, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 // ─── STRIPE CONFIGURATION ─────────────────────────────────────────────────
 const STRIPE_CONFIG = {
@@ -100,6 +101,10 @@ const TIERS = [
 
 export default function Pricing() {
   useSeoRobots(true);
+  useSeoMeta(
+    'RockHound-GO Pricing — Free, Field Pro & Family Plans',
+    'RockHound-GO is free forever for rockhounds. Field Pro adds unlimited AI scans, offline hotspot maps, and advanced filters. Family plan covers the whole crew with parental controls. No credit card to start.'
+  );
   const navigate = useNavigate();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(null);

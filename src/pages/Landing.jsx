@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Compass, ScanLine, Gem, Trophy, MapPin, Zap, Shield, Users, Star, ChevronRight, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const FEATURES = [
   {
@@ -83,6 +84,10 @@ function CrystalParticle({ style }) {
 
 export default function Landing() {
   useSeoRobots(true);
+  useSeoMeta(
+    'RockHound-GO — AI Field Companion for Rockhounds | Mineral ID, Hotspot Maps & GeoDex',
+    'Identify any rock or mineral instantly with AI scan. Discover rockhounding hotspots on interactive maps with land-access legality scores. Build your GPS-tagged GeoDex collection. Free, works offline, built by collectors.'
+  );
   const [heroVisible, setHeroVisible] = useState(false);
   const navigate = useNavigate();
   useEffect(() => { setHeroVisible(true); }, []);
