@@ -160,12 +160,16 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
   const _speak = () => {
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
-    utter.rate     = voiceConfig.rate || 0.88;
-    utter.pitch    = voiceConfig.pitch || 1.05;
+    utter.rate     = voiceConfig.rate || 0.96;
+    utter.pitch    = voiceConfig.pitch || 1.02;
     utter.volume   = voiceConfig.volume ?? 1.0;
     const voices   = window.speechSynthesis.getVoices();
-    const best     = voices.find((v) => /en[-_]US/i.test(v.lang) && /female|samantha|zira/i.test(v.name))
-                  || voices.find((v) => /en[-_]US/i.test(v.lang))
+    // Prioritize Irish-American female voice (en-IE / Moira), smooth warm natural female voices, and avoid British (en-GB).
+    const isNotBritish = (v) => !/en[-_]GB|british|uk\s*english/i.test(v.lang + ' ' + v.name);
+    const best     = voices.find((v) => isNotBritish(v) && /en[-_]IE|irish|moira|orla|niamh/i.test(v.lang + ' ' + v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /samantha|karen|victoria|ava|zoe|allison|female/i.test(v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang))
+                  || voices.find((v) => isNotBritish(v))
                   || voices[0];
     if (best) utter.voice = best;
     utter.onstart  = () => setSpeaking(true);

@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { saveCache, loadCache } from '@/lib/offlineCache';
+import { getAugmentedHotspots } from '@/lib/seedHotspots';
 
 const CACHE_KEY = 'Hotspot';
 const QUERY_KEY = ['hotspots'];
@@ -50,8 +51,8 @@ export default function useOfflineHotspots() {
     onError: () => setIsOffline(true),
   });
 
-  // Show loading spinner only when we have NO data at all (first cold start)
-  const isLoading = isFetching && data.length === 0;
+  const augmentedData = getAugmentedHotspots(data);
+  const isLoading = isFetching && augmentedData.length === 0;
 
-  return { data, isLoading, isOffline, cachedAt, error: null, refetch };
+  return { data: augmentedData, isLoading, isOffline, cachedAt, error: null, refetch };
 }
