@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import BlackOpalShader from './BlackOpalShader.jsx';
-import PhysicalCrystalOrb from './PhysicalCrystalOrb.jsx';
 import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
@@ -285,15 +284,27 @@ export default function AmethystOrb({
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
         style={{ boxShadow: cfg.boxShadow }}
       >
-        {/* LAYER 1 — 3D Physical Crystal Orb with Simplex Vertex Displacement & Thin-Film Iridescence */}
+        {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
+            WebGPU + TSL when available; WebGL fallback otherwise. */}
         <div className="absolute inset-0">
-          <PhysicalCrystalOrb
-            size={size}
-            orbState={effectiveState}
-            getAmplitude={getAmplitude}
-            getSpectrum={getSpectrum}
-            getInteraction={getInteraction}
-          />
+          {useWebGPU ? (
+            <WebGPUOpalShader
+              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
+              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
+              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+              onUnsupported={() => setUseWebGPU(false)}
+            />
+          ) : (
+            <BlackOpalShader
+              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
+              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
+              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+            />
+          )}
         </div>
 
         {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only).
