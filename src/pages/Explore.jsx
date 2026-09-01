@@ -131,6 +131,12 @@ export default function Explore() {
     queryFn: () => base44.entities.Specimen.list('-found_date', 500),
     initialData: [],
   });
+  // Club chapters — shown as pins on the map for club discovery
+  const { data: clubs = [] } = useQuery({
+    queryKey: ['clubs-explore'],
+    queryFn: () => base44.entities.ClubChapter.list('-created_date', 100),
+    initialData: [],
+  });
   const { earnedCodes, pendingBadge, dismissPending } = useBadgeAwarder();
 
   const [activeId,       setActiveId]       = useState(null);
@@ -165,6 +171,12 @@ export default function Explore() {
     );
   }, []);
   useEffect(() => { locate(); }, [locate]);
+
+  // Deep-link from Hub "Weekend Family Adventure" — start on public land layer
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('focus') === 'family') setActiveLayer('public');
+  }, []);
 
   // Collected minerals set
   const collectedMinerals = useMemo(
@@ -269,6 +281,7 @@ export default function Explore() {
         <HotspotMap
           hotspots={filteredHotspots}
           specimens={specimens}
+          clubs={clubs}
           height="100%"
           activeId={activeId}
           onMarkerClick={handleMarkerClick}

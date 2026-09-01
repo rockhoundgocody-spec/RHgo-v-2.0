@@ -49,6 +49,26 @@ const DIFF_BADGE = {
 const hotspotIconCache = new Map();
 const specimenIconCache = new Map();
 const userIconCache = new Map();
+const clubIconCache = new Map();
+
+function makeClubIcon() {
+  if (clubIconCache.has('club')) return clubIconCache.get('club');
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="13" fill="#0f766e" opacity="0.3">
+        <animate attributeName="r" values="11;15;11" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0;0.3" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <rect x="8" y="10" width="16" height="14" rx="2" fill="#14b8a6" opacity="0.95"
+        style="filter:drop-shadow(0 0 5px #14b8a6)"/>
+      <rect x="8" y="10" width="16" height="14" rx="2" fill="none" stroke="white" stroke-width="1.5"/>
+      <rect x="12" y="6" width="8" height="5" rx="1" fill="#14b8a6" opacity="0.9"/>
+      <circle cx="16" cy="17" r="2.5" fill="white" opacity="0.8"/>
+    </svg>`;
+  const icon = L.divIcon({ html: svg, className: '', iconSize: [32, 32], iconAnchor: [16, 16] });
+  clubIconCache.set('club', icon);
+  return icon;
+}
 
 // ── Custom div icon factory ───────────────────────────────────────────────────
 // highContrast: used when the geology overlay is on — solid fills, dark halos
@@ -192,6 +212,7 @@ function UserPanner({ userLocation }) {
 export default function HotspotMap({
   hotspots      = [],
   specimens     = [],
+  clubs         = [],
   height        = 480,
   activeId      = null,
   onMarkerClick,
@@ -345,6 +366,26 @@ export default function HotspotMap({
             <Popup>You are here 📍</Popup>
           </Marker>
         )}
+
+        {/* Club chapter pins — gem & mineral clubs near you */}
+        {clubs.filter(c => c.lat != null && c.lng != null).map(c => (
+          <Marker
+            key={`club-${c.id}`}
+            position={[c.lat, c.lng]}
+            icon={makeClubIcon()}
+            zIndexOffset={200}
+          >
+            <Popup>
+              <div style={{ fontFamily: 'system-ui', fontSize: 12, minWidth: 140 }}>
+                <div style={{ fontWeight: 700, color: '#14b8a6' }}>🏛️ {c.name}</div>
+                {c.location_label && <div style={{ color: '#64748b', marginTop: 3 }}>{c.location_label}</div>}
+                {c.meeting_schedule && <div style={{ color: '#94a3b8', marginTop: 2, fontSize: 11 }}>{c.meeting_schedule}</div>}
+                {c.member_count > 0 && <div style={{ color: '#a78bfa', marginTop: 2, fontSize: 11 }}>{c.member_count} members</div>}
+                <a href="/clubs" style={{ color: '#c084fc', marginTop: 4, display: 'inline-block', fontSize: 11 }}>View chapter →</a>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );

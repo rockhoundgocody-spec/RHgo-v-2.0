@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Smartphone, Gem } from 'lucide-react';
 
@@ -38,18 +37,28 @@ function isPublicPath(pathname) {
  * desktop reviewers, auditors, and search engines can reach them.
  */
 export default function MobileOnlyGate({ children }) {
-  const location = useLocation();
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' ? window.innerWidth > MOBILE_MAX_WIDTH : false
+  );
+  const [pathname, setPathname] = useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/'
   );
 
   useEffect(() => {
     const onResize = () => setIsDesktop(window.innerWidth > MOBILE_MAX_WIDTH);
+    const onPop = () => setPathname(window.location.pathname);
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    window.addEventListener('popstate', onPop);
+    // Poll pathname — the gate sits outside BrowserRouter so it can't use useLocation.
+    const interval = setInterval(() => setPathname(window.location.pathname), 300);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('popstate', onPop);
+      clearInterval(interval);
+    };
   }, []);
 
-  if (!isDesktop || isPublicPath(location.pathname)) return children;
+  if (!isDesktop || isPublicPath(pathname)) return children;
 
   return (
     <div

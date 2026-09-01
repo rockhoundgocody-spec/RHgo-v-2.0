@@ -5,9 +5,9 @@
  *
  * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
+import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGES } from '@/lib/badgeDefinitions.js';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
@@ -133,6 +133,29 @@ export default function HotspotDetailSheet({
     });
   }, [hotspot?.id]);
 
+  // Depletion signal — count specimens logged at this hotspot this season
+  const [seasonFinds, setSeasonFinds] = useState(0);
+  useEffect(() => {
+    if (!hotspot?.name) return;
+    const now = new Date();
+    const seasonStart = new Date(now.getFullYear(), now.getMonth() >= 3 && now.getMonth() <= 10 ? 2 : 10, 1);
+    let alive = true;
+    (async () => {
+      try {
+        const all = await base44.entities.Specimen.list('-found_date', 200);
+        if (!alive) return;
+        const name = hotspot.name.toLowerCase();
+        const count = all.filter(s => {
+          if (!s.found_date) return false;
+          const d = new Date(s.found_date);
+          return d >= seasonStart && (s.found_at || '').toLowerCase().includes(name.slice(0, 6));
+        }).length;
+        setSeasonFinds(count);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [hotspot?.name]);
+
   // ── EARLY RETURN after all hooks ──────────────────────────────────────────
   if (!hotspot) return null;
 
@@ -245,6 +268,17 @@ export default function HotspotDetailSheet({
                 </span>
                 {collectionGapMinerals.length > 3 && ` + ${collectionGapMinerals.length - 3} more`}
               </p>
+            </div>
+          )}
+
+          {/* ── Depletion signal ── */}
+          {seasonFinds > 0 && (
+            <div className="mx-5 mb-4 px-4 py-2.5 rounded-xl flex items-center gap-2"
+              style={{ background: 'hsla(20,50%,14%,0.5)', border: '1px solid hsla(20,60%,45%,0.25)' }}>
+              <TrendingDown size={12} className="text-orange-400/80 flex-shrink-0" />
+              <span className="text-orange-300/80 text-[11px] font-medium">
+                {seasonFinds} {seasonFinds === 1 ? 'find' : 'finds'} logged here this season — rarity may be depleted
+              </span>
             </div>
           )}
 
