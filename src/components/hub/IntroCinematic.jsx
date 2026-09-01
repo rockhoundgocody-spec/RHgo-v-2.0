@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useIntroAudio } from '@/hooks/useIntroAudio';
+import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
 
 // ── Scene definitions ───────────────────────────────────────────────────────
 const SCENES = [
@@ -199,30 +200,35 @@ export default function IntroCinematic({ onDone }) {
       {/* ── Underground fragments (scene 4) ── */}
       {step === 4 && <FragmentField />}
 
-      {/* ── Central Orb (story scenes) ── */}
+      {/* ── Central Orb (story scenes) — amethyst orb aesthetic ── */}
       {scene && scene.orbSize > 0 && (
         <motion.div
           className="absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           animate={{ scale: orbPulse ? [1, 1.15, 1] : 1 }}
           transition={{ duration: 0.4 }}
+          style={{ opacity: scene.orbOpacity }}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.3 }}
-            animate={{ opacity: scene.orbOpacity, scale: 1 }}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-full"
-            style={{
-              width: scene.orbSize,
-              height: scene.orbSize,
-              background:
-                'radial-gradient(circle at 35% 35%, hsl(280 100% 92%) 0%, hsl(270 90% 70%) 40%, hsl(265 80% 45%) 70%, transparent 100%)',
-              boxShadow: `0 0 ${scene.orbSize * 0.8}px hsla(280, 100%, 70%, 0.6), 0 0 ${scene.orbSize * 1.5}px hsla(265, 90%, 50%, 0.3)`,
-            }}
-          />
+          {scene.orbSize >= 60 ? (
+            <LiquidMetalOrb size={scene.orbSize} awakened={scene.orbSize >= 80} />
+          ) : (
+            <motion.div
+              initial={{ scale: 0.3 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-full"
+              style={{
+                width: scene.orbSize,
+                height: scene.orbSize,
+                background:
+                  'radial-gradient(circle at 35% 35%, hsl(280 100% 92%) 0%, hsl(270 90% 70%) 40%, hsl(265 80% 45%) 70%, transparent 100%)',
+                boxShadow: `0 0 ${scene.orbSize * 0.8}px hsla(280, 100%, 70%, 0.6), 0 0 ${scene.orbSize * 1.5}px hsla(265, 90%, 50%, 0.3)`,
+              }}
+            />
+          )}
         </motion.div>
       )}
 
-      {/* ── Role scene orb (smaller, floating) ── */}
+      {/* ── Role scene orb — amethyst orb aesthetic ── */}
       {isRole && (
         <motion.div
           className="absolute left-1/2 top-[33%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
@@ -233,15 +239,9 @@ export default function IntroCinematic({ onDone }) {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="rounded-full"
-            style={{
-              width: 60,
-              height: 60,
-              background:
-                'radial-gradient(circle at 35% 35%, hsl(280 100% 92%) 0%, hsl(270 90% 70%) 40%, hsl(265 80% 45%) 70%, transparent 100%)',
-              boxShadow: '0 0 40px hsla(280, 100%, 70%, 0.5)',
-            }}
-          />
+          >
+            <LiquidMetalOrb size={60} awakened />
+          </motion.div>
         </motion.div>
       )}
 
@@ -312,15 +312,9 @@ export default function IntroCinematic({ onDone }) {
             <motion.div
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 2.5, repeat: Infinity }}
-              className="rounded-full"
-              style={{
-                width: 70,
-                height: 70,
-                background:
-                  'radial-gradient(circle at 35% 35%, hsl(280 100% 92%) 0%, hsl(270 90% 70%) 40%, hsl(265 80% 45%) 70%, transparent 100%)',
-                boxShadow: '0 0 50px hsla(280, 100%, 70%, 0.5)',
-              }}
-            />
+            >
+              <LiquidMetalOrb size={70} awakened />
+            </motion.div>
             <p className="text-white/85 text-[15px] leading-relaxed font-light text-center">
               Welcome, traveler. What shall I call you?
             </p>
@@ -369,15 +363,9 @@ export default function IntroCinematic({ onDone }) {
             <motion.div
               animate={{ y: [0, -8, 0], scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="rounded-full"
-              style={{
-                width: 80,
-                height: 80,
-                background:
-                  'radial-gradient(circle at 35% 35%, hsl(280 100% 92%) 0%, hsl(270 90% 70%) 40%, hsl(265 80% 45%) 70%, transparent 100%)',
-                boxShadow: '0 0 60px hsla(280, 100%, 70%, 0.5)',
-              }}
-            />
+            >
+              <LiquidMetalOrb size={80} awakened />
+            </motion.div>
             <p className="text-white/85 text-[16px] leading-relaxed font-light text-center">
               Will you help me find my fragments, {name}?
             </p>
