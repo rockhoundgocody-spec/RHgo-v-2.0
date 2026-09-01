@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Compass, Zap, Shield, Star, MapPin, Loader2, Award, CheckCircle2 } from 'lucide-react';
+import { Sparkles, X, Compass, Zap, Star, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLuckyMineralOfTheDay, playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
 import { fetchGeologyAt } from '@/lib/macrostrat';

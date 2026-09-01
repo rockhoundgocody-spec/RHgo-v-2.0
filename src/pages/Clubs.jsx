@@ -5,9 +5,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Users, MapPin, Calendar, Plus, ChevronRight, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
+import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
 const EVENT_TYPE_CONFIG = {
   field_trip: { label: 'Field Trip', icon: Mountain, color: '#34d399' },

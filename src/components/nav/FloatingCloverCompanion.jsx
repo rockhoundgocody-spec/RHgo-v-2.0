@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, MessageCircle, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import CloverVoicePanel from '@/components/hub/CloverVoicePanel.jsx';
 import useCloverConversation from '@/components/hub/useCloverConversation.js';

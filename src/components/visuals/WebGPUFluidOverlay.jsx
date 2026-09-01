@@ -214,7 +214,7 @@ export default function WebGPUFluidOverlay({
         renderer.dispose();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [resolution, intensity]);
 
   return (

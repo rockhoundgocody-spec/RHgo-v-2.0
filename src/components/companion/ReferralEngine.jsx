@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Gift, Users, Sparkles, Copy, Check, TrendingUp, Heart } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export default function ReferralEngine({ companion }) {
   const [referralCode, setReferralCode] = useState(null);

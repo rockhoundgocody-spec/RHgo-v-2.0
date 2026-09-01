@@ -52,7 +52,7 @@ export default function LiveStreamView() {
         .update(stream.id, { viewer_count: (stream.viewer_count || 0) + 1 })
         .catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [stream?.id]);
 
   if (missing) {

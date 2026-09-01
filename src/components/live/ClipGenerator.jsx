@@ -5,7 +5,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Film, Share2, Loader2, Check, Scissors, Sparkles } from 'lucide-react';
+import { Film, Share2, Loader2, Scissors, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ASPECT_OPTIONS = [

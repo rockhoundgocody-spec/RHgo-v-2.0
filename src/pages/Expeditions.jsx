@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Calendar, Users, Gem, Plus, ChevronRight } from 'lucide-react';
+import { Calendar, Users, Gem, Plus, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Award, Zap, Shield, Volume2, Smile } from 'lucide-react';
+import { Award, Zap, Volume2 } from 'lucide-react';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
 import { playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
 

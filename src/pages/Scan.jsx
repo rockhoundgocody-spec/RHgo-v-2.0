@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
-import { fetchGeologyAt, formatGeologyContext } from '@/lib/macrostrat';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
@@ -279,6 +278,11 @@ export default function Scan() {
       },
     });
 
+    let resultData = r && typeof r === 'object' ? { ...r } : {};
+    if (typeof r === 'string') {
+      try { resultData = JSON.parse(r); } catch { resultData = {}; }
+    }
+
     // Canonical enforcement pass — the backend applies the Operating Handbook,
     // Context Integrity grading, and Essence entropy math to this result
     // (prefilled_result skips the LLM, so this is fast and free).
@@ -288,40 +292,40 @@ export default function Scan() {
         lat: gpsRef.current?.lat,
         lng: gpsRef.current?.lng,
         save: false,
-        prefilled_result: r,
+        prefilled_result: resultData,
         wet_dry: wetDryRef.current,
         beach_name: beachRef.current,
       });
       const d = veri?.data;
-      if (d?.context_integrity) r.context_integrity = d.context_integrity;
-      if (d?.handbook) r.handbook = d.handbook;
-      if (d?.essence) r.essence = d.essence;
-      if (typeof d?.identification?.confidence === 'number') r.confidence = d.identification.confidence;
+      if (d?.context_integrity) resultData.context_integrity = d.context_integrity;
+      if (d?.handbook) resultData.handbook = d.handbook;
+      if (d?.essence) resultData.essence = d.essence;
+      if (typeof d?.identification?.confidence === 'number') resultData.confidence = d.identification.confidence;
     } catch { /* enforcement is best-effort — result still renders */ }
 
     // Build HRM-style reasoning result from the LLM output.
-    const modelConf = typeof r?.confidence === 'number' ? r.confidence : 0.5;
+    const modelConf = typeof resultData?.confidence === 'number' ? resultData.confidence : 0.5;
     const imgEvidence = uploads.map((u, i) => ({
       type: 'image', label: i === 0 ? 'Primary photo' : `Angle ${i + 1}`, weight: 0.25,
     }));
-    const featureEvidence = (r?.observed_features || []).slice(0, 5).map((f) => ({
+    const featureEvidence = (resultData?.observed_features || []).slice(0, 5).map((f) => ({
       type: 'feature', label: f.feature, value: f.value, weight: 0.05,
     }));
     const combinedScore = Math.min(imgEvidence.length * 0.15 + modelConf * 0.7, 1);
     const band = scoreToBand(combinedScore);
     const hints = [];
     if (uploads.length === 1) hints.push('More angles improve accuracy');
-    if (!r?.observed_features?.length) hints.push('Note color and luster for better results');
+    if (!resultData?.observed_features?.length) hints.push('Note color and luster for better results');
 
     const reasoningResult = {
-      primaryResult: r?.top_match || 'Unknown',
+      primaryResult: resultData?.top_match || 'Unknown',
       confidenceBand: band,
       confidenceScore: combinedScore,
       evidenceUsed: [...imgEvidence, ...featureEvidence],
       uncertainties: band === 'low' ? ['Low confidence — re-scan recommended'] : [],
       improvementHints: hints,
       recommendedAction: band === 'high' ? 'save' : band === 'medium' ? 'compare' : 'rescan',
-      reasoningSummary: r?.reasoning || '',
+      reasoningSummary: resultData?.reasoning || '',
       needsMoreEvidence: band === 'low',
       isOfflineFallback: false,
     };
@@ -330,7 +334,7 @@ export default function Scan() {
     const cutoutUrl = await cutoutPromise;
     if (cutoutUrl) primaryRef.current = cutoutUrl;
 
-    const enriched = enrichWithScientificValidation(r);
+    const enriched = enrichWithScientificValidation(resultData);
 
     return { result: enriched, uploads, reasoningResult };
   }, []);

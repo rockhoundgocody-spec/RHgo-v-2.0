@@ -3,7 +3,7 @@ import useCameraStream from './useCameraStream';
 import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
 import TorchButton from './TorchButton.jsx';
 import ScanModeBar from './ScanModeBar.jsx';
-import { Upload, ScanLine, Gem, Camera, Ruler } from 'lucide-react';
+import { Upload, ScanLine, Gem, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STAGE_LABELS = {

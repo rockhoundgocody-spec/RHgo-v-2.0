@@ -53,7 +53,7 @@ export function QuestCard({ q }) {
 
   // Time remaining
   const hoursLeft = q.expires_at
-    ? Math.max(0, Math.floor((new Date(q.expires_at) - Date.now()) / 3_600_000))
+    ? Math.max(0, Math.floor((new Date(q.expires_at).getTime() - Date.now()) / 3_600_000))
     : null;
   const timeLabel = hoursLeft !== null
     ? hoursLeft > 48 ? `${Math.floor(hoursLeft / 24)}d left` : `${hoursLeft}h left`

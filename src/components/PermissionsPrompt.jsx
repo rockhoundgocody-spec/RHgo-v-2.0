@@ -9,7 +9,7 @@ import { requestCurrentPosition, requestNotificationPermission } from './permiss
 import { usePermissionState } from '@/hooks/usePermissionState';
 import { useServiceWorkerUpdate } from '@/hooks/useServiceWorkerUpdate';
 
-export default function PermissionsPrompt({ onDismiss }) {
+export default function PermissionsPrompt({ onDismiss = () => {} }) {
   const notifPerm = usePermissionState('notifications');
   const locationPerm = usePermissionState('geolocation');
   const { updateAvailable, applyUpdate } = useServiceWorkerUpdate();

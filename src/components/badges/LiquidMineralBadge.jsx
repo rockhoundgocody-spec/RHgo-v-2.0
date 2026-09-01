@@ -332,7 +332,7 @@ export default function LiquidMineralBadge({
   showLabel = false,
   variant = 'dark', // 'dark' | 'light'
   arGlow = false,   // hover/AR mode
-  onClick,
+  onClick = () => {},
   className = '',
 }) {
   const reduceMotion = useReducedMotion();
