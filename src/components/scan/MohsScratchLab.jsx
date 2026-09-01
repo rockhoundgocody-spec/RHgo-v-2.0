@@ -11,7 +11,12 @@ const TEST_TOOLS = [
   { id: 'streak',     name: 'Streak Plate', hardness: 6.5, icon: '🪨', desc: 'Unglazed porcelain tile (streak color)' },
 ];
 
-export default function MohsScratchLab({ specimenHardness = 7.0, mineralName = 'Specimen', streakColor = 'White / Colorless' }) {
+export default function MohsScratchLab({
+  specimenHardness = 7.0,
+  mineralName = 'Specimen',
+  streakColor = 'White / Colorless',
+  isKidMode = false,
+}) {
   const [selectedTool, setSelectedTool] = useState(TEST_TOOLS[2]); // Default steel knife
   const [scratchTestResult, setScratchTestResult] = useState(null);
   const [scratchCount, setScratchCount] = useState(0);
@@ -25,7 +30,9 @@ export default function MohsScratchLab({ specimenHardness = 7.0, mineralName = '
       setScratchTestResult({
         scratched: false,
         streak: true,
-        text: `Powder Streak Test: Produced ${streakColor} powder streak on porcelain. Diagnostic for ${mineralName}.`,
+        text: isKidMode
+          ? `🎨 Color Chalk Streak! Rubbed on unglazed tile, your rock leaves a cool "${streakColor}" powder line!`
+          : `Powder Streak Test: Produced ${streakColor} powder streak on porcelain. Diagnostic for ${mineralName}.`,
       });
       return;
     }
@@ -35,13 +42,17 @@ export default function MohsScratchLab({ specimenHardness = 7.0, mineralName = '
       setScratchTestResult({
         scratched: true,
         streak: false,
-        text: `SCRATCH FORMED! The ${tool.name} (${tool.hardness} Mohs) cut a visible groove into the surface. Specimen is softer than or equal to ${tool.hardness} Mohs.`,
+        text: isKidMode
+          ? `💥 OUCH! The ${tool.name} cut right into the rock! That means the ${tool.name} won this hardness battle!`
+          : `SCRATCH FORMED! The ${tool.name} (${tool.hardness} Mohs) cut a visible groove into the surface. Specimen is softer than or equal to ${tool.hardness} Mohs.`,
       });
     } else {
       setScratchTestResult({
         scratched: false,
         streak: false,
-        text: `NO SCRATCH (Resisted): The ${tool.name} (${tool.hardness} Mohs) glided across without scratching. Specimen hardness is GREATER than ${tool.hardness} Mohs.`,
+        text: isKidMode
+          ? `🛡️ SHIELD BLOCKED! The ${tool.name} glided right off without leaving a single mark! Your rock is too tough to scratch!`
+          : `NO SCRATCH (Resisted): The ${tool.name} (${tool.hardness} Mohs) glided across without scratching. Specimen hardness is GREATER than ${tool.hardness} Mohs.`,
       });
     }
   };
@@ -56,7 +67,7 @@ export default function MohsScratchLab({ specimenHardness = 7.0, mineralName = '
     >
       <div className="flex items-center justify-between">
         <div className="text-[10px] uppercase font-bold tracking-widest text-amber-400 flex items-center gap-1.5">
-          <Hammer size={12} /> Mohs Field Scratch & Streak Lab
+          <Hammer size={12} /> {isKidMode ? '🎮 Rock Battle Scratch Challenge' : 'Mohs Field Scratch & Streak Lab'}
         </div>
         <span className="text-[9px] font-mono text-white/40">Lab Hardness: {specimenHardness} Mohs</span>
       </div>

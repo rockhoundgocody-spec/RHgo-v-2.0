@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, BookOpen, Sparkles } from 'lucide-react';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
+import useKidMode from '@/lib/useKidMode';
+import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
 
 const PHASE_TEXT = {
   thinking:  'thinking…',
@@ -21,9 +23,11 @@ export default function CloverVoicePanel({
   const bottomRef = useRef(null);
   const [draft, setDraft] = useState('');
   const [expandedIntel, setExpandedIntel] = useState(false);
+  const isKid = useKidMode();
 
   const lastMsg = messages[messages.length - 1]?.content || '';
   const detectedMineral = useMemo(() => lookupMineralIntelligence(lastMsg), [lastMsg]);
+  const kidMineral = useMemo(() => detectedMineral ? getKidFriendlyMineral(detectedMineral.name) : null, [detectedMineral]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,7 +46,7 @@ export default function CloverVoicePanel({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/8">
         <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide flex items-center gap-1.5">
-          Clover 🍀
+          Clover 🍀 {isKid && <span className="text-[9px] text-amber-300 font-bold">(Explorer Buddy)</span>}
           {phase === 'listening' && (
             <span className="flex items-center gap-1 text-[9px] font-normal text-hud-cyan">
               <Mic size={9} className="animate-pulse" /> listening
@@ -102,6 +106,13 @@ export default function CloverVoicePanel({
               </span>
             </div>
 
+            {kidMineral && (
+              <div className="text-[10px] font-bold text-amber-300 flex items-center gap-1 pt-0.5">
+                <Sparkles size={11} className="text-yellow-400" />
+                <span>Superpower: {kidMineral.superpower}</span>
+              </div>
+            )}
+
             {expandedIntel && (
               <div className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
                 <div><span className="text-white/40">Formula:</span> <span className="font-mono text-cyan-300 font-semibold">{detectedMineral.formula}</span></div>
@@ -131,12 +142,17 @@ export default function CloverVoicePanel({
         {/* Quick prompt chips for fast 1-tap inquiries */}
         {messages.length <= 2 && !interim && phase !== 'thinking' && (
           <div className="pt-1.5 pb-1 flex flex-wrap gap-1.5 justify-start">
-            {[
+            {(isKid ? [
+              'Did dinosaurs see this rock? 🦖',
+              'Tell me about volcano rocks! 🌋',
+              'Which rocks glow in the dark? ✨',
+              'Tell me a secret treasure clue! 🕵️',
+            ] : [
               'Where can I hunt nearby?',
               'How to spot agates?',
               'Field hardness test tips',
               'Tell me a rock secret',
-            ].map((chip) => (
+            ]).map((chip) => (
               <button
                 key={chip}
                 onClick={() => onSend?.(chip)}
