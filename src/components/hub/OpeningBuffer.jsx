@@ -381,13 +381,25 @@ const DEVICE_KEY = 'rhgo_device_id';
 export function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
   if (!id) {
+    const cryptoObj =
+      (typeof globalThis !== 'undefined' && globalThis.crypto) ||
+      (typeof window !== 'undefined' && window.crypto) ||
+      (typeof self !== 'undefined' && self.crypto);
+
     let uuid;
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      uuid = crypto.randomUUID();
-    } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      uuid = Date.now().toString(36) + '_' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+    if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
+      uuid = cryptoObj.randomUUID();
+    } else if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      cryptoObj.getRandomValues(bytes);
+      uuid = Date.now().toString(36) + '_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    } else if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      uuid = Date.now().toString(36) + '_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
     } else {
-      uuid = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      const highRes = typeof performance !== 'undefined' && performance.now ? performance.now().toString(36).replace('.', '') : '';
+      uuid = Date.now().toString(36) + '_' + highRes;
     }
     id = 'dev_' + uuid;
     localStorage.setItem(DEVICE_KEY, id);

@@ -53,4 +53,63 @@ describe('getDeviceId', () => {
 
     expect(id).toBe('dev_existing_12345');
   });
+  it('does not invoke Math.random when generating a device ID', () => {
+    const originalMathRandom = Math.random;
+    let mathRandomCalled = false;
+    Math.random = () => {
+      mathRandomCalled = true;
+      return originalMathRandom();
+    };
+
+    try {
+      const id = getDeviceId();
+      expect(id).toMatch(/^dev_/);
+      expect(mathRandomCalled).toBe(false);
+    } finally {
+      Math.random = originalMathRandom;
+    }
+  });
+
+  it('uses crypto.getRandomValues when randomUUID is unavailable', () => {
+    const originalRandomUUID = globalThis.crypto.randomUUID;
+    const originalGetRandomValues = globalThis.crypto.getRandomValues;
+    let getRandomValuesCalled = false;
+
+    globalThis.crypto.randomUUID = undefined;
+    globalThis.crypto.getRandomValues = (array) => {
+      getRandomValuesCalled = true;
+      for (let i = 0; i < array.length; i++) {
+        array[i] = i;
+      }
+      return array;
+    };
+
+    try {
+      const id = getDeviceId();
+      expect(id).toMatch(/^dev_/);
+      expect(getRandomValuesCalled).toBe(true);
+    } finally {
+      if (originalRandomUUID) {
+        globalThis.crypto.randomUUID = originalRandomUUID;
+      }
+      globalThis.crypto.getRandomValues = originalGetRandomValues;
+    }
+  });
+  it('uses crypto.randomUUID when available', () => {
+    const originalRandomUUID = globalThis.crypto.randomUUID;
+    let randomUUIDCalled = false;
+
+    globalThis.crypto.randomUUID = () => {
+      randomUUIDCalled = true;
+      return '12345678-1234-4234-8234-123456789abc';
+    };
+
+    try {
+      const id = getDeviceId();
+      expect(id).toBe('dev_12345678-1234-4234-8234-123456789abc');
+      expect(randomUUIDCalled).toBe(true);
+    } finally {
+      globalThis.crypto.randomUUID = originalRandomUUID;
+    }
+  });
 });
