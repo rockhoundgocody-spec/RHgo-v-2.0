@@ -16,7 +16,6 @@ import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
 import HotspotMap from '@/components/explore/GoogleHotspotMap.jsx';
-import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
 import ExpeditionPlanner from '@/components/explore/ExpeditionPlanner.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
@@ -396,11 +395,6 @@ export default function Explore() {
           >
             <CloudRain size={16} className={showWeather ? 'text-amber-300' : 'text-white/50'} />
           </button>
-        </div>
-
-        {/* Layer toggles */}
-        <div className="pointer-events-auto mb-2">
-          <MapLayerPanel activeLayer={activeLayer} onLayerChange={setActiveLayer} />
         </div>
 
         {/* Expedition planner */}
