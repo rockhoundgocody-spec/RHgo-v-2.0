@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
-import FloatingGrokOrb from '@/components/hub/FloatingGrokOrb.jsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
@@ -179,7 +178,6 @@ export default function Layout() {
         <HotspotProximityWatcher />
         <StreakReminderBanner />
         <OracleOverlays />
-        <FloatingGrokOrb />
         <BadgeUnlockWatcher />
       </div>
       </BadgeAwarderProvider>
