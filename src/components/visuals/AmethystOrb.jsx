@@ -20,6 +20,8 @@ const STATE_CONFIG = {
   listening: { haloBase: 'hsla(160,90%,55%,0.5)',    auraBase: 'hsla(145,100%,50%,0.5)',   innerBase: 'hsla(190,100%,58%,0.55)', boxShadow: '0 0 90px hsla(145,90%,55%,0.45), 0 0 40px hsla(175,100%,60%,0.3), 0 0 20px hsla(45,100%,60%,0.18), inset 0 0 55px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.4, idleAuraScale: 1.6 },
   thinking:  { haloBase: 'hsla(210,100%,65%,0.45)',  auraBase: 'hsla(260,80%,60%,0.42)',    innerBase: 'hsla(195,100%,58%,0.5)',  boxShadow: '0 0 80px hsla(210,100%,60%,0.4), 0 0 35px hsla(330,90%,60%,0.22), 0 0 20px hsla(45,100%,60%,0.15), inset 0 0 50px hsla(265,90%,8%,0.55)', idlePulseScale: 1.8, idleAuraScale: 2.0 },
   speaking:  { haloBase: 'hsla(330,90%,62%,0.45)',   auraBase: 'hsla(175,90%,55%,0.5)',    innerBase: 'hsla(45,100%,62%,0.55)',  boxShadow: '0 0 90px hsla(330,90%,60%,0.42), 0 0 40px hsla(175,100%,60%,0.3), 0 0 25px hsla(45,100%,65%,0.22), inset 0 0 60px hsla(265,90%,8%,0.6)', idlePulseScale: 2.0, idleAuraScale: 2.2 },
+  blessing:  { haloBase: 'hsla(45,100%,65%,0.6)',    auraBase: 'hsla(35,100%,55%,0.6)',    innerBase: 'hsla(280,100%,75%,0.65)', boxShadow: '0 0 110px hsla(45,100%,60%,0.6), 0 0 50px hsla(280,100%,70%,0.4), 0 0 30px hsla(175,100%,60%,0.3), inset 0 0 70px hsla(45,100%,15%,0.65)', idlePulseScale: 2.2, idleAuraScale: 2.4 },
+  radar:     { haloBase: 'hsla(195,100%,60%,0.6)',   auraBase: 'hsla(180,100%,50%,0.55)',  innerBase: 'hsla(210,100%,65%,0.6)',  boxShadow: '0 0 100px hsla(195,100%,55%,0.5), 0 0 45px hsla(160,100%,60%,0.35), 0 0 25px hsla(280,100%,65%,0.2), inset 0 0 60px hsla(200,90%,10%,0.6)', idlePulseScale: 1.7, idleAuraScale: 1.9 },
 };
 
 // Growth tiers — the orb visually evolves as the user's companion levels up.
@@ -68,7 +70,17 @@ export default function AmethystOrb({
   useEffect(() => {
     if (!visible) return;
     let raf;
+    let inViewport = true;
+    const observer = new IntersectionObserver(([entry]) => {
+      inViewport = entry.isIntersecting;
+    }, { threshold: 0.05 });
+    if (wrapRef.current) observer.observe(wrapRef.current);
+
     const tick = () => {
+      if (!inViewport) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       const t = performance.now() * 0.001;
       const a = getAmplitude ? getAmplitude() || 0 : 0;
       const spec = getSpectrum ? getSpectrum() : { bass: 0, mid: 0, treble: 0 };
@@ -186,7 +198,10 @@ export default function AmethystOrb({
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
   }, [getAmplitude, getSpectrum, getInteraction, visible, effectiveState, reduceMotion, size]);
 
   const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
@@ -320,6 +335,15 @@ export default function AmethystOrb({
           style={{
             background:
               'radial-gradient(circle at 65% 70%, hsla(45,100%,68%,0.3) 0%, hsla(330,90%,65%,0.2) 35%, hsla(160,90%,55%,0.16) 60%, transparent 80%)',
+          }}
+        />
+
+        {/* Prismatic refraction ring & caustics */}
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background: 'radial-gradient(circle, transparent 72%, hsla(190,100%,75%,0.35) 86%, hsla(330,100%,70%,0.3) 93%, hsla(45,100%,75%,0.4) 98%, transparent 100%)',
+            mixBlendMode: 'screen',
           }}
         />
 

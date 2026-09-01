@@ -24,8 +24,8 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(width, height);
     mount.appendChild(renderer.domElement);
 
@@ -141,13 +141,17 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
           vec3 col = base + liquid;
 
+          // Prismatic chromatic dispersion ring near the rim
+          float rimDispersion = smoothstep(0.40, 0.49, d);
+          col += vec3(0.12 * sin(d * 40.0 + t), 0.15 * cos(d * 35.0 - t), 0.22 * sin(d * 45.0)) * rimDispersion;
+
           // deeper inner shadow for richer contrast — darker exposure
           float shade = smoothstep(0.5, 0.05, d);
           col *= mix(0.55, 1.0, shade);
 
-          // very dim specular — almost gone, preserves UV mood
+          // Subtle gem specular highlight
           float spec = smoothstep(0.28, 0.0, length(uv - vec2(-0.15, 0.18)));
-          col += spec * 0.09;
+          col += spec * 0.14;
 
           // alpha falls off at the very edge for clean rim
           float a = smoothstep(0.5, 0.46, d);
@@ -163,9 +167,14 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
 
     let raf;
     let paused = false;
+    let inViewport = true;
     const start = performance.now();
+
     const animate = () => {
-      if (paused) { raf = requestAnimationFrame(animate); return; }
+      if (paused || !inViewport) {
+        raf = requestAnimationFrame(animate);
+        return;
+      }
       uniforms.u_time.value = ((performance.now() - start) / 1000) * speed * Math.PI;
       const getAmp = ampGetterRef.current;
       const getSpec = specGetterRef.current;
@@ -180,8 +189,19 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
       raf = requestAnimationFrame(animate);
     };
     animate();
+
     const onVis = () => { paused = !!document.hidden; };
     document.addEventListener('visibilitychange', onVis);
+
+    const onContextLost = (e) => { e.preventDefault(); paused = true; };
+    const onContextRestored = () => { paused = false; };
+    renderer.domElement.addEventListener('webglcontextlost', onContextLost, false);
+    renderer.domElement.addEventListener('webglcontextrestored', onContextRestored, false);
+
+    const io = new IntersectionObserver(([entry]) => {
+      inViewport = entry.isIntersecting;
+    }, { threshold: 0.05 });
+    io.observe(mount);
 
     const handleResize = () => {
       const w = mount.clientWidth;
@@ -195,6 +215,9 @@ export default function BlackOpalShader({ intensity = 1.0, speed = 0.25, hueShif
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', onVis);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
+      io.disconnect();
       ro.disconnect();
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
       geometry.dispose();

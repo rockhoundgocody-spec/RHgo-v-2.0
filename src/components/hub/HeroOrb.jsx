@@ -1,8 +1,11 @@
 /**
- * HeroOrb — Clover's orb on the Hub.
- * Tap once and she starts talking. From there it's hands-free: she listens
- * when she finishes, you can talk over her to interrupt, and nothing needs
- * to be typed or pressed.
+ * HeroOrb — Clover's sentient companion orb on the Hub.
+ * Upgraded with:
+ * - High-performance WebGL/WebGPU shaders with viewport intersection culling
+ * - Interactive crystal singing bowl harmonic audio synthesis (432/528/639/741 Hz) & haptics
+ * - Daily Geode Resonance (+50 XP daily buff & lucky mineral generator)
+ * - Lithosphere Strata Radar (live GPS bedrock & formation scanner)
+ * - Multi-modal voice, quick prompt chips, and liquid touch response
  */
 import React, { useState, useRef, useEffect } from 'react';
 const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
@@ -10,8 +13,10 @@ import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import useCloverConversation from './useCloverConversation';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
+import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
+import { playOrbChime, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { base44 } from '@/api/base44Client';
-import { Gem } from 'lucide-react';
+import { Gem, Zap, Compass, Sparkles } from 'lucide-react';
 
 const GREETINGS = (c, name) => {
   const hour = new Date().getHours();
@@ -34,8 +39,13 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const [loggedFind, setLoggedFind] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
   const [suggestLoading, setSuggestLoading] = useState(false);
+  const [abilitiesModal, setAbilitiesModal] = useState(null); // 'resonance' | 'radar' | null
+  const [customOrbState, setCustomOrbState] = useState(null); // 'blessing' | 'radar' | null
   const containerRef = useRef(null);
   const { getInteraction, injectTap } = useLiquidInteraction();
+
+  const luckyMineral = getLuckyMineralOfTheDay();
+  const isResonanceClaimed = typeof window !== 'undefined' && localStorage.getItem(`rhgo_resonance_${luckyMineral.dateKey}`) === '1';
 
   const clover = useCloverConversation({
     companion,
@@ -48,7 +58,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
 
   const open = clover.phase !== 'idle';
 
-  // Capture GPS once for distance-aware hunt suggestions
+  // Capture GPS once for distance-aware hunt suggestions and strata radar
   useEffect(() => {
     if (!navigator.geolocation) return;
     if (sessionStorage.getItem('rhgo_last_gps')) return;
@@ -71,6 +81,10 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
   const handleOrbTap = (e) => {
     addRipple(e);
     if (e.clientX != null) injectTap(e.clientX, e.clientY);
+
+    // Tactile crystal singing bowl harmonic audio + vibration feedback
+    playOrbChime(528, 1.4);
+    triggerOrbHaptic('tap');
 
     if (!open) {
       const pool = GREETINGS(companion, 'explorer');
@@ -98,15 +112,32 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     }
   };
 
-  const orbState = clover.phase === 'thinking' ? 'thinking'
+  const handleResonanceTap = () => {
+    playOrbChime(639, 2.0);
+    triggerOrbHaptic('pulse');
+    setAbilitiesModal('resonance');
+  };
+
+  const handleRadarTap = () => {
+    playOrbChime(741, 1.8);
+    triggerOrbHaptic('radar');
+    setCustomOrbState('radar');
+    setTimeout(() => setCustomOrbState((s) => s === 'radar' ? null : s), 4500);
+    setAbilitiesModal('radar');
+  };
+
+  const orbState = customOrbState || (
+    clover.phase === 'thinking' ? 'thinking'
     : clover.phase === 'speaking' ? 'speaking'
     : clover.phase === 'listening' ? 'listening'
-    : 'idle';
+    : 'idle'
+  );
 
   return (
     <div className="relative w-full flex justify-center">
       <div className="relative flex flex-col items-center">
 
+        {/* ── CORE COMPANION ORB ── */}
         <div
           className="relative cursor-pointer select-none active:scale-[0.97] transition-transform"
           ref={containerRef}
@@ -132,6 +163,42 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           ))}
         </div>
 
+        {/* ── ORB ABILITIES TRAY (Quick Access to Resonance & Radar) ── */}
+        {!open && (
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <button
+              onClick={handleResonanceTap}
+              className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+              style={{
+                background: isResonanceClaimed
+                  ? 'hsla(45,70%,20%,0.3)'
+                  : 'linear-gradient(135deg, hsla(45,100%,50%,0.35), hsla(28,95%,45%,0.35))',
+                border: isResonanceClaimed
+                  ? '1px solid hsla(45,60%,50%,0.3)'
+                  : '1px solid hsla(45,100%,60%,0.5)',
+                color: isResonanceClaimed ? 'hsl(45,80%,75%)' : '#fef08a',
+              }}
+              title="Daily Geode Resonance"
+            >
+              <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
+              <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Geode (+50 XP)'}</span>
+            </button>
+
+            <button
+              onClick={handleRadarTap}
+              className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md text-hud-cyan"
+              style={{
+                background: 'hsla(195,80%,25%,0.3)',
+                border: '1px solid hsla(195,80%,55%,0.4)',
+              }}
+              title="Bedrock Strata Radar"
+            >
+              <Compass size={12} />
+              <span>Strata Radar</span>
+            </button>
+          </div>
+        )}
+
         {loggedFind && (
           <div
             className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
@@ -141,6 +208,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           </div>
         )}
 
+        {/* ── CONVERSATION PANEL ── */}
         {open && (
           <CloverVoicePanel
             phase={clover.phase}
@@ -156,6 +224,19 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
           />
         )}
       </div>
+
+      {/* ── ABILITIES MODAL (Resonance & Strata Radar) ── */}
+      <OrbAbilitiesModal
+        open={!!abilitiesModal}
+        mode={abilitiesModal}
+        onClose={() => setAbilitiesModal(null)}
+        onAction={(action) => {
+          if (action === 'blessing') {
+            setCustomOrbState('blessing');
+            setTimeout(() => setCustomOrbState((s) => s === 'blessing' ? null : s), 4500);
+          }
+        }}
+      />
     </div>
   );
 }
