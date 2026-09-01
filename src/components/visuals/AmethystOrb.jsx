@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import BlackOpalShader from './BlackOpalShader.jsx';
 import PhysicalCrystalOrb from './PhysicalCrystalOrb.jsx';
+import MoltenMetalOrb from './MoltenMetalOrb.jsx';
 import WebGPUOpalShader from './WebGPUOpalShader.jsx';
 import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
 import SphereVolume from './SphereVolume.jsx';
@@ -285,9 +286,9 @@ export default function AmethystOrb({
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
         style={{ boxShadow: cfg.boxShadow }}
       >
-        {/* LAYER 1 — 3D Physical Crystal Orb with Simplex Vertex Displacement & Thin-Film Iridescence */}
+        {/* LAYER 1 — 3D Molten Liquid-Metal Orb with concentric fluid ripples + pearlescent iridescence */}
         <div className="absolute inset-0">
-          <PhysicalCrystalOrb
+          <MoltenMetalOrb
             size={size}
             orbState={effectiveState}
             getAmplitude={getAmplitude}
@@ -316,14 +317,14 @@ export default function AmethystOrb({
           className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30"
           style={{
             background:
-              'radial-gradient(circle at 35% 30%, hsla(190,100%,72%,0.26) 0%, hsla(330,90%,62%,0.2) 40%, hsla(175,90%,50%,0.18) 70%, hsla(45,100%,60%,0.14) 100%)',
+              'radial-gradient(circle at 35% 30%, hsla(43,47%,91%,0.22) 0%, hsla(283,38%,80%,0.18) 40%, hsla(165,43%,69%,0.16) 70%, hsla(43,47%,91%,0.10) 100%)',
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none mix-blend-screen opacity-30"
           style={{
             background:
-              'radial-gradient(circle at 65% 70%, hsla(45,100%,68%,0.3) 0%, hsla(330,90%,65%,0.2) 35%, hsla(160,90%,55%,0.16) 60%, transparent 80%)',
+              'radial-gradient(circle at 65% 70%, hsla(283,38%,80%,0.24) 0%, hsla(165,43%,69%,0.18) 35%, hsla(43,47%,91%,0.14) 60%, transparent 80%)',
           }}
         />
 
@@ -331,7 +332,7 @@ export default function AmethystOrb({
         <div
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
-            background: 'radial-gradient(circle, transparent 72%, hsla(190,100%,75%,0.35) 86%, hsla(330,100%,70%,0.3) 93%, hsla(45,100%,75%,0.4) 98%, transparent 100%)',
+            background: 'radial-gradient(circle, transparent 72%, hsla(43,47%,91%,0.35) 86%, hsla(283,38%,80%,0.3) 93%, hsla(165,43%,69%,0.4) 98%, transparent 100%)',
             mixBlendMode: 'screen',
           }}
         />

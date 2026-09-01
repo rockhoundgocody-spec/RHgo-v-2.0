@@ -12,7 +12,7 @@ import useKidMode from '@/lib/useKidMode';
 import {
   Sparkles, RotateCcw, GitCompare, Pencil, Microscope, CheckCircle2,
   Zap, FlaskConical, BookOpen, Star, Shield, Cloud, Gem, Hammer,
-  Compass, Camera, ArrowRight, Check, Award, Eye
+  Compass, Camera, ArrowRight, Check, Award, Eye, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionModal from './CorrectionModal.jsx';
@@ -68,6 +68,7 @@ export default function HolographicResult({
   const [uvMode, setUvMode] = useState(false);
   const [fireworksTrigger, setFireworksTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState('overview'); // overview | candidates | tests | deep
+  const reduceMotion = useReducedMotion();
 
   const toggleKidMode = () => {
     const next = !kidMode;
