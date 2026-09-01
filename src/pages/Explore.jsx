@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
+import SpawnStats from '@/components/ar/SpawnStats.jsx';
 import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
@@ -298,10 +299,15 @@ export default function Explore() {
         {/* Search + locate row */}
         <div className="flex items-center gap-2 pointer-events-auto mb-2">
           <div className="flex-1 relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
-            <input type="text" placeholder="Search hotspots, minerals…"
+            {searchQuery
+              ? <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
+              : <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />
+                </div>
+            }
+            <input type="text" placeholder=""
               value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-8 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none"
+              className={`w-full ${searchQuery ? 'pl-8' : 'pl-24'} pr-8 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none`}
               style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}
             />
             {searchQuery && (
@@ -339,8 +345,6 @@ export default function Explore() {
           </button>
           <SpawnHUD
             spawns={spawns}
-            caughtToday={caughtToday}
-            dailyCap={dailyCap}
             arActive={arActive}
             onToggleAR={() => setArActive(a => !a)}
           />
