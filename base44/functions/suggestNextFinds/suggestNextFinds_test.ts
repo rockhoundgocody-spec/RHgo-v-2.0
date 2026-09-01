@@ -1,4 +1,5 @@
-import { assertEquals, assertAlmostEquals } from 'jsr:@std/assert@1';
+import { assertEquals, assertAlmostEquals } from "jsr:@std/assert@1";
+import { aggregateSpecimenCollection } from "./operations.ts";
 
 // Haversine distance in miles (original implementation)
 function originalDistanceMi(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -33,7 +34,7 @@ function fastDistanceMi(
   return EARTH_RADIUS_MI * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-Deno.test('distance calculation correctness', () => {
+Deno.test("distance calculation correctness", () => {
   const distOrig = originalDistanceMi(44.3148, -85.6024, 46.5436, -87.3954);
   const distFast = fastDistanceMi(44.3148, -85.6024, 46.5436, -87.3954);
   assertEquals(Math.round(distOrig), 177);
@@ -41,17 +42,17 @@ Deno.test('distance calculation correctness', () => {
   assertEquals(Math.round(distFast), Math.round(distOrig));
 });
 
-Deno.test('benchmark distance processing and sorting over hotspots', () => {
+Deno.test("benchmark distance processing and sorting over hotspots", () => {
   // Generate 1000 synthetic hotspots
   const hotspots = Array.from({ length: 1000 }, (_, i) => ({
     name: `Hotspot ${i}`,
-    state: 'MI',
+    state: "MI",
     lat: 42.0 + (i % 100) * 0.05 + (i * 0.001),
     lng: -85.0 - (i % 80) * 0.05 - (i * 0.001),
-    minerals: ['Agate', 'Quartz', 'Copper'],
-    difficulty: 'moderate',
+    minerals: ["Agate", "Quartz", "Copper"],
+    difficulty: "moderate",
     trust_score: 90,
-    land_type: 'public',
+    land_type: "public",
   }));
 
   const userLat = 44.3148;
@@ -127,4 +128,61 @@ Deno.test('benchmark distance processing and sorting over hotspots', () => {
   console.log(`Original duration (${iterations} runs, 1000 items): ${durOrig.toFixed(2)}ms`);
   console.log(`Optimized duration (${iterations} runs, 1000 items): ${durOpt.toFixed(2)}ms`);
   console.log(`Speedup: ${(durOrig / durOpt).toFixed(2)}x`);
+});
+
+Deno.test("aggregateSpecimenCollection correctness and edge cases", () => {
+  // Empty array
+  assertEquals(aggregateSpecimenCollection([]), {});
+
+  // Various edge case specimens
+  const specimens = [
+    { mineral_name: "Agate" },
+    { mineral_name: "  Agate " },
+    { mineral_name: "Quartz" },
+    { mineral_name: "" },
+    { mineral_name: "   " },
+    { mineral_name: null },
+    { mineral_name: undefined },
+    { mineral_name: "Agate" },
+    { mineral_name: "Copper" },
+  ];
+
+  const result = aggregateSpecimenCollection(specimens);
+  assertEquals(result, {
+    Agate: 3,
+    Quartz: 1,
+    Copper: 1,
+  });
+});
+
+Deno.test("benchmark specimen collection aggregation", () => {
+  const mineralPool = ["Lake Superior Agate", "Quartz Crystal", "Native Copper", "Datolite", "Thomsonite", "Greenstone", "Petoskey Stone", "  ", "", null];
+  const specimens = Array.from({ length: 1000 }, (_, i) => ({
+    mineral_name: mineralPool[i % mineralPool.length],
+  }));
+
+  const iterations = 1000;
+
+  // Measure original loop approach
+  const startOrig = performance.now();
+  for (let iter = 0; iter < iterations; iter++) {
+    const collection: Record<string, number> = {};
+    for (const s of specimens) {
+      const m = (s.mineral_name || "").trim();
+      if (!m) continue;
+      collection[m] = (collection[m] || 0) + 1;
+    }
+  }
+  const durOrig = performance.now() - startOrig;
+
+  // Measure aggregateSpecimenCollection helper
+  const startOpt = performance.now();
+  for (let iter = 0; iter < iterations; iter++) {
+    const _collection = aggregateSpecimenCollection(specimens);
+  }
+  const durOpt = performance.now() - startOpt;
+
+  console.log(`Specimen Aggregation Original (${iterations} runs, 1000 items): ${durOrig.toFixed(2)}ms`);
+  console.log(`Specimen Aggregation Optimized (${iterations} runs, 1000 items): ${durOpt.toFixed(2)}ms`);
+  console.log(`Aggregation Speedup: ${(durOrig / Math.max(durOpt, 0.001)).toFixed(2)}x`);
 });
