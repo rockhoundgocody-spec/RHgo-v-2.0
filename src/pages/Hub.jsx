@@ -102,18 +102,51 @@ export default function Hub() {
         </div>
 
         {/* Quick action buttons */}
-        <div className="mt-6 grid grid-cols-3 gap-2 w-full">
+        {/* Quick action buttons — balanced 4-col layout */}
+        <div className="mt-6 grid grid-cols-4 gap-2 w-full">
           <QuickAction to="/scan" icon={ScanLine} label="Scan" color="amethyst" />
-          <QuickAction to="/explore" icon={Compass} label="Explore" color="cyan" />
-          <QuickAction to="/collection" icon={Gem} label="Codex" color="purple" />
-          <QuickAction to="/quests" icon={Sword} label="Missions" color="gold" />
+          <QuickAction to="/explore" icon={Compass} label="Map" color="cyan" />
+          <QuickAction to="/collection" icon={Gem} label="GeoDex" color="purple" />
+          <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
           <QuickAction to="/badges" icon={Trophy} label="Badges" color="amber" />
-          <QuickAction to="/companion" icon={Heart} label="Clover" color="rose" />
-          <QuickAction to="/private-log" icon={Lock} label="My Finds" color="amethyst" />
+          <QuickAction to="/private-log" icon={Lock} label="Finds" color="amethyst" />
           <QuickAction to="/community" icon={Users} label="Social" color="cyan" />
           <QuickAction to="/clubs" icon={Building2} label="Clubs" color="cyan" />
-          <QuickAction to="/dashboard" icon={BarChart3} label="Progress" color="purple" />
         </div>
+
+        {/* Family Nature Adventure Spotlight */}
+        <Link
+          to="/explore"
+          className="mt-3.5 w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all active:scale-[0.98] group"
+          style={{
+            background: 'linear-gradient(135deg, hsla(180,60%,14%,0.85) 0%, hsla(245,25%,10%,0.95) 100%)',
+            borderColor: 'hsla(185,90%,60%,0.35)',
+            boxShadow: '0 8px 24px -4px hsla(185,90%,30%,0.25)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'hsla(185,80%,35%,0.3)', border: '1px solid hsla(185,90%,60%,0.4)' }}
+            >
+              <Compass size={20} className="text-cyan-300" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-white tracking-wide flex items-center gap-1.5">
+                Weekend Family Adventure 🌲
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                  HOTSPOTS READY
+                </span>
+              </div>
+              <div className="text-[10px] text-white/60 mt-0.5">
+                Tap to explore kid-friendly agate beaches & geode beds near you!
+              </div>
+            </div>
+          </div>
+          <span className="text-cyan-300 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+            →
+          </span>
+        </Link>
 
         {/* CHRONOLITH — the deep investigation portal */}
         <Link to="/chronolith" className="mt-4 w-full flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-[0.98] group"
