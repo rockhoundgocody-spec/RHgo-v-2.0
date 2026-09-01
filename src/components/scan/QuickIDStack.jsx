@@ -122,7 +122,10 @@ export default function QuickIDStack({
                       <FieldChip label="Streak Test" value={result.verification_tests[0].expected} />
                     )}
                     {result?.crystal_system && (
-                      <FieldChip label="Cleavage" value={result.crystal_system} />
+                      <FieldChip label="System" value={result.crystal_system} />
+                    )}
+                    {result?.chemical_formula && (
+                      <FieldChip label="Formula" value={result.chemical_formula} />
                     )}
                   </div>
                 )}

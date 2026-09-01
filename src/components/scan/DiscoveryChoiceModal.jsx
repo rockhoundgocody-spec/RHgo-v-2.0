@@ -16,18 +16,18 @@ const PRIVACY_OPTIONS = [
 ];
 
 export default function DiscoveryChoiceModal({ open, mineralName, onClose, onConfirm }) {
-  const [disposition, setDisposition] = useState(null);
-  const [geoPrivacy, setGeoPrivacy] = useState('private');
-  const [confirmedLegal, setConfirmedLegal] = useState(false);
+  const [disposition, setDisposition] = useState('collected');
+  const [geoPrivacy, setGeoPrivacy] = useState('approximate');
+  const [confirmedLegal, setConfirmedLegal] = useState(true);
   const reduceMotion = useReducedMotion();
 
   const canConfirm = Boolean(disposition && confirmedLegal);
 
   useEffect(() => {
     if (!open) return;
-    setDisposition(null);
+    setDisposition('collected');
     setGeoPrivacy('approximate');
-    setConfirmedLegal(false);
+    setConfirmedLegal(true);
   }, [open]);
 
   useEffect(() => {
@@ -38,6 +38,8 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, open]);
+
+  const xpLabel = disposition === 'left_in_place' ? '+40 Steward XP' : '+25 Collector XP';
 
   return createPortal(
     <AnimatePresence>
@@ -72,16 +74,18 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
             aria-labelledby="discovery-choice-title"
             aria-describedby="discovery-choice-description"
           >
-            <h2 id="discovery-choice-title" className="text-white font-bold text-lg text-center">Discovery Choice</h2>
-            <p id="discovery-choice-description" className="text-white/40 text-[11px] text-center mt-1 mb-4">
-              What happens to this {mineralName || 'specimen'}?
+            <h2 id="discovery-choice-title" className="text-white font-black text-lg text-center tracking-tight">
+              Save to Digital Collection
+            </h2>
+            <p id="discovery-choice-description" className="text-white/50 text-xs text-center mt-1 mb-4">
+              Catalog <span className="text-amethyst-glow font-semibold">{mineralName || 'this specimen'}</span> into your personal GeoDex.
             </p>
 
             <div role="radiogroup" aria-label="Discovery disposition" className="grid grid-cols-2 gap-2.5">
               <ChoiceCard
                 icon={Gem}
-                title="Add to My GeoDex"
-                subtitle="Collect it — it joins your collection"
+                title="Add to GeoDex"
+                subtitle="Collected — joins your digital collection"
                 xp="+25 Collector XP"
                 accent="amethyst"
                 selected={disposition === 'collected'}
@@ -90,7 +94,7 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
               <ChoiceCard
                 icon={MapPin}
                 title="Mark In Place"
-                subtitle="Leave it for others — drop a legacy pin"
+                subtitle="Left in field — drop a landmark pin"
                 xp="+40 Steward XP"
                 accent="cyan"
                 selected={disposition === 'left_in_place'}
@@ -100,8 +104,11 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
 
             {/* Geo privacy */}
             <div className="mt-4">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-1.5">
-                Location privacy
+              <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-1.5 flex items-center justify-between">
+                <span>Location privacy</span>
+                <span className="text-[9px] text-white/30 font-normal">
+                  {geoPrivacy === 'private' ? 'Only you can see' : geoPrivacy === 'approximate' ? 'Stealth Mode (City level)' : 'Precise GPS Pin'}
+                </span>
               </div>
               <div role="radiogroup" aria-label="Location privacy" className="flex gap-1.5">
                 {PRIVACY_OPTIONS.map((p) => (
@@ -111,11 +118,11 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
                     role="radio"
                     aria-checked={geoPrivacy === p.id}
                     onClick={() => setGeoPrivacy(p.id)}
-                    className="flex-1 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
+                    className="flex-1 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                     style={{
-                      color: geoPrivacy === p.id ? 'hsl(195,100%,80%)' : 'hsla(220,25%,65%,0.5)',
-                      background: geoPrivacy === p.id ? 'hsla(195,100%,60%,0.1)' : 'hsla(0,0%,100%,0.03)',
-                      border: `1px solid ${geoPrivacy === p.id ? 'hsla(195,90%,60%,0.4)' : 'hsla(0,0%,100%,0.08)'}`,
+                      color: geoPrivacy === p.id ? 'hsl(195,100%,85%)' : 'hsla(220,25%,65%,0.5)',
+                      background: geoPrivacy === p.id ? 'hsla(195,100%,60%,0.15)' : 'hsla(0,0%,100%,0.03)',
+                      border: `1px solid ${geoPrivacy === p.id ? 'hsla(195,90%,60%,0.45)' : 'hsla(0,0%,100%,0.08)'}`,
                     }}
                   >
                     {p.label}
@@ -125,17 +132,16 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
             </div>
 
             {/* Legal / ethics confirmation */}
-            <label className="mt-4 flex items-start gap-2.5 cursor-pointer select-none">
+            <label className="mt-4 flex items-start gap-2.5 cursor-pointer select-none rounded-xl p-2.5 bg-white/[0.02] border border-white/5">
               <input
                 type="checkbox"
                 checked={confirmedLegal}
                 onChange={(e) => setConfirmedLegal(e.target.checked)}
-                className="mt-0.5 accent-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
+                className="mt-0.5 w-4 h-4 rounded accent-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
               />
-              <span className="text-white/55 text-[11px] leading-snug">
-                <ShieldCheck size={12} className="inline mr-1 text-emerald-400" />
-                I had legal access to this location and followed local collecting rules.
-                Never collect where prohibited — when in doubt, mark in place.
+              <span className="text-white/60 text-[11px] leading-snug">
+                <ShieldCheck size={13} className="inline mr-1 text-emerald-400" />
+                I followed ethical rockhounding rules and had permission to collect or access this spot.
               </span>
             </label>
 
@@ -143,16 +149,23 @@ export default function DiscoveryChoiceModal({ open, mineralName, onClose, onCon
               type="button"
               disabled={!canConfirm}
               onClick={() => onConfirm({ disposition, geoPrivacy })}
-              className="mt-4 w-full py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
+              className="mt-4 w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all disabled:opacity-35 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow flex items-center justify-center gap-2"
               style={{
                 background: canConfirm
-                  ? 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))'
+                  ? disposition === 'left_in_place'
+                    ? 'linear-gradient(135deg, hsl(160 70% 45%), hsl(180 75% 35%))'
+                    : 'linear-gradient(135deg, hsl(280 75% 55%), hsl(265 80% 45%))'
                   : 'hsla(0,0%,100%,0.06)',
                 color: 'white',
-                boxShadow: canConfirm ? '0 4px 24px hsla(280,80%,50%,0.35)' : 'none',
+                boxShadow: canConfirm
+                  ? disposition === 'left_in_place'
+                    ? '0 4px 24px hsla(160,80%,40%,0.35)'
+                    : '0 4px 24px hsla(280,80%,50%,0.4)'
+                  : 'none',
               }}
             >
-              Confirm Discovery
+              <Gem size={16} />
+              {disposition === 'left_in_place' ? `Log Field Pin (${xpLabel})` : `Save to GeoDex (${xpLabel})`}
             </button>
           </motion.div>
         </motion.div>
