@@ -30,7 +30,7 @@ export default function Expeditions() {
         '-created_date',
         1
       );
-      return families[0];
+      return families[0] || null;
     },
   });
 
