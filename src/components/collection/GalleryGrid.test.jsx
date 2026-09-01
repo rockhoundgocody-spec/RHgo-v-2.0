@@ -5,11 +5,15 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    useCallback: (fn) => fn,
+    useRef: (initial) => ({ current: initial }),
+    useEffect: vi.fn(),
     useState: (initial) => [initial, vi.fn()],
   };
 });
 
 vi.mock('framer-motion', () => ({
+  useReducedMotion: () => false,
   motion: {
     button: ({ children, onClick, 'aria-label': ariaLabel, className, style, ...props }) => (
       <button onClick={onClick} aria-label={ariaLabel} className={className} style={style} {...props}>
