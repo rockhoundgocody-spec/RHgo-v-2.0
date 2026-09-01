@@ -12,11 +12,16 @@ const rarityColor = {
 
 function useGoogleMapsScript() {
   const [mapsReady, setMapsReady] = useState(() => !!globalThis.window?.google?.maps?.Map);
-  const [apiKey, setApiKey] = useState(null);
+  const [apiKey, setApiKey] = useState(() => {
+    if (typeof window !== 'undefined' && window.GOOGLE_MAPS_API_KEY) return window.GOOGLE_MAPS_API_KEY;
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_MAPS_API_KEY) return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    return null;
+  });
   const [loadError, setLoadError] = useState(false);
 
   // Fetch the Maps API key
   useEffect(() => {
+    if (apiKey) return;
     base44.functions.invoke('getMapsKey', {})
       .then((r) => {
         const key = r?.data?.apiKey;
@@ -24,7 +29,7 @@ function useGoogleMapsScript() {
         else setLoadError(true);
       })
       .catch(() => setLoadError(true));
-  }, []);
+  }, [apiKey]);
 
   // Load Google Maps script — reuse the shared loader promise if available
   useEffect(() => {
