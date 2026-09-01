@@ -146,6 +146,7 @@ export default function Explore() {
   const [selectedMinerals, setSelectedMinerals] = useState(new Set());
   const [expeditionRoute, setExpeditionRoute] = useState([]);
   const [showGeology,    setShowGeology]    = useState(false);
+  const [geologyCardOpen, setGeologyCardOpen] = useState(false);
   const [hudMode,        setHudMode]        = useState(false);
   const [showWeather,    setShowWeather]    = useState(false);
   const [arActive,       setArActive]       = useState(false);
@@ -324,7 +325,7 @@ export default function Explore() {
             }}>
             {locating ? <Loader2 size={16} className="text-hud-cyan animate-spin"/> : <Locate size={16} className={userLocation ? 'text-hud-cyan' : 'text-white/50'}/>}
           </button>
-          <button onClick={() => setShowGeology(g => !g)}
+          <button onClick={() => setShowGeology(g => { setGeologyCardOpen(!g); return !g; })}
             aria-label="Toggle geology view"
             aria-pressed={showGeology}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
@@ -406,9 +407,9 @@ export default function Explore() {
           />
         </div>
 
-        {showGeology && userLocation && (
+        {showGeology && geologyCardOpen && userLocation && (
           <div className="mt-2 pointer-events-auto">
-            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setShowGeology(false)} />
+            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setGeologyCardOpen(false)} />
           </div>
         )}
 
