@@ -13,7 +13,11 @@ const SESSION_KEY = 'rhgo_streak_reminder_dismissed';
 const STORAGE_KEY = 'rhgo_streak_reminder_last_shown';
 
 function getTodayStr() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 const MESSAGES = [
