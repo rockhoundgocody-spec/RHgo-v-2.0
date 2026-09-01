@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard } from 'lucide-react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { lookupMineralIntelligence } from '@/lib/mindatApi';
 
 const PHASE_TEXT = {
   thinking:  'thinking…',
@@ -18,11 +19,15 @@ export default function CloverVoicePanel({
   suggestions, onDismissSuggestions, voiceSupported, onSend,
 }) {
   const bottomRef = useRef(null);
-  const [draft, setDraft] = React.useState('');
+  const [draft, setDraft] = useState('');
+  const [expandedIntel, setExpandedIntel] = useState(false);
+
+  const lastMsg = messages[messages.length - 1]?.content || '';
+  const detectedMineral = useMemo(() => lookupMineralIntelligence(lastMsg), [lastMsg]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, interim, suggestions]);
+  }, [messages, interim, suggestions, detectedMineral, expandedIntel]);
 
   return (
     <div
@@ -74,6 +79,42 @@ export default function CloverVoicePanel({
             </div>
           </div>
         ))}
+
+        {/* Mindat Scientific Mineral Intelligence Card */}
+        {detectedMineral && (
+          <div
+            className="rounded-xl p-2.5 space-y-1.5 transition-all text-[11px]"
+            style={{
+              background: 'hsla(270,40%,18%,0.75)',
+              border: '1px solid hsla(280,70%,60%,0.35)',
+            }}
+          >
+            <div
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedIntel(!expandedIntel)}
+            >
+              <div className="flex items-center gap-1.5 font-bold text-amethyst-glow">
+                <Gem size={12} />
+                <span>Mindat: {detectedMineral.name}</span>
+              </div>
+              <span className="text-[9px] text-white/50 font-mono flex items-center gap-0.5">
+                {detectedMineral.hardness} {expandedIntel ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </span>
+            </div>
+
+            {expandedIntel && (
+              <div className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
+                <div><span className="text-white/40">Formula:</span> <span className="font-mono text-cyan-300 font-semibold">{detectedMineral.formula}</span></div>
+                <div><span className="text-white/40">System:</span> {detectedMineral.crystal_system}</div>
+                <div><span className="text-white/40">Cleavage:</span> {detectedMineral.cleavage}</div>
+                {detectedMineral.uv_fluorescence && (
+                  <div><span className="text-amber-400 font-semibold">UV:</span> {detectedMineral.uv_fluorescence}</div>
+                )}
+                <div className="text-white/60 italic pt-0.5 leading-snug">{detectedMineral.field_test}</div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* What she's hearing right now */}
         {interim && (
