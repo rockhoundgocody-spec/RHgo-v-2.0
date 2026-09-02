@@ -1,26 +1,17 @@
 import React, { useState } from 'react';
 import useCameraStream from './useCameraStream';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
-import AngleGuide from './AngleGuide.jsx';
 import { Button } from '@/components/ui/button';
 import TorchButton from './TorchButton.jsx';
-import { Camera, Check } from 'lucide-react';
-
-const ANGLES = [
-  { key: 'front', label: 'Front view' },
-  { key: 'side', label: 'Side · 90°' },
-  { key: 'back', label: 'Back · 180°' },
-  { key: 'top', label: 'Top down' },
-];
+import { Camera, Plus, Sparkles } from 'lucide-react';
 
 /**
- * MultiAngleCapture — guides user through capturing N angles of a specimen
- * for 3D reconstruction. Calls onComplete(blobs[]) when all angles captured.
+ * MultiAngleCapture — free-form capture: take one shot or several, then analyze.
+ * Calls onComplete(shots[]) with { key, label, captured, blob } entries.
  */
 export default function MultiAngleCapture({ onComplete, onCancel }) {
   const { videoRef, ready, capture, torchSupported, torchOn, toggleTorch } = useCameraStream({ active: true });
-  const [angles, setAngles] = useState(ANGLES.map((a) => ({ ...a, captured: false, blob: null })));
-  const [index, setIndex] = useState(0);
+  const [shots, setShots] = useState([]);
   const [flash, setFlash] = useState(false);
 
   const handleSnap = async () => {
@@ -28,25 +19,18 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
     if (!blob) return;
     setFlash(true);
     setTimeout(() => setFlash(false), 220);
-    const next = [...angles];
-    next[index] = { ...next[index], captured: true, blob };
-    setAngles(next);
-
-    const nextIdx = next.findIndex((a) => !a.captured);
-    if (nextIdx === -1) {
-      onComplete?.(next);
-    } else {
-      setIndex(nextIdx);
-    }
+    setShots((s) => [...s, blob]);
   };
 
-  const completed = angles.filter((a) => a.captured).length;
+  const handleAnalyze = () => {
+    if (!shots.length) return;
+    onComplete?.(shots.map((blob, i) => ({ key: `shot${i + 1}`, label: `Shot ${i + 1}`, captured: true, blob })));
+  };
 
   return (
-    <HudFrame label={`Multi-Angle Capture · ${completed}/${angles.length}`}>
-      {/* 4:3 viewport with object-contain — holding the phone sideways shows
-          (and captures) the whole landscape frame instead of cropping it */}
-      <div className="relative aspect-[4/3] w-full rounded-md overflow-hidden hud-grid-bg">
+    <HudFrame label={shots.length ? `Capture · ${shots.length} shot${shots.length > 1 ? 's' : ''}` : 'Capture'}>
+      {/* Tall 2:3 viewport with object-contain — the full frame is shown and captured */}
+      <div className="relative aspect-[2/3] w-full rounded-md overflow-hidden hud-grid-bg">
         <video
           ref={videoRef}
           playsInline
@@ -71,17 +55,18 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
           <div className="absolute inset-0 bg-white/70 pointer-events-none animate-pulse" />
         )}
 
-        {/* angle progress dial */}
-        <div className="absolute top-2 right-2">
-          <AngleGuide angles={angles} currentIndex={index} />
-        </div>
-
         <div className="absolute top-3 left-3 text-[9px] font-mono uppercase tracking-[0.3em] text-hud-cyan/80 glow-hud">
           ◉ CAPTURE
         </div>
+        {shots.length > 0 && (
+          <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-mono"
+            style={{ background: 'hsla(145,80%,30%,0.35)', border: '1px solid hsl(145 90% 55%)', color: 'hsl(145 90% 70%)' }}>
+            {shots.length} taken
+          </div>
+        )}
         <div className="absolute bottom-3 left-3 right-3 text-center">
           <div className="text-amethyst-glow text-xs font-mono uppercase tracking-[0.3em] glow-amethyst">
-            Frame the specimen · {angles[index]?.label}
+            {shots.length ? 'Add another angle or analyze' : 'Frame the specimen'}
           </div>
         </div>
       </div>
@@ -92,8 +77,8 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
           disabled={!ready}
           className="flex-1 bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white h-12 rounded-xl shadow-[0_0_24px_-10px_hsla(280,100%,60%,0.6)]"
         >
-          <Camera className="mr-2" size={16} />
-          Snap {angles[index]?.label}
+          {shots.length ? <Plus className="mr-2" size={16} /> : <Camera className="mr-2" size={16} />}
+          {shots.length ? 'Add another' : 'Snap photo'}
         </Button>
         <Button
           onClick={onCancel}
@@ -104,27 +89,20 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
         </Button>
       </div>
 
-      {/* progress chips */}
-      <div className="mt-3 flex gap-1.5 justify-center">
-        {angles.map((a, i) => (
-          <div
-            key={a.key}
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider"
-            style={{
-              background: a.captured
-                ? 'hsla(145,80%,30%,0.3)'
-                : i === index
-                  ? 'hsla(280,80%,40%,0.3)'
-                  : 'hsla(220,30%,20%,0.3)',
-              border: `1px solid ${a.captured ? 'hsl(145 90% 55%)' : i === index ? 'hsl(280 100% 70%)' : 'hsla(220,30%,40%,0.4)'}`,
-              color: a.captured ? 'hsl(145 90% 70%)' : i === index ? 'hsl(280 100% 85%)' : 'hsla(0,0%,80%,0.5)',
-            }}
-          >
-            {a.captured && <Check size={9} />}
-            {a.label}
-          </div>
-        ))}
-      </div>
+      {shots.length > 0 && (
+        <Button
+          onClick={handleAnalyze}
+          className="mt-2 w-full h-12 rounded-xl text-white font-bold"
+          style={{
+            background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
+            border: '1px solid hsla(280,80%,70%,0.5)',
+            boxShadow: '0 0 24px hsla(265,80%,55%,0.4)',
+          }}
+        >
+          <Sparkles className="mr-2" size={16} />
+          Analyze {shots.length} shot{shots.length > 1 ? 's' : ''}
+        </Button>
+      )}
     </HudFrame>
   );
 }
