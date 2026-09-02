@@ -173,7 +173,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
               title="Daily Geode Resonance"
             >
               <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
-              <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Geode (+50 XP)'}</span>
+              <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Challenge'}</span>
             </button>
           </div>
         )}
