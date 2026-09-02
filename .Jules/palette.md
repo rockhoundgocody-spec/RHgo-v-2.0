@@ -45,3 +45,6 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2026-09-15 - Empty State Component Keyboard Focus and Screen Reader Accessibility
+**Learning:** Zero-state / empty-state screens often omit keyboard focus indicators on call-to-action buttons and links, leaving keyboard-only users unable to locate the action. Additionally, decorative animated icon orbs or emojis in zero states need `aria-hidden="true"` so screen readers bypass the icon and announce the title and body text directly.
+**Action:** Always add `aria-hidden="true"` to decorative animated icon containers in empty state components, ensure `type="button"` is set on action buttons, and apply `focus-visible:ring-2` with an on-brand glow color so keyboard navigation focus stands out.
