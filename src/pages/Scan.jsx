@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
-import LiveScanStage from '@/components/scan/LiveScanStage.jsx';
 import MultiAngleCapture from '@/components/scan/MultiAngleCapture.jsx';
 import ReconstructionStage from '@/components/scan/ReconstructionStage.jsx';
 import HolographicResult from '@/components/scan/HolographicResult.jsx';
@@ -55,12 +54,10 @@ function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 /**
  * Scan — combined flow:
- *   live  →  capture (multi-angle)  →  reconstruct (upload + AI)  →  result
- *
- * (Touched to force Vite to re-emit the chunk after sibling edits.)
+ *   capture (multi-angle)  →  reconstruct (upload + AI)  →  result
  */
 export default function Scan() {
-  const [stage, setStage] = useState('live'); // live | capture | reconstruct | result
+  const [stage, setStage] = useState('capture'); // capture | reconstruct | result
   const [angles, setAngles] = useState([]);
   const [primaryUrl, setPrimaryUrl] = useState(null);
   const [result, setResult] = useState(null);
@@ -116,16 +113,6 @@ export default function Scan() {
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
-
-  // Fallback if camera unavailable — single-image classic flow.
-  const handleUploadFallback = async (file) => {
-    if (!file) return;
-    if (!guardScan()) return;
-    const blob = file;
-    setAngles([{ key: 'front', label: 'Uploaded', captured: true, blob }]);
-    setStage('reconstruct');
-    if (voiceEnabled) speak(pickRandom(SCAN_LINES.analyzing));
-  };
 
   const handleCaptureComplete = (capturedAngles, mode) => {
     if (!guardScan()) return;
@@ -387,9 +374,9 @@ export default function Scan() {
   };
 
   const handleReconstructError = () => {
-    // Soft fail back to live so the user can retry.
+    // Soft fail back to capture so the user can retry.
     if (voiceEnabled) speak(pickRandom(SCAN_LINES.error));
-    setStage('live');
+    setStage('capture');
   };
 
   const saveWithChoice = async (choice) => {
@@ -485,7 +472,7 @@ export default function Scan() {
 
   const reset = () => {
     stop();
-    setStage('live');
+    setStage('capture');
     setAngles([]);
     setPrimaryUrl(null);
     setResult(null);
@@ -509,10 +496,10 @@ export default function Scan() {
       <div className="flex items-center justify-between mb-2 px-1">
         <div>
           <h1 className="text-lg font-black text-white tracking-tight leading-none">AI Scanner</h1>
-          <p className="text-white/55 text-[9px] uppercase tracking-[0.22em] mt-0.5">Vision · 3D Reconstruct · Field ID</p>
+          <p className="text-white/55 text-[9px] uppercase tracking-[0.22em] mt-0.5">Capture · 3D Reconstruct · Field ID</p>
         </div>
         <div className="flex items-center gap-2">
-          {(stage === 'live' || stage === 'capture') && (
+          {stage === 'capture' && (
             <WetDryToggle value={wetDry} onChange={setWetDry} />
           )}
           <StageStrip stage={stage} />
@@ -521,17 +508,10 @@ export default function Scan() {
 
       {/* Main content — fills remaining height */}
       <div className="flex-1 min-h-0 overflow-y-auto -webkit-overflow-scrolling-touch">
-        {stage === 'live' && (
-          <LiveScanStage
-            onBeginCapture={(mode) => { if (mode) setScanMode(mode); setStage('capture'); }}
-            onUploadFallback={handleUploadFallback}
-          />
-        )}
-
         {stage === 'capture' && (
           <MultiAngleCapture
             onComplete={handleCaptureComplete}
-            onCancel={() => setStage('live')}
+            onCancel={() => navigate(-1)}
           />
         )}
 
@@ -600,7 +580,6 @@ export default function Scan() {
 
 function StageStrip({ stage }) {
   const stages = [
-    { id: 'live', label: 'Vision' },
     { id: 'capture', label: 'Capture' },
     { id: 'reconstruct', label: 'AI' },
     { id: 'result', label: 'Result' },
