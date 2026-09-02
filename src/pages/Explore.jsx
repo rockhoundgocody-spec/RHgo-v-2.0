@@ -11,17 +11,14 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
-import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
+import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Flame } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
-import HotspotMap from '@/components/explore/HotspotMap.jsx';
-import MapLayerPanel from '@/components/explore/MapLayerPanel.jsx';
-import MineralFilterPanel from '@/components/explore/MineralFilterPanel.jsx';
+import HotspotMap from '@/components/explore/GoogleHotspotMap.jsx';
 import HotspotDetailSheet from '@/components/explore/HotspotDetailSheet.jsx';
 import ExpeditionPlanner from '@/components/explore/ExpeditionPlanner.jsx';
 import OfflineBanner from '@/components/explore/OfflineBanner.jsx';
-import OfflineTopoSync from '@/components/explore/OfflineTopoSync.jsx';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import BadgeUnlockAnimation from '@/components/badges/BadgeUnlockAnimation.jsx';
@@ -31,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useSpawns from '@/lib/useSpawns';
 import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
+import SpawnStats from '@/components/ar/SpawnStats.jsx';
 import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
@@ -144,12 +142,12 @@ export default function Explore() {
   const [locating,       setLocating]       = useState(false);
   const [sheetOpen,      setSheetOpen]      = useState(false);
   const [detailHotspot,  setDetailHotspot]  = useState(null);
-  const [searchQuery,    setSearchQuery]    = useState('');
   const [activeLayer,    setActiveLayer]    = useState('all');
   const [selectedMinerals, setSelectedMinerals] = useState(new Set());
   const [expeditionRoute, setExpeditionRoute] = useState([]);
   const [showGeology,    setShowGeology]    = useState(false);
-  const [hudMode,        setHudMode]        = useState(false);
+  const [geologyCardOpen, setGeologyCardOpen] = useState(false);
+  const hudMode = false;
   const [showWeather,    setShowWeather]    = useState(false);
   const [arActive,       setArActive]       = useState(false);
   const [activeSpawn,    setActiveSpawn]    = useState(null);
@@ -199,38 +197,15 @@ export default function Explore() {
     return (detailHotspot.minerals||[]).filter(m => !collectedMinerals.has(m.toLowerCase()));
   }, [detailHotspot, collectedMinerals]);
 
-  // All unique minerals across hotspots — drives the filter chips
-  const allMinerals = useMemo(() => {
-    const set = new Set();
-    hotspots.forEach(h => (h.minerals || []).forEach(m => { if (m?.trim()) set.add(m.trim()); }));
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [hotspots]);
-
   // Sorted lowercase lookup for filtering
   const selectedMineralsLower = useMemo(
     () => new Set([...selectedMinerals].map(m => m.toLowerCase())),
     [selectedMinerals]
   );
 
-  const toggleMineral = useCallback((mineral) => {
-    setSelectedMinerals(prev => {
-      const next = new Set(prev);
-      if (next.has(mineral)) next.delete(mineral); else next.add(mineral);
-      return next;
-    });
-  }, []);
-
-  const clearMineralFilter = useCallback(() => setSelectedMinerals(new Set()), []);
-
   // Search filter
   const filteredHotspots = useMemo(() => {
-    const q = searchQuery.toLowerCase();
     let list = hotspots;
-    if (q) list = list.filter(h =>
-      h.name?.toLowerCase().includes(q) ||
-      h.state?.toLowerCase().includes(q) ||
-      h.minerals?.some(m => m.toLowerCase().includes(q))
-    );
     // Layer-specific filtering for card list
     if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite'].includes(m.toLowerCase())));
     if (activeLayer === 'gaps')   list = list.filter(h => collectionGapIds.has(h.id));
@@ -242,7 +217,7 @@ export default function Explore() {
       list = list.filter(h => (h.minerals || []).some(m => selectedMineralsLower.has(m.toLowerCase())));
     }
     return list;
-  }, [hotspots, searchQuery, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
+  }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
 
   const handleMarkerClick = useCallback(h => { setActiveId(h.id); setDetailHotspot(h); }, []);
   const handleCloseDetail = useCallback(() => { setDetailHotspot(null); setActiveId(null); }, []);
@@ -316,22 +291,9 @@ export default function Explore() {
         )}
         {/* Search + locate row */}
         <div className="flex items-center gap-2 pointer-events-auto mb-2">
-          <div className="flex-1 relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
-            <input type="text" placeholder="Search hotspots, minerals…"
-              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-8 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none"
-              style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
-                aria-label="Clear search"
-              >
-                <X size={13}/>
-              </button>
-            )}
+          <div className="flex-1 flex items-center px-3 py-1.5 rounded-2xl"
+            style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}>
+            <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />
           </div>
           <button onClick={locate} disabled={locating}
             aria-label="My location"
@@ -344,7 +306,7 @@ export default function Explore() {
             }}>
             {locating ? <Loader2 size={16} className="text-hud-cyan animate-spin"/> : <Locate size={16} className={userLocation ? 'text-hud-cyan' : 'text-white/50'}/>}
           </button>
-          <button onClick={() => setShowGeology(g => !g)}
+          <button onClick={() => setShowGeology(g => { setGeologyCardOpen(!g); return !g; })}
             aria-label="Toggle geology view"
             aria-pressed={showGeology}
             className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
@@ -358,29 +320,10 @@ export default function Explore() {
           </button>
           <SpawnHUD
             spawns={spawns}
-            caughtToday={caughtToday}
-            dailyCap={dailyCap}
             arActive={arActive}
             onToggleAR={() => setArActive(a => !a)}
           />
           <QuickPinButton userLocation={userLocation} />
-
-          {/* HUD mode toggle */}
-          <button
-            onClick={() => setHudMode(h => !h)}
-            title="High-contrast HUD mode"
-            aria-pressed={hudMode}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
-            style={{
-              background: hudMode ? 'hsla(195,100%,30%,.4)' : 'hsla(240,30%,8%,.88)',
-              border: hudMode ? '1px solid hsla(195,100%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: hudMode ? '0 0 18px hsla(195,100%,60%,.4)' : 'none',
-            }}
-            aria-label="Toggle HUD mode"
-          >
-            <Sun size={16} className={hudMode ? 'text-hud-cyan' : 'text-white/50'} />
-          </button>
 
           {/* Heat map toggle */}
           <button
@@ -417,23 +360,6 @@ export default function Explore() {
           </button>
         </div>
 
-        {/* Layer toggles */}
-        <div className="pointer-events-auto mb-2">
-          <MapLayerPanel activeLayer={activeLayer} onLayerChange={setActiveLayer} />
-        </div>
-
-        {/* Mineral type filter chips */}
-        {allMinerals.length > 0 && (
-          <div className="pointer-events-auto mb-2">
-            <MineralFilterPanel
-              minerals={allMinerals}
-              selected={selectedMinerals}
-              onToggle={toggleMineral}
-              onClearAll={clearMineralFilter}
-            />
-          </div>
-        )}
-
         {/* Expedition planner */}
         <div className="pointer-events-auto relative">
           <ExpeditionPlanner
@@ -443,9 +369,9 @@ export default function Explore() {
           />
         </div>
 
-        {showGeology && userLocation && (
+        {showGeology && geologyCardOpen && userLocation && (
           <div className="mt-2 pointer-events-auto">
-            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setShowGeology(false)} />
+            <GeologyInfoCard lat={userLocation.lat} lng={userLocation.lng} onClose={() => setGeologyCardOpen(false)} />
           </div>
         )}
 
@@ -460,11 +386,6 @@ export default function Explore() {
         {isOffline && hotspots.length > 0 && (
           <div className="mt-2 pointer-events-auto">
             <OfflineBanner cachedAt={cachedAt} count={hotspots.length} />
-          </div>
-        )}
-        {userLocation && (
-          <div className="mt-2 pointer-events-auto max-w-[280px]">
-            <OfflineTopoSync userLocation={userLocation} />
           </div>
         )}
       </div>
@@ -504,7 +425,7 @@ export default function Explore() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h2 className="text-white font-bold text-sm">
-                        {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Hotspots'}
+                        Nearby Hotspots
                       </h2>
                       <p className="text-white/50 text-[10px] uppercase tracking-[.2em]">
                         {hotspots.length} total · {publicCount} open
@@ -562,7 +483,7 @@ export default function Explore() {
                 }}>
                 {loading ? <Loader2 size={14} className="text-amethyst-glow animate-spin"/> : <Zap size={14} className="text-amethyst-glow"/>}
                 <span className="text-white/80 text-sm font-semibold">
-                  {loading ? 'Loading hotspots…' : `${filteredHotspots.length} hotspots`}
+                  {loading ? 'Loading hotspots…' : 'Hotspots'}
                 </span>
                 <ChevronUp size={14} className="text-white/40"/>
               </motion.button>

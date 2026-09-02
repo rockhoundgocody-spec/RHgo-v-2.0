@@ -16,7 +16,7 @@ import CloverVoicePanel from './CloverVoicePanel.jsx';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import { playOrbChime, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { base44 } from '@/api/base44Client';
-import { Gem, Zap, Compass } from 'lucide-react';
+import { Gem, Zap } from 'lucide-react';
 
 const GREETINGS = (c, name) => {
   const hour = new Date().getHours();
@@ -118,14 +118,6 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     setAbilitiesModal('resonance');
   };
 
-  const handleRadarTap = () => {
-    playOrbChime(741, 1.8);
-    triggerOrbHaptic('radar');
-    setCustomOrbState('radar');
-    setTimeout(() => setCustomOrbState((s) => s === 'radar' ? null : s), 4500);
-    setAbilitiesModal('radar');
-  };
-
   const orbState = customOrbState || (
     clover.phase === 'thinking' ? 'thinking'
     : clover.phase === 'speaking' ? 'speaking'
@@ -181,20 +173,7 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
               title="Daily Geode Resonance"
             >
               <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
-              <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Geode (+50 XP)'}</span>
-            </button>
-
-            <button
-              onClick={handleRadarTap}
-              className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md text-hud-cyan"
-              style={{
-                background: 'hsla(195,80%,25%,0.3)',
-                border: '1px solid hsla(195,80%,55%,0.4)',
-              }}
-              title="Bedrock Strata Radar"
-            >
-              <Compass size={12} />
-              <span>Strata Radar</span>
+              <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Challenge'}</span>
             </button>
           </div>
         )}

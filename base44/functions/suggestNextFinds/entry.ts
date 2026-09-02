@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS_MI = 3959;
+const MAX_RADIUS_MI = 25;
 
 // Haversine distance in miles with pre-calculated user latitude radian / cosine parameters
 function distanceMi(
@@ -67,6 +68,8 @@ Deno.serve(async (req) => {
           distanceMi: dist != null ? Math.round(dist) : null,
         };
       });
+      // Only keep hotspots within the 25-mile suggestion radius
+      scored = scored.filter(h => h.distanceMi != null && h.distanceMi <= MAX_RADIUS_MI);
       scored.sort((a, b) => (a.distanceMi ?? 9999) - (b.distanceMi ?? 9999));
     } else {
       scored = hotspots.map(h => ({
@@ -104,7 +107,9 @@ THEIR COLLECTION SO FAR:
 ${collectedSummary}
 
 NEARBY HOTSPOTS (closest first):
-${hotspotContext || 'No mapped hotspots nearby — suggest based on general Michigan / Great Lakes geology.'}
+${hotspotContext || (lat != null && lng != null
+  ? `No mapped hotspots within ${MAX_RADIUS_MI} miles — set hotspot_name and distance_mi to null and suggest based on collection gaps + local geology.`
+  : 'No mapped hotspots nearby — suggest based on general Michigan / Great Lakes geology.')}
 
 MINERALS AVAILABLE NEARBY THEY HAVEN'T FOUND YET:
 ${uncollectedNearby.length ? uncollectedNearby.join(', ') : 'Cross-reference collection gaps with hotspot minerals.'}
@@ -115,6 +120,7 @@ Rules:
 - For each, name the best nearby hotspot, what to look for, and why it's a good next target.
 - If no geolocation was given, still suggest based on collection gaps + general Midwest geology.
 - Be accurate — only reference minerals that genuinely occur at the named hotspots.
+- Only name hotspots from the list above (all within ${MAX_RADIUS_MI} miles). Never suggest a site farther than ${MAX_RADIUS_MI} miles away.
 - Keep each suggestion's "why" to one sentence.
 
 Output a JSON object:
@@ -165,9 +171,23 @@ Output a JSON object:
       }
     }
 
+    // Sanitize: only keep hotspot references that are actually in the in-radius list,
+    // and use our computed distance rather than the model's guess.
+    const nearbyByName = new Map(nearby.map(h => [h.name.toLowerCase(), h]));
+    const suggestions = (Array.isArray(parsed?.suggestions) ? parsed.suggestions : [])
+      .slice(0, 4)
+      .map((s: Record<string, unknown>) => {
+        const match = nearbyByName.get(String(s.hotspot_name || '').toLowerCase());
+        return {
+          ...s,
+          hotspot_name: match ? match.name : null,
+          distance_mi: match ? match.distanceMi : null,
+        };
+      });
+
     return Response.json({
       clover_intro: String(parsed?.clover_intro || `Hey ${name}, here's what I'd hunt next.`).trim(),
-      suggestions: Array.isArray(parsed?.suggestions) ? parsed.suggestions.slice(0, 4) : [],
+      suggestions,
       collection_size: specimens.length,
       nearby_hotspot_count: nearby.length,
     });

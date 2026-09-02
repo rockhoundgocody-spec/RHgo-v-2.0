@@ -8,21 +8,17 @@
  * - Shows proactive field alerts and mineral tips right where the explorer is
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import CloverVoicePanel from '@/components/hub/CloverVoicePanel.jsx';
 import useCloverConversation from '@/components/hub/useCloverConversation.js';
 import { playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
-import { evaluateProactiveFieldSituation } from '@/lib/proactiveFieldCopilot';
 
 export default function FloatingCloverCompanion() {
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
-  const [fieldAlert, setFieldAlert] = useState(null);
-  const alertDismissedRef = useRef(false);
 
   // Hide on Hub ('/') where HeroOrb is already the centerpiece, and admin/docs
   const isHub = location.pathname === '/';
@@ -35,21 +31,6 @@ export default function FloatingCloverCompanion() {
       // Find logged notification
     },
   });
-
-  // Evaluate proactive field alerts once GPS is available
-  useEffect(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation || isHub) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const alerts = await evaluateProactiveFieldSituation(pos.coords.latitude, pos.coords.longitude);
-        if (alerts && alerts.length > 0 && !alertDismissedRef.current) {
-          setFieldAlert(alerts[0]);
-        }
-      },
-      () => {},
-      { timeout: 8000 }
-    );
-  }, [location.pathname, isHub]);
 
   if (isHub || isAdminOrDocs) return null;
 
@@ -74,37 +55,6 @@ export default function FloatingCloverCompanion() {
 
   return (
     <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end pointer-events-none select-none">
-      {/* Proactive Field Alert Banner */}
-      <AnimatePresence>
-        {fieldAlert && !expanded && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="pointer-events-auto mb-2 mr-1 p-2.5 max-w-[220px] rounded-xl text-xs backdrop-blur-md shadow-lg border border-amber-400/40"
-            style={{ background: 'hsla(260,30%,12%,0.92)' }}
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold text-amber-300 mb-1">
-              <span className="flex items-center gap-1">
-                <Sparkles size={11} /> {fieldAlert.badge}
-              </span>
-              <button
-                onClick={() => {
-                  setFieldAlert(null);
-                  alertDismissedRef.current = true;
-                }}
-                className="text-white/40 hover:text-white"
-              >
-                <X size={12} />
-              </button>
-            </div>
-            <p className="text-[11px] text-white/90 line-clamp-2 leading-tight">
-              {fieldAlert.description}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Expanded Voice Conversation Drawer */}
       <AnimatePresence>
         {expanded && (
@@ -153,11 +103,6 @@ export default function FloatingCloverCompanion() {
             getSpectrum={clover.getSpectrum}
           />
         </div>
-
-        {/* Proactive alert ping dot */}
-        {fieldAlert && !expanded && (
-          <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse" />
-        )}
       </motion.button>
     </div>
   );
