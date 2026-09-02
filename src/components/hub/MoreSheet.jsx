@@ -44,7 +44,7 @@ export default function MoreSheet({ open, onClose }) {
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
 
-            <div className="px-6 my-12 py-4">
+            <div className="px-6 py-10 my-10">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base font-black text-white">More</h2>
                 <button
