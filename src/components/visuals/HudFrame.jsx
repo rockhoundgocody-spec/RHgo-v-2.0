@@ -20,7 +20,7 @@ export default function HudFrame({ children, label, className = '' }) {
           {label}
         </div>
       }
-      <div className="pr-4 pl-4">{children}</div>
+      <div className="pr-8 pl-12 pb-1">{children}</div>
     </div>);
 
 }
