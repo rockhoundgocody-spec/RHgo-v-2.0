@@ -35,15 +35,15 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
           ref={videoRef}
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-contain"
-        />
+          className="absolute inset-0 w-full h-full object-contain py-1" />
+        
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(circle at center, transparent 35%, hsla(240,40%,3%,0.6) 100%)',
-          }}
-        />
+            'radial-gradient(circle at center, transparent 35%, hsla(240,40%,3%,0.6) 100%)'
+          }} />
+        
 
         {/* Flashlight */}
         <div className="absolute bottom-2 right-2 z-20">
@@ -51,19 +51,19 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
         </div>
 
         {/* flash on capture */}
-        {flash && (
-          <div className="absolute inset-0 bg-white/70 pointer-events-none animate-pulse" />
-        )}
+        {flash &&
+        <div className="absolute inset-0 bg-white/70 pointer-events-none animate-pulse" />
+        }
 
         <div className="absolute top-3 left-3 text-[9px] font-mono uppercase tracking-[0.3em] text-hud-cyan/80 glow-hud">
           ◉ CAPTURE
         </div>
-        {shots.length > 0 && (
-          <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-mono"
-            style={{ background: 'hsla(145,80%,30%,0.35)', border: '1px solid hsl(145 90% 55%)', color: 'hsl(145 90% 70%)' }}>
+        {shots.length > 0 &&
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-mono"
+        style={{ background: 'hsla(145,80%,30%,0.35)', border: '1px solid hsl(145 90% 55%)', color: 'hsl(145 90% 70%)' }}>
             {shots.length} taken
           </div>
-        )}
+        }
         <div className="absolute bottom-3 left-3 right-3 text-center">
           <div className="text-amethyst-glow text-xs font-mono uppercase tracking-[0.3em] glow-amethyst">
             {shots.length ? 'Add another angle or analyze' : 'Frame the specimen'}
@@ -75,34 +75,34 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
         <Button
           onClick={handleSnap}
           disabled={!ready}
-          className="flex-1 bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white h-12 rounded-xl shadow-[0_0_24px_-10px_hsla(280,100%,60%,0.6)]"
-        >
+          className="flex-1 bg-amethyst/30 hover:bg-amethyst/40 border border-amethyst/50 text-white h-12 rounded-xl shadow-[0_0_24px_-10px_hsla(280,100%,60%,0.6)]">
+          
           {shots.length ? <Plus className="mr-2" size={16} /> : <Camera className="mr-2" size={16} />}
           {shots.length ? 'Add another' : 'Snap photo'}
         </Button>
         <Button
           onClick={onCancel}
           variant="outline"
-          className="border-white/20 text-white/80 hover:bg-white/5 h-12"
-        >
+          className="border-white/20 text-white/80 hover:bg-white/5 h-12">
+          
           Cancel
         </Button>
       </div>
 
-      {shots.length > 0 && (
-        <Button
-          onClick={handleAnalyze}
-          className="mt-2 w-full h-12 rounded-xl text-white font-bold"
-          style={{
-            background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
-            border: '1px solid hsla(280,80%,70%,0.5)',
-            boxShadow: '0 0 24px hsla(265,80%,55%,0.4)',
-          }}
-        >
+      {shots.length > 0 &&
+      <Button
+        onClick={handleAnalyze}
+        className="mt-2 w-full h-12 rounded-xl text-white font-bold"
+        style={{
+          background: 'linear-gradient(135deg, hsla(265,70%,50%,0.95), hsla(280,80%,60%,0.95))',
+          border: '1px solid hsla(280,80%,70%,0.5)',
+          boxShadow: '0 0 24px hsla(265,80%,55%,0.4)'
+        }}>
+        
           <Sparkles className="mr-2" size={16} />
           Analyze {shots.length} shot{shots.length > 1 ? 's' : ''}
         </Button>
-      )}
-    </HudFrame>
-  );
+      }
+    </HudFrame>);
+
 }
