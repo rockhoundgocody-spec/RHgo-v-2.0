@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { Flame, Zap } from 'lucide-react';
 
@@ -28,7 +28,8 @@ function getDayIndex() {
 
 export default function DailyStreakCard({ companion }) {
   const [revealed, setRevealed] = useState(false);
-  const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState(() => companion?.streak_days || 0);
+  const contentId = useId();
 
   useEffect(() => {
     if (companion?.streak_days) setStreak(companion.streak_days);
@@ -60,40 +61,43 @@ export default function DailyStreakCard({ companion }) {
           </div>
         </div>
 
-        {!revealed ? (
-          <button
-            type="button"
-            onClick={() => setRevealed(true)}
-            className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
-            style={{ borderColor: `${color}40`, background: `${color}08` }}
-          >
-            <div className="text-4xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300 motion-reduce:transition-none">
-              ❓
-            </div>
-            <div className="text-[11px] uppercase tracking-[0.3em] font-bold"
-              style={{ color }}>
-              Tap to Reveal Today's Mineral
-            </div>
-            <div className="text-[10px] text-white/30 mt-1">
-              {mineral.rarity} · learn something wild
-            </div>
-            <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity motion-reduce:transition-none"
-              style={{ background: `radial-gradient(ellipse at center, ${color}15 0%, transparent 70%)` }} />
-          </button>
-        ) : (
-          <div className="flex gap-3 items-start">
-            <div className="text-3xl shrink-0">{mineral.emoji}</div>
-            <div>
-              <div className="text-white font-bold text-sm leading-tight">{mineral.name}</div>
-              <div className="text-[9px] uppercase tracking-[0.2em] font-semibold mb-1.5" style={{ color }}>
-                {mineral.rarity}
-              </div>
-              <p className="text-white/55 text-[11px] leading-relaxed italic">
-                "{mineral.fact}"
-              </p>
-            </div>
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          aria-expanded={revealed}
+          aria-controls={contentId}
+          aria-label="Reveal today's daily mystery mineral"
+          className={`w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 ${
+            revealed ? 'hidden' : 'flex'
+          }`}
+          style={{ borderColor: `${color}40`, background: `${color}08` }}
+        >
+          <div className="text-4xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300 motion-reduce:transition-none">
+            <span aria-hidden="true">❓</span>
           </div>
-        )}
+          <div className="text-[11px] uppercase tracking-[0.3em] font-bold"
+            style={{ color }}>
+            Tap to Reveal Today's Mineral
+          </div>
+          <div className="text-[10px] text-white/30 mt-1">
+            {mineral.rarity} · learn something wild
+          </div>
+          <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity motion-reduce:transition-none"
+            style={{ background: `radial-gradient(ellipse at center, ${color}15 0%, transparent 70%)` }} />
+        </button>
+
+        <div id={contentId} className={revealed ? 'flex gap-3 items-start' : 'hidden'}>
+          <div className="text-3xl shrink-0"><span aria-hidden="true">{mineral.emoji}</span></div>
+          <div>
+            <div className="text-white font-bold text-sm leading-tight">{mineral.name}</div>
+            <div className="text-[9px] uppercase tracking-[0.2em] font-semibold mb-1.5" style={{ color }}>
+              {mineral.rarity}
+            </div>
+            <p className="text-white/55 text-[11px] leading-relaxed italic">
+              "{mineral.fact}"
+            </p>
+          </div>
+        </div>
       </div>
     </GlassPanel>
   );

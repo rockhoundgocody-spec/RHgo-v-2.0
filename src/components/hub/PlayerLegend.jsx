@@ -4,7 +4,7 @@ import { User, Upload, Trophy, Share2, ChevronRight, Check, AlertCircle } from '
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { shareAchievement } from '@/lib/shareAchievement';
-import { LEVEL_TITLES, XP_PER_LEVEL, getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
+import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 
 // Level-up celebration overlay
 function LevelUpModal({ title, onClose, reducedMotion }) {
