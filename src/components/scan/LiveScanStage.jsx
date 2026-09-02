@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import useCameraStream from './useCameraStream';
 import LiveLabelsOverlay from './LiveLabelsOverlay.jsx';
 import TorchButton from './TorchButton.jsx';
-import ScanModeBar from './ScanModeBar.jsx';
 import { Upload, ScanLine, Gem, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,8 +17,8 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
-  const [scanMode, setScanMode] = useState('rock');
-  const [scaleOn, setScaleOn] = useState(false);
+  const scanMode = 'rock';
+  const scaleOn = false;
   const signalRef = useRef(0);
   const scanStateRef = useRef('idle');
   const signalBarRef = useRef(null);
@@ -116,18 +115,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
           <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/40">RockHound·AI</span>
         </div>
       </div>
-
-      {/* ── SCAN MODE BAR (2B.1) ── */}
-      {!error && (
-        <div className="px-3 py-2" style={{ borderBottom: `1px solid ${col.border}`, background: 'hsla(265,50%,4%,0.5)' }}>
-          <ScanModeBar
-            mode={scanMode}
-            onModeChange={setScanMode}
-            scaleOn={scaleOn}
-            onScaleToggle={() => setScaleOn(s => !s)}
-          />
-        </div>
-      )}
 
       {/* ── MAIN VIEWPORT ── fills remaining height */}
       <div className="relative overflow-hidden flex-1 min-h-0">
