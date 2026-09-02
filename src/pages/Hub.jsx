@@ -77,14 +77,14 @@ export default function Hub() {
 
         <div className="mt-3 select-none">
           <span
-            className="text-[56px] sm:text-[80px] font-black leading-none text-amethyst-glow glow-amethyst block"
+            className="text-[34px] sm:text-[48px] font-black leading-none text-amethyst-glow glow-amethyst block whitespace-nowrap"
             style={{
               letterSpacing: '-0.02em',
               textShadow:
                 '0 0 60px hsla(280,100%,75%,0.7), 0 0 120px hsla(265,80%,50%,0.4)',
             }}
           >
-            GO
+            RockHound-GO
           </span>
           <p className="mt-1 text-white/55 text-[11px] font-light tracking-[0.18em] uppercase">
             Discover · Identify · Collect
