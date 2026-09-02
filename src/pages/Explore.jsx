@@ -11,7 +11,7 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
-import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
+import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Flame } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
@@ -147,7 +147,7 @@ export default function Explore() {
   const [expeditionRoute, setExpeditionRoute] = useState([]);
   const [showGeology,    setShowGeology]    = useState(false);
   const [geologyCardOpen, setGeologyCardOpen] = useState(false);
-  const [hudMode,        setHudMode]        = useState(false);
+  const hudMode = false;
   const [showWeather,    setShowWeather]    = useState(false);
   const [arActive,       setArActive]       = useState(false);
   const [activeSpawn,    setActiveSpawn]    = useState(null);
@@ -324,23 +324,6 @@ export default function Explore() {
             onToggleAR={() => setArActive(a => !a)}
           />
           <QuickPinButton userLocation={userLocation} />
-
-          {/* HUD mode toggle */}
-          <button
-            onClick={() => setHudMode(h => !h)}
-            title="High-contrast HUD mode"
-            aria-pressed={hudMode}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
-            style={{
-              background: hudMode ? 'hsla(195,100%,30%,.4)' : 'hsla(240,30%,8%,.88)',
-              border: hudMode ? '1px solid hsla(195,100%,60%,.7)' : '1px solid hsla(255,30%,40%,.3)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: hudMode ? '0 0 18px hsla(195,100%,60%,.4)' : 'none',
-            }}
-            aria-label="Toggle HUD mode"
-          >
-            <Sun size={16} className={hudMode ? 'text-hud-cyan' : 'text-white/50'} />
-          </button>
 
           {/* Heat map toggle */}
           <button
