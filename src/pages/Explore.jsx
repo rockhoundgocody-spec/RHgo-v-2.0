@@ -11,7 +11,7 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
-import { Loader2, Locate, Zap, Search, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
+import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Sun, Flame } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
@@ -142,7 +142,6 @@ export default function Explore() {
   const [locating,       setLocating]       = useState(false);
   const [sheetOpen,      setSheetOpen]      = useState(false);
   const [detailHotspot,  setDetailHotspot]  = useState(null);
-  const [searchQuery,    setSearchQuery]    = useState('');
   const [activeLayer,    setActiveLayer]    = useState('all');
   const [selectedMinerals, setSelectedMinerals] = useState(new Set());
   const [expeditionRoute, setExpeditionRoute] = useState([]);
@@ -206,13 +205,7 @@ export default function Explore() {
 
   // Search filter
   const filteredHotspots = useMemo(() => {
-    const q = searchQuery.toLowerCase();
     let list = hotspots;
-    if (q) list = list.filter(h =>
-      h.name?.toLowerCase().includes(q) ||
-      h.state?.toLowerCase().includes(q) ||
-      h.minerals?.some(m => m.toLowerCase().includes(q))
-    );
     // Layer-specific filtering for card list
     if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite'].includes(m.toLowerCase())));
     if (activeLayer === 'gaps')   list = list.filter(h => collectionGapIds.has(h.id));
@@ -224,7 +217,7 @@ export default function Explore() {
       list = list.filter(h => (h.minerals || []).some(m => selectedMineralsLower.has(m.toLowerCase())));
     }
     return list;
-  }, [hotspots, searchQuery, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
+  }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
 
   const handleMarkerClick = useCallback(h => { setActiveId(h.id); setDetailHotspot(h); }, []);
   const handleCloseDetail = useCallback(() => { setDetailHotspot(null); setActiveId(null); }, []);
@@ -298,27 +291,9 @@ export default function Explore() {
         )}
         {/* Search + locate row */}
         <div className="flex items-center gap-2 pointer-events-auto mb-2">
-          <div className="flex-1 relative">
-            {searchQuery
-              ? <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
-              : <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />
-                </div>
-            }
-            <input type="text" placeholder=""
-              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className={`w-full ${searchQuery ? 'pl-8' : 'pl-24'} pr-8 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none`}
-              style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
-                aria-label="Clear search"
-              >
-                <X size={13}/>
-              </button>
-            )}
+          <div className="flex-1 flex items-center px-3 py-1.5 rounded-2xl"
+            style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}>
+            <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />
           </div>
           <button onClick={locate} disabled={locating}
             aria-label="My location"
@@ -467,7 +442,7 @@ export default function Explore() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h2 className="text-white font-bold text-sm">
-                        {searchQuery ? `${filteredHotspots.length} results` : 'Nearby Hotspots'}
+                        Nearby Hotspots
                       </h2>
                       <p className="text-white/50 text-[10px] uppercase tracking-[.2em]">
                         {hotspots.length} total · {publicCount} open
