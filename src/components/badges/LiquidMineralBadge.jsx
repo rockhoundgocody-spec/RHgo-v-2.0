@@ -219,12 +219,24 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, red
       className="relative overflow-hidden flex-shrink-0 transition-all duration-300"
       style={{ width: size, height: size, clipPath: OCT }}
     >
+      {/* Liquid Glass Medal base image */}
+      {mat === 'liquid_glass' && (
+        <img
+          src="https://media.base44.com/images/public/69f35dd14650b54681c835ec/5f84cc464_generated_d23e9b3d.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover"
+          draggable={false}
+        />
+      )}
       {/* L1: Deep stone base */}
-      <div className="absolute inset-0" style={{
-        background: isLight
-          ? 'radial-gradient(ellipse at 38% 32%, hsl(210,30%,96%) 0%, hsl(220,20%,84%) 80%)'
-          : `radial-gradient(ellipse at 38% 32%, ${scheme.mid} 0%, ${scheme.dark} 80%)`,
-      }} />
+      {mat !== 'liquid_glass' && (
+        <div className="absolute inset-0" style={{
+          background: isLight
+            ? 'radial-gradient(ellipse at 38% 32%, hsl(210,30%,96%) 0%, hsl(220,20%,84%) 80%)'
+            : `radial-gradient(ellipse at 38% 32%, ${scheme.mid} 0%, ${scheme.dark} 80%)`,
+        }} />
+      )}
 
       {/* L2: Mineral veins */}
       <div className="absolute inset-0" style={{
