@@ -44,8 +44,19 @@ export default function MoreSheet({ open, onClose }) {
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
 
-            <div className="px-6 py-24 my-2">
-              <div className="flex items-center justify-between mb-5">
+            <div className="relative px-6 py-24 my-2">
+              <img
+                src="https://media.base44.com/images/public/69f35dd14650b54681c835ec/0fcf628b6_generated_b0d6f60e.png"
+                alt=""
+                aria-hidden
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(180deg, hsla(245,32%,8%,0.55) 0%, hsla(240,26%,5%,0.8) 100%)' }}
+              />
+              <div className="relative flex items-center justify-between mb-5">
                 <h2 className="text-base font-black text-white">More</h2>
                 <button
                 onClick={onClose}
@@ -57,7 +68,7 @@ export default function MoreSheet({ open, onClose }) {
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="relative grid grid-cols-3 gap-3">
                 {MORE_ACTIONS.map(({ to, icon: Icon, label, color }) =>
               <Link
                 key={to}
