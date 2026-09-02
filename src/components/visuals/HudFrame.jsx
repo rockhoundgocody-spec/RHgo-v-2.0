@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export default function HudFrame({ children, label, className = '' }) {
+export default function HudFrame({ children, label, className = '', contentClassName = 'pl-12 pr-16' }) {
   return (
     <div className={cn('relative', className)}>
       {['top-0 left-0', 'top-0 right-0 rotate-90', 'bottom-0 right-0 rotate-180', 'bottom-0 left-0 -rotate-90'].map((p, i) =>
@@ -20,7 +20,7 @@ export default function HudFrame({ children, label, className = '' }) {
           {label}
         </div>
       }
-      <div className="pl-12 pr-16">{children}</div>
+      <div className={contentClassName}>{children}</div>
     </div>);
 
 }

@@ -28,7 +28,7 @@ export default function MultiAngleCapture({ onComplete, onCancel }) {
   };
 
   return (
-    <HudFrame label={shots.length ? `Capture · ${shots.length} shot${shots.length > 1 ? 's' : ''}` : 'Capture'}>
+    <HudFrame label={shots.length ? `Capture · ${shots.length} shot${shots.length > 1 ? 's' : ''}` : 'Capture'} className="-mx-3" contentClassName="px-1 pt-1">
       {/* Tall 2:3 viewport with object-contain — the full frame is shown and captured */}
       <div className="relative aspect-[2/3] w-full rounded-md overflow-hidden hud-grid-bg">
         <video
