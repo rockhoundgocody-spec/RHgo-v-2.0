@@ -238,17 +238,18 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, red
         }} />
       )}
 
-      {/* L2: Mineral veins */}
+      {/* L2: Mineral veins (subtle tint over glass base) */}
       <div className="absolute inset-0" style={{
         background: `
           radial-gradient(ellipse at 20% 80%, ${scheme.vein} 0%, transparent 40%),
           radial-gradient(ellipse at 80% 20%, ${scheme.vein} 0%, transparent 40%),
           radial-gradient(ellipse at 60% 60%, ${scheme.vein} 0%, transparent 30%)
         `,
+        opacity: mat === 'liquid_glass' ? 0.35 : 1,
       }} />
 
-      {/* L3: Material texture */}
-      {matPat && (
+      {/* L3: Material texture (skipped for liquid glass — image provides texture) */}
+      {matPat && mat !== 'liquid_glass' && (
         <div className="absolute inset-0" style={{ background: matPat, opacity: isLight ? 0.38 : 0.28 }} />
       )}
 
@@ -274,11 +275,19 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, red
         }}
       />
 
-      {/* L6: Stone micro-cracks */}
-      <CrackOverlay size={size} isLight={isLight} />
+      {/* L6: Stone micro-cracks (skipped for liquid glass) */}
+      {mat !== 'liquid_glass' && <CrackOverlay size={size} isLight={isLight} />}
 
       {/* L7: Metallic filigree */}
       <FiligreeOverlay size={size} color={scheme.secondary} isLight={isLight} />
+
+      {/* L7.5: Liquid glass light refraction sheen */}
+      {mat === 'liquid_glass' && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(135deg, hsla(0,0%,100%,0.16) 0%, transparent 28%, transparent 72%, hsla(280,80%,90%,0.10) 100%)',
+          mixBlendMode: 'screen',
+        }} />
+      )}
 
       {/* L8: Top specular highlight */}
       <div className="absolute" style={{
