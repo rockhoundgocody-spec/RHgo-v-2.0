@@ -36,7 +36,7 @@ export default function HolographicVaultView({ specimens = [] }) {
       <div className="w-full flex items-center justify-between px-2 mb-3">
         <button
           onClick={handlePrev}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Previous specimen"
         >
           <ChevronLeft size={20} />
@@ -48,7 +48,7 @@ export default function HolographicVaultView({ specimens = [] }) {
 
         <button
           onClick={handleNext}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Next specimen"
         >
           <ChevronRight size={20} />
