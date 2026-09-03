@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin, Users, Sparkles } from 'lucide-react';
+import { X, Calendar, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const MOODS = [
@@ -72,6 +72,9 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
             onClick={onClose}
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="capsule-sheet-title"
             className="fixed bottom-0 inset-x-0 z-[2000] rounded-t-3xl overflow-hidden"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -91,11 +94,11 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
 
             <div className="overflow-y-auto px-5 pb-8" style={{ maxHeight: 'calc(85vh - 20px)' }}>
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-black text-white">Log a Trip</h2>
+                <h2 id="capsule-sheet-title" className="text-lg font-black text-white">Log a Trip</h2>
                 <button
                   onClick={onClose}
                   aria-label="Close"
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                   style={{ background: 'hsla(255,30%,20%,0.5)', border: '1px solid hsla(255,30%,40%,0.2)' }}
                 >
                   <X size={14} className="text-white/60" />
@@ -110,21 +113,21 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
                     onChange={(e) => update('expedition_name', e.target.value)}
                     placeholder="e.g. Agate Beach Weekend"
                     maxLength={80}
-                    className="w-full px-3 py-2.5 rounded-xl text-white text-sm outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl text-white text-sm outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                     style={{ background: 'hsla(255,30%,12%,0.7)', border: '1px solid hsla(280,80%,65%,0.3)' }}
                   />
                 </Field>
 
                 <Field label="Location">
                   <div className="relative">
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" aria-hidden="true" />
                     <input
                       type="text"
                       value={form.location_name}
                       onChange={(e) => update('location_name', e.target.value)}
                       placeholder="e.g. Sleeping Bear Dunes, MI"
                       maxLength={80}
-                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-white text-sm outline-none"
+                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-white text-sm outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                       style={{ background: 'hsla(255,30%,12%,0.7)', border: '1px solid hsla(280,80%,65%,0.3)' }}
                     />
                   </div>
@@ -132,12 +135,12 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
 
                 <Field label="Date">
                   <div className="relative">
-                    <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                    <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" aria-hidden="true" />
                     <input
                       type="date"
                       value={form.expedition_date}
                       onChange={(e) => update('expedition_date', e.target.value)}
-                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-white text-sm outline-none"
+                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-white text-sm outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                       style={{ background: 'hsla(255,30%,12%,0.7)', border: '1px solid hsla(280,80%,65%,0.3)' }}
                     />
                   </div>
@@ -149,15 +152,16 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
                       <button
                         key={m.value}
                         type="button"
+                        aria-pressed={form.mood_snapshot === m.value}
                         onClick={() => update('mood_snapshot', m.value)}
-                        className="px-3 py-2 rounded-xl text-xs font-semibold transition"
+                        className="px-3 py-2 rounded-xl text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                         style={
                           form.mood_snapshot === m.value
                             ? { background: 'hsla(280,80%,40%,0.3)', border: '1px solid hsla(280,80%,65%,0.5)', color: 'hsl(280,100%,88%)' }
                             : { background: 'hsla(255,30%,12%,0.5)', border: '1px solid hsla(255,30%,30%,0.2)', color: 'hsla(0,0%,100%,0.5)' }
                         }
                       >
-                        {m.icon} {m.label}
+                        <span aria-hidden="true">{m.icon}</span> {m.label}
                       </button>
                     ))}
                   </div>
@@ -170,7 +174,7 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
                     placeholder="What happened on this trip?"
                     maxLength={2000}
                     rows={3}
-                    className="w-full px-3 py-2.5 rounded-xl text-white text-sm outline-none resize-none"
+                    className="w-full px-3 py-2.5 rounded-xl text-white text-sm outline-none resize-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                     style={{ background: 'hsla(255,30%,12%,0.7)', border: '1px solid hsla(280,80%,65%,0.3)' }}
                   />
                 </Field>
@@ -183,7 +187,7 @@ export default function CreateCapsuleSheet({ open, onClose, onCreate }) {
                   type="button"
                   onClick={handleSubmit}
                   disabled={saving || !form.expedition_name.trim()}
-                  className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 disabled:opacity-40"
+                  className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                   style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))', boxShadow: '0 6px 28px -6px hsla(270,80%,60%,0.5)' }}
                 >
                   {saving ? 'Saving…' : 'Save Trip'}
