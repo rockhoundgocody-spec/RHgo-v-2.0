@@ -13,7 +13,7 @@ import MoreSheet from '@/components/hub/MoreSheet.jsx';
 import CloverSuggests from '@/components/hub/CloverSuggests.jsx';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword, Trophy, Lock, Users, Atom, Building2, Grid3x3 } from 'lucide-react';
+import { Compass, ScanLine, Gem, Sword, Trophy, Lock, Atom, Grid3x3 } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
 import AddToHomeScreenPrompt from '@/components/hub/AddToHomeScreenPrompt.jsx';
