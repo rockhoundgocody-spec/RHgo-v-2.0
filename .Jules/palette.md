@@ -45,3 +45,6 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2024-10-27 - Focus rings in varied component contexts
+**Learning:** Components containing varied themed elements (e.g., standard map layers vs specific hud-cyan UI areas) may require different coloured focus rings for contrast and visual coherence. A one-size-fits-all focus ring doesn't work well across heterogeneous panels.
+**Action:** Always check the context of individual buttons within a component, and match the focus ring color to the active/theme state of that specific button's context (e.g. `hud-cyan/50`, `rose-400/50`, or `white/50`).
