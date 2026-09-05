@@ -410,12 +410,29 @@ export default function Scan() {
         </div>
       )}
 
+      {/* ── Tap-to-focus green box ── */}
+      {stage === 'camera' && camera.focusPoint && (
+        <div
+          className="absolute z-20 pointer-events-none"
+          style={{
+            left: `${camera.focusPoint.x * 100}%`,
+            top: `${camera.focusPoint.y * 100}%`,
+            width: '80px', height: '80px',
+            transform: 'translate(-50%, -50%)',
+            border: '2px solid #9FE8D0',
+            borderRadius: '12px',
+            boxShadow: '0 0 12px rgba(159,232,208,0.5)',
+            animation: 'focusPulse 0.3s ease-out',
+          }}
+        />
+      )}
+
       {/* ── Hint line (bottom of viewfinder, gone after first shot) ── */}
       {stage === 'camera' && showHint && (
         <div className="absolute inset-x-0 z-20 flex justify-center" style={{ bottom: '32%' }}>
           <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full"
             style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
-            Fill the frame · daylight
+            {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
           </span>
         </div>
       )}
