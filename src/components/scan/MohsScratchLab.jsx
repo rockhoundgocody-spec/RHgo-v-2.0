@@ -73,19 +73,23 @@ export default function MohsScratchLab({
       </div>
 
       {/* Tool Selector Chips */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Mohs test tools">
         {TEST_TOOLS.map((t) => (
           <button
             key={t.id}
+            type="button"
+            aria-pressed={selectedTool.id === t.id}
+            aria-label={`Test hardness with ${t.name} (${t.hardness} Mohs)`}
+            title={t.desc}
             onClick={() => handleTest(t)}
-            className="p-2 rounded-xl text-left transition-all active:scale-95 flex flex-col justify-between"
+            className="p-2 rounded-xl text-left transition-all active:scale-95 flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
             style={{
               background: selectedTool.id === t.id ? 'hsla(270,50%,30%,0.5)' : 'hsla(240,20%,14%,0.6)',
               border: selectedTool.id === t.id ? '1px solid hsla(280,80%,60%,0.5)' : '1px solid hsla(270,20%,30%,0.2)',
             }}
           >
             <div className="flex items-center justify-between">
-              <span className="text-base">{t.icon}</span>
+              <span className="text-base" aria-hidden="true">{t.icon}</span>
               <span className="text-[8px] font-mono font-bold text-white/50">{t.hardness}M</span>
             </div>
             <div className="text-[10px] font-bold text-white mt-1 leading-tight">{t.name}</div>
@@ -95,6 +99,8 @@ export default function MohsScratchLab({
 
       {/* Interactive Scratch Plate Feedback */}
       <div
+        role="status"
+        aria-live="polite"
         className="p-3 rounded-xl relative overflow-hidden"
         style={{
           background: 'hsla(250,30%,8%,0.9)',
@@ -105,6 +111,7 @@ export default function MohsScratchLab({
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <div
+                aria-hidden="true"
                 className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
                 style={{
                   background: scratchTestResult.scratched ? 'hsla(0,70%,40%,0.4)' : 'hsla(160,70%,40%,0.4)',
@@ -123,7 +130,7 @@ export default function MohsScratchLab({
           </div>
         ) : (
           <div className="py-2 text-center text-[11px] text-white/40 flex items-center justify-center gap-1.5">
-            <Sparkles size={12} className="text-amber-400" />
+            <Sparkles size={12} className="text-amber-400" aria-hidden="true" />
             Tap any tool above to simulate a field hardness test!
           </div>
         )}
