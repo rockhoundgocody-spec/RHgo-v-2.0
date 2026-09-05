@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Users, Gem, Plus, ChevronRight } from 'lucide-react';
+import { Calendar, Users, Gem, Plus, ChevronRight, Map as MapIcon, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import CreateCapsuleSheet from '@/components/expeditions/CreateCapsuleSheet.jsx';
+import ExpeditionMapView from '@/components/expeditions/ExpeditionMapView.jsx';
 
 /**
  * Expeditions / Memory Capsules
@@ -12,6 +13,7 @@ import CreateCapsuleSheet from '@/components/expeditions/CreateCapsuleSheet.jsx'
  */
 export default function Expeditions() {
   const [filterMode, setFilterMode] = useState('all');
+  const [viewMode, setViewMode] = useState('timeline'); // 'timeline' | 'map'
   const [createOpen, setCreateOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -19,6 +21,18 @@ export default function Expeditions() {
     queryKey: ['memoryCapsules'],
     queryFn: () =>
       base44.entities.MemoryCapsule.filter({}, '-expedition_date', 50),
+  });
+
+  const { data: specimens = [] } = useQuery({
+    queryKey: ['expeditionMapSpecimens'],
+    queryFn: () => base44.entities.Specimen.filter({}, '-found_date', 200),
+    enabled: viewMode === 'map',
+  });
+
+  const { data: hotspots = [] } = useQuery({
+    queryKey: ['expeditionMapHotspots'],
+    queryFn: () => base44.entities.Hotspot.filter({}, '-created_date', 200),
+    enabled: viewMode === 'map',
   });
 
   const { data: familyProfile } = useQuery({
@@ -64,25 +78,50 @@ export default function Expeditions() {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-5">
-        {['all', 'family'].map((mode) => (
+      {/* View toggle + filter tabs */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex gap-2">
+          {['all', 'family'].map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setFilterMode(mode)}
+              className={`px-3.5 py-1.5 rounded-lg border transition text-xs font-medium capitalize ${
+                filterMode === mode
+                  ? 'border-amethyst/50 bg-amethyst/15 text-amethyst-glow'
+                  : 'border-white/10 text-white/40 hover:border-white/25 hover:text-white/60'
+              }`}
+            >
+              {mode === 'all' ? 'All trips' : 'Family trips'}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 p-1 rounded-lg border border-white/10 bg-white/5">
           <button
-            key={mode}
-            onClick={() => setFilterMode(mode)}
-            className={`px-3.5 py-1.5 rounded-lg border transition text-xs font-medium capitalize ${
-              filterMode === mode
-                ? 'border-amethyst/50 bg-amethyst/15 text-amethyst-glow'
-                : 'border-white/10 text-white/40 hover:border-white/25 hover:text-white/60'
+            onClick={() => setViewMode('timeline')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition ${
+              viewMode === 'timeline' ? 'bg-amethyst/25 text-amethyst-glow' : 'text-white/45 hover:text-white/70'
             }`}
           >
-            {mode === 'all' ? 'All trips' : 'Family trips'}
+            <List size={13} /> Timeline
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('map')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition ${
+              viewMode === 'map' ? 'bg-amethyst/25 text-amethyst-glow' : 'text-white/45 hover:text-white/70'
+            }`}
+          >
+            <MapIcon size={13} /> Map
+          </button>
+        </div>
       </div>
 
+      {/* Map view */}
+      {viewMode === 'map' && (
+        <ExpeditionMapView specimens={specimens} hotspots={hotspots} />
+      )}
+
       {/* Timeline */}
-      {isLoading ? (
+      {viewMode === 'timeline' && (isLoading ? (
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-amethyst/20 border-t-amethyst rounded-full animate-spin" />
         </div>
@@ -139,10 +178,10 @@ export default function Expeditions() {
             </Link>
           ))}
         </div>
-      )}
+      ))}
 
       {/* Empty state */}
-      {!isLoading && filteredCapsules.length === 0 && (
+      {viewMode === 'timeline' && !isLoading && filteredCapsules.length === 0 && (
         <GlassPanel className="p-12 text-center">
           <p className="text-white/50 mb-4">No expeditions yet.</p>
           <button
