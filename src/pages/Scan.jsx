@@ -17,6 +17,12 @@ import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { progressQuestsForSpecimen } from '@/lib/questProgress';
+import {
+  consumeGuestScan,
+  getGuestQuota,
+  guestLoginUrl,
+  stashPendingGuestReport,
+} from '@/lib/guestDevice';
 
 const VOICE_LINES = {
   high: (n) => `That's ${n}. I'm pretty sure about this one.`,
@@ -27,7 +33,7 @@ const VOICE_LINES = {
 
 export default function Scan() {
   const navigate = useNavigate();
-  const [stage, setStage] = useState('camera'); // camera | processing | result
+  const [stage, setStage] = useState('camera');
   const [facing, setFacing] = useState('environment');
   const [frozenFrame, setFrozenFrame] = useState(null);
   const [lastShotUrl, setLastShotUrl] = useState(null);
@@ -47,16 +53,28 @@ export default function Scan() {
   const { speak, stop } = useSpeechSynthesis();
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
 
-  // Scan limit — 5/month free, unlimited paid
   const [me, setMe] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const { isPaid, loading: subLoading } = useSubscription(me);
   const monthKey = `rhgo_scans_${new Date().toISOString().slice(0, 7)}`;
   const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(monthKey) || 0));
-  const canScan = isPaid || subLoading || scansUsed < 5;
+  const [guestQuota, setGuestQuota] = useState(() => getGuestQuota());
+  const isGuest = authReady && !me;
+  const canScan = !authReady
+    ? false
+    : isPaid || subLoading
+      ? true
+      : isGuest
+        ? guestQuota.allowed
+        : scansUsed < 5;
 
-  useEffect(() => { base44.auth.me().then(setMe).catch(() => {}); }, []);
+  useEffect(() => {
+    base44.auth.me()
+      .then(setMe)
+      .catch(() => setMe(null))
+      .finally(() => setAuthReady(true));
+  }, []);
 
-  // GPS
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -76,9 +94,15 @@ export default function Scan() {
     );
   }, []);
 
-  // ── Shutter ──
   const handleShutter = async () => {
-    if (!canScan) { navigate('/pricing'); return; }
+    if (!canScan) {
+      if (isGuest) {
+        navigate(guestLoginUrl('/scan'));
+        return;
+      }
+      navigate('/pricing');
+      return;
+    }
     const blob = await camera.capture();
     if (!blob) return;
 
@@ -89,18 +113,15 @@ export default function Scan() {
     setStage('processing');
 
     try {
-      // Upload (strip EXIF first)
       const clean = await stripExif(blob);
       const file = new File([clean], 'shot1.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      // Background removal (parallel with LLM)
       const cutoutPromise = base44.functions
         .invoke('removeSpecimenBackground', { image_url: file_url })
         .then(res => res?.data?.cutout_url || null)
         .catch(() => null);
 
-      // AGI deliberation
       const agiDeliberation = await deliberateGeologicalSpecimen({
         imageUrls: [file_url],
         locality: gpsCoords,
@@ -108,7 +129,6 @@ export default function Scan() {
         userTier: isPaid ? 'pro' : 'free',
       });
 
-      // LLM identification
       const r = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
@@ -170,7 +190,6 @@ export default function Scan() {
       let resultData = r && typeof r === 'object' ? { ...r } : {};
       if (typeof r === 'string') { try { resultData = JSON.parse(r); } catch { resultData = {}; } }
 
-      // Enforcement pass (handbook, context integrity, essence)
       try {
         const veri = await base44.functions.invoke('identifySpecimen', {
           image_url: file_url,
@@ -187,10 +206,8 @@ export default function Scan() {
         if (typeof d?.identification?.confidence === 'number') resultData.confidence = d.identification.confidence;
       } catch { /* best-effort */ }
 
-      // Cutout for display
       const cutoutUrl = await cutoutPromise;
       const finalUrl = cutoutUrl || file_url;
-
       const enriched = enrichWithScientificValidation(resultData);
 
       setResult(enriched);
@@ -198,12 +215,14 @@ export default function Scan() {
       setStage('result');
       setSheetOpen(true);
 
-      if (!isPaid) {
+      if (isGuest) {
+        setGuestQuota(consumeGuestScan());
+        stashPendingGuestReport({ result: enriched, primaryUrl: finalUrl, gpsCoords, beachName });
+      } else if (!isPaid) {
         setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
       }
 
-      // Voice
-      if (voiceEnabled && enriched?.top_match) {
+      if (!isGuest && voiceEnabled && enriched?.top_match) {
         const band = scoreToBand(enriched.confidence || 0);
         const isRare = ['rare', 'legendary'].includes(enriched.rarity);
         const line = isRare
@@ -220,9 +239,13 @@ export default function Scan() {
     }
   };
 
-  // ── Save ──
   const handleSave = async (disposition) => {
     if (!result || !primaryUrl) return;
+    if (isGuest) {
+      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, disposition });
+      navigate(guestLoginUrl('/scan'));
+      return;
+    }
     setSheetOpen(false);
 
     const { lat, lng } = applyGeoPrivacy(gpsCoords, 'private');
@@ -266,7 +289,6 @@ export default function Scan() {
 
     setSavedId(specimenId);
 
-    // XP
     const currentUser = await base44.auth.me().catch(() => null);
     if (currentUser?.email) {
       const category = disposition === 'left_in_place' ? 'steward' : disposition === 'observed' ? 'explorer' : 'collector';
@@ -286,8 +308,6 @@ export default function Scan() {
         });
       }
       if (disposition === 'collected') logCollectedWeight(currentUser.email);
-
-      // Quest progress
       try {
         await progressQuestsForSpecimen(
           { ...result, id: specimenId, image_url: primaryUrl },
@@ -296,7 +316,6 @@ export default function Scan() {
       } catch { /* best-effort */ }
     }
 
-    // Rare popup
     if (['rare', 'legendary'].includes(result.rarity)) {
       await refreshBadges();
       setRarePopup({ rarity: result.rarity, mineralName: result.top_match });
@@ -319,7 +338,6 @@ export default function Scan() {
     setSheetOpen(false);
   };
 
-  // Torch hold (lock button)
   const handleLockDown = async () => {
     if (!camera.torchSupported) return;
     setTorchWasOn(camera.torchOn);
@@ -334,11 +352,7 @@ export default function Scan() {
   const flipCamera = () => setFacing(f => f === 'environment' ? 'user' : 'environment');
 
   return (
-    <div
-      className="fixed inset-0 overflow-hidden select-none"
-      style={{ background: '#0a0a14' }}
-    >
-      {/* ── Full-bleed video ── */}
+    <div className="fixed inset-0 overflow-hidden select-none" style={{ background: '#0a0a14' }}>
       {stage === 'camera' && (
         <video
           ref={camera.videoRef}
@@ -351,12 +365,10 @@ export default function Scan() {
         />
       )}
 
-      {/* Frozen frame during processing / result */}
       {(stage === 'processing' || stage === 'result') && frozenFrame && (
         <img src={frozenFrame} alt="capture" className="absolute inset-0 w-full h-full object-cover" />
       )}
 
-      {/* ── Top bar: X + flash + flip ── */}
       {stage === 'camera' && (
         <div
           className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-4"
@@ -396,21 +408,12 @@ export default function Scan() {
         </div>
       )}
 
-      {/* ── Focus box (center, thin) ── */}
       {stage === 'camera' && (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-          <div
-            className="rounded-2xl"
-            style={{
-              width: '62%', aspectRatio: '1 / 1',
-              border: '1.5px solid rgba(255,255,255,0.35)',
-              boxShadow: '0 0 0 1px rgba(0,0,0,0.3)',
-            }}
-          />
+          <div className="rounded-2xl" style={{ width: '62%', aspectRatio: '1 / 1', border: '1.5px solid rgba(255,255,255,0.35)', boxShadow: '0 0 0 1px rgba(0,0,0,0.3)' }} />
         </div>
       )}
 
-      {/* ── Tap-to-focus green box ── */}
       {stage === 'camera' && camera.focusPoint && (
         <div
           className="absolute z-20 pointer-events-none"
@@ -427,17 +430,14 @@ export default function Scan() {
         />
       )}
 
-      {/* ── Hint line (bottom of viewfinder, gone after first shot) ── */}
       {stage === 'camera' && showHint && (
         <div className="absolute inset-x-0 z-20 flex justify-center" style={{ bottom: '32%' }}>
-          <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full"
-            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
+          <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
             {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
           </span>
         </div>
       )}
 
-      {/* ── Processing overlay ── */}
       {stage === 'processing' && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center" style={{ background: 'rgba(10,10,20,0.6)' }}>
           <Loader2 size={36} className="text-[#9FE8D0] animate-spin" />
@@ -445,13 +445,8 @@ export default function Scan() {
         </div>
       )}
 
-      {/* ── Bottom bar: roll + shutter + lock ── */}
       {stage === 'camera' && (
-        <div
-          className="absolute bottom-0 inset-x-0 z-30 flex items-center justify-between px-6"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom,0px), 24px)', marginBottom: '8px' }}
-        >
-          {/* Roll — last photo */}
+        <div className="absolute bottom-0 inset-x-0 z-30 flex items-center justify-between px-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom,0px), 24px)', marginBottom: '8px' }}>
           <div className="w-14 flex justify-center">
             {lastShotUrl ? (
               <img src={lastShotUrl} alt="last" className="w-12 h-12 rounded-xl object-cover border border-white/20" />
@@ -462,22 +457,16 @@ export default function Scan() {
             )}
           </div>
 
-          {/* Shutter — 72pt, mint */}
           <button
             onClick={handleShutter}
-            disabled={!camera.ready}
+            disabled={!camera.ready || !canScan}
             aria-label="Capture"
             className="rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-50"
-            style={{
-              width: 72, height: 72,
-              background: '#9FE8D0',
-              boxShadow: '0 0 30px -4px rgba(159,232,208,0.6)',
-            }}
+            style={{ width: 72, height: 72, background: '#9FE8D0', boxShadow: '0 0 30px -4px rgba(159,232,208,0.6)' }}
           >
             <div className="w-14 h-14 rounded-full" style={{ border: '3px solid #0a0a14' }} />
           </button>
 
-          {/* Lock — torch hold */}
           <div className="w-14 flex justify-center">
             {camera.torchSupported && (
               <button
@@ -499,7 +488,6 @@ export default function Scan() {
         </div>
       )}
 
-      {/* ── Result sheet ── */}
       <ScanResultSheet
         open={sheetOpen}
         result={result}
@@ -513,7 +501,6 @@ export default function Scan() {
         onClose={resetToCamera}
       />
 
-      {/* ── Rare mineral popup ── */}
       <AnimatePresence>
         {rarePopup && !pendingBadge && (
           <RareMineralPopup
@@ -525,12 +512,10 @@ export default function Scan() {
         )}
       </AnimatePresence>
 
-      {/* ── Badge unlock ── */}
       {pendingBadge && (
         <BadgeUnlockOverlay badge={pendingBadge} onClose={() => { dismissPending(); resetToCamera(); }} />
       )}
 
-      {/* ── Camera error ── */}
       {camera.error && stage === 'camera' && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center" style={{ background: '#0a0a14' }}>
           <p className="text-white/60 text-sm mb-4">Camera unavailable</p>
