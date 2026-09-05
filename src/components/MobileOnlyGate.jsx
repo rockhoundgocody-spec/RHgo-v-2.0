@@ -8,6 +8,7 @@ const MOBILE_MAX_WIDTH = 768; // px — anything wider is treated as desktop
 // SEO, and auditor access — these bypass the mobile-only gate.
 const PUBLIC_ROUTES = [
   '/',
+  '/explore',
   '/pricing',
   '/privacy-policy',
   '/terms',

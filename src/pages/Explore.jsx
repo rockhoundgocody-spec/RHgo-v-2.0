@@ -11,7 +11,7 @@
  * - Badge glow effects on map when Crystal Whisperer / rare badges earned
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
-import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Flame } from 'lucide-react';
+import { Loader2, Locate, Zap, X, ChevronUp, Layers, Mountain, CloudRain, Flame, Route } from 'lucide-react';
 import QuickPinButton from '@/components/explore/QuickPinButton.jsx';
 import GeologyInfoCard from '@/components/explore/GeologyInfoCard.jsx';
 import WeatherPanel from '@/components/explore/WeatherPanel.jsx';
@@ -30,6 +30,9 @@ import SpawnMapLayer from '@/components/ar/SpawnMapLayer.jsx';
 import SpawnHUD from '@/components/ar/SpawnHUD.jsx';
 import SpawnStats from '@/components/ar/SpawnStats.jsx';
 import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
+import { useAuth } from '@/lib/AuthContext';
+import { useSeoMeta } from '@/lib/useSeoMeta';
+import ExpeditionTeaserModal from '@/components/explore/ExpeditionTeaserModal.jsx';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -123,11 +126,22 @@ const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Explore() {
-  const { data: hotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
+  const { isAuthenticated } = useAuth();
+  const { data: rawHotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
+  // Logged-out visitors see approximate coordinates (rounded to 2 decimal places)
+  const hotspots = useMemo(
+    () => isAuthenticated ? rawHotspots : rawHotspots.map(h => ({
+      ...h,
+      lat: typeof h.lat === 'number' ? Math.round(h.lat * 100) / 100 : h.lat,
+      lng: typeof h.lng === 'number' ? Math.round(h.lng * 100) / 100 : h.lng,
+    })),
+    [rawHotspots, isAuthenticated]
+  );
   const { data: specimens = [] } = useQuery({
     queryKey: ['specimens-explore'],
     queryFn: () => base44.entities.Specimen.list('-found_date', 500),
     initialData: [],
+    enabled: isAuthenticated,
   });
   // Club chapters — shown as pins on the map for club discovery
   const { data: clubs = [] } = useQuery({
@@ -152,6 +166,8 @@ export default function Explore() {
   const [arActive,       setArActive]       = useState(false);
   const [activeSpawn,    setActiveSpawn]    = useState(null);
   const [showHeatMap,    setShowHeatMap]    = useState(false);
+  const [teaserOpen,    setTeaserOpen]    = useState(false);
+  const [teaserHotspot, setTeaserHotspot] = useState(null);
   const scrollRef = useRef(null);
 
   const { spawns, caughtToday, dailyCap, catchSpawn, dismissSpawn } = useSpawns({
@@ -182,20 +198,47 @@ export default function Explore() {
     [specimens]
   );
 
-  // Collection gap hotspot IDs
+  // Collection gap hotspot IDs (logged-out users have no collection → no gaps)
   const collectionGapIds = useMemo(() => {
+    if (!isAuthenticated) return new Set();
     const ids = new Set();
     hotspots.forEach(h => {
       if ((h.minerals||[]).some(m => !collectedMinerals.has(m.toLowerCase()))) ids.add(h.id);
     });
     return ids;
-  }, [hotspots, collectedMinerals]);
+  }, [hotspots, collectedMinerals, isAuthenticated]);
 
   // Active gap minerals for detail sheet
   const activeGapMinerals = useMemo(() => {
     if (!detailHotspot) return [];
     return (detailHotspot.minerals||[]).filter(m => !collectedMinerals.has(m.toLowerCase()));
   }, [detailHotspot, collectedMinerals]);
+
+  // SEO: 3 mineral names from nearest hotspots for og:description
+  const seoMinerals = useMemo(() => {
+    const sorted = userLocation
+      ? [...hotspots].sort((a, b) =>
+          Math.hypot((a.lat||0) - userLocation.lat, (a.lng||0) - userLocation.lng) -
+          Math.hypot((b.lat||0) - userLocation.lat, (b.lng||0) - userLocation.lng))
+      : hotspots;
+    const minerals = [];
+    const seen = new Set();
+    for (const h of sorted) {
+      for (const m of (h.minerals || [])) {
+        if (m && !seen.has(m)) { seen.add(m); minerals.push(m); }
+        if (minerals.length >= 3) break;
+      }
+      if (minerals.length >= 3) break;
+    }
+    return minerals;
+  }, [hotspots, userLocation]);
+
+  useSeoMeta(
+    'Find minerals near you - RockHound-GO',
+    seoMinerals.length > 0
+      ? `Discover real mineral hotspots near you — find ${seoMinerals.join(', ')} and more. AI scan, hotspot maps & collection tracking.`
+      : 'Discover real mineral hotspots near you. AI scan, hotspot maps & collection tracking.'
+  );
 
   // Sorted lowercase lookup for filtering
   const selectedMineralsLower = useMemo(
@@ -219,7 +262,10 @@ export default function Explore() {
     return list;
   }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
 
-  const handleMarkerClick = useCallback(h => { setActiveId(h.id); setDetailHotspot(h); }, []);
+  const handleMarkerClick = useCallback(h => {
+    if (!isAuthenticated) { setTeaserHotspot(h); setTeaserOpen(true); return; }
+    setActiveId(h.id); setDetailHotspot(h);
+  }, [isAuthenticated]);
   const handleCloseDetail = useCallback(() => { setDetailHotspot(null); setActiveId(null); }, []);
 
   // Scroll active card into view
@@ -245,7 +291,7 @@ export default function Explore() {
 
       {/* ── FULLSCREEN MAP ── always mounted so hotspots render as soon as data arrives */}
       <div className="absolute inset-0">
-        {arActive && (
+        {isAuthenticated && arActive && (
           <SpawnMapLayer
             spawns={spawns}
             caughtToday={caughtToday}
@@ -293,7 +339,7 @@ export default function Explore() {
         <div className="flex items-center gap-2 pointer-events-auto mb-2">
           <div className="flex-1 flex items-center px-3 py-1.5 rounded-2xl"
             style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}>
-            <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />
+            {isAuthenticated && <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />}
           </div>
           <button onClick={locate} disabled={locating}
             aria-label="My location"
@@ -318,12 +364,16 @@ export default function Explore() {
             }}>
             <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
           </button>
-          <SpawnHUD
-            spawns={spawns}
-            arActive={arActive}
-            onToggleAR={() => setArActive(a => !a)}
-          />
-          <QuickPinButton userLocation={userLocation} />
+          {isAuthenticated && (
+            <>
+              <SpawnHUD
+                spawns={spawns}
+                arActive={arActive}
+                onToggleAR={() => setArActive(a => !a)}
+              />
+              <QuickPinButton userLocation={userLocation} />
+            </>
+          )}
 
           {/* Heat map toggle */}
           <button
@@ -360,13 +410,28 @@ export default function Explore() {
           </button>
         </div>
 
-        {/* Expedition planner */}
+        {/* Expedition planner — teaser button for logged-out visitors */}
         <div className="pointer-events-auto relative">
-          <ExpeditionPlanner
-            hotspots={hotspots} specimens={specimens} userLocation={userLocation}
-            onRouteChange={route => { setExpeditionRoute(route); if (route.length>0) setActiveLayer('expedition'); }}
-            onHotspotFocus={h => { setActiveId(h.id); setDetailHotspot(h); }}
-          />
+          {isAuthenticated ? (
+            <ExpeditionPlanner
+              hotspots={hotspots} specimens={specimens} userLocation={userLocation}
+              onRouteChange={route => { setExpeditionRoute(route); if (route.length>0) setActiveLayer('expedition'); }}
+              onHotspotFocus={h => { setActiveId(h.id); setDetailHotspot(h); }}
+            />
+          ) : (
+            <button
+              onClick={() => { setTeaserHotspot(null); setTeaserOpen(true); }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider border transition-all active:scale-95"
+              style={{
+                background: 'hsla(240,30%,8%,0.82)',
+                border: '1px solid hsla(270,30%,40%,0.25)',
+                color: 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(16px)',
+              }}
+            >
+              <Route size={13} /> Plan Expedition
+            </button>
+          )}
         </div>
 
         {showGeology && geologyCardOpen && userLocation && (
@@ -390,8 +455,8 @@ export default function Explore() {
         )}
       </div>
 
-      {/* ── Hotspot detail sheet (pin tap) ── */}
-      {detailHotspot && (
+      {/* ── Hotspot detail sheet (pin tap) — authenticated only ── */}
+      {isAuthenticated && detailHotspot && (
         <HotspotDetailSheet
           hotspot={detailHotspot}
           specimens={specimens}
@@ -401,8 +466,16 @@ export default function Explore() {
         />
       )}
 
-      {/* ── Bottom list sheet ── */}
-      {!detailHotspot && (
+      {/* ── Sign-up teaser modal — logged-out visitors ── */}
+      <ExpeditionTeaserModal
+        open={teaserOpen}
+        onClose={() => { setTeaserOpen(false); setTeaserHotspot(null); }}
+        minerals={teaserHotspot ? (teaserHotspot.minerals || []) : seoMinerals}
+        hotspotName={teaserHotspot ? teaserHotspot.name : null}
+      />
+
+      {/* ── Bottom list sheet — authenticated only ── */}
+      {isAuthenticated && !detailHotspot && (
         <div className="absolute bottom-0 inset-x-0 z-[1000] pointer-events-none">
           <AnimatePresence mode="wait">
             {sheetOpen ? (
@@ -492,9 +565,9 @@ export default function Explore() {
         </div>
       )}
 
-      {/* AR Encounter Screen */}
+      {/* AR Encounter Screen — authenticated only */}
       <AnimatePresence>
-        {activeSpawn && (
+        {isAuthenticated && activeSpawn && (
           <AREncounterScreen
             spawn={activeSpawn}
             onCatch={(spawn) => catchSpawn(spawn.id)}
@@ -503,8 +576,8 @@ export default function Explore() {
         )}
       </AnimatePresence>
 
-      {/* Badge unlock overlay (fires when a badge is earned on the map) */}
-      {pendingBadge && <BadgeUnlockAnimation badge={pendingBadge} onClose={dismissPending} />}
+      {/* Badge unlock overlay — authenticated only */}
+      {isAuthenticated && pendingBadge && <BadgeUnlockAnimation badge={pendingBadge} onClose={dismissPending} />}
     </div>
   );
 }
