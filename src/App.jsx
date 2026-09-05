@@ -9,6 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
+import HomeGate from '@/components/HomeGate.jsx';
 import Hub from '@/pages/Hub';
 const Landing = lazy(() => import('@/pages/Landing'));
 
@@ -134,7 +135,7 @@ const AuthenticatedApp = () => {
         <Route path="/terms" element={<Terms />} />
 
         <Route element={<Layout />}>
-          <Route path="/" element={<Hub />} />
+          <Route path="/" element={<HomeGate />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />

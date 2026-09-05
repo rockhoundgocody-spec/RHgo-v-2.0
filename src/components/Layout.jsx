@@ -134,7 +134,7 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   // Every authenticated app route is private — keep it out of search results.
   useSeoRobots(false);
 
@@ -180,7 +180,7 @@ export default function Layout() {
           pathname={location.pathname}
         />
 
-        {!isAdminOrDocs && (
+        {!isAdminOrDocs && isAuthenticated && (
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 

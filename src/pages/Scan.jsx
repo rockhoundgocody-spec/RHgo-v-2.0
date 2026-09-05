@@ -86,8 +86,8 @@ export default function Scan() {
   const [me, setMe] = useState(null);
   const { isPaid, loading: subLoading } = useSubscription(me);
   const FREE_SCAN_LIMIT = 5;
-  const todayKey = `rhgo_scans_${new Date().toISOString().slice(0, 10)}`;
-  const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(todayKey) || 0));
+  const monthKey = `rhgo_scans_${new Date().toISOString().slice(0, 7)}`;
+  const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(monthKey) || 0));
   const canScan = isPaid || subLoading || scansUsed < FREE_SCAN_LIMIT;
   const guardScan = () => {
     if (canScan) return true;
@@ -355,7 +355,7 @@ export default function Scan() {
     setDeepLoading(false);
     setStage('result');
     if (!isPaid) {
-      setScansUsed(u => { const n = u + 1; localStorage.setItem(todayKey, String(n)); return n; });
+      setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
     }
 
     // Clover speaks the result
