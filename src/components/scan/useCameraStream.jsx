@@ -1,17 +1,61 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+
+const TAP_LOCK_MS = 2500;
+
+function trackOf(stream) {
+  return stream?.getVideoTracks?.()[0] || null;
+}
+
+function readCaps(track) {
+  try {
+    return track?.getCapabilities?.() || {};
+  } catch {
+    return {};
+  }
+}
+
+async function applyFocus(track, mode, point) {
+  if (!track) return false;
+  const caps = readCaps(track);
+  const modes = caps.focusMode;
+  const hasMode = Array.isArray(modes) ? modes.includes(mode) : false;
+  const advanced = {};
+  if (hasMode) advanced.focusMode = mode;
+  if (point && Array.isArray(caps.pointsOfInterest)) {
+    advanced.pointsOfInterest = [point];
+  }
+  if (!Object.keys(advanced).length) return false;
+  try {
+    await track.applyConstraints({ advanced: [advanced] });
+    return true;
+  } catch {
+    try {
+      if (hasMode) {
+        await track.applyConstraints({ focusMode: mode });
+        return true;
+      }
+    } catch {
+      /* device rejected */
+    }
+    return false;
+  }
+}
 
 /**
- * useCameraStream — manages a rear-facing camera MediaStream.
- * Returns { videoRef, ready, error, stop, capture } where capture()
- * grabs a Blob of the current frame.
+ * useCameraStream — rear camera + continuous AF + tap-to-focus.
+ * focusAt(clientX, clientY, videoEl) uses ImageCapture pointsOfInterest when present.
  */
 export default function useCameraStream({ active = true } = {}) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const lockTimerRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [torchSupported, setTorchSupported] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
+  const [focusSupported, setFocusSupported] = useState(false);
+  const [focusMode, setFocusMode] = useState('none');
+  const [focusPoint, setFocusPoint] = useState(null);
 
   useEffect(() => {
     if (!active) return;
@@ -22,8 +66,9 @@ export default function useCameraStream({ active = true } = {}) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            focusMode: { ideal: 'continuous' },
           },
           audio: false,
         });
@@ -32,10 +77,14 @@ export default function useCameraStream({ active = true } = {}) {
           return;
         }
         streamRef.current = stream;
-        // Torch (flashlight) is only controllable on some devices/browsers
-        const track = stream.getVideoTracks()[0];
-        const caps = track?.getCapabilities?.();
+        const track = trackOf(stream);
+        const caps = readCaps(track);
         setTorchSupported(!!caps && 'torch' in caps);
+        const modes = caps.focusMode;
+        const canFocus = Array.isArray(modes) && (modes.includes('continuous') || modes.includes('single-shot') || modes.includes('manual'));
+        setFocusSupported(canFocus || Array.isArray(caps.pointsOfInterest));
+        await applyFocus(track, modes?.includes('continuous') ? 'continuous' : (modes?.[0] || 'continuous'));
+        if (!cancelled) setFocusMode('continuous');
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
@@ -50,6 +99,7 @@ export default function useCameraStream({ active = true } = {}) {
 
     return () => {
       cancelled = true;
+      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
@@ -57,11 +107,14 @@ export default function useCameraStream({ active = true } = {}) {
       setReady(false);
       setTorchOn(false);
       setTorchSupported(false);
+      setFocusSupported(false);
+      setFocusMode('none');
+      setFocusPoint(null);
     };
   }, [active]);
 
   const toggleTorch = async () => {
-    const track = streamRef.current?.getVideoTracks?.()[0];
+    const track = trackOf(streamRef.current);
     if (!track) return;
     const next = !torchOn;
     try {
@@ -71,6 +124,34 @@ export default function useCameraStream({ active = true } = {}) {
       setTorchSupported(false);
     }
   };
+
+  const resumeContinuous = useCallback(async () => {
+    const track = trackOf(streamRef.current);
+    const ok = await applyFocus(track, 'continuous');
+    if (ok) setFocusMode('continuous');
+    setFocusPoint(null);
+  }, []);
+
+  /** Tap video. x/y are event client coords. */
+  const focusAt = useCallback(async (clientX, clientY, el) => {
+    const node = el || videoRef.current;
+    const track = trackOf(streamRef.current);
+    if (!node || !track) return;
+    const rect = node.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const nx = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const ny = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+    setFocusPoint({ x: nx, y: ny });
+    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+    const caps = readCaps(track);
+    const modes = caps.focusMode || [];
+    const tapMode = modes.includes('single-shot') ? 'single-shot' : modes.includes('manual') ? 'manual' : 'continuous';
+    const ok = await applyFocus(track, tapMode, { x: nx, y: ny });
+    if (ok) setFocusMode(tapMode);
+    lockTimerRef.current = setTimeout(() => {
+      resumeContinuous();
+    }, TAP_LOCK_MS);
+  }, [resumeContinuous]);
 
   const capture = () => new Promise((resolve) => {
     const v = videoRef.current;
@@ -84,6 +165,7 @@ export default function useCameraStream({ active = true } = {}) {
   });
 
   const stop = () => {
+    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
@@ -91,5 +173,18 @@ export default function useCameraStream({ active = true } = {}) {
     setReady(false);
   };
 
-  return { videoRef, ready, error, capture, stop, torchSupported, torchOn, toggleTorch };
+  return {
+    videoRef,
+    ready,
+    error,
+    capture,
+    stop,
+    torchSupported,
+    torchOn,
+    toggleTorch,
+    focusSupported,
+    focusMode,
+    focusPoint,
+    focusAt,
+  };
 }

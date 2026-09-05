@@ -13,8 +13,11 @@ const STAGE_LABELS = {
 };
 
 export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
-  const { videoRef, ready, error, torchSupported, torchOn, toggleTorch } = useCameraStream({ active: true });
-  const [scanState, setScanState] = useState('idle'); // idle | scanning | processing | locked
+  const {
+    videoRef, ready, error, torchSupported, torchOn, toggleTorch,
+    focusSupported, focusPoint, focusAt,
+  } = useCameraStream({ active: true });
+  const [scanState, setScanState] = useState('idle');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastLabel, setLastLabel] = useState(null);
   const scanMode = 'rock';
@@ -23,10 +26,8 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const scanStateRef = useRef('idle');
   const signalBarRef = useRef(null);
   const signalTextRef = useRef(null);
+  const viewportRef = useRef(null);
 
-  // Simulate signal build-up while camera is ready.
-  // Signal value + bar width are driven via refs (no per-frame setState)
-  // so the entire overlay tree doesn't re-render 60×/sec — that was the glitch.
   useEffect(() => {
     if (!ready) return;
     let raf;
@@ -36,13 +37,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
       const target = 0.45 + Math.sin(t * 0.5) * 0.3 + Math.sin(t * 1.3) * 0.15;
       const next = signalRef.current + (target - signalRef.current) * 0.03;
       signalRef.current = next;
-
-      // Drive the signal bar width + text directly via refs — zero React re-renders
       const pct = Math.round(next * 100);
       if (signalBarRef.current) signalBarRef.current.style.width = pct + '%';
       if (signalTextRef.current) signalTextRef.current.textContent = pct + '%';
-
-      // Drive scan state from signal (only transitions when crossing thresholds)
       const newState = next > 0.78 ? 'locked' : next > 0.55 ? 'scanning' : 'idle';
       if (newState !== scanStateRef.current) {
         scanStateRef.current = newState;
@@ -57,7 +54,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
     return () => cancelAnimationFrame(raf);
   }, [ready]);
 
-  // When AI classify call starts/ends, flip to processing state
   const handleProcessingStart = useCallback(() => {
     setIsProcessing(true);
     setScanState('processing');
@@ -67,12 +63,19 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   const handleProcessingEnd = useCallback((label) => {
     setIsProcessing(false);
     setLastLabel(label || null);
-    // Return to signal-driven state
     const sig = signalRef.current;
     const next = sig > 0.78 ? 'locked' : sig > 0.55 ? 'scanning' : 'idle';
     setScanState(next);
     scanStateRef.current = next;
   }, []);
+
+  const onTapFocus = useCallback((e) => {
+    if (!ready || isProcessing) return;
+    const point = e.touches?.[0] || e.changedTouches?.[0] || e;
+    const x = point.clientX;
+    const y = point.clientY;
+    focusAt(x, y, viewportRef.current);
+  }, [ready, isProcessing, focusAt]);
 
   const stageInfo = STAGE_LABELS[scanState] || STAGE_LABELS.idle;
 
@@ -93,7 +96,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         transition: 'border-color 0.5s, box-shadow 0.5s',
       }}>
 
-      {/* ── STATUS HEADER ── */}
       <div className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: `1px solid ${col.border}`, background: 'hsla(265,50%,4%,0.7)', transition: 'border-color 0.5s' }}>
         <div className="flex items-center gap-2.5">
@@ -116,8 +118,12 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
         </div>
       </div>
 
-      {/* ── MAIN VIEWPORT ── fills remaining height */}
-      <div className="relative overflow-hidden flex-1 min-h-0">
+      <div
+        ref={viewportRef}
+        className="relative overflow-hidden flex-1 min-h-0"
+        onPointerUp={onTapFocus}
+        style={{ touchAction: 'manipulation' }}
+      >
 
         {error ? (
           <>
@@ -125,15 +131,11 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
           </>
         ) : (
           <>
-            {/* object-contain so a sideways (landscape) frame is fully visible
-                and framed exactly as it will be captured — no crop */}
-            <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-contain" />
+            <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
 
-            {/* Dark vignette */}
             <div className="absolute inset-0 pointer-events-none"
               style={{ background: 'radial-gradient(circle at center, transparent 38%, hsla(265,60%,3%,0.75) 100%)' }} />
 
-            {/* Color wash tinted by state */}
             <div className="absolute inset-0 pointer-events-none mix-blend-color-dodge"
               style={{
                 background: scanState === 'processing'
@@ -144,7 +146,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 transition: 'background 0.6s',
               }} />
 
-            {/* Subtle grid */}
             <div className="absolute inset-0 pointer-events-none opacity-10"
               style={{
                 backgroundImage: `linear-gradient(${col.accent.replace('0.85', '0.3')} 1px, transparent 1px), linear-gradient(90deg, ${col.accent.replace('0.85', '0.3')} 1px, transparent 1px)`,
@@ -152,7 +153,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 transition: 'opacity 0.4s',
               }} />
 
-            {/* Scan sweep line — faster when processing */}
             <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
               <div className="absolute inset-x-0 h-20"
                 style={{
@@ -161,12 +161,27 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 }} />
             </div>
 
-            {/* Flashlight — bottom-left, clear of brackets and the specimen view */}
-            <div className="absolute bottom-[76px] left-1/2 -translate-x-1/2 z-20">
+            {focusPoint && (
+              <div
+                className="absolute z-30 pointer-events-none"
+                style={{
+                  left: `${focusPoint.x * 100}%`,
+                  top: `${focusPoint.y * 100}%`,
+                  width: 44,
+                  height: 44,
+                  marginLeft: -22,
+                  marginTop: -22,
+                  border: '1.5px solid hsla(145,80%,60%,0.9)',
+                  borderRadius: 6,
+                  boxShadow: '0 0 12px hsla(145,80%,50%,0.45)',
+                }}
+              />
+            )}
+
+            <div className="absolute bottom-[76px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
               <TorchButton supported={torchSupported} on={torchOn} onToggle={toggleTorch} />
             </div>
 
-            {/* Live identification labels */}
             <LiveLabelsOverlay
               videoRef={videoRef}
               active={ready && !isProcessing}
@@ -174,9 +189,8 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
               onProcessingEnd={handleProcessingEnd}
             />
 
-            {/* Last detected label — persists between classify calls */}
             {lastLabel && !isProcessing && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full z-10"
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full z-10 pointer-events-none"
                 style={{
                   background: 'hsla(220,40%,5%,0.85)',
                   border: `1px solid ${col.border}`,
@@ -188,7 +202,6 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
               </div>
             )}
 
-            {/* Processing flash overlay */}
             {scanState === 'processing' && (
               <div className="absolute inset-0 pointer-events-none"
                 style={{
@@ -197,11 +210,9 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                 }} />
             )}
 
-            {/* Scale reference overlay */}
             {scaleOn && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                 <div className="relative" style={{ width: '60%', maxWidth: 200 }}>
-                  {/* Ruler bar */}
                   <div className="flex items-end justify-between" style={{ height: 24 }}>
                     {[...Array(11)].map((_, i) => (
                       <div key={i} style={{
@@ -211,12 +222,10 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
                       }} />
                     ))}
                   </div>
-                  {/* Scale labels */}
                   <div className="flex justify-between mt-1">
                     <span className="text-[8px] font-mono text-hud-cyan">0</span>
                     <span className="text-[8px] font-mono text-hud-cyan">5cm</span>
                   </div>
-                  {/* Coin reference */}
                   <div className="absolute -right-2 top-8 w-8 h-8 rounded-full flex items-center justify-center"
                     style={{ border: '1.5px dashed hsla(195,100%,80%,0.4)', background: 'hsla(195,100%,60%,0.05)' }}>
                     <span className="text-[7px] text-hud-cyan/60">🪙</span>
@@ -225,21 +234,16 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
               </div>
             )}
 
-            {/* Corner brackets */}
             <CornerBrackets color={col.accent} />
 
-            {/* Bottom telemetry */}
             <div className="absolute bottom-0 inset-x-0 px-4 pb-3 pt-8 pointer-events-none"
               style={{ background: 'linear-gradient(0deg, hsla(265,60%,3%,0.9) 0%, transparent 100%)' }}>
-              <SignalBar barRef={signalBarRef} textRef={signalTextRef} color={col.bar} state={scanState} />
+              <SignalBar barRef={signalBarRef} textRef={signalTextRef} color={col.bar} state={scanState} focusHint={focusSupported} />
             </div>
           </>
         )}
       </div>
 
-
-
-      {/* ── BOTTOM ACTIONS ── */}
       {!error && (
         <div className="p-4 space-y-2.5"
           style={{ borderTop: `1px solid ${col.border}`, background: 'hsla(265,50%,3%,0.8)', transition: 'border-color 0.5s' }}>
@@ -272,12 +276,11 @@ export default function LiveScanStage({ onBeginCapture, onUploadFallback }) {
   );
 }
 
-/* ── Signal bar ── */
-function SignalBar({ barRef, textRef, color, state }) {
+function SignalBar({ barRef, textRef, color, state, focusHint }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.25em] text-white/30">
-        <span>{state === 'processing' ? '⬟ AI Processing…' : state === 'locked' ? '⬟ Locked on target' : '⬞ Align specimen'}</span>
+        <span>{state === 'processing' ? '⬟ AI Processing…' : state === 'locked' ? '⬟ Locked on target' : focusHint ? 'tap to focus' : '⬛ Align specimen'}</span>
         <span ref={textRef}>0%</span>
       </div>
       <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
@@ -288,7 +291,6 @@ function SignalBar({ barRef, textRef, color, state }) {
   );
 }
 
-/* ── Corner brackets ── */
 function CornerBrackets({ color }) {
   const s = { border: `2px solid ${color}`, filter: `drop-shadow(0 0 5px ${color})`, width: 20, height: 20 };
   return (
@@ -301,7 +303,6 @@ function CornerBrackets({ color }) {
   );
 }
 
-/* ── Error fallback ── */
 function ErrorView({ error, onUpload }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
@@ -315,7 +316,6 @@ function ErrorView({ error, onUpload }) {
       <p className="text-white/50 text-xs mb-6 max-w-[240px]">
         You can still identify minerals by uploading a photo from your gallery.
       </p>
-      {/* Use a label wrapping the input for reliable file picking without JS .click() */}
       <label
         htmlFor="error-upload-input"
         className="cursor-pointer rounded-xl text-white font-semibold w-full max-w-[220px] h-12 text-sm flex items-center justify-center focus-within:outline-none focus-within:ring-2 focus-within:ring-hud-cyan"
