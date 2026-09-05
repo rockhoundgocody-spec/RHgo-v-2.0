@@ -19,6 +19,8 @@ import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore } from '@/lib/scanSave';
+import { progressQuestsForSpecimen } from '@/lib/questProgress';
+import QuestShareCard from '@/components/quests/QuestShareCard';
 
 // Natural field-collector voice lines for each scan moment
 const SCAN_LINES = {
@@ -70,6 +72,7 @@ export default function Scan() {
   const [shareMapOpen, setShareMapOpen] = useState(false);
   const [choiceOpen, setChoiceOpen] = useState(false);
   const [rarePopup, setRarePopup] = useState(null); // { rarity, mineralName, badge }
+  const [completedQuests, setCompletedQuests] = useState([]);
   const [scanMode, setScanMode] = useState('rock');
   const [deepAnalysis, setDeepAnalysis] = useState(null);
   const [deepLoading, setDeepLoading] = useState(false);
@@ -460,6 +463,17 @@ export default function Scan() {
     setSavedId(specimenId);
     setSavedSpecimen(specimenObj);
 
+    // Progress active quests — show share card for any newly completed
+    if (currentUser?.email) {
+      try {
+        const finished = await progressQuestsForSpecimen(
+          { ...result, ...specimenObj, id: specimenId },
+          currentUser.email
+        );
+        if (finished.length) setCompletedQuests(finished);
+      } catch { /* quest progress is best-effort */ }
+    }
+
     // Trigger rare mineral popup for rare/legendary saves
     if (['rare', 'legendary'].includes(result.rarity)) {
       // Briefly wait for badge refresh so we can attach it to the popup
@@ -484,6 +498,7 @@ export default function Scan() {
     setShareMapOpen(false);
     setChoiceOpen(false);
     setRarePopup(null);
+    setCompletedQuests([]);
     setWetDry('dry');
     setBeachName(null);
   };
@@ -574,6 +589,14 @@ export default function Scan() {
         onClose={() => setShareMapOpen(false)}
         onShared={() => setShareMapOpen(false)}
       />
+
+      {/* Quest completion share card — fires immediately after a quest completes */}
+      {completedQuests.length > 0 && (
+        <QuestShareCard
+          quests={completedQuests}
+          onDismiss={() => setCompletedQuests([])}
+        />
+      )}
     </div>
   );
 }
