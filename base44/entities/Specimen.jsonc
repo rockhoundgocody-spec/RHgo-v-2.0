@@ -54,9 +54,10 @@
       "type": "string",
       "enum": [
         "collected",
-        "left_in_place"
+        "left_in_place",
+        "observed"
       ],
-      "description": "Chattel (collected) vs affixed/legacy (marked in place) path"
+      "description": "Chattel (collected) vs affixed/legacy (marked in place) vs observed (noted only)"
     },
     "collected": {
       "type": "boolean",

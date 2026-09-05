@@ -149,6 +149,7 @@ export default function Layout() {
   );
   const isRoot = PRIMARY_ROOTS.includes(location.pathname);
   const isFullscreenMap = location.pathname.startsWith('/explore');
+  const isFullscreenCamera = location.pathname.startsWith('/scan');
   const activeTab = getActiveTab(location.pathname);
 
   useEffect(() => {
@@ -180,15 +181,15 @@ export default function Layout() {
           pathname={location.pathname}
         />
 
-        {!isAdminOrDocs && isAuthenticated && (
+        {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        <HotspotProximityWatcher />
-        <StreakReminderBanner />
-        <OracleOverlays />
+        {!isFullscreenCamera && <HotspotProximityWatcher />}
+        {!isFullscreenCamera && <StreakReminderBanner />}
+        {!isFullscreenCamera && <OracleOverlays />}
         <BadgeUnlockWatcher />
-        <FloatingCloverCompanion />
+        {!isFullscreenCamera && <FloatingCloverCompanion />}
       </div>
       </BadgeAwarderProvider>
     </OracleProvider>

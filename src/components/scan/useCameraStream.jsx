@@ -45,7 +45,7 @@ async function applyFocus(track, mode, point) {
  * useCameraStream — rear camera + continuous AF + tap-to-focus.
  * focusAt(clientX, clientY, videoEl) uses ImageCapture pointsOfInterest when present.
  */
-export default function useCameraStream({ active = true } = {}) {
+export default function useCameraStream({ active = true, facing = 'environment' } = {}) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const lockTimerRef = useRef(null);
@@ -65,7 +65,7 @@ export default function useCameraStream({ active = true } = {}) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { ideal: 'environment' },
+            facingMode: { ideal: facing },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
             focusMode: { ideal: 'continuous' },
@@ -111,7 +111,7 @@ export default function useCameraStream({ active = true } = {}) {
       setFocusMode('none');
       setFocusPoint(null);
     };
-  }, [active]);
+  }, [active, facing]);
 
   const toggleTorch = async () => {
     const track = trackOf(streamRef.current);
