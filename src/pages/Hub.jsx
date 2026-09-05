@@ -12,7 +12,7 @@ const LAND_LABEL = {
 };
 
 export default function Hub() {
-  const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
+  const [bufferDone, setBufferDone] = useState(() => localStorage.getItem('rhgo_buffer_seen') === '1');
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
@@ -26,7 +26,7 @@ export default function Hub() {
   }, []);
 
   if (!bufferDone) {
-    return <OpeningBuffer onDone={() => { sessionStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
+    return <OpeningBuffer onDone={() => { localStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
   }
   if (showCinematic) {
     return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
