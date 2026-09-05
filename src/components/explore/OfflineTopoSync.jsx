@@ -70,7 +70,7 @@ export default function OfflineTopoSync({ userLocation }) {
           <button
             onClick={handleClear}
             aria-label="Clear cached tiles"
-            className="ml-auto text-white/30 hover:text-rose-400 transition"
+            className="ml-auto text-white/30 hover:text-rose-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 rounded-sm"
           >
             <Trash2 size={11} />
           </button>
@@ -110,14 +110,14 @@ export default function OfflineTopoSync({ userLocation }) {
               <div className="flex gap-2">
                 <button
                   onClick={handleDownload}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition active:scale-95"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                   style={{ background: 'linear-gradient(135deg, hsl(195,80%,45%), hsl(215,80%,50%))' }}
                 >
                   <Download size={12} className="inline mr-1.5" /> Download
                 </button>
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white/50 transition"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
                   style={{ background: 'hsla(255,20%,16%,0.5)', border: '1px solid hsla(255,20%,30%,0.2)' }}
                 >
                   Cancel
@@ -127,7 +127,7 @@ export default function OfflineTopoSync({ userLocation }) {
           ) : (
             <button
               onClick={() => setShowConfirm(true)}
-              className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition active:scale-95"
+              className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
               style={{ background: 'linear-gradient(135deg, hsl(195,80%,45%), hsl(215,80%,50%))', boxShadow: '0 4px 12px hsla(195,80%,50%,0.2)' }}
             >
               <WifiOff size={12} className="inline mr-1.5" /> Cache Offline Tiles

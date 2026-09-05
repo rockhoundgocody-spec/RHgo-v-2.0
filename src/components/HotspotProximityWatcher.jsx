@@ -99,7 +99,7 @@ export function HotspotProximityBanner({ nearby, permission, requestPermission, 
           {permission !== 'granted' && (
             <button
               onClick={requestPermission}
-              className="mt-1 inline-flex items-center gap-1 text-[11px] text-hud hover:text-hud-cyan"
+              className="mt-1 inline-flex items-center gap-1 text-[11px] text-hud hover:text-hud-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan rounded-sm"
             >
               <Bell size={11} /> Enable push notifications
             </button>
@@ -108,13 +108,13 @@ export function HotspotProximityBanner({ nearby, permission, requestPermission, 
         <Link
           to="/explore"
           onClick={() => onDismiss(hotspotId)}
-          className="text-xs px-3 py-1.5 rounded-md bg-amethyst/30 hover:bg-amethyst/50 text-white border border-amethyst/50"
+          className="text-xs px-3 py-1.5 rounded-md bg-amethyst/30 hover:bg-amethyst/50 text-white border border-amethyst/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
         >
           Explore
         </Link>
         <button
           onClick={() => onDismiss(hotspotId)}
-          className="text-white/50 hover:text-white"
+          className="text-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
           aria-label="Dismiss"
         >
           <X size={16} />

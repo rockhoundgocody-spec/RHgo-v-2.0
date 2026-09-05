@@ -36,7 +36,7 @@ export default function ExportBar({ logs }) {
         onClick={() => handleExport('csv')}
         disabled={!hasLogs || exporting !== null}
         aria-label="Export as CSV spreadsheet"
-        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40"
+        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
         style={{
           background: done === 'csv' ? 'hsla(150,60%,25%,0.4)' : 'hsla(150,40%,15%,0.5)',
           border: `1px solid ${done === 'csv' ? 'hsla(150,70%,50%,0.4)' : 'hsla(150,50%,40%,0.25)'}`,
@@ -52,7 +52,7 @@ export default function ExportBar({ logs }) {
         onClick={() => handleExport('kmz')}
         disabled={!hasLogs || exporting !== null}
         aria-label="Export as KMZ for Google Earth"
-        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40"
+        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
         style={{
           background: done === 'kmz' ? 'hsla(45,60%,25%,0.4)' : 'hsla(45,40%,15%,0.5)',
           border: `1px solid ${done === 'kmz' ? 'hsla(45,70%,50%,0.4)' : 'hsla(45,50%,40%,0.25)'}`,
