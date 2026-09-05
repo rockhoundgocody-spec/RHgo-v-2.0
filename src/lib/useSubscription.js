@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import { base44 } from '../api/base44Client.js';
+import { ensureFreeSubscription } from '../api/coreLoop.js';
 
 // Simple, synchronous DJB2 hash helper to obfuscate email in session storage key
 export function hashEmail(email) {
@@ -49,14 +50,13 @@ export function useSubscription(user) {
           }
           sessionStorage.removeItem(cacheKey);
         }
-        const rows = await base44.entities.Subscription.filter({ owner_email: user.email });
-        const sub = rows?.[0] || { tier: 'free', status: 'active', owner_email: user.email };
+        const sub = await ensureFreeSubscription(base44.entities.Subscription, user.email);
         if (!cancelled) {
           setSubscription(sub);
           sessionStorage.setItem(cacheKey, JSON.stringify({ ...sub, _cachedAt: Date.now() }));
         }
       } catch {
-        if (!cancelled) setSubscription({ tier: 'free', status: 'active' });
+        if (!cancelled) setSubscription({ tier: 'free', status: 'active', owner_email: user.email });
       } finally {
         if (!cancelled) setLoading(false);
       }
