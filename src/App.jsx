@@ -109,6 +109,7 @@ const AuthenticatedApp = () => {
             <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
+            <Route path="/scan" element={<Scan />} />
             <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
@@ -133,11 +134,12 @@ const AuthenticatedApp = () => {
         <Route path="/demo" element={<Demo />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
+        {/* Guest scan — camera + one free report, no account */}
+        <Route path="/scan" element={<Scan />} />
 
         <Route element={<Layout />}>
           <Route path="/" element={<HomeGate />} />
           <Route path="/explore" element={<Explore />} />
-          <Route path="/scan" element={<Scan />} />
           <Route path="/collection" element={<Collection />} />
           <Route path="/community" element={<Community />} />
           <Route path="/collections" element={<Collections />} />
