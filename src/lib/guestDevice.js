@@ -230,6 +230,7 @@ export function consumeGuestScan(now = Date.now()) {
   const current = getGuestQuota(now);
   if (!current.allowed) return current;
   writeQuota(now);
+  persistGuestStorage().catch(() => {});
   return getGuestQuota(now);
 }
 
@@ -267,10 +268,6 @@ export function guestLoginUrl(returnPath = '/scan') {
   return `/login?from_url=${encodeURIComponent(path)}`;
 }
 
-/**
- * Pull IndexedDB copies if LS/cookie were wiped, then ask the
- * browser not to evict this origin. Call after a completed guest scan.
- */
 export async function persistGuestStorage() {
   const id = getOrCreateGuestId();
 
