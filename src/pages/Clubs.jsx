@@ -53,7 +53,7 @@ export default function Clubs() {
   useEffect(() => { load(); }, [load]);
 
   const handleRsvp = async (event) => {
-    if (!me?.email) { base44.auth.redirectToLogin(); return; }
+    if (!me?.email) { window.location.href = '/login'; return; }
     const isRsvped = rsvpMap[event.id];
     const newEmails = isRsvped
       ? (event.rsvp_emails || []).filter(e => e !== me.email)

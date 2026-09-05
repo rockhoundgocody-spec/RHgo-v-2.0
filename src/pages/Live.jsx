@@ -59,7 +59,7 @@ export default function Live() {
           )}
           {!studioOpen && (
             <Button
-              onClick={() => (me ? setStudioOpen(true) : base44.auth.redirectToLogin())}
+              onClick={() => (me ? setStudioOpen(true) : (window.location.href = '/login'))}
               className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] text-white"
               style={{ background: 'linear-gradient(135deg, hsla(0,75%,45%,0.9), hsla(340,90%,55%,0.75))' }}
             >

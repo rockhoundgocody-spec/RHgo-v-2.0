@@ -90,7 +90,7 @@ export default function useBroadcast({ videoRef, me }) {
   }, [videoRef]);
 
   const goLive = useCallback(async ({ deviceId, deviceLabel, title, coords, keepMedia }) => {
-    if (!me) { base44.auth.redirectToLogin(); return; }
+    if (!me) { window.location.href = '/login'; return; }
     setStarting(true);
     try {
       // keepMedia: the glasses screen-capture stream is already open — reuse it.
