@@ -1,4 +1,42 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mockLocalStorage = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] ?? null,
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+
+let mockCookie = '';
+
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+
+Object.defineProperty(globalThis, 'localStorage', {
+  value: mockLocalStorage,
+  writable: true,
+});
+
+if (typeof globalThis.document === 'undefined') {
+  globalThis.document = {};
+}
+
+Object.defineProperty(globalThis.document, 'cookie', {
+  get: () => mockCookie,
+  set: (val) => {
+    if (val.includes('Max-Age=0')) {
+      mockCookie = '';
+    } else {
+      mockCookie = val;
+    }
+  },
+  configurable: true,
+});
+
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
@@ -95,7 +133,10 @@ describe('guestDevice', () => {
 
   it('persistGuestStorage asks the browser to keep the origin', async () => {
     const persist = vi.fn().mockResolvedValue(true);
-    Object.defineProperty(navigator, 'storage', {
+    if (!globalThis.navigator) {
+      globalThis.navigator = {};
+    }
+    Object.defineProperty(globalThis.navigator, 'storage', {
       configurable: true,
       value: { persist },
     });
