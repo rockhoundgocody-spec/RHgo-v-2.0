@@ -54,7 +54,9 @@ const SECTIONS = [
     icon: RefreshCw,
     title: 'Subscriptions, Changes & Termination',
     body: [
-      'Field Pro and Family subscriptions are billed via Stripe on a recurring basis until cancelled. You can cancel at any time from Settings; access continues until the end of the current billing period.',
+      'Season ($12.99/30 days), Hound ($79/yr), Steward ($149/yr), and Club ($199/yr) are digital access subscriptions billed via Stripe on the web at rhgo.me. They are not sold as in-app purchases inside the iOS or Android app.',
+      'Physical specimens and goods (rocks, Mystery Mineral Minis, show tickets, paid digs) may be purchased inside the app via Stripe.',
+      'You can cancel a digital subscription at any time from Settings; access continues until the end of the current billing period.',
       'We may update or discontinue features with reasonable notice. Material changes to these Terms will be announced in the app.',
       'We may suspend or terminate accounts that violate these Terms. You may delete your account at any time.',
     ],

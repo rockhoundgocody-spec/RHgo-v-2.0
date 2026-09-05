@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, MapPin, Camera, Users, Baby, Trash2, Mail } from 'lucide-react';
+import { Shield, MapPin, Camera, Smartphone, Users, Baby, Trash2, Mail } from 'lucide-react';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 
@@ -33,6 +33,17 @@ const SECTIONS = [
     ],
   },
   {
+    icon: Smartphone,
+    title: 'Permissions We Request',
+    body: [
+      'Camera: To photograph specimens for AI mineral identification. Photos are processed to generate identification results and stored in your private collection unless you choose to share them.',
+      'Microphone: For voice interaction with Clover, our AI field companion. Audio is used for speech recognition during your session and is not permanently stored unless you save a recording.',
+      'Location: To tag finds with GPS coordinates, show nearby hotspots, and provide geological context for AI identification. Permission-based; revoke anytime in device settings.',
+      'Notifications: For streak reminders, storm hunter alerts, and quest updates. Control each type in Settings.',
+      'Payment: For physical specimens and goods (rocks, Mystery Mineral Minis, show tickets, paid digs) processed via Stripe. Digital subscriptions (Season, Hound, Steward, Club) are sold only on the web at rhgo.me — not as in-app purchases inside the iOS or Android app.',
+    ],
+  },
+  {
     icon: Baby,
     title: 'Child Accounts & COPPA',
     body: [
@@ -56,7 +67,7 @@ const SECTIONS = [
     title: 'Third-Party Services',
     body: [
       'Google Cloud: AI identification (Gemini) and maps. Subject to Google\u2019s privacy policy.',
-      'Stripe: payment processing for Field Pro and Family subscriptions. We do not store your full card details.',
+      'Stripe: payment processing for physical goods and digital subscriptions on the web. We do not store your full card details.',
       'Instagram (optional): if you connect your account, we can publish hotspot finds on your behalf with your consent.',
       'Each third-party service operates under its own privacy policy; we share only the minimum data required to provide the feature.',
     ],

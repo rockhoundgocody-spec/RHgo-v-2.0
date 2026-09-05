@@ -15,6 +15,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import { isNativeApp } from '@/lib/isNativeApp';
 
 const STRIPE_CONFIG = {
   successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
@@ -137,9 +138,11 @@ export default function Pricing() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(null);
+  const nativeApp = isNativeApp();
 
   const handleUpgrade = async (tier) => {
     if (tier.id === 'free') { navigate('/'); return; }
+    if (nativeApp) return; // Digital subs not sold inside native app — subscribe on rhgo.me
 
     base44.analytics.track({ eventName: 'pricing_upgrade_tapped', properties: { tier: tier.id } });
 
@@ -234,12 +237,19 @@ export default function Pricing() {
                 </div>
               )}
 
-              <button onClick={() => handleUpgrade(tier)}
-                disabled={upgrading === tier.id}
-                className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
-                style={tier.ctaStyle}>
-                {upgrading === tier.id ? 'Redirecting…' : tier.cta}
-              </button>
+              {nativeApp && tier.id !== 'free' ? (
+                <div className="w-full py-2.5 rounded-xl text-center text-[11px] text-white/40"
+                  style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}>
+                  Subscribe on rhgo.me
+                </div>
+              ) : (
+                <button onClick={() => handleUpgrade(tier)}
+                  disabled={upgrading === tier.id}
+                  className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
+                  style={tier.ctaStyle}>
+                  {upgrading === tier.id ? 'Redirecting…' : tier.cta}
+                </button>
+              )}
             </div>
           </motion.div>
         ))}

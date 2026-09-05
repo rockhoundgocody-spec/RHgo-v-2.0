@@ -212,6 +212,13 @@ export default function Login() {
               Join for free →
             </Link>
           </p>
+
+          {/* Privacy + Terms — accessible without account */}
+          <div className="flex items-center justify-center gap-3 mt-4 text-white/25 text-[11px]">
+            <Link to="/privacy-policy" className="hover:text-white/50 transition">Privacy Policy</Link>
+            <span className="text-white/15">·</span>
+            <Link to="/terms" className="hover:text-white/50 transition">Terms of Service</Link>
+          </div>
         </motion.div>
       </div>
     </div>
