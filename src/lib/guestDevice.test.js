@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  GUEST_COOKIE,
   GUEST_ID_KEY,
   GUEST_PENDING_KEY,
   GUEST_QUOTA_KEY,
@@ -8,18 +9,26 @@ import {
   getGuestQuota,
   getOrCreateGuestId,
   guestLoginUrl,
+  hydrateGuestStorage,
   peekPendingGuestReport,
+  persistGuestStorage,
   stashPendingGuestReport,
   takePendingGuestReport,
 } from './guestDevice';
 
+function clearCookie() {
+  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+}
+
 describe('guestDevice', () => {
   beforeEach(() => {
     localStorage.clear();
+    clearCookie();
   });
 
   afterEach(() => {
     localStorage.clear();
+    clearCookie();
   });
 
   it('creates a stable g_ device key', () => {
@@ -28,6 +37,20 @@ describe('guestDevice', () => {
     expect(a).toMatch(/^g_/);
     expect(a).toBe(b);
     expect(localStorage.getItem(GUEST_ID_KEY)).toBe(a);
+  });
+
+  it('mirrors the key into a first-party cookie', () => {
+    const id = getOrCreateGuestId();
+    expect(document.cookie).toContain(GUEST_COOKIE);
+    expect(document.cookie).toContain(id);
+  });
+
+  it('restores the key from the cookie when localStorage is empty', () => {
+    const id = getOrCreateGuestId();
+    localStorage.clear();
+    expect(localStorage.getItem(GUEST_ID_KEY)).toBeNull();
+    expect(getOrCreateGuestId()).toBe(id);
+    expect(localStorage.getItem(GUEST_ID_KEY)).toBe(id);
   });
 
   it('allows the first scan', () => {
@@ -68,5 +91,22 @@ describe('guestDevice', () => {
   it('ignores a corrupt quota blob', () => {
     localStorage.setItem(GUEST_QUOTA_KEY, '{not-json');
     expect(getGuestQuota(5).allowed).toBe(true);
+  });
+
+  it('persistGuestStorage asks the browser to keep the origin', async () => {
+    const persist = vi.fn().mockResolvedValue(true);
+    Object.defineProperty(navigator, 'storage', {
+      configurable: true,
+      value: { persist },
+    });
+    const id = getOrCreateGuestId();
+    const result = await persistGuestStorage();
+    expect(result.guestId).toBe(id);
+    expect(result.persisted).toBe(true);
+    expect(persist).toHaveBeenCalledTimes(1);
+  });
+
+  it('hydrateGuestStorage is an alias that does not throw without IDB', async () => {
+    await expect(hydrateGuestStorage()).resolves.toMatchObject({ guestId: expect.stringMatching(/^g_/) });
   });
 });
