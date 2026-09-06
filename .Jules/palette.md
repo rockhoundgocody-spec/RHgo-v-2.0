@@ -45,3 +45,6 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2024-11-21 - Accessible Hub Link Styling
+**Learning:** Found that custom highly-styled landing pages (like the main Hub screen) often omit `focus-visible` styles on interactive navigation elements like `<Link>` wrappers around images or blocks. This makes it impossible for keyboard users to navigate core application routes.
+**Action:** Always ensure that custom standalone block-level `<Link>` elements, especially those wrapping images or acting as large custom buttons, include `focus-visible:outline-none focus-visible:ring-2` combined with a complementary theme color (e.g. `focus-visible:ring-white/50` or `focus-visible:ring-hud-cyan/70`) to restore keyboard usability without affecting the primary visual design.

@@ -45,7 +45,7 @@ export default function Hub() {
         <Link
           to="/profile"
           aria-label="Profile"
-          className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95"
+          className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           style={{ border: '1px solid hsla(0,0%,100%,0.15)', background: 'hsla(0,0%,100%,0.03)' }}
         >
           <span className="text-white/60 text-xs font-bold uppercase">
@@ -58,7 +58,7 @@ export default function Hub() {
       <div className="flex justify-center mt-14">
         <Link
           to="/scan"
-          className="flex items-center gap-2.5 px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-[0.18em] transition-all active:scale-95"
+          className="flex items-center gap-2.5 px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-[0.18em] transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a14]"
           style={{
             background: '#9FE8D0',
             color: '#0a0a14',
@@ -74,7 +74,7 @@ export default function Hub() {
       <section className="px-5 mt-12">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Today</h2>
         {hotspot ? (
-          <Link to="/explore" className="block">
+          <Link to="/explore" className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
             <div className="text-white font-semibold text-[15px] leading-tight">{hotspot.name}</div>
             <div className="text-white/45 text-[12px] mt-0.5 capitalize">{huntLine}</div>
           </Link>
@@ -89,7 +89,7 @@ export default function Hub() {
         {lastThree.length > 0 ? (
           <div className="flex gap-2">
             {lastThree.map(s => (
-              <Link key={s.id} to={`/specimen/${s.id}`}>
+              <Link key={s.id} to={`/specimen/${s.id}`} className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 block">
                 <img
                   src={s.image_url}
                   alt={s.mineral_name || 'specimen'}
