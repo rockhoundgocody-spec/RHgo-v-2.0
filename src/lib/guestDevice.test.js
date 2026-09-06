@@ -16,8 +16,43 @@ import {
   takePendingGuestReport,
 } from './guestDevice';
 
+function createLocalStorageMock() {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+}
+
+let cookieStore = '';
+
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+
+if (typeof globalThis.document === 'undefined') {
+  globalThis.document = {
+    get cookie() { return cookieStore; },
+    set cookie(val) { cookieStore = val; },
+  };
+}
+
+if (typeof globalThis.localStorage === 'undefined' || !globalThis.localStorage) {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: createLocalStorageMock(),
+    writable: true,
+  });
+}
+
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  cookieStore = '';
+  if (typeof document !== 'undefined' && document.cookie) {
+    try {
+      document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+    } catch {}
+  }
 }
 
 describe('guestDevice', () => {
