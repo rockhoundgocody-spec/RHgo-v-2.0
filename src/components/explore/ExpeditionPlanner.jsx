@@ -17,17 +17,33 @@ function haversineKm(a, b) {
 }
 
 // Nearest-neighbour TSP from origin
-function planRoute(origin, hotspots, limit = 6) {
-  if (!origin || hotspots.length === 0) return [];
-  let remaining = [...hotspots];
-  let current   = origin;
-  const route   = [];
+// Optimization (Bolt): Use a single-pass linear minimum distance scan instead of Array.prototype.sort().
+// Sorting calls haversineKm O(N log N) times per iteration, re-executing trigonometric functions
+// (Math.sin, Math.cos, Math.atan2, Math.sqrt) repeatedly inside comparator functions.
+// Linear scan reduces distance calculations from O(limit * N log N) to O(limit * N) (~70%+ reduction).
+export function planRoute(origin, hotspots, limit = 6) {
+  if (!origin || !hotspots || hotspots.length === 0) return [];
+  const remaining = [...hotspots];
+  let current = origin;
+  const route = [];
+
   while (remaining.length > 0 && route.length < limit) {
-    remaining.sort((a, b) => haversineKm(current, a) - haversineKm(current, b));
-    const next = remaining.shift();
+    let bestIndex = 0;
+    let minDistance = haversineKm(current, remaining[0]);
+
+    for (let i = 1; i < remaining.length; i++) {
+      const dist = haversineKm(current, remaining[i]);
+      if (dist < minDistance) {
+        minDistance = dist;
+        bestIndex = i;
+      }
+    }
+
+    const [next] = remaining.splice(bestIndex, 1);
     route.push(next);
     current = next;
   }
+
   return route;
 }
 
@@ -90,7 +106,6 @@ export default function ExpeditionPlanner({
 
   const totalKm = useMemo(() => {
     if (!route.length) return 0;
-    const origin = userLocation || route[0];
     let km = userLocation ? haversineKm(userLocation, route[0]) : 0;
     for (let i = 1; i < route.length; i++) km += haversineKm(route[i - 1], route[i]);
     return Math.round(km);
