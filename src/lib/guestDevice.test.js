@@ -1,4 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const store = new Map();
+const mockLocalStorage = {
+  getItem: (k) => store.get(k) ?? null,
+  setItem: (k, v) => store.set(k, String(v)),
+  removeItem: (k) => store.delete(k),
+  clear: () => store.clear(),
+};
+
+globalThis.localStorage = mockLocalStorage;
+globalThis.window = {
+  localStorage: mockLocalStorage,
+  location: { protocol: 'https:' },
+};
+globalThis.document = {
+  cookie: '',
+};
+
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
