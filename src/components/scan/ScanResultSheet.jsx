@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown } from 'lucide-react';
+import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown, Leaf, ShoppingBag } from 'lucide-react';
 
 const CONFIDENCE_BAND = (c) => {
   if (c >= 0.85) return { label: 'high', color: '#9FE8D0' };
@@ -15,6 +15,7 @@ const CONFIDENCE_BAND = (c) => {
 export default function ScanResultSheet({
   open, result, imageUrl, saved,
   onKeep, onLeave, onObserve, onAsk, onRetry, onClose,
+  provenance, onProvenanceChange, locationExhausted,
 }) {
   const [testsOpen, setTestsOpen] = useState(false);
 
@@ -116,6 +117,34 @@ export default function ScanResultSheet({
                   </div>
                 )}
 
+                {/* Provenance toggle — nature vs store-bought */}
+                {onProvenanceChange && (
+                  <div className="mb-4">
+                    <div className="text-white/40 text-[10px] uppercase tracking-[0.2em] mb-2">Where's it from?</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <ProvenancePill
+                        active={provenance === 'nature'}
+                        onClick={() => onProvenanceChange('nature')}
+                        icon={Leaf}
+                        label="Found in nature"
+                        sub="Field, gravel, driveway"
+                      />
+                      <ProvenancePill
+                        active={provenance === 'store_bought'}
+                        onClick={() => onProvenanceChange('store_bought')}
+                        icon={ShoppingBag}
+                        label="Store-bought"
+                        sub="Shop, gift, trade"
+                      />
+                    </div>
+                    {locationExhausted && provenance === 'nature' && (
+                      <div className="mt-2 text-[11px] text-amber-400/80 leading-snug">
+                        You've scanned 5+ here — move 250m+ to earn XP again, or mark it store-bought.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Primary: Keep / Leave / Observed */}
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   <SheetButton label="Keep" onClick={onKeep} disabled={saved} primary />
@@ -182,6 +211,27 @@ function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) 
     >
       {Icon && <Icon size={15} />}
       {label}
+    </button>
+  );
+}
+
+function ProvenancePill({ active, onClick, icon: Icon, label, sub }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-all active:scale-95"
+      style={{
+        background: active ? '#9FE8D015' : 'hsla(0,0%,100%,0.04)',
+        border: `1px solid ${active ? '#9FE8D050' : 'hsla(0,0%,100%,0.08)'}`,
+      }}
+    >
+      <Icon size={16} className="mt-0.5 shrink-0" style={{ color: active ? '#9FE8D0' : 'rgba(255,255,255,0.5)' }} />
+      <div className="min-w-0">
+        <div className="text-[12px] font-semibold leading-tight" style={{ color: active ? '#9FE8D0' : 'rgba(255,255,255,0.8)' }}>
+          {label}
+        </div>
+        <div className="text-[10px] text-white/35 leading-tight mt-0.5">{sub}</div>
+      </div>
     </button>
   );
 }

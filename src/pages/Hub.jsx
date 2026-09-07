@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
-import { useEntityList } from '@/lib/useEntityQuery.js';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
+import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 
 const LAND_LABEL = {
   public: 'public', blm: 'public', forest_service: 'public',
@@ -16,13 +17,20 @@ export default function Hub() {
   const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
-  const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     base44.entities.Hotspot.list('-trust_score', 1)
       .then(h => setHotspot(h[0]))
       .catch(() => {});
+    // Load player profile for XP
+    base44.auth.me().then(u => {
+      if (!u?.email) return;
+      base44.entities.PlayerProfile.filter({ owner_email: u.email })
+        .then(p => setProfile(p[0] || null))
+        .catch(() => {});
+    }).catch(() => {});
   }, []);
 
   if (!bufferDone) {
@@ -32,7 +40,12 @@ export default function Hub() {
     return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
   }
 
-  const lastThree = specimens.filter(s => s.image_url).slice(0, 3);
+  const totalXp = profile?.total_xp || 0;
+  const level = getLevel(totalXp);
+  const title = getTitle(level);
+  const progress = xpProgress(totalXp);
+  const remaining = xpToNext(totalXp);
+
   const huntLine = hotspot
     ? `${hotspot.state || 'US'} · ${LAND_LABEL[hotspot.land_type] || 'public'}${hotspot.access_notes ? ' · ' + hotspot.access_notes.split('.')[0].toLowerCase().trim() : ''}`
     : null;
@@ -54,8 +67,37 @@ export default function Hub() {
         </Link>
       </header>
 
+      {/* Clover — she's home when you're home */}
+      <div className="flex justify-center mt-6">
+        <HeroOrb companion={profile} size={120} />
+      </div>
+
+      {/* XP / Level — the progression anchor */}
+      <section className="px-5 mt-5">
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="text-white font-bold text-[13px] tracking-tight">{title}</span>
+          <span className="text-white/40 text-[11px] tabular-nums">
+            {remaining > 0 ? `${remaining} XP to next` : 'Max level'}
+          </span>
+        </div>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'hsla(0,0%,100%,0.06)' }}>
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, hsla(275,80%,60%,0.8), hsla(280,100%,75%,0.95))',
+              boxShadow: '0 0 12px hsla(280,100%,70%,0.4)',
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-white/30 text-[10px] uppercase tracking-[0.18em]">Level {level}</span>
+          <span className="text-white/30 text-[10px] tabular-nums">{totalXp.toLocaleString()} XP</span>
+        </div>
+      </section>
+
       {/* Scan — the only mint element */}
-      <div className="flex justify-center mt-14">
+      <div className="flex justify-center mt-7">
         <Link
           to="/scan"
           className="flex items-center gap-2.5 px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-[0.18em] transition-all active:scale-95"
@@ -71,7 +113,7 @@ export default function Hub() {
       </div>
 
       {/* Today's hunt */}
-      <section className="px-5 mt-12">
+      <section className="px-5 mt-10">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Today</h2>
         {hotspot ? (
           <Link to="/explore" className="block">
@@ -80,26 +122,6 @@ export default function Hub() {
           </Link>
         ) : (
           <div className="text-white/30 text-[12px]">Loading…</div>
-        )}
-      </section>
-
-      {/* Cabinet — last 3 thumbs or empty */}
-      <section className="px-5 mt-8">
-        <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Cabinet</h2>
-        {lastThree.length > 0 ? (
-          <div className="flex gap-2">
-            {lastThree.map(s => (
-              <Link key={s.id} to={`/specimen/${s.id}`}>
-                <img
-                  src={s.image_url}
-                  alt={s.mineral_name || 'specimen'}
-                  className="w-[88px] h-[88px] rounded-xl object-cover border border-white/10"
-                />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-white/30 text-[12px]">Scan your first specimen</div>
         )}
       </section>
     </div>

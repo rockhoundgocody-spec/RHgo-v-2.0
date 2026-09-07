@@ -14,7 +14,7 @@ import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import useCloverConversation from './useCloverConversation';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
-import { playOrbChime, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
+import { playOrbChime, playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { base44 } from '@/api/base44Client';
 import { Gem, Zap } from 'lucide-react';
 
@@ -82,8 +82,8 @@ export default function HeroOrb({ companion, todaysSpecimens = 0, size = 141 }) 
     addRipple(e);
     if (e.clientX != null) injectTap(e.clientX, e.clientY);
 
-    // Tactile crystal singing bowl harmonic audio + vibration feedback
-    playOrbChime(528, 1.4);
+    // Soft breath acknowledgment — she turns toward you, not a bell
+    playOrbBreath(0.5);
     triggerOrbHaptic('tap');
 
     if (!open) {

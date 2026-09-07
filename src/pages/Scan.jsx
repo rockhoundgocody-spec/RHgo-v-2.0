@@ -11,7 +11,7 @@ import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
-import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore } from '@/lib/scanSave';
+import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
@@ -47,6 +47,9 @@ export default function Scan() {
   const [torchWasOn, setTorchWasOn] = useState(false);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [beachName, setBeachName] = useState(null);
+  const [provenance, setProvenance] = useState(PROVENANCE.NATURE);
+  const [recentSpecimens, setRecentSpecimens] = useState([]);
+  const [locationExhausted, setLocationExhausted] = useState(false);
 
   const camera = useCameraStream({ active: stage === 'camera', facing });
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();

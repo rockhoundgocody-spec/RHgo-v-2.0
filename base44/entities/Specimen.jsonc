@@ -97,6 +97,15 @@
       "type": "integer",
       "default": 0
     },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "nature",
+        "store_bought"
+      ],
+      "default": "nature",
+      "description": "Where the specimen came from \u2014 nature (field, gravel, driveway, landscaping) vs store-bought/gift. Store-bought earns reduced XP."
+    },
     "chain_ids": {
       "type": "array",
       "items": {
