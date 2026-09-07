@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin, Users, Sparkles } from 'lucide-react';
+import { X, Calendar, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const MOODS = [
