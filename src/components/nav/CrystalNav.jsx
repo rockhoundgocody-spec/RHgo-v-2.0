@@ -1,14 +1,16 @@
 /**
  * CrystalNav — bottom 5-tab navigation, dark obsidian style.
- * Clean lucide icons in HUD-cyan / amethyst duotone, refined hero Scan button.
+ * Day one is simple: Home, Map, Scan, GeoDex. Market stays sealed until
+ * Mythic Earth Wizard; the fifth slot becomes a locked "More" tease.
  */
 import React from 'react';
 import { useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Home, Map, Gem, Store, ScanLine } from 'lucide-react';
+import { Home, Map, Gem, Store, ScanLine, Lock } from 'lucide-react';
 import useKidMode from '@/lib/useKidMode';
 import { onboardingStore } from '@/lib/onboardingStore';
+import { useFeatureProgression } from '@/lib/useFeatureProgression';
 
 const NAV_TABS = [
   { to: '/', label: 'Home', Icon: Home },
@@ -20,14 +22,18 @@ const NAV_TABS = [
 
 export default function CrystalNav({ activeTab, onTabClick, pathname }) {
   const isKid = useKidMode();
+  const { isPathOpen } = useFeatureProgression();
+  const marketOpen = isPathOpen('/market');
   const onboardingActive = useSyncExternalStore(onboardingStore.subscribe, onboardingStore.get, () => false);
-  // Hide the nav entirely during the onboarding/intro cinematic
   if (onboardingActive) return null;
-  // Kids don't see the trade/market surface (peer commerce + money).
-  const tabs = isKid ? NAV_TABS.filter((t) => t.to !== '/market') : NAV_TABS;
-  // Rendered into document.body via portal — escapes the app's internal
-  // scroll container so Leaflet's composited map layers can never paint
-  // over or hide the nav (iOS WebKit fixed-position bug).
+
+  const tabs = NAV_TABS
+    .filter((t) => !(isKid && t.to === '/market'))
+    .map((t) => {
+      if (t.to !== '/market' || marketOpen) return t;
+      return { to: '/', label: 'More', Icon: Lock, locked: true };
+    });
+
   return createPortal(
     <nav
       className="fixed left-1/2 z-[5000] flex items-center"
@@ -47,9 +53,11 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
       }}
     >
       {tabs.map((tab) => {
-        const isActive = tab.to === '/'
-          ? pathname === '/'
-          : pathname.startsWith(tab.to);
+        const isActive = tab.locked
+          ? false
+          : tab.to === '/'
+            ? pathname === '/'
+            : pathname.startsWith(tab.to);
 
         if (tab.hero) {
           return (
@@ -65,22 +73,28 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
         return (
           <button
             type="button"
-            key={tab.to}
+            key={tab.label}
             onClick={() => onTabClick(tab.to, isActive)}
             aria-current={isActive ? 'page' : undefined}
             className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
             style={{
-              color: isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
+              color: tab.locked
+                ? 'hsla(280,40%,70%,0.45)'
+                : isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
               background: isActive ? 'hsla(195,100%,60%,0.07)' : 'transparent',
             }}
-            aria-label={tab.label}
+            aria-label={tab.locked ? 'More wings — sealed until later ranks' : tab.label}
           >
             <div style={{ filter: isActive ? 'drop-shadow(0 0 6px hsla(195,100%,60%,0.6))' : 'none' }}>
               <Icon size={19} strokeWidth={isActive ? 2 : 1.6} />
             </div>
             <span
               className="text-[8px] font-semibold uppercase tracking-[0.18em]"
-              style={{ color: isActive ? 'hsla(195,100%,82%,0.95)' : 'hsla(220,25%,65%,0.45)' }}
+              style={{
+                color: tab.locked
+                  ? 'hsla(280,40%,70%,0.5)'
+                  : isActive ? 'hsla(195,100%,82%,0.95)' : 'hsla(220,25%,65%,0.45)',
+              }}
             >
               {tab.label}
             </span>

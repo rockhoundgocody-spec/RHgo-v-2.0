@@ -13,11 +13,16 @@ import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { filterOwnedSpecimens } from '@/api/coreLoop';
+import CollectionWeightTracker from '@/components/hub/CollectionWeightTracker.jsx';
 
 const RARITY_FILTERS = ['all', 'common', 'uncommon', 'rare', 'legendary'];
 
 export default function Collection() {
-  const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
+  const { data: allSpecimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
+  const { data: me } = useCurrentUser();
+  const specimens = useMemo(() => filterOwnedSpecimens(allSpecimens, me), [allSpecimens, me]);
   const [view, setView] = useState('crystal'); // 'crystal' | 'gallery' | 'grid' | 'map' | 'dashboard'
   const [rarityFilter, setRarityFilter] = useState('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -51,6 +56,18 @@ export default function Collection() {
           <button onClick={() => setView('dashboard')} aria-pressed={view === 'dashboard'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
         </div>
       </div>
+
+      {me?.email && (
+        <div className="mb-4 space-y-2">
+          <CollectionWeightTracker userEmail={me.email} />
+          <Link
+            to="/chronolith"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/30 bg-amethyst/8 hover:bg-amethyst/15 text-amethyst-glow text-[11px] uppercase tracking-[0.25em] transition"
+          >
+            Investigate a specimen
+          </Link>
+        </div>
+      )}
 
       {/* Rarity + verified filters */}
       {(view === 'crystal' || view === 'grid' || view === 'gallery') && (

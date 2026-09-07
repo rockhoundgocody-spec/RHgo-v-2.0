@@ -5,6 +5,9 @@ import { ScanLine } from 'lucide-react';
 import { useEntityList } from '@/lib/useEntityQuery.js';
 import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
 import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
+import NextUnlockNudge from '@/components/progression/NextUnlockNudge.jsx';
+import CrawlAtlas from '@/components/progression/CrawlAtlas.jsx';
+import { useFeatureProgression } from '@/lib/useFeatureProgression';
 
 const LAND_LABEL = {
   public: 'public', blm: 'public', forest_service: 'public',
@@ -17,6 +20,7 @@ export default function Hub() {
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
   const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
+  const { next, remaining, xpNeededFor, level, crawled, score } = useFeatureProgression();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -39,7 +43,6 @@ export default function Hub() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
-      {/* Header — logo + profile only */}
       <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
         <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
         <Link
@@ -54,7 +57,6 @@ export default function Hub() {
         </Link>
       </header>
 
-      {/* Scan — the only mint element */}
       <div className="flex justify-center mt-14">
         <Link
           to="/scan"
@@ -70,7 +72,14 @@ export default function Hub() {
         </Link>
       </div>
 
-      {/* Today's hunt */}
+      {score.total > 0 && (
+        <p className="text-center text-white/30 text-[10px] uppercase tracking-[0.2em] mt-4">
+          Atlas {score.crawled}/{score.total} crawled
+        </p>
+      )}
+
+      <NextUnlockNudge next={next} remaining={remaining} xpNeededFor={xpNeededFor} />
+
       <section className="px-5 mt-12">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Today</h2>
         {hotspot ? (
@@ -83,7 +92,6 @@ export default function Hub() {
         )}
       </section>
 
-      {/* Cabinet — last 3 thumbs or empty */}
       <section className="px-5 mt-8">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Cabinet</h2>
         {lastThree.length > 0 ? (
@@ -102,6 +110,8 @@ export default function Hub() {
           <div className="text-white/30 text-[12px]">Scan your first specimen</div>
         )}
       </section>
+
+      <CrawlAtlas level={level} crawled={crawled} />
     </div>
   );
 }

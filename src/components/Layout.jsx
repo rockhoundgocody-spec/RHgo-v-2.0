@@ -16,6 +16,7 @@ import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
 import { useAuth } from '@/lib/AuthContext';
+import FeatureGate from '@/components/progression/FeatureGate.jsx';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
@@ -99,6 +100,12 @@ function SubrouteBackButton({ onBack }) {
 }
 
 function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
+  const gatedOutlet = isAdminOrDocs ? <Outlet /> : (
+    <FeatureGate pathname={pathname}>
+      <Outlet />
+    </FeatureGate>
+  );
+
   return (
     <main
       className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
@@ -109,10 +116,7 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
       }
     >
       {isFullscreenMap ? (
-        /* Leaflet maps break inside AnimatePresence exit transitions —
-           render the map route without the animation wrapper so
-           navigating away always works. */
-        <Outlet />
+        gatedOutlet
       ) : (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -123,7 +127,7 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
             exit="exit"
             transition={pageTransition}
           >
-            <Outlet />
+            {gatedOutlet}
           </motion.div>
         </AnimatePresence>
       )}
@@ -135,11 +139,8 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  // Every authenticated app route is private — keep it out of search results.
   useSeoRobots(false);
 
-  // Reset the module-level tab back-stacks when the authenticated user
-  // changes so a new user never inherits the previous user's navigation history.
   useEffect(() => {
     for (const key of Object.keys(tabStacks)) delete tabStacks[key];
   }, [user?.email]);
@@ -163,7 +164,6 @@ export default function Layout() {
       tabStacks[to] = [to];
       navigate(to, { replace: true });
     } else {
-      // Always navigate to root of tab — avoids stale stack issues on sub-routes
       navigate(to);
     }
   };

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import ChronolithOpening from '@/components/chronolith/ChronolithOpening.jsx';
 import RealityTrial from '@/components/chronolith/RealityTrial.jsx';
 import { uploadChronolithImages } from '@/lib/chronolithUploads.js';
+import { buildChronolithInvokePayload } from '@/api/coreLoop';
 
 /**
  * CHRONOLITH — The Planet That Remembers
@@ -60,16 +61,32 @@ export default function Chronolith() {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('investigateCase', {
-        image_urls: urls,
-        lat: gpsCoords?.lat,
-        lng: gpsCoords?.lng,
-        field_observations: existingObs,
-        specimen_label: '',
-        case_id: caseId,
-      });
-      const newCase = res?.data?.case;
+      const user = await base44.auth.me().catch(() => null);
+      if (!user?.email) throw new Error('Sign in to open a Chronolith case.');
+      const res = await base44.functions.invoke(
+        'investigateCase',
+        buildChronolithInvokePayload({
+          ownerEmail: user.email,
+          imageUrls: urls,
+          coords: gpsCoords,
+          fieldObservations: existingObs,
+          specimenLabel: '',
+          caseId,
+        }),
+      );
+      let newCase = res?.data?.case;
       if (!newCase) throw new Error('No case returned');
+      if (!newCase.id) {
+        newCase = await base44.entities.ChronolithCase.create({
+          ...newCase,
+          owner_email: user.email,
+          image_urls: urls,
+          lat: gpsCoords?.lat,
+          lng: gpsCoords?.lng,
+          field_observations: existingObs,
+          status: newCase.status || 'investigating',
+        });
+      }
       setCaseData(newCase);
       if (stage === 'capture' || stage === 'analyzing') {
         setStage('opening');

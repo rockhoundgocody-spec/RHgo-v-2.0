@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Clock, FileText, DollarSign, Lock, MapPin } from 'lucide-react';
+import { isUnverifiedQuickPin } from '@/api/coreLoop';
 
 const ACCESS_CONFIG = {
   open:       { label: 'Open Access',     color: '#34d399', icon: CheckCircle2, desc: 'Collecting allowed — follow local rules' },
@@ -25,7 +26,10 @@ const CLAIM_CONFIG = {
 export default function LandAccessPanel({ hotspot }) {
   if (!hotspot) return null;
 
-  const access = ACCESS_CONFIG[hotspot.access_status] || ACCESS_CONFIG.unknown;
+  const unverified = isUnverifiedQuickPin(hotspot);
+  const access = unverified
+    ? { label: 'Unverified Pin', color: '#94a3b8', icon: AlertTriangle, desc: 'Not an open collecting site until access metadata is confirmed' }
+    : (ACCESS_CONFIG[hotspot.access_status] || ACCESS_CONFIG.unknown);
   const claim = CLAIM_CONFIG[hotspot.claim_type] || CLAIM_CONFIG.unknown;
   const AccessIcon = access.icon;
 
@@ -37,6 +41,8 @@ export default function LandAccessPanel({ hotspot }) {
       style={{
         background: isClosed
           ? 'hsla(0,60%,14%,0.7)'
+          : unverified
+          ? 'hsla(220,15%,12%,0.7)'
           : needsPermit
           ? 'hsla(45,60%,14%,0.5)'
           : 'hsla(150,40%,12%,0.5)',
@@ -68,7 +74,7 @@ export default function LandAccessPanel({ hotspot }) {
         )}
 
         {/* Permit requirement */}
-        {needsPermit && (
+        {needsPermit && !unverified && (
           <div className="flex items-start gap-2">
             <FileText size={12} className="text-amber-400 mt-0.5 shrink-0" />
             <div className="flex-1">
