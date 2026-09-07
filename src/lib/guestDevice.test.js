@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  GUEST_COOKIE,
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+let GUEST_COOKIE,
   GUEST_ID_KEY,
   GUEST_PENDING_KEY,
   GUEST_QUOTA_KEY,
@@ -13,12 +13,72 @@ import {
   peekPendingGuestReport,
   persistGuestStorage,
   stashPendingGuestReport,
-  takePendingGuestReport,
-} from './guestDevice';
+  takePendingGuestReport;
+
+const createStorage = () => {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+  };
+};
+
+const localStorageMock = createStorage();
 
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  if (typeof document !== 'undefined') {
+    document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  }
 }
+
+beforeAll(async () => {
+  if (typeof globalThis.window === 'undefined') {
+    let cookieStore = '';
+    const mockWin = {
+      location: { origin: 'http://localhost' },
+      localStorage: localStorageMock,
+      navigator: { storage: { persist: vi.fn().mockResolvedValue(true) } },
+    };
+    mockWin.self = mockWin;
+    mockWin.top = mockWin;
+    globalThis.window = mockWin;
+    globalThis.localStorage = localStorageMock;
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: mockWin.navigator,
+    });
+    globalThis.document = {
+      get cookie() {
+        return cookieStore;
+      },
+      set cookie(val) {
+        if (val.includes('Max-Age=0')) {
+          cookieStore = '';
+        } else {
+          cookieStore = val;
+        }
+      },
+    };
+  }
+
+  const mod = await import('./guestDevice');
+  GUEST_COOKIE = mod.GUEST_COOKIE;
+  GUEST_ID_KEY = mod.GUEST_ID_KEY;
+  GUEST_PENDING_KEY = mod.GUEST_PENDING_KEY;
+  GUEST_QUOTA_KEY = mod.GUEST_QUOTA_KEY;
+  GUEST_WINDOW_MS = mod.GUEST_WINDOW_MS;
+  consumeGuestScan = mod.consumeGuestScan;
+  getGuestQuota = mod.getGuestQuota;
+  getOrCreateGuestId = mod.getOrCreateGuestId;
+  guestLoginUrl = mod.guestLoginUrl;
+  hydrateGuestStorage = mod.hydrateGuestStorage;
+  peekPendingGuestReport = mod.peekPendingGuestReport;
+  persistGuestStorage = mod.persistGuestStorage;
+  stashPendingGuestReport = mod.stashPendingGuestReport;
+  takePendingGuestReport = mod.takePendingGuestReport;
+});
 
 describe('guestDevice', () => {
   beforeEach(() => {
