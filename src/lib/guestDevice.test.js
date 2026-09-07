@@ -1,3 +1,16 @@
+
+const storageMap = new Map();
+const mockLocalStorage = {
+  getItem: (key) => storageMap.get(key) ?? null,
+  setItem: (key, val) => storageMap.set(key, String(val)),
+  removeItem: (key) => storageMap.delete(key),
+  clear: () => storageMap.clear(),
+};
+
+globalThis.localStorage = mockLocalStorage;
+globalThis.window = globalThis.window || { localStorage: mockLocalStorage, location: { protocol: 'https:' } };
+globalThis.document = globalThis.document || { cookie: '' };
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GUEST_COOKIE,
