@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, ShieldCheck, X, Share2, Check, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ProvenanceCertificateModal({ open, result, savedId, gpsCoords, onClose }) {
   const [copied, setCopied] = React.useState(false);
+  const titleId = useId();
 
   if (!open || !result) return null;
 
@@ -31,6 +32,9 @@ export default function ProvenanceCertificateModal({ open, result, savedId, gpsC
         onClick={onClose}
       >
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -43,17 +47,26 @@ export default function ProvenanceCertificateModal({ open, result, savedId, gpsC
           }}
         >
           {/* Close button */}
-          <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white p-1">
-            <X size={18} />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close provenance certificate"
+            className="absolute top-4 right-4 text-white/40 hover:text-white p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 transition-colors"
+          >
+            <X size={18} aria-hidden="true" />
           </button>
 
           {/* Certificate Header */}
           <div className="text-center space-y-1 mb-4">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] uppercase font-black tracking-widest">
-              <Award size={12} /> Official Mineral Provenance
+              <Award size={12} aria-hidden="true" /> Official Mineral Provenance
             </div>
-            <h2 className="text-lg font-black tracking-tight mt-1 text-white">RockHound-GO Codex</h2>
-            <div className="text-[10px] font-mono text-white/50 tracking-wider">CERTIFICATE NO: {certId}</div>
+            <h2 id={titleId} className="text-lg font-black tracking-tight mt-1 text-white">
+              RockHound-GO Codex
+            </h2>
+            <div className="text-[10px] font-mono text-white/50 tracking-wider">
+              CERTIFICATE NO: {certId}
+            </div>
           </div>
 
           {/* Certificate Body */}
@@ -90,14 +103,14 @@ export default function ProvenanceCertificateModal({ open, result, savedId, gpsC
               <div>
                 <span className="text-white/40 block">Verification</span>
                 <span className="font-bold text-cyan-400 flex items-center gap-1">
-                  <ShieldCheck size={11} /> AI Validated
+                  <ShieldCheck size={11} aria-hidden="true" /> AI Validated
                 </span>
               </div>
             </div>
 
             {gpsCoords && (
               <div className="pt-2 border-t border-white/10 flex items-center gap-1.5 text-[9px] text-white/50 font-mono">
-                <MapPin size={10} className="text-amber-400" />
+                <MapPin size={10} className="text-amber-400" aria-hidden="true" />
                 Provenance Coordinates: {gpsCoords.lat?.toFixed(3)}°N, {gpsCoords.lng?.toFixed(3)}°W
               </div>
             )}
@@ -106,13 +119,15 @@ export default function ProvenanceCertificateModal({ open, result, savedId, gpsC
           {/* Action buttons */}
           <div className="mt-4 flex gap-2">
             <Button
+              type="button"
               onClick={handleShare}
-              className="flex-1 h-11 text-xs font-extrabold rounded-xl text-white shadow-lg active:scale-98 transition-all flex items-center justify-center gap-1.5"
+              aria-label={copied ? 'Certificate details copied to clipboard' : 'Copy and share provenance certificate details'}
+              className="flex-1 h-11 text-xs font-extrabold rounded-xl text-white shadow-lg active:scale-98 transition-all flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
               style={{
                 background: 'linear-gradient(135deg, hsl(45 90% 48%), hsl(28 85% 42%))',
               }}
             >
-              {copied ? <Check size={14} /> : <Share2 size={14} />}
+              {copied ? <Check size={14} aria-hidden="true" /> : <Share2 size={14} aria-hidden="true" />}
               {copied ? 'Certificate Copied!' : 'Copy & Share Certificate'}
             </Button>
           </div>
