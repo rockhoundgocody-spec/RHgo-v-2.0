@@ -25,7 +25,6 @@ export default function CaseFileLedger({
         onClick={onToggleLedger}
         aria-expanded={Boolean(showLedger)}
         aria-controls={contentId}
-        aria-label={showLedger ? 'Collapse case file ledger' : 'Expand case file ledger'}
         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         style={{ background: 'hsla(220,40%,5%,0.6)', border: '1px solid hsla(270,20%,25%,0.2)' }}
       >

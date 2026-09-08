@@ -32,7 +32,6 @@ describe('CaseFileLedger', () => {
     expect(triggerBtn.props.type).toBe('button');
     expect(triggerBtn.props['aria-expanded']).toBe(false);
     expect(triggerBtn.props['aria-controls']).toBe(':r0:');
-    expect(triggerBtn.props['aria-label']).toBe('Expand case file ledger');
     expect(triggerBtn.props.className).toContain('focus-visible:ring-2');
     expect(triggerBtn.props.className).toContain('focus-visible:ring-amethyst-glow/50');
 
@@ -53,7 +52,6 @@ describe('CaseFileLedger', () => {
 
     const triggerBtn = element.props.children[0];
     expect(triggerBtn.props['aria-expanded']).toBe(true);
-    expect(triggerBtn.props['aria-label']).toBe('Collapse case file ledger');
 
     const bodyContainer = element.props.children[1];
     expect(bodyContainer).toBeDefined();
