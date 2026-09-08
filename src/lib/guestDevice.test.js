@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
@@ -16,11 +16,64 @@ import {
   takePendingGuestReport,
 } from './guestDevice';
 
+const createStorage = () => {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+  };
+};
+
+let cookieStore = '';
+
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  cookieStore = '';
+  if (typeof globalThis.document !== 'undefined') {
+    globalThis.document.cookie = '';
+  }
 }
 
 describe('guestDevice', () => {
+  beforeAll(() => {
+    const mockStorage = createStorage();
+    globalThis.localStorage = mockStorage;
+    globalThis.window = {
+      localStorage: mockStorage,
+      location: {
+        origin: 'http://localhost:3000',
+        href: 'http://localhost:3000',
+      },
+    };
+    if (typeof globalThis.navigator === 'undefined') {
+      Object.defineProperty(globalThis, 'navigator', {
+        value: {},
+        writable: true,
+        configurable: true,
+      });
+    }
+    Object.defineProperty(globalThis.navigator, 'storage', {
+      value: {
+        persist: vi.fn().mockResolvedValue(true),
+      },
+      writable: true,
+      configurable: true,
+    });
+    globalThis.document = {
+      get cookie() {
+        return cookieStore;
+      },
+      set cookie(val) {
+        if (val.includes('Max-Age=0')) {
+          cookieStore = '';
+        } else {
+          cookieStore = val;
+        }
+      },
+    };
+  });
+
   beforeEach(() => {
     localStorage.clear();
     clearCookie();

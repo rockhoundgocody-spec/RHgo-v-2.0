@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown, Leaf, ShoppingBag } from 'lucide-react';
+import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag } from 'lucide-react';
 
 const CONFIDENCE_BAND = (c) => {
   if (c >= 0.85) return { label: 'high', color: '#9FE8D0' };
