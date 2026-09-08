@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { Route, Zap, ChevronRight, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function haversineKm(a, b) {
+export function haversineKm(a, b) {
   const R = 6371;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
@@ -16,18 +16,36 @@ function haversineKm(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-// Nearest-neighbour TSP from origin
-function planRoute(origin, hotspots, limit = 6) {
-  if (!origin || hotspots.length === 0) return [];
-  let remaining = [...hotspots];
-  let current   = origin;
-  const route   = [];
+/**
+ * Bolt Optimization: Nearest-neighbour TSP pathfinding from origin.
+ * Instead of performing a full Array.prototype.sort() on every iteration (which triggers
+ * O(N log N) trigonometric haversineKm re-evaluations), perform a single-pass O(N) linear
+ * minimum distance scan per step. This reduces total trigonometric distance calculations
+ * from O(limit * N log N) to O(limit * N) per route search.
+ */
+export function planRoute(origin, hotspots, limit = 6) {
+  if (!origin || !hotspots || hotspots.length === 0 || limit <= 0) return [];
+  const remaining = [...hotspots];
+  let current = origin;
+  const route = [];
+
   while (remaining.length > 0 && route.length < limit) {
-    remaining.sort((a, b) => haversineKm(current, a) - haversineKm(current, b));
-    const next = remaining.shift();
+    let nearestIndex = 0;
+    let minDistance = haversineKm(current, remaining[0]);
+
+    for (let i = 1; i < remaining.length; i++) {
+      const dist = haversineKm(current, remaining[i]);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestIndex = i;
+      }
+    }
+
+    const [next] = remaining.splice(nearestIndex, 1);
     route.push(next);
     current = next;
   }
+
   return route;
 }
 
