@@ -67,12 +67,12 @@ Deno.serve(async (req) => {
 
         // Sort by distance if we have a user location
         if (userLat != null && userLng != null) {
-          unvisited = unvisited
-            .map((h) => ({
-              ...h,
-              _dist: h.lat != null && h.lng != null ? Math.hypot(h.lat - userLat, h.lng - userLng) : 999,
-            }))
-            .sort((a, b) => (a as any)._dist - (b as any)._dist);
+          const withDist = unvisited.map((h) => ({
+            ...h,
+            _dist: h.lat != null && h.lng != null ? Math.hypot(h.lat - userLat, h.lng - userLng) : 999,
+          }));
+          withDist.sort((a, b) => a._dist - b._dist);
+          unvisited = withDist;
         }
 
         const topUnvisited = unvisited.slice(0, 8);
