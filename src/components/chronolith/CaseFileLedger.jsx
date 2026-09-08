@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, AlertTriangle, Target, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -16,29 +16,36 @@ export default function CaseFileLedger({
   showLedger,
   onToggleLedger
 }) {
+  const contentId = useId();
+
   return (
     <>
       <button
+        type="button"
         onClick={onToggleLedger}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition"
+        aria-expanded={Boolean(showLedger)}
+        aria-controls={contentId}
+        aria-label={showLedger ? 'Collapse case file ledger' : 'Expand case file ledger'}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         style={{ background: 'hsla(220,40%,5%,0.6)', border: '1px solid hsla(270,20%,25%,0.2)' }}
       >
         <div className="flex items-center gap-2">
-          <FileText size={13} className="text-white/40" />
+          <FileText size={13} className="text-white/40" aria-hidden="true" />
           <span className="text-xs font-semibold text-white/60">Case File</span>
           <span className="text-[9px] text-white/30">
             {evidence.length} evidence · {contradictions.length} contradictions · {missing.length} missing
           </span>
         </div>
         {showLedger ? (
-          <ChevronUp size={14} className="text-white/30" />
+          <ChevronUp size={14} className="text-white/30" aria-hidden="true" />
         ) : (
-          <ChevronDown size={14} className="text-white/30" />
+          <ChevronDown size={14} className="text-white/30" aria-hidden="true" />
         )}
       </button>
 
       {showLedger && (
         <motion.div
+          id={contentId}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="space-y-3 overflow-hidden"
