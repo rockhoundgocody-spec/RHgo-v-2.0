@@ -72,7 +72,11 @@ Deno.serve(async (req) => {
               ...h,
               _dist: h.lat != null && h.lng != null ? Math.hypot(h.lat - userLat, h.lng - userLng) : 999,
             }))
-            .sort((a, b) => (a as any)._dist - (b as any)._dist);
+            .sort((a, b) => {
+              const distA = ('_dist' in a) ? (a as { _dist: number })._dist : 999;
+              const distB = ('_dist' in b) ? (b as { _dist: number })._dist : 999;
+              return distA - distB;
+            });
         }
 
         const topUnvisited = unvisited.slice(0, 8);
