@@ -60,19 +60,21 @@ Deno.serve(async (req) => {
         const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
 
         // Unvisited = hotspot has at least one mineral the user hasn't collected
-        let unvisited = hotspots.filter((h) => {
+        const unvisitedHotspots = hotspots.filter((h) => {
           if (!h.minerals || h.minerals.length === 0) return false;
           return h.minerals.some((m) => !collectedSet.has(m.toLowerCase()));
         });
 
         // Sort by distance if we have a user location
+        let unvisited = unvisitedHotspots.map((h) => ({
+          ...h,
+          _dist: (userLat != null && userLng != null && h.lat != null && h.lng != null)
+            ? Math.hypot(h.lat - userLat, h.lng - userLng)
+            : 999,
+        }));
+
         if (userLat != null && userLng != null) {
-          unvisited = unvisited
-            .map((h) => ({
-              ...h,
-              _dist: h.lat != null && h.lng != null ? Math.hypot(h.lat - userLat, h.lng - userLng) : 999,
-            }))
-            .sort((a, b) => (a as any)._dist - (b as any)._dist);
+          unvisited.sort((a, b) => a._dist - b._dist);
         }
 
         const topUnvisited = unvisited.slice(0, 8);
