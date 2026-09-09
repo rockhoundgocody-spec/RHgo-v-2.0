@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
@@ -16,9 +16,49 @@ import {
   takePendingGuestReport,
 } from './guestDevice';
 
+const createStorage = () => {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+  };
+};
+
+let cookieStore = '';
+
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  cookieStore = '';
 }
+
+beforeAll(() => {
+  const storageMock = createStorage();
+  const documentMock = {
+    get cookie() {
+      return cookieStore;
+    },
+    set cookie(val) {
+      if (val.includes('Max-Age=0')) {
+        cookieStore = '';
+      } else {
+        const cookieNameVal = val.split(';')[0];
+        if (cookieStore) {
+          cookieStore += `; ${cookieNameVal}`;
+        } else {
+          cookieStore = cookieNameVal;
+        }
+      }
+    },
+  };
+
+  globalThis.window = {
+    location: { protocol: 'http:' },
+    localStorage: storageMock,
+  };
+  globalThis.localStorage = storageMock;
+  globalThis.document = documentMock;
+});
 
 describe('guestDevice', () => {
   beforeEach(() => {

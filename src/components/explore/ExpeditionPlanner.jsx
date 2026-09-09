@@ -16,15 +16,24 @@ function haversineKm(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-// Nearest-neighbour TSP from origin
-function planRoute(origin, hotspots, limit = 6) {
-  if (!origin || hotspots.length === 0) return [];
-  let remaining = [...hotspots];
-  let current   = origin;
-  const route   = [];
+// Nearest-neighbour TSP from origin - optimized single-pass linear minimum scan (O(N) vs O(N log N) sort)
+// Reduces trigonometric haversine calculation calls per step and avoids unnecessary array sorting
+export function planRoute(origin, hotspots, limit = 6) {
+  if (!origin || !hotspots || hotspots.length === 0) return [];
+  const remaining = [...hotspots];
+  let current = origin;
+  const route = [];
   while (remaining.length > 0 && route.length < limit) {
-    remaining.sort((a, b) => haversineKm(current, a) - haversineKm(current, b));
-    const next = remaining.shift();
+    let bestIndex = 0;
+    let minDistance = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const dist = haversineKm(current, remaining[i]);
+      if (dist < minDistance) {
+        minDistance = dist;
+        bestIndex = i;
+      }
+    }
+    const [next] = remaining.splice(bestIndex, 1);
     route.push(next);
     current = next;
   }
