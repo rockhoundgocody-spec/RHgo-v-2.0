@@ -8,7 +8,7 @@
  * - Shows proactive field alerts and mineral tips right where the explorer is
  */
 
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
@@ -19,6 +19,7 @@ import { playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
 export default function FloatingCloverCompanion() {
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
+  const panelId = useId();
 
   // Hide on Hub ('/') where HeroOrb is already the centerpiece, and admin/docs
   const isHub = location.pathname === '/';
@@ -27,7 +28,7 @@ export default function FloatingCloverCompanion() {
   );
 
   const clover = useCloverConversation({
-    onFindLogged: (name) => {
+    onFindLogged: (_name) => {
       // Find logged notification
     },
   });
@@ -59,6 +60,7 @@ export default function FloatingCloverCompanion() {
       <AnimatePresence>
         {expanded && (
           <motion.div
+            id={panelId}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -87,11 +89,13 @@ export default function FloatingCloverCompanion() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={handleOrbClick}
-        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus:outline-none"
+        aria-expanded={expanded}
+        aria-controls={expanded ? panelId : undefined}
+        aria-label={expanded ? 'Close Clover Companion' : 'Talk to Clover'}
+        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
         style={{
           boxShadow: '0 0 24px hsla(270,90%,60%,0.45), 0 0 10px hsla(190,100%,50%,0.3)',
         }}
-        aria-label="Talk to Clover"
       >
         <div className="w-full h-full rounded-full overflow-hidden">
           <AmethystOrb
