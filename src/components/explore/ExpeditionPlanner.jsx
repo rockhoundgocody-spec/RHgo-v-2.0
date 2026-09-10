@@ -190,6 +190,7 @@ export default function ExpeditionPlanner({
                       <button
                         key={h.id}
                         onClick={() => { onHotspotFocus && onHotspotFocus(h); setOpen(false); }}
+                        aria-label={`View hotspot: ${h.name}`}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all active:scale-98 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                         style={{ background: 'hsla(255,25%,14%,0.7)', border: '1px solid hsla(255,30%,30%,0.2)' }}
                       >

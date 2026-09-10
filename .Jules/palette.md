@@ -45,3 +45,6 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2024-11-21 - Accessible Dynamic Lists
+**Learning:** Found that dynamically generated list elements (like suggested routes mapped over arrays) often use plain buttons for navigation, but lack `aria-label`s to clearly communicate their purpose (e.g. what pressing the button will actually do) to screen reader users when the inner text is heavily styled or truncated.
+**Action:** Always add explicit `aria-label` attributes to dynamically generated navigation buttons mapped from lists to ensure screen readers provide useful, actionable context.
