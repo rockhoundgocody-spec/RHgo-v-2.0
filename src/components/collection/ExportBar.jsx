@@ -30,12 +30,41 @@ export default function ExportBar({ logs }) {
 
   const hasLogs = logs && logs.length > 0;
 
+  const getCsvLabel = () => {
+    if (!hasLogs) return 'Export as CSV disabled: No rock logs available';
+    if (exporting === 'csv') return 'Exporting collection as CSV spreadsheet...';
+    if (done === 'csv') return 'Exported collection as CSV spreadsheet';
+    return 'Export collection as CSV spreadsheet';
+  };
+
+  const getKmzLabel = () => {
+    if (!hasLogs) return 'Export as KMZ disabled: No rock logs available';
+    if (exporting === 'kmz') return 'Exporting collection as KMZ for Google Earth...';
+    if (done === 'kmz') return 'Exported collection as KMZ for Google Earth';
+    return 'Export collection as KMZ for Google Earth';
+  };
+
+  const getCsvTitle = () => {
+    if (!hasLogs) return 'No rock logs available to export';
+    if (exporting === 'csv') return 'Exporting CSV...';
+    if (done === 'csv') return 'Export completed!';
+    return 'Export as CSV spreadsheet';
+  };
+
+  const getKmzTitle = () => {
+    if (!hasLogs) return 'No rock logs available to export';
+    if (exporting === 'kmz') return 'Exporting KMZ...';
+    if (done === 'kmz') return 'Export completed!';
+    return 'Export as KMZ for Google Earth';
+  };
+
   return (
     <div className="flex gap-2">
       <button
         onClick={() => handleExport('csv')}
         disabled={!hasLogs || exporting !== null}
-        aria-label="Export as CSV spreadsheet"
+        aria-label={getCsvLabel()}
+        title={getCsvTitle()}
         className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
         style={{
           background: done === 'csv' ? 'hsla(150,60%,25%,0.4)' : 'hsla(150,40%,15%,0.5)',
@@ -51,7 +80,8 @@ export default function ExportBar({ logs }) {
       <button
         onClick={() => handleExport('kmz')}
         disabled={!hasLogs || exporting !== null}
-        aria-label="Export as KMZ for Google Earth"
+        aria-label={getKmzLabel()}
+        title={getKmzTitle()}
         className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
         style={{
           background: done === 'kmz' ? 'hsla(45,60%,25%,0.4)' : 'hsla(45,40%,15%,0.5)',

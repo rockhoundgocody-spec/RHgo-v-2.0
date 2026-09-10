@@ -45,3 +45,6 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2026-03-29 - Dynamic Export Button State Accessibility
+**Learning:** Action and export buttons with dynamic states (e.g., idle, exporting, completed, disabled) require state-aware `aria-label` strings to communicate status changes to screen readers and explicit `title` tooltips explaining why actions are disabled when data is missing.
+**Action:** Always provide stateful `aria-label` and `title` helpers for action buttons that handle async or conditional states (such as disabled zero-data states).
