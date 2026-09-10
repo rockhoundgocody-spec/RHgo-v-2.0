@@ -103,7 +103,7 @@ export default function MapFilterSheet({
                   className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60 transition">
+                  <button onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
                     <X size={14} />
                   </button>
                 )}

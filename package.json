@@ -94,5 +94,21 @@
     "typescript": "^5.8.2",
     "vite": "^6.1.0",
     "vitest": "^4.1.9"
-  }
+  },
+  "description": "RockHound-GO is being consolidated into one controlled deploy target: **one repo, one build, one URL, one server path**.",
+  "main": "eslint.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rockhoundgocody-spec/RHgo-v-2.0.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rockhoundgocody-spec/RHgo-v-2.0/issues"
+  },
+  "homepage": "https://github.com/rockhoundgocody-spec/RHgo-v-2.0#readme"
 }
