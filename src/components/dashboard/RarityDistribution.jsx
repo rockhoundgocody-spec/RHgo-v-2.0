@@ -9,9 +9,22 @@ const RARITY_META = [
 
 export default function RarityDistribution({ specimens }) {
   const total = specimens.length || 1;
+
+  // Optimization (Bolt): Tally rarity counts in a single O(N) pass over specimens
+  // rather than performing 4 separate array filter passes (O(4N)).
+  const rarityMap = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
+  for (let i = 0; i < specimens.length; i++) {
+    const key = specimens[i].rarity || 'common';
+    if (rarityMap[key] !== undefined) {
+      rarityMap[key]++;
+    } else {
+      rarityMap.common++;
+    }
+  }
+
   const counts = RARITY_META.map((m) => ({
     ...m,
-    count: specimens.filter((s) => (s.rarity || 'common') === m.key).length,
+    count: rarityMap[m.key] || 0,
   }));
 
   return (

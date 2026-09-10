@@ -3,13 +3,29 @@ import { Gem, Sparkles, MapPin, CalendarDays } from 'lucide-react';
 
 export default function FindsSummary({ specimens }) {
   const total = specimens.length;
-  const rareCount = specimens.filter((s) => ['rare', 'legendary'].includes(s.rarity)).length;
-  const withLocation = specimens.filter((s) => s.lat != null).length;
-  const thisMonth = specimens.filter((s) => {
+
+  // Optimization (Bolt): Compute summary metrics in a single pass over specimens
+  // and pre-capture current month/year to eliminate redundant new Date() calls per item.
+  const now = new Date();
+  const curMonth = now.getMonth();
+  const curYear = now.getFullYear();
+
+  let rareCount = 0;
+  let withLocation = 0;
+  let thisMonth = 0;
+
+  for (let i = 0; i < total; i++) {
+    const s = specimens[i];
+    if (s.rarity === 'rare' || s.rarity === 'legendary') rareCount++;
+    if (s.lat != null) withLocation++;
     const d = s.found_date || s.created_date;
-    return d && new Date(d).getMonth() === new Date().getMonth()
-        && new Date(d).getFullYear() === new Date().getFullYear();
-  }).length;
+    if (d) {
+      const dt = new Date(d);
+      if (dt.getMonth() === curMonth && dt.getFullYear() === curYear) {
+        thisMonth++;
+      }
+    }
+  }
 
   const stats = [
     { icon: Gem, label: 'Total Finds', value: total, color: 'hsl(280,85%,80%)' },
