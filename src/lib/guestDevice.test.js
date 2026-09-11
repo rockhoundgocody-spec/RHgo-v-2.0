@@ -20,6 +20,16 @@ function clearCookie() {
   document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
 }
 
+if (typeof globalThis.localStorage === 'undefined') {
+  let store = {};
+  globalThis.localStorage = {
+    getItem: (key) => store[key] ?? null,
+    setItem: (key, val) => { store[key] = String(val); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+}
+
 describe('guestDevice', () => {
   beforeEach(() => {
     localStorage.clear();
