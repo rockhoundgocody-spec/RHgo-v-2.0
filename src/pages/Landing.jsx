@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
 
 const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/e29b0b8c6_generated_image.png';
 
@@ -21,8 +22,11 @@ export default function Landing() {
     <div className="min-h-screen flex flex-col items-center justify-between relative overflow-hidden"
       style={{ background: '#0a0a14' }}>
 
+      {/* Geodesic orb background — drifting glowing spheres */}
+      <GeodesicOrbBackground />
+
       {/* ── HERO ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md relative z-10">
 
         {/* One photo of a real find */}
         <div className="relative w-full max-w-xs mb-8">
@@ -79,7 +83,7 @@ export default function Landing() {
       </div>
 
       {/* ── TINY FOOTER ── */}
-      <footer className="w-full px-6 pb-8 pt-4 flex items-center justify-center text-white/30 text-[11px]">
+      <footer className="w-full px-6 pb-8 pt-4 flex items-center justify-center text-white/30 text-[11px] relative z-10">
         <Link to="/pricing" className="hover:text-white/60 transition">Pricing</Link>
       </footer>
     </div>

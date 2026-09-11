@@ -19,6 +19,12 @@ const PUBLIC_ROUTES = [
   '/clubs',
   '/find-of-the-week',
   '/live',
+  // Auth routes — must render on desktop so users can sign in/register
+  '/login',
+  '/register',
+  '/auth',
+  '/forgot-password',
+  '/reset-password',
 ];
 
 function isPublicPath(pathname) {
