@@ -115,7 +115,7 @@ export default function ExpeditionTeaserModal({ open, onClose, minerals = [], ho
 
               <button
                 onClick={onClose}
-                className="mt-3 text-white/40 text-xs hover:text-white/70 transition"
+                className="mt-3 text-white/40 text-xs hover:text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
               >
                 Maybe later
               </button>
