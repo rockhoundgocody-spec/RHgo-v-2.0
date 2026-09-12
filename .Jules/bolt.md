@@ -5,3 +5,7 @@
 ## 2026-08-24 - Entity Bulk Deletion via deleteMany Prevents O(N+1) HTTP Network Bottlenecks
 **Learning:** Fetching all entity records via `.list()` and using `Promise.all(all.map(h => delete(h.id)))` fires N+1 HTTP requests, overwhelming network connections and backend servers.
 **Action:** Use `.deleteMany({})` on `@base44/sdk` entity handlers to execute entity bulk deletion in a single O(1) HTTP network request.
+
+## 2026-09-12 - Single-Pass Linear Minimum Scan Prevents O(N² log N) Trigonometric Bottlenecks
+**Learning:** Executing full `Array.prototype.sort()` inside greedy pathfinding loops repeatedly recalculates expensive trigonometric functions (`haversineKm`) across all array items.
+**Action:** Use a single-pass linear scan (`O(N)`) to select the minimum item per iteration step, reducing complexity to `O(N)` per step and eliminating sorting overhead.
