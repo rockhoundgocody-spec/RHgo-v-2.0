@@ -1,23 +1,65 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  GUEST_COOKIE,
-  GUEST_ID_KEY,
-  GUEST_PENDING_KEY,
-  GUEST_QUOTA_KEY,
-  GUEST_WINDOW_MS,
-  consumeGuestScan,
-  getGuestQuota,
-  getOrCreateGuestId,
-  guestLoginUrl,
-  hydrateGuestStorage,
-  peekPendingGuestReport,
-  persistGuestStorage,
-  stashPendingGuestReport,
-  takePendingGuestReport,
-} from './guestDevice';
+import { afterEach, beforeEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+let GUEST_COOKIE, GUEST_ID_KEY, GUEST_PENDING_KEY, GUEST_QUOTA_KEY, GUEST_WINDOW_MS;
+let consumeGuestScan, getGuestQuota, getOrCreateGuestId, guestLoginUrl, hydrateGuestStorage;
+let peekPendingGuestReport, persistGuestStorage, stashPendingGuestReport, takePendingGuestReport;
+
+const createStorage = () => {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+  };
+};
+
+const localStorage = createStorage();
+const cookies = new Map();
+
+beforeAll(async () => {
+  globalThis.window = {
+    location: { origin: 'http://localhost:3000', href: 'http://localhost:3000' },
+    localStorage,
+  };
+  globalThis.localStorage = localStorage;
+  globalThis.document = {
+    get cookie() {
+      return Array.from(cookies.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+    },
+    set cookie(val) {
+      const parts = val.split(';')[0].split('=');
+      if (parts.length >= 2) {
+        const k = parts[0].trim();
+        const v = parts.slice(1).join('=').trim();
+        if (val.includes('Max-Age=0')) {
+          cookies.delete(k);
+        } else {
+          cookies.set(k, v);
+        }
+      }
+    },
+  };
+
+  const mod = await import('./guestDevice');
+  GUEST_COOKIE = mod.GUEST_COOKIE;
+  GUEST_ID_KEY = mod.GUEST_ID_KEY;
+  GUEST_PENDING_KEY = mod.GUEST_PENDING_KEY;
+  GUEST_QUOTA_KEY = mod.GUEST_QUOTA_KEY;
+  GUEST_WINDOW_MS = mod.GUEST_WINDOW_MS;
+  consumeGuestScan = mod.consumeGuestScan;
+  getGuestQuota = mod.getGuestQuota;
+  getOrCreateGuestId = mod.getOrCreateGuestId;
+  guestLoginUrl = mod.guestLoginUrl;
+  hydrateGuestStorage = mod.hydrateGuestStorage;
+  peekPendingGuestReport = mod.peekPendingGuestReport;
+  persistGuestStorage = mod.persistGuestStorage;
+  stashPendingGuestReport = mod.stashPendingGuestReport;
+  takePendingGuestReport = mod.takePendingGuestReport;
+});
 
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  cookies.clear();
 }
 
 describe('guestDevice', () => {
