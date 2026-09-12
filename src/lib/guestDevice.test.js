@@ -1,4 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const store = new Map();
+const mockLocalStorage = {
+  getItem: (key) => store.get(key) ?? null,
+  setItem: (key, val) => store.set(key, String(val)),
+  removeItem: (key) => store.delete(key),
+  clear: () => store.clear(),
+};
+
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+
+if (typeof globalThis.localStorage === 'undefined') {
+  globalThis.localStorage = mockLocalStorage;
+}
+
+if (typeof globalThis.document === 'undefined') {
+  let cookieVal = '';
+  globalThis.document = {
+    get cookie() { return cookieVal; },
+    set cookie(v) { cookieVal = v; },
+  };
+}
+
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
@@ -17,7 +42,7 @@ import {
 } from './guestDevice';
 
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  document.cookie = '';
 }
 
 describe('guestDevice', () => {
