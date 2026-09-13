@@ -200,3 +200,22 @@ Do not use ignore files to hide test failures, remove assertions, or claim warni
 7. Performance/monitoring/load/restore validation, then progressive rollout. Landing redesign, download links, liquid-physics interactions and broad UI expansion are deferred; no fake download buttons or placeholder heatmaps were added.
 
 Nothing on this branch reaches the published app until the builder merges to main and publishes. The second deployment must be independently supplied/verified before extending these findings to it.
+
+## Final verification addendum — 2026-09-13
+
+After correcting the actual failures, the final command results were:
+
+| Check | Actual result | Coverage limit |
+|---|---|---|
+| `npm test -- --reporter=json --outputFile=/tmp/rhgo-final-verification.json` | Exit 0; **431 passed, 0 failed, 0 pending**, 85 test files | Includes 25 event-engine contract tests with a test-only transactional store, not PostgreSQL. |
+| `npm run build` | Exit 0 | Vite production compile, not a deployment or scalability test. |
+| `npm run lint` | Exit 0 | Configured frontend ESLint scope; not a dependency-vulnerability scan. |
+| Mobile Explore preview | Controls and markers present; no horizontal document overflow; no captured console errors | Basemap tile imagery and malicious popup values were not visually verified. |
+| Compare preview | “No specimen to compare” rendered | Existing empty state only; no specimen records were changed. |
+| Offline storage fix | Six queue tests pass, including quota-rejection preservation | Live user save gesture and cross-tab racing not automatically verified. |
+| Deno backend suites | Not run; Deno executable unavailable | Run in the proposed CI environment. |
+| Live PostgreSQL sync / real-user isolation | Not attempted | Adapter/endpoints and second user session not provisioned. |
+| GitHub Actions activation/deployment | Not performed | Workflow write refused by sync integration permissions. |
+| Second app / global datasets / CNN / 10M load | Not audited, trained, ingested or benchmarked | Remains explicit follow-on work. |
+
+Non-blocking build/test warning: the installed Browserslist dataset is seven months old. No packages were silently upgraded or installed. No tests were skipped to obtain a passing result. Production data cleanup was unnecessary because no production test records were created.

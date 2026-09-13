@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-13",
+  "scope": "Accessible branch repository; scoped architecture audit and replication foundation",
+  "tests": { "command": "npm test -- --reporter=json --outputFile=/tmp/rhgo-final-verification.json", "exit_code": 0, "files": 85, "passed": 431, "failed": 0, "pending": 0, "replication_contract_tests": 25 },
+  "build": { "command": "npm run build", "exit_code": 0 },
+  "lint": { "command": "npm run lint", "exit_code": 0 },
+  "preview": { "explore_controls_and_markers": "passed", "mobile_document_overflow": false, "compare_empty_state": "passed", "captured_console_errors": 0, "basemap_imagery": "not visually verified", "live_offline_save_gesture": "not automatically verified" },
+  "limitations": [
+    "Replication store tested in memory only; production transaction adapter and endpoints not implemented",
+    "Deno executable unavailable; Deno suites not run",
+    "Existing entity permissions unchanged; changes require main branch",
+    "GitHub workflow writes refused by repository-sync permission; supplied YAML is inactive",
+    "No independent source or deployment verification for rhgo2.base44.app",
+    "PostGIS, Redis, global ETL, CNN training, prospectivity outputs and 10-million-user capacity not provisioned or validated",
+    "No production records, subscriptions or external service objects modified"
+  ],
+  "release": "Requires merge to main and publish"
+}
