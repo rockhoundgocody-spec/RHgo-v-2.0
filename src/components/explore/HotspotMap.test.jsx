@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
 vi.mock('leaflet/dist/leaflet.css', () => ({ default: {} }));
 vi.mock('leaflet', () => ({
@@ -16,7 +16,10 @@ vi.mock('leaflet', () => ({
 describe('HotspotMap icon caching', () => {
   let getHotspotIcon, getSpecimenIcon, getUserIcon;
 
+  afterAll(() => vi.unstubAllGlobals());
+
   beforeAll(async () => {
+    if (typeof navigator === 'undefined') vi.stubGlobal('navigator', { userAgent: 'node' });
     // Leaflet + react-dom access window/document during module evaluation in Node environment.
     if (typeof globalThis.window === 'undefined') {
       const dummyEl = {
@@ -33,9 +36,9 @@ describe('HotspotMap icon caching', () => {
           createElement: () => dummyEl,
         },
       };
-      globalThis.window = win;
+      vi.stubGlobal('window', win);
       if (typeof globalThis.document === 'undefined') {
-        globalThis.document = win.document;
+        vi.stubGlobal('document', win.document);
       }
     }
 
