@@ -1,0 +1,97 @@
+{
+  "name": "SyncConflict",
+  "type": "object",
+  "description": "Ambiguous merges the engine could not resolve deterministically. Both sides are preserved so the user can review them calmly ('Needs review (1)').",
+  "properties": {
+    "owner_email": {
+      "type": "string"
+    },
+    "entity": {
+      "type": "string",
+      "enum": [
+        "find",
+        "photo",
+        "id_result"
+      ]
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "client_id of the affected record"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "local_json": {
+      "type": "object",
+      "description": "What the device sent"
+    },
+    "remote_json": {
+      "type": "object",
+      "description": "What the server kept"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "resolved_at": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "owner_email",
+    "entity",
+    "entity_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
