@@ -350,6 +350,33 @@ export default function AmethystOrb({
         {/* Volumetric sphere shading — pure CSS, no WebGL context */}
         <SphereVolume />
 
+        {/* PHOTON-SPHERE RING — luminous annulus with dark center.
+            Keeps existing shader colors visible in the ring band and the
+            outer rim; the center is masked to the page background so the orb
+            reads as light orbiting a dark core. Drift/breathing motion is
+            untouched — these are pure pointer-events-none overlays. */}
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, #0a0a14 0%, #0a0a14 30%, rgba(10,10,20,0.55) 38%, transparent 47%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background: `radial-gradient(circle, transparent 40%, ${cfg.haloBase} 46%, ${cfg.auraBase} 52%, transparent 60%)`,
+            mixBlendMode: 'screen',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full opacity-50"
+          style={{
+            background: `conic-gradient(from 0deg, transparent 0deg, ${cfg.haloBase} 30deg, transparent 60deg, ${cfg.auraBase} 120deg, transparent 150deg, ${cfg.haloBase} 240deg, transparent 270deg, ${cfg.auraBase} 330deg, transparent 360deg)`,
+            mixBlendMode: 'screen',
+          }}
+        />
+
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <div className="text-white/95 font-semibold tracking-wider text-lg glow-amethyst">
