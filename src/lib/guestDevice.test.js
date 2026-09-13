@@ -22,13 +22,35 @@ function clearCookie() {
 
 describe('guestDevice', () => {
   beforeEach(() => {
-    localStorage.clear();
+    // This suite runs in Node. Model only the storage/cookie interfaces under test;
+    // no DOM or browser engine is needed for these device-key unit tests.
+    const values = new Map();
+    const cookies = new Map();
+    const local = {
+      getItem: key => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, String(value)),
+      removeItem: key => values.delete(key),
+      clear: () => values.clear(),
+    };
+    const doc = {
+      get cookie() { return [...cookies].map(([key, value]) => `${key}=${value}`).join('; '); },
+      set cookie(value) {
+        const pair = value.split(';')[0];
+        const split = pair.indexOf('=');
+        const key = pair.slice(0, split);
+        if (/Max-Age=0(?:;|$)/i.test(value)) cookies.delete(key);
+        else cookies.set(key, pair.slice(split + 1));
+      },
+    };
+    vi.stubGlobal('localStorage', local);
+    vi.stubGlobal('document', doc);
+    vi.stubGlobal('window', { localStorage: local, location: { protocol: 'https:' } });
+    vi.stubGlobal('navigator', {});
     clearCookie();
   });
 
   afterEach(() => {
-    localStorage.clear();
-    clearCookie();
+    vi.unstubAllGlobals();
   });
 
   it('creates a stable g_ device key', () => {
