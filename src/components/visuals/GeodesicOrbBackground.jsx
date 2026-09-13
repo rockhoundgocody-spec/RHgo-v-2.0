@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * GeodesicOrbBackground — slowly drifting, glowing translucent spheres
+ * GeodesicOrbBackground — slowly drifting photon-sphere rings
+ * (luminous annulus, dark center — light orbiting a black hole)
  * behind the landing/login experience.
  *
  * Pure CSS transforms + opacity. No canvas, no 3D libs. 60fps.
@@ -63,19 +64,19 @@ export default function GeodesicOrbBackground() {
             height: orb.size,
             top: orb.top,
             left: orb.left,
-            background: `radial-gradient(circle at 35% 35%, hsla(${orb.hue},90%,70%,0.18) 0%, hsla(${orb.hue},80%,50%,0.08) 45%, transparent 72%)`,
-            filter: 'blur(8px)',
+            background: `radial-gradient(circle, transparent 36%, hsla(${orb.hue},95%,78%,0.55) 41%, hsla(${orb.hue},90%,60%,0.28) 47%, transparent 58%)`,
+            filter: 'blur(6px)',
             transform: `translate(var(--parallax-x), var(--parallax-y))`,
             transition: 'transform 0.6s cubic-bezier(0.22,1,0.36,1)',
             animation: reduce ? 'none' : `geodesic-drift-${i} ${orb.duration}s ease-in-out infinite alternate`,
             animationDelay: `${orb.delay}s`,
           }}
         >
-          {/* Geodesic facet overlay — subtle polygon grid for crystal feel */}
+          {/* Photon ring facet shimmer — conic highlights orbiting the annulus */}
           <div
-            className="absolute inset-0 rounded-full opacity-30"
+            className="absolute inset-0 rounded-full opacity-40"
             style={{
-              background: `conic-gradient(from 0deg, transparent 0deg, hsla(${orb.hue},90%,80%,0.12) 30deg, transparent 60deg, hsla(${orb.hue},90%,80%,0.12) 120deg, transparent 150deg, hsla(${orb.hue},90%,80%,0.12) 240deg, transparent 270deg, hsla(${orb.hue},90%,80%,0.12) 330deg, transparent 360deg)`,
+              background: `conic-gradient(from 0deg, transparent 0deg, hsla(${orb.hue},100%,85%,0.22) 30deg, transparent 60deg, hsla(${orb.hue},100%,85%,0.22) 120deg, transparent 150deg, hsla(${orb.hue},100%,85%,0.22) 240deg, transparent 270deg, hsla(${orb.hue},100%,85%,0.22) 330deg, transparent 360deg)`,
               mixBlendMode: 'screen',
             }}
           />
