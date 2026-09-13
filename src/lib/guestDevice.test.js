@@ -16,6 +16,32 @@ import {
   takePendingGuestReport,
 } from './guestDevice';
 
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+
+if (typeof globalThis.localStorage === 'undefined') {
+  let store = {};
+  globalThis.localStorage = {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+}
+
+if (typeof globalThis.document === 'undefined') {
+  let cookieStore = '';
+  globalThis.document = {
+    get cookie() { return cookieStore; },
+    set cookie(val) { cookieStore = val; },
+  };
+}
+
+if (typeof globalThis.navigator === 'undefined') {
+  globalThis.navigator = {};
+}
+
 function clearCookie() {
   document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
 }
