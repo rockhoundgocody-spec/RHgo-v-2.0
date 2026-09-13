@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 
+// Icon-cache unit tests do not mount a map; isolate the external rendering layer
+// rather than partially emulating a browser and loading Leaflet's real DOM runtime.
+vi.mock('react-leaflet', () => ({
+  MapContainer: () => null, TileLayer: () => null, Marker: () => null,
+  Popup: () => null, Polyline: () => null, useMap: vi.fn(),
+}));
 vi.mock('leaflet/dist/leaflet.css', () => ({ default: {} }));
 vi.mock('leaflet', () => ({
   default: {
@@ -16,32 +22,7 @@ vi.mock('leaflet', () => ({
 describe('HotspotMap icon caching', () => {
   let getHotspotIcon, getSpecimenIcon, getUserIcon;
 
-  afterAll(() => vi.unstubAllGlobals());
-
   beforeAll(async () => {
-    if (typeof navigator === 'undefined') vi.stubGlobal('navigator', { userAgent: 'node' });
-    // Leaflet + react-dom access window/document during module evaluation in Node environment.
-    if (typeof globalThis.window === 'undefined') {
-      const dummyEl = {
-        style: {},
-        setAttribute: () => {},
-        removeAttribute: () => {},
-      };
-      const win = {
-        L: {},
-        screen: { deviceXDPI: 0, logicalXDPI: 0 },
-        navigator: typeof navigator !== 'undefined' ? navigator : { userAgent: 'node' },
-        document: {
-          documentElement: dummyEl,
-          createElement: () => dummyEl,
-        },
-      };
-      vi.stubGlobal('window', win);
-      if (typeof globalThis.document === 'undefined') {
-        vi.stubGlobal('document', win.document);
-      }
-    }
-
     const module = await import('./HotspotMap.jsx');
     getHotspotIcon = module.getHotspotIcon;
     getSpecimenIcon = module.getSpecimenIcon;
