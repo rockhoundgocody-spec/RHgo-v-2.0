@@ -168,26 +168,13 @@ export async function loadQueue() {
 }
 
 export async function saveQueue(items) {
+  if (!Array.isArray(items)) throw new TypeError('Offline queue must be an array');
+  if (typeof localStorage === 'undefined') throw new Error('Offline storage is unavailable');
+  // Never trim unsynced finds to make a write fit. setItem is atomic: on quota
+  // failure the previous durable queue stays intact and the caller sees failure.
+  const encrypted = await encryptPayload(items);
+  localStorage.setItem(STORAGE_KEY, encrypted);
   cachedQueue = items;
-  let batch = items;
-  while (batch.length > 0) {
-    try {
-      const encrypted = await encryptPayload(batch);
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, encrypted);
-      }
-      cachedQueue = batch;
-      return;
-    } catch {
-      batch = batch.slice(Math.ceil(batch.length / 2));
-    }
-  }
-  try {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    cachedQueue = [];
-  } catch { /* nothing more we can do */ }
 }
 
 const MAX_ATTEMPTS = 5;

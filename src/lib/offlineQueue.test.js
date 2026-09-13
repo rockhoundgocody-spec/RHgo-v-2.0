@@ -102,30 +102,23 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(getQueueLength()).toBe(0);
   });
 
-  it("keeps the cached count consistent when quota pressure trims the queue", async () => {
+  it("preserves every previously saved write and rejects when storage is full", async () => {
+    const original = [{ entity: 'Specimen', op: 'create', data: { mineral_name: 'Agate' } }];
+    await saveQueue(original);
+    const storedBefore = localStorage.getItem('rh-offline-queue-v1');
     const originalSetItem = localStorage.setItem;
-    let queueWrites = 0;
     localStorage.setItem = (key, value) => {
-      if (key === "rh-offline-queue-v1" && queueWrites++ === 0) {
-        const error = new Error("Storage quota exceeded");
-        error.name = "QuotaExceededError";
-        throw error;
-      }
+      if (key === 'rh-offline-queue-v1') throw new Error('Storage quota exceeded');
       originalSetItem.call(localStorage, key, value);
     };
-
     try {
-      const items = Array.from({ length: 8 }, (_, index) => ({
-        entity: "Specimen",
-        op: "create",
-        data: { mineral_name: `Specimen ${index}` },
-      }));
-      await saveQueue(items);
-
-      expect(getQueueLength()).toBe(4);
-      const persisted = await loadQueue();
-      expect(persisted).toHaveLength(4);
-      expect(persisted[0].data.mineral_name).toBe("Specimen 4");
+      const incoming = [...original, { entity: 'Specimen', op: 'create', data: { mineral_name: 'Quartz' } }];
+      await expect(saveQueue(incoming)).rejects.toThrow('Storage quota exceeded');
+      expect(localStorage.getItem('rh-offline-queue-v1')).toBe(storedBefore);
+      expect(getQueueLength()).toBe(1);
+      expect(await loadQueue()).toEqual(original);
+      await expect(saveQueue([])).rejects.toThrow('Storage quota exceeded');
+      expect(localStorage.getItem('rh-offline-queue-v1')).toBe(storedBefore);
     } finally {
       localStorage.setItem = originalSetItem;
     }
