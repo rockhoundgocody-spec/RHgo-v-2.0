@@ -1,0 +1,48 @@
+# READY-TO-APPLY ARTIFACT, NOT AN ACTIVE WORKFLOW.
+# Repository administrator must place at .github/workflows/quality-gates.yml
+# and remove/supersede the old deno.yml job to avoid duplicate gates.
+# This editor cannot write .github/workflows because repository sync lacks permission.
+name: RockHound quality gates
+on:
+  push:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm lint
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno lint
+      - run: deno test -A
+# No automatic production deployment: publisher credentials/approval are not configured.
+# Pin actions to reviewed commit SHAs before enabling protected production deployment.

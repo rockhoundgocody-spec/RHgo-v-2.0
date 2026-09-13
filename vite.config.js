@@ -23,7 +23,8 @@ export default defineConfig({
     react(),
   ],
   test: {
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    alias: { 'npm:vitest@4.1.9': 'vitest' },
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}', 'base44/shared/**/*.spec.js'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'],
     testTimeout: 30000,
     hookTimeout: 30000,
