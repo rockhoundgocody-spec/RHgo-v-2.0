@@ -31,38 +31,60 @@ export default function ExportBar({ logs }) {
   const hasLogs = logs && logs.length > 0;
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2" role="region" aria-label="Export collection options">
       <button
         onClick={() => handleExport('csv')}
         disabled={!hasLogs || exporting !== null}
-        aria-label="Export as CSV spreadsheet"
-        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+        aria-label={
+          done === 'csv'
+            ? 'CSV export complete'
+            : exporting === 'csv'
+            ? 'Exporting CSV spreadsheet'
+            : 'Export collection as CSV spreadsheet'
+        }
+        title={!hasLogs ? 'No items available to export' : 'Export collection as CSV spreadsheet'}
+        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
         style={{
           background: done === 'csv' ? 'hsla(150,60%,25%,0.4)' : 'hsla(150,40%,15%,0.5)',
           border: `1px solid ${done === 'csv' ? 'hsla(150,70%,50%,0.4)' : 'hsla(150,50%,40%,0.25)'}`,
           color: done === 'csv' ? '#34d399' : '#86efac',
         }}
       >
-        {exporting === 'csv' ? <Loader2 size={12} className="animate-spin" />
-         : done === 'csv' ? <Check size={12} />
-         : <FileSpreadsheet size={12} />}
-        {done === 'csv' ? 'Exported' : 'CSV'}
+        {exporting === 'csv' ? (
+          <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+        ) : done === 'csv' ? (
+          <Check size={12} aria-hidden="true" />
+        ) : (
+          <FileSpreadsheet size={12} aria-hidden="true" />
+        )}
+        <span>{done === 'csv' ? 'Exported' : 'CSV'}</span>
       </button>
       <button
         onClick={() => handleExport('kmz')}
         disabled={!hasLogs || exporting !== null}
-        aria-label="Export as KMZ for Google Earth"
-        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        aria-label={
+          done === 'kmz'
+            ? 'KMZ export complete'
+            : exporting === 'kmz'
+            ? 'Exporting KMZ for Google Earth'
+            : 'Export collection as KMZ for Google Earth'
+        }
+        title={!hasLogs ? 'No items available to export' : 'Export collection as KMZ for Google Earth'}
+        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
         style={{
           background: done === 'kmz' ? 'hsla(45,60%,25%,0.4)' : 'hsla(45,40%,15%,0.5)',
           border: `1px solid ${done === 'kmz' ? 'hsla(45,70%,50%,0.4)' : 'hsla(45,50%,40%,0.25)'}`,
           color: done === 'kmz' ? '#fbbf24' : '#fcd34d',
         }}
       >
-        {exporting === 'kmz' ? <Loader2 size={12} className="animate-spin" />
-         : done === 'kmz' ? <Check size={12} />
-         : <FileText size={12} />}
-        {done === 'kmz' ? 'Exported' : 'KMZ'}
+        {exporting === 'kmz' ? (
+          <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+        ) : done === 'kmz' ? (
+          <Check size={12} aria-hidden="true" />
+        ) : (
+          <FileText size={12} aria-hidden="true" />
+        )}
+        <span>{done === 'kmz' ? 'Exported' : 'KMZ'}</span>
       </button>
     </div>
   );
