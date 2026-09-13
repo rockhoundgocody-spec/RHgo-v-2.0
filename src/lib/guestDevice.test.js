@@ -1,4 +1,48 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const createStorage = () => {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+  };
+};
+
+const localStorage = createStorage();
+let cookieStore = '';
+
+beforeAll(() => {
+  globalThis.localStorage = localStorage;
+  globalThis.window = {
+    location: { href: 'http://localhost/' },
+    localStorage,
+  };
+  if (!globalThis.navigator) {
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {},
+      configurable: true,
+      writable: true,
+    });
+  }
+  Object.defineProperty(globalThis, 'document', {
+    value: {
+      get cookie() {
+        return cookieStore;
+      },
+      set cookie(v) {
+        if (v.includes('Max-Age=0')) {
+          cookieStore = '';
+        } else {
+          cookieStore = v;
+        }
+      },
+    },
+    configurable: true,
+  });
+});
+
 import {
   GUEST_COOKIE,
   GUEST_ID_KEY,
@@ -17,7 +61,7 @@ import {
 } from './guestDevice';
 
 function clearCookie() {
-  document.cookie = `${GUEST_COOKIE}=; Path=/; Max-Age=0`;
+  cookieStore = '';
 }
 
 describe('guestDevice', () => {
