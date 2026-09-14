@@ -77,12 +77,12 @@ export default function MapFilterSheet({
                 </div>
                 <div className="flex items-center gap-2">
                   {activeCount > 0 && (
-                    <button onClick={resetAll}
+                    <button onClick={resetAll} aria-label="Reset all map filters"
                       className="px-3 py-2 rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition">
                       Reset
                     </button>
                   )}
-                  <button onClick={onClose}
+                  <button onClick={onClose} aria-label="Done, apply filters and close"
                     className="px-5 py-2 rounded-full font-bold text-sm transition active:scale-95"
                     style={{ background: '#9FE8D0', color: '#0a0a14' }}>
                     Done
@@ -140,7 +140,7 @@ export default function MapFilterSheet({
               {/* POPULAR ROCKS */}
               <FilterSection title="POPULAR ROCKS">
                 {selectedMinerals.size > 0 && (
-                  <button onClick={onClearMinerals}
+                  <button onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
                     className="text-[11px] text-[#9FE8D0] mb-2 hover:underline">
                     Clear all ({selectedMinerals.size})
                   </button>
@@ -152,6 +152,7 @@ export default function MapFilterSheet({
                       <button
                         key={mineral}
                         onClick={() => onToggleMineral(mineral)}
+                        aria-pressed={active}
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98]"
                         style={{
                           background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
@@ -201,6 +202,7 @@ function FilterRadioRow({ label, sublabel, active, onClick }) {
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98]"
       style={{
         background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
