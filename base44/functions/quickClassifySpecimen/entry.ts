@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from './imageUrlValidation.ts';
 
 /**
  * quickClassifySpecimen — a fast, lightweight "subagent" that takes a single
@@ -22,6 +23,14 @@ Deno.serve(async (req) => {
     const { file_url } = await req.json();
     if (!file_url) {
       return Response.json({ error: 'file_url required' }, { status: 400 });
+    }
+
+    // Validate that file_url points to a trusted storage domain before sending to LLM.
+    if (!isValidImageUrl(file_url)) {
+      return Response.json(
+        { error: 'file_url must be an uploaded app file' },
+        { status: 400 }
+      );
     }
 
     const r = await base44.asServiceRole.integrations.Core.InvokeLLM({
