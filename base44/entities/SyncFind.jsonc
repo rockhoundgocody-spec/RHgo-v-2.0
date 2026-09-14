@@ -1,0 +1,121 @@
+{
+  "name": "SyncFind",
+  "type": "object",
+  "description": "Server replica of a client-side find (offline-first sync spine). client_id is the device-generated uuid; rev is the monotonic revision used for optimistic concurrency. Only fuzzed coordinates are ever stored here \u2014 exact coordinates stay encrypted on the device.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Device-generated uuid; stable across devices for the same find"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "rev": {
+      "type": "integer",
+      "default": 1,
+      "description": "Monotonic revision, incremented on every accepted mutation"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "location_fuzz_lat": {
+      "type": "number"
+    },
+    "location_fuzz_lng": {
+      "type": "number"
+    },
+    "location_precision_m": {
+      "type": "integer",
+      "default": 500,
+      "description": "0 exact (opt-in), 50, 500, or -1 hidden"
+    },
+    "location_accuracy_m": {
+      "type": "number"
+    },
+    "geohash_fuzz": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "integer",
+      "description": "Epoch ms when the find was made"
+    },
+    "client_updated_at": {
+      "type": "integer",
+      "description": "Epoch ms of the last client-side edit \u2014 used for last-writer-wins on scalar fields"
+    },
+    "deleted_at": {
+      "type": "integer",
+      "description": "Epoch ms tombstone; null/absent when live"
+    },
+    "sync_state": {
+      "type": "string",
+      "enum": [
+        "synced",
+        "conflicted"
+      ],
+      "default": "synced"
+    }
+  },
+  "required": [
+    "client_id",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

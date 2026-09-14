@@ -1,0 +1,81 @@
+{
+  "name": "SyncEventLedger",
+  "type": "object",
+  "description": "Idempotency ledger for the sync engine. One row per outbox event id ever processed; a replayed event is answered from this ledger instead of being re-applied.",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Client outbox event id \u2014 the idempotency key"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "acked",
+        "rejected"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "result_rev": {
+      "type": "integer"
+    },
+    "conflict_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "owner_email",
+    "type",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
