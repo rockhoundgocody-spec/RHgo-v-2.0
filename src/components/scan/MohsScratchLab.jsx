@@ -19,7 +19,7 @@ export default function MohsScratchLab({
 }) {
   const [selectedTool, setSelectedTool] = useState(TEST_TOOLS[2]); // Default steel knife
   const [scratchTestResult, setScratchTestResult] = useState(null);
-  const [scratchCount, setScratchCount] = useState(0);
+  const [, setScratchCount] = useState(0);
 
   const handleTest = (tool) => {
     setSelectedTool(tool);
@@ -67,34 +67,42 @@ export default function MohsScratchLab({
     >
       <div className="flex items-center justify-between">
         <div className="text-[10px] uppercase font-bold tracking-widest text-amber-400 flex items-center gap-1.5">
-          <Hammer size={12} /> {isKidMode ? '🎮 Rock Battle Scratch Challenge' : 'Mohs Field Scratch & Streak Lab'}
+          <Hammer size={12} aria-hidden="true" /> {isKidMode ? '🎮 Rock Battle Scratch Challenge' : 'Mohs Field Scratch & Streak Lab'}
         </div>
         <span className="text-[9px] font-mono text-white/40">Lab Hardness: {specimenHardness} Mohs</span>
       </div>
 
       {/* Tool Selector Chips */}
       <div className="grid grid-cols-3 gap-1.5">
-        {TEST_TOOLS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => handleTest(t)}
-            className="p-2 rounded-xl text-left transition-all active:scale-95 flex flex-col justify-between"
-            style={{
-              background: selectedTool.id === t.id ? 'hsla(270,50%,30%,0.5)' : 'hsla(240,20%,14%,0.6)',
-              border: selectedTool.id === t.id ? '1px solid hsla(280,80%,60%,0.5)' : '1px solid hsla(270,20%,30%,0.2)',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-base">{t.icon}</span>
-              <span className="text-[8px] font-mono font-bold text-white/50">{t.hardness}M</span>
-            </div>
-            <div className="text-[10px] font-bold text-white mt-1 leading-tight">{t.name}</div>
-          </button>
-        ))}
+        {TEST_TOOLS.map((t) => {
+          const isSelected = selectedTool?.id === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => handleTest(t)}
+              aria-pressed={isSelected}
+              aria-label={`${t.name} (Hardness ${t.hardness} Mohs)`}
+              className="p-2 rounded-xl text-left transition-all active:scale-95 flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+              style={{
+                background: isSelected ? 'hsla(270,50%,30%,0.5)' : 'hsla(240,20%,14%,0.6)',
+                border: isSelected ? '1px solid hsla(280,80%,60%,0.5)' : '1px solid hsla(270,20%,30%,0.2)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-base" aria-hidden="true">{t.icon}</span>
+                <span className="text-[8px] font-mono font-bold text-white/50">{t.hardness}M</span>
+              </div>
+              <div className="text-[10px] font-bold text-white mt-1 leading-tight">{t.name}</div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Interactive Scratch Plate Feedback */}
       <div
+        role="status"
+        aria-live="polite"
         className="p-3 rounded-xl relative overflow-hidden"
         style={{
           background: 'hsla(250,30%,8%,0.9)',
@@ -110,6 +118,7 @@ export default function MohsScratchLab({
                   background: scratchTestResult.scratched ? 'hsla(0,70%,40%,0.4)' : 'hsla(160,70%,40%,0.4)',
                   color: scratchTestResult.scratched ? '#f87171' : '#34d399',
                 }}
+                aria-hidden="true"
               >
                 {scratchTestResult.scratched ? '✗' : '✓'}
               </div>
@@ -123,7 +132,7 @@ export default function MohsScratchLab({
           </div>
         ) : (
           <div className="py-2 text-center text-[11px] text-white/40 flex items-center justify-center gap-1.5">
-            <Sparkles size={12} className="text-amber-400" />
+            <Sparkles size={12} className="text-amber-400" aria-hidden="true" />
             Tap any tool above to simulate a field hardness test!
           </div>
         )}
