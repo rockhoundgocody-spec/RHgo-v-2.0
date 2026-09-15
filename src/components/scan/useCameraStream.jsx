@@ -45,7 +45,7 @@ async function applyFocus(track, mode, point) {
  * useCameraStream — rear camera + continuous AF + tap-to-focus.
  * focusAt(clientX, clientY, videoEl) uses ImageCapture pointsOfInterest when present.
  */
-export default function useCameraStream({ active = true, facing = 'environment' } = {}) {
+export default function useCameraStream({ active = true, facing = 'environment', retryKey = 0 } = {}) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const lockTimerRef = useRef(null);
@@ -111,7 +111,7 @@ export default function useCameraStream({ active = true, facing = 'environment' 
       setFocusMode('none');
       setFocusPoint(null);
     };
-  }, [active, facing]);
+  }, [active, facing, retryKey]);
 
   const toggleTorch = async () => {
     const track = trackOf(streamRef.current);

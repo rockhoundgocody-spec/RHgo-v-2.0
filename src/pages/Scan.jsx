@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon } from 'lucide-react';
+import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import useCameraStream from '@/components/scan/useCameraStream.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
 import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
@@ -51,7 +51,9 @@ export default function Scan() {
   const [recentSpecimens, setRecentSpecimens] = useState([]);
   const [locationExhausted, setLocationExhausted] = useState(false);
 
-  const camera = useCameraStream({ active: stage === 'camera', facing });
+  const [cameraRetry, setCameraRetry] = useState(0);
+  const fileInputRef = useRef(null);
+  const camera = useCameraStream({ active: stage === 'camera', facing, retryKey: cameraRetry });
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const { speak, stop } = useSpeechSynthesis();
   const voiceEnabled = localStorage.getItem('rhgo_clover_voice') !== 'off';
@@ -97,18 +99,7 @@ export default function Scan() {
     );
   }, []);
 
-  const handleShutter = async () => {
-    if (!canScan) {
-      if (isGuest) {
-        setStage('guestLimit');
-        return;
-      }
-      navigate('/pricing');
-      return;
-    }
-    const blob = await camera.capture();
-    if (!blob) return;
-
+  const processPhoto = async (blob) => {
     const frameUrl = URL.createObjectURL(blob);
     setFrozenFrame(frameUrl);
     setLastShotUrl(frameUrl);
@@ -146,7 +137,9 @@ export default function Scan() {
           'formation, where_to_find (array), value_estimate, confidence (0-1, conservative), ' +
           'description (2 sentences for an excited explorer), reasoning (what features led to this ID), ' +
           'observed_features (array of {feature, value} you ACTUALLY see), lookalikes (2-3 with differentiator), ' +
-          'verification_tests (3-5 ranked by ease with expected outcome), image_quality_score (0-1), ' +
+          'verification_tests (3-5 ranked by ease with expected outcome), ' +
+          'field_habit (crystal habit/form you observe), field_luster (luster type), field_matrix (host rock), field_next_test (most useful next test to try), ' +
+          'image_quality_score (0-1), ' +
           'geological_plausibility (0-1), fun_fact, collection_value, rarity (common/uncommon/rare/legendary), ' +
           'and up to 3 ranked candidates. Never say "I cannot identify" — always give a best guess. ' +
           AGATE_PROMPT_BLOCK + agiDeliberation.geologyContext,
@@ -189,6 +182,10 @@ export default function Scan() {
               type: 'array',
               items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
             },
+            field_habit: { type: 'string' },
+            field_luster: { type: 'string' },
+            field_matrix: { type: 'string' },
+            field_next_test: { type: 'string' },
           },
         },
       });
@@ -247,11 +244,40 @@ export default function Scan() {
     }
   };
 
-  const handleSave = async (disposition) => {
+  const handleShutter = async () => {
+    if (!canScan) {
+      if (isGuest) {
+        setStage('guestLimit');
+        return;
+      }
+      navigate('/pricing');
+      return;
+    }
+    const blob = await camera.capture();
+    if (!blob) return;
+    await processPhoto(blob);
+  };
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!canScan) {
+      if (isGuest) {
+        setStage('guestLimit');
+        return;
+      }
+      navigate('/pricing');
+      return;
+    }
+    await processPhoto(file);
+  };
+
+  const handleSave = async (disposition, fieldReport) => {
     if (!result || !primaryUrl) return;
     if (isGuest) {
       // Soft save: stash locally, show confirmation — never hard-redirect to login
-      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, disposition });
+      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, disposition, fieldReport });
       setSheetOpen(false);
       setStage('guestSaved');
       setTimeout(resetToCamera, 2500);
@@ -296,6 +322,10 @@ export default function Scan() {
       geo_privacy: 'private',
       rarity_quality_score: rqs,
       xp_awarded: xp,
+      ...(fieldReport?.field_habit ? { field_habit: fieldReport.field_habit } : {}),
+      ...(fieldReport?.field_luster ? { field_luster: fieldReport.field_luster } : {}),
+      ...(fieldReport?.field_matrix ? { field_matrix: fieldReport.field_matrix } : {}),
+      ...(fieldReport?.field_next_test ? { field_next_test: fieldReport.field_next_test } : {}),
     });
 
     setSavedId(specimenId);
@@ -519,14 +549,30 @@ export default function Scan() {
         </div>
       )}
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleUpload}
+        className="hidden"
+      />
+
+      {stage === 'camera' && !camera.error && (
+        <div className="absolute inset-x-0 z-20 flex justify-center" style={{ bottom: 'calc(max(env(safe-area-inset-bottom,0px), 24px) + 88px)' }}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-white/40 text-[11px] font-medium hover:text-white/60 transition">
+            or upload a photo
+          </button>
+        </div>
+      )}
+
       <ScanResultSheet
         open={sheetOpen}
         result={result}
         imageUrl={primaryUrl}
         saved={!!savedId}
-        onKeep={() => handleSave('collected')}
-        onLeave={() => handleSave('left_in_place')}
-        onObserve={() => handleSave('observed')}
+        onKeep={(fr) => handleSave('collected', fr)}
+        onLeave={(fr) => handleSave('left_in_place', fr)}
+        onObserve={(fr) => handleSave('observed', fr)}
         onAsk={handleAsk}
         onRetry={resetToCamera}
         onClose={resetToCamera}
@@ -548,12 +594,17 @@ export default function Scan() {
       )}
 
       {camera.error && stage === 'camera' && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center" style={{ background: '#0a0a14' }}>
-          <p className="text-white/60 text-sm mb-4">Camera unavailable</p>
-          <p className="text-white/30 text-xs mb-6 text-center px-8">{camera.error}</p>
-          <button onClick={() => navigate(-1)} className="px-6 py-2.5 rounded-xl text-sm font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
-            Go back
-          </button>
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
+          <p className="text-white/60 text-sm mb-2">Camera unavailable</p>
+          <p className="text-white/30 text-xs mb-6 text-center">{camera.error}</p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+              <Upload size={16} /> Upload from gallery
+            </button>
+            <button onClick={() => setCameraRetry(k => k + 1)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70" style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)' }}>
+              Try camera again
+            </button>
+          </div>
         </div>
       )}
     </div>

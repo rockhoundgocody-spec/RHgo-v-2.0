@@ -35,6 +35,8 @@ import { useSeoMeta } from '@/lib/useSeoMeta';
 import ExpeditionTeaserModal from '@/components/explore/ExpeditionTeaserModal.jsx';
 import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
+import ExploreEmptyState from '@/components/explore/ExploreEmptyState.jsx';
+import { useNavigate } from 'react-router-dom';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -128,6 +130,7 @@ const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Explore() {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data: rawHotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
   // Logged-out visitors see approximate coordinates (rounded to 2 decimal places)
@@ -283,6 +286,28 @@ export default function Explore() {
     return list;
   }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
 
+  const hasNearbyHotspots = useMemo(() => {
+    if (!userLocation) return false;
+    return hotspots.some(h => {
+      if (h.lat == null || h.lng == null) return false;
+      const R = 6371000;
+      const dLat = (h.lat - userLocation.lat) * Math.PI / 180;
+      const dLng = (h.lng - userLocation.lng) * Math.PI / 180;
+      const lat1 = userLocation.lat * Math.PI / 180;
+      const lat2 = h.lat * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(a)) * 0.000621371 <= 500;
+    });
+  }, [hotspots, userLocation]);
+
+  const showEmptyPanel = !loading && (!userLocation || !hasNearbyHotspots);
+
+  const handleEmptyAction = useCallback((action) => {
+    if (action === 'filter') setFilterOpen(true);
+    else if (action === 'land') { setShowGeology(true); setGeologyCardOpen(true); }
+    else if (action === 'scan') navigate('/scan');
+  }, [navigate]);
+
   const handleMarkerClick = useCallback(h => {
     if (!isAuthenticated) { setTeaserHotspot(h); setTeaserOpen(true); return; }
     setActiveId(h.id); setDetailHotspot(h);
@@ -393,6 +418,24 @@ export default function Explore() {
             </button>
           )}
         </div>
+
+        <AnimatePresence>
+          {showEmptyPanel && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="pointer-events-auto mt-2 px-1"
+            >
+              <ExploreEmptyState
+                hotspots={hotspots}
+                userLocation={userLocation}
+                onSelectHotspot={handleSearchSelect}
+                onAction={handleEmptyAction}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {showGeology && geologyCardOpen && userLocation && (
           <div className="mt-2 pointer-events-auto">

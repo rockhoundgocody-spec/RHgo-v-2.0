@@ -148,6 +148,22 @@
           "type": "number"
         }
       }
+    },
+    "field_habit": {
+      "type": "string",
+      "description": "User-editable field report: crystal habit / form observed"
+    },
+    "field_luster": {
+      "type": "string",
+      "description": "User-editable field report: luster type observed"
+    },
+    "field_matrix": {
+      "type": "string",
+      "description": "User-editable field report: matrix / host rock observed"
+    },
+    "field_next_test": {
+      "type": "string",
+      "description": "User-editable field report: next test to try (e.g. streak, hardness, magnetism)"
     }
   },
   "required": [

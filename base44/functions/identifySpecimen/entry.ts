@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
         prompt:
           'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
           'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
-          'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
+          'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates, field_habit (crystal habit/form you observe), field_luster (luster type), field_matrix (host rock matrix), field_next_test (single most useful next test to try). ' +
           'Never refuse — always give best attempt with calibrated confidence. ' +
           AGATE_PROMPT_BLOCK + ' ' +
           handbookPromptBlock() +
@@ -282,6 +282,10 @@ Deno.serve(async (req) => {
               type: 'array',
               items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
             },
+            field_habit:           { type: 'string' },
+            field_luster:          { type: 'string' },
+            field_matrix:          { type: 'string' },
+            field_next_test:       { type: 'string' },
             candidates: {
               type: 'array',
               items: {

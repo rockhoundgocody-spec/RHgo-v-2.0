@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown, Leaf, ShoppingBag } from 'lucide-react';
 
@@ -18,6 +18,19 @@ export default function ScanResultSheet({
   provenance, onProvenanceChange, locationExhausted,
 }) {
   const [testsOpen, setTestsOpen] = useState(false);
+  const [fieldReport, setFieldReport] = useState({
+    field_habit: '', field_luster: '', field_matrix: '', field_next_test: '',
+  });
+
+  useEffect(() => {
+    if (!result) return;
+    setFieldReport({
+      field_habit: result.field_habit || '',
+      field_luster: result.field_luster || '',
+      field_matrix: result.field_matrix || '',
+      field_next_test: result.field_next_test || '',
+    });
+  }, [result]);
 
   if (!result) return null;
 
@@ -117,6 +130,33 @@ export default function ScanResultSheet({
                   </div>
                 )}
 
+                {/* Field Report card — AI-filled, user-editable */}
+                <div className="mb-4">
+                  <div className="text-white/35 text-[11px] mb-2">Your eye still checks</div>
+                  <div className="space-y-2">
+                    <FieldInput
+                      label="Habit"
+                      value={fieldReport.field_habit}
+                      onChange={(v) => setFieldReport(f => ({ ...f, field_habit: v }))}
+                    />
+                    <FieldInput
+                      label="Luster"
+                      value={fieldReport.field_luster}
+                      onChange={(v) => setFieldReport(f => ({ ...f, field_luster: v }))}
+                    />
+                    <FieldInput
+                      label="Matrix"
+                      value={fieldReport.field_matrix}
+                      onChange={(v) => setFieldReport(f => ({ ...f, field_matrix: v }))}
+                    />
+                    <FieldInput
+                      label="Next test"
+                      value={fieldReport.field_next_test}
+                      onChange={(v) => setFieldReport(f => ({ ...f, field_next_test: v }))}
+                    />
+                  </div>
+                </div>
+
                 {/* Provenance toggle — nature vs store-bought */}
                 {onProvenanceChange && (
                   <div className="mb-4">
@@ -147,9 +187,9 @@ export default function ScanResultSheet({
 
                 {/* Primary: Keep / Leave / Observed */}
                 <div className="grid grid-cols-3 gap-2 mb-2">
-                  <SheetButton label="Keep" onClick={onKeep} disabled={saved} primary />
-                  <SheetButton label="Leave" onClick={onLeave} disabled={saved} />
-                  <SheetButton label="Observed" onClick={onObserve} disabled={saved} />
+                  <SheetButton label="Keep" onClick={() => onKeep(fieldReport)} disabled={saved} primary />
+                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport)} disabled={saved} />
+                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport)} disabled={saved} />
                 </div>
 
                 {/* Secondary: Tests / Save / Ask */}
@@ -159,7 +199,7 @@ export default function ScanResultSheet({
                     onClick={() => setTestsOpen(t => !t)}
                     active={testsOpen}
                   />
-                  <SheetButton label="Save" icon={Save} onClick={onObserve} disabled={saved} />
+                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport)} disabled={saved} />
                   <SheetButton label="Ask" icon={MessageCircle} onClick={onAsk} />
                 </div>
 
@@ -212,6 +252,25 @@ function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) 
       {Icon && <Icon size={15} />}
       {label}
     </button>
+  );
+}
+
+function FieldInput({ label, value, onChange }) {
+  return (
+    <div>
+      <div className="text-white/40 text-[10px] uppercase tracking-[0.15em] mb-1">{label}</div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="—"
+        className="w-full px-3 py-2 rounded-lg text-white text-[12px] outline-none placeholder:text-white/20"
+        style={{
+          background: 'hsla(255,30%,12%,0.6)',
+          border: '1px solid hsla(0,0%,100%,0.08)',
+        }}
+      />
+    </div>
   );
 }
 
