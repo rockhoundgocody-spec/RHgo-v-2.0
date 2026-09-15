@@ -1,11 +1,6 @@
 /**
- * FloatingCloverCompanion.jsx — Persistent floating Clover orb throughout the entire app.
- *
- * Provides users with Clover companionship everywhere (Explore map, Scanner, GeoDex, Quests, Market):
- * - Hides automatically on the Hub where the full HeroOrb is displayed
- * - Shows an interactive glowing mini-orb on all other pages
- * - 1-tap expansion into hands-free voice dialogue with Irish-American female persona
- * - Shows proactive field alerts and mineral tips right where the explorer is
+ * FloatingCloverCompanion — persistent Clover on every page except Hub HeroOrb.
+ * Visual of HeroOrb / AmethystOrb is unchanged.
  */
 
 import React, { useState } from 'react';
@@ -20,17 +15,12 @@ export default function FloatingCloverCompanion() {
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
 
-  // Hide on Hub ('/') where HeroOrb is already the centerpiece, and admin/docs
   const isHub = location.pathname === '/';
   const isAdminOrDocs = ['/admin', '/docs', '/dev', '/login', '/register', '/onboarding'].some((p) =>
     location.pathname.startsWith(p)
   );
 
-  const clover = useCloverConversation({
-    onFindLogged: (name) => {
-      // Find logged notification
-    },
-  });
+  const clover = useCloverConversation();
 
   if (isHub || isAdminOrDocs) return null;
 
@@ -41,21 +31,20 @@ export default function FloatingCloverCompanion() {
       setExpanded(true);
       if (clover.phase === 'idle') {
         const openers = [
-          "Hey there! What are we checking out?",
-          "I'm right here with you — find anything good?",
-          "Need a quick mineral check or field tip?",
+          "Here, hound. What are we checking?",
+          "Clover's up. Find or site?",
+          "Talk. I'll pull the vault or open scan.",
         ];
         clover.start(openers[Math.floor(Math.random() * openers.length)]);
       }
     } else {
       setExpanded(false);
-      clover.stop();
+      clover.end();
     }
   };
 
   return (
     <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end pointer-events-none select-none">
-      {/* Expanded Voice Conversation Drawer */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -70,18 +59,17 @@ export default function FloatingCloverCompanion() {
               interim={clover.interim}
               onClose={() => {
                 setExpanded(false);
-                clover.stop();
+                clover.end();
               }}
               onHunt={() => {}}
               huntLoading={false}
-              voiceSupported={true}
+              voiceSupported={clover.voiceSupported}
               onSend={clover.send}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Persistent Mini Orb Button */}
       <motion.button
         type="button"
         whileHover={{ scale: 1.08 }}
