@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 /**
  * quickClassifySpecimen — a fast, lightweight "subagent" that takes a single
@@ -22,6 +23,11 @@ Deno.serve(async (req) => {
     const { file_url } = await req.json();
     if (!file_url) {
       return Response.json({ error: 'file_url required' }, { status: 400 });
+    }
+
+    // SSRF guard: only process images from trusted storage domains
+    if (!isValidImageUrl(file_url)) {
+      return Response.json({ error: 'file_url must be from a trusted storage domain' }, { status: 400 });
     }
 
     const r = await base44.asServiceRole.integrations.Core.InvokeLLM({

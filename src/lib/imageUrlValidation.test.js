@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isValidImageUrl } from '../../base44/functions/removeSpecimenBackground/imageUrlValidation.ts';
+import { isValidImageUrl } from '../../base44/shared/imageUrlValidation.ts';
 
 describe('isValidImageUrl', () => {
   it('allows valid URLs on exact allowed domains', () => {
