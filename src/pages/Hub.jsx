@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
+import { toast } from '@/components/ui/use-toast';
+import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
 
 const LAND_LABEL = {
   public: 'public', blm: 'public', forest_service: 'public',
@@ -11,6 +13,7 @@ const LAND_LABEL = {
 };
 
 export default function Hub() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -28,6 +31,33 @@ export default function Hub() {
         .catch(() => {});
     }).catch(() => {});
   }, []);
+
+  // Once per browser session after auth: sync any stashed guest find
+  useEffect(() => {
+    if (!user?.email) return;
+    try {
+      if (sessionStorage.getItem('rhgo_guest_reclaim_done') === '1') return;
+      sessionStorage.setItem('rhgo_guest_reclaim_done', '1');
+    } catch {
+      /* private mode — still attempt once via in-memory guard below */
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const out = await reclaimGuestReport();
+        if (cancelled || !out?.synced) return;
+        toast({
+          title: 'Synced your guest find.',
+          description: out.mineralName || undefined,
+        });
+        if (out.specimenId) navigate(`/specimen/${out.specimenId}`);
+        else navigate('/collection');
+      } catch {
+        /* best-effort — stash re-preserved by helper on hard failure */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email, navigate]);
 
   const totalXp = profile?.total_xp || 0;
   const level = getLevel(totalXp);
