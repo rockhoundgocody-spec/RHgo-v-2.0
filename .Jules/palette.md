@@ -48,3 +48,7 @@
 ## 2024-11-21 - Accessible Dynamic Lists
 **Learning:** Found that dynamically generated list elements (like suggested routes mapped over arrays) often use plain buttons for navigation, but lack `aria-label`s to clearly communicate their purpose (e.g. what pressing the button will actually do) to screen reader users when the inner text is heavily styled or truncated.
 **Action:** Always add explicit `aria-label` attributes to dynamically generated navigation buttons mapped from lists to ensure screen readers provide useful, actionable context.
+
+## 2024-05-18 - Native File Upload Accessibility
+**Learning:** Using JavaScript `useRef` to proxy clicks from an inaccessible `<button>` to a hidden `<input type="file" className="hidden">` fundamentally breaks keyboard accessibility, as the hidden input cannot receive focus and the button lacks native file picker semantics.
+**Action:** When implementing custom file upload buttons in this codebase, wrap the `<input type="file">` inside a `<label>`. Use `className="sr-only"` on the input to keep it visually hidden but focusable, and apply `cursor-pointer focus-within:ring-2 focus-within:outline-none` directly to the `<label>` to leverage native HTML semantics and provide visual focus indication.

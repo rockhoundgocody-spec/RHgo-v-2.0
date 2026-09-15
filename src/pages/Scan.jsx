@@ -52,7 +52,7 @@ export default function Scan() {
   const [locationExhausted, setLocationExhausted] = useState(false);
 
   const [cameraRetry, setCameraRetry] = useState(0);
-  const fileInputRef = useRef(null);
+
   const camera = useCameraStream({ active: stage === 'camera', facing, retryKey: cameraRetry });
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
   const { speak, stop } = useSpeechSynthesis();
@@ -555,19 +555,17 @@ export default function Scan() {
         </div>
       )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleUpload}
-        className="hidden"
-      />
-
       {stage === 'camera' && !camera.error && (
         <div className="absolute inset-x-0 z-20 flex justify-center" style={{ bottom: 'calc(max(env(safe-area-inset-bottom,0px), 24px) + 88px)' }}>
-          <button onClick={() => fileInputRef.current?.click()} className="text-white/40 text-[11px] font-medium hover:text-white/60 transition">
+          <label className="text-white/40 text-[11px] font-medium hover:text-white/60 transition cursor-pointer focus-within:ring-2 focus-within:ring-[#9FE8D0] focus-within:outline-none rounded">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              className="sr-only"
+            />
             or upload a photo
-          </button>
+          </label>
         </div>
       )}
 
@@ -604,9 +602,15 @@ export default function Scan() {
           <p className="text-white/60 text-sm mb-2">Camera unavailable</p>
           <p className="text-white/30 text-xs mb-6 text-center">{camera.error}</p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
-            <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+            <label className="px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpload}
+                className="sr-only"
+              />
               <Upload size={16} /> Upload from gallery
-            </button>
+            </label>
             <button onClick={() => setCameraRetry(k => k + 1)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70" style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)' }}>
               Try camera again
             </button>
