@@ -1,6 +1,7 @@
 /**
  * googleMapIcons — SVG pin builders for the Google Maps hotspot map.
  * Each returns an HTML element usable as AdvancedMarkerElement content.
+ * Includes cluster pin for MarkerClusterer.
  */
 export const LAND_COLORS = {
   public:         '#34d399',
@@ -16,7 +17,7 @@ const DIFF_BADGE = { easy: '●', moderate: '◆', hard: '▲', expert: '★' };
 function toEl(svg) {
   const div = document.createElement('div');
   div.innerHTML = svg.trim();
-  div.style.transform = 'translateY(50%)'; // advanced markers anchor bottom-center; recenter
+  div.style.transform = 'translateY(50%)';
   return div;
 }
 
@@ -26,18 +27,20 @@ export function hotspotPinEl({ color, isActive, isGlowing, hasGap, difficulty, h
   const ring  = hasGap ? `<circle cx="22" cy="22" r="18" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.8"/>` : '';
   const pulse = isGlowing ? `
     <circle cx="22" cy="22" r="17" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.4">
-      <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="14;20;14" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
     </circle>` : '';
   const coreR = isActive ? 14 : highContrast ? 12 : 10;
   const halo  = highContrast ? `<circle cx="22" cy="22" r="${coreR + 4}" fill="#0a0f1e" opacity="0.85"/>` : '';
+  const highlight = !highContrast ? `<circle cx="18" cy="18" r="${coreR * 0.35}" fill="white" opacity="0.25"/>` : '';
   return toEl(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 44 44">
       ${pulse}${ring}${halo}
       <circle cx="22" cy="22" r="${coreR}" fill="${color}" opacity="${highContrast ? 1 : 0.92}"
         style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${highContrast ? '#0a0f1e' : color})"/>
       <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.6)'}" stroke-width="${highContrast ? 3 : isActive ? 2 : 1.5}"/>
-      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold">${badge}</text>
+      ${highlight}
+      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold"${highContrast ? ' stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
     </svg>`);
 }
 
@@ -74,5 +77,18 @@ export function clubPinEl() {
       <rect x="8" y="10" width="16" height="14" rx="2" fill="none" stroke="white" stroke-width="1.5"/>
       <rect x="12" y="6" width="8" height="5" rx="1" fill="#14b8a6" opacity="0.9"/>
       <circle cx="16" cy="17" r="2.5" fill="white" opacity="0.8"/>
+    </svg>`);
+}
+
+export function clusterPinEl(count) {
+  const size = count > 99 ? 52 : count > 9 ? 46 : 40;
+  const fontSize = count > 99 ? 13 : 15;
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 52 52">
+      <circle cx="26" cy="26" r="24" fill="hsla(270,60%,25%,0.9)" stroke="hsla(280,80%,70%,0.6)" stroke-width="2"
+        style="filter:drop-shadow(0 0 10px hsla(280,80%,50%,0.5))"/>
+      <circle cx="26" cy="26" r="20" fill="hsla(265,50%,15%,0.95)" stroke="hsla(280,70%,65%,0.3)" stroke-width="1"/>
+      <circle cx="21" cy="21" r="7" fill="white" opacity="0.08"/>
+      <text x="26" y="31" text-anchor="middle" font-size="${fontSize}" fill="hsl(280,85%,82%)" font-weight="bold">${count}</text>
     </svg>`);
 }

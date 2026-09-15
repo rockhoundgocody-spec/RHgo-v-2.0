@@ -1,16 +1,20 @@
 /**
- * GoogleHotspotMap — hotspot map on the new Google Maps JavaScript API
- * (Advanced Markers, v=weekly). Interactive pins for every hotspot,
- * personal find, club chapter, and the user's location.
+ * GoogleHotspotMap — hotspot map on the Google Maps JavaScript API
+ * (Advanced Markers, v=weekly). Features:
+ * - Marker clustering for 378+ hotspots (groups at low zoom, splits at high zoom)
+ * - Custom SVG pins per land type + rarity
+ * - Layer filtering (all, rare, gaps, public, expedition)
+ * - Badge-glow pulse on hotspots linked to earned badges
+ * - Expedition route polyline, geology overlay, heat map
  *
- * Same props as the Leaflet HotspotMap — falls back to it when the
- * Maps API key is unavailable or the script fails to load.
+ * Falls back to the Leaflet HotspotMap when the Maps API key is unavailable.
  */
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
 import { loadGoogleMaps } from '@/lib/googleMapsLoader';
 import LeafletHotspotMap from '@/components/explore/HotspotMap.jsx';
 import {
-  LAND_COLORS, hotspotPinEl, specimenPinEl, userPinEl, clubPinEl,
+  LAND_COLORS, hotspotPinEl, specimenPinEl, userPinEl, clubPinEl, clusterPinEl,
 } from '@/components/explore/googleMapIcons.js';
 
 const RARE_MINERALS = ['quartz', 'garnet', 'tourmaline', 'topaz', 'sapphire'];
@@ -28,9 +32,10 @@ export default function GoogleHotspotMap(props) {
   const mapRef       = useRef(null);
   const markerLibRef = useRef(null);
   const infoRef      = useRef(null);
-  const overlaysRef  = useRef([]);   // markers, polylines, circles — rebuilt per render
+  const overlaysRef  = useRef([]);
+  const clustererRef = useRef(null);
   const flewRef      = useRef(false);
-  const [status, setStatus] = useState('loading'); // loading | ready | fallback
+  const [status, setStatus] = useState('loading');
 
   const isFullHeight = height === '100%';
   const highContrast = showGeology || hudMode;
@@ -63,7 +68,7 @@ export default function GoogleHotspotMap(props) {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Layer + mineral filtering (mirrors the Leaflet map) ──
+  // ── Layer + mineral filtering ──
   const visiblePoints = useMemo(() => {
     let list = hotspots.filter(h => typeof h.lat === 'number' && typeof h.lng === 'number');
     if (activeLayer === 'rare') {
@@ -84,36 +89,57 @@ export default function GoogleHotspotMap(props) {
     [specimens]
   );
 
-  // ── Rebuild markers + overlays whenever the data changes ──
+  // ── Rebuild markers + overlays whenever data changes ──
   useEffect(() => {
     if (status !== 'ready' || !mapRef.current || !markerLibRef.current) return;
     const map = mapRef.current;
     const { AdvancedMarkerElement } = markerLibRef.current;
     const g = window.google.maps;
 
-    // Clear previous overlays
+    // Clear previous non-clustered overlays
     overlaysRef.current.forEach(o => { o.map = null; if (o.setMap) o.setMap(null); });
     overlaysRef.current = [];
     const add = (o) => { overlaysRef.current.push(o); return o; };
 
-    // Hotspot pins — tap opens the detail sheet
-    visiblePoints.forEach(h => {
+    // Clear previous clusterer
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+      clustererRef.current.setMap(null);
+      clustererRef.current = null;
+    }
+
+    // ── Hotspot pins — clustered ──
+    const hotspotMarkers = visiblePoints.map(h => {
       const color    = LAND_COLORS[h.land_type] || LAND_COLORS.unknown;
       const isActive = h.id === activeId;
       const hasGap   = collectionGapIds.has(h.id);
       const isGlowing = isActive || hasGap ||
         (h.minerals || []).some(m => ['tourmaline', 'topaz', 'sapphire'].some(r => m.toLowerCase().includes(r)));
-      const marker = add(new AdvancedMarkerElement({
-        map,
+      const marker = new AdvancedMarkerElement({
         position: { lat: h.lat, lng: h.lng },
         content: hotspotPinEl({ color, isActive, isGlowing, hasGap, difficulty: h.difficulty, highContrast }),
         zIndex: isActive ? 1000 : hasGap ? 500 : 1,
         title: h.name,
-      }));
+      });
       marker.addListener('click', () => onMarkerClick && onMarkerClick(h));
+      return marker;
     });
 
-    // Personal specimen finds
+    // Create clusterer — groups pins at low zoom, splits at zoom 8+
+    clustererRef.current = new MarkerClusterer({
+      map,
+      markers: hotspotMarkers,
+      algorithm: new SuperClusterAlgorithm({ radius: 80, maxZoom: 7 }),
+      renderer: {
+        render: ({ count, position }) => new AdvancedMarkerElement({
+          position,
+          content: clusterPinEl(count),
+          zIndex: 999,
+        }),
+      },
+    });
+
+    // ── Personal specimen finds (not clustered) ──
     if (activeLayer === 'all' || activeLayer === 'gaps') {
       geoSpecimens.forEach(s => {
         const marker = add(new AdvancedMarkerElement({
@@ -135,7 +161,7 @@ export default function GoogleHotspotMap(props) {
       });
     }
 
-    // Club chapter pins
+    // ── Club chapter pins (not clustered) ──
     clubs.filter(c => c.lat != null && c.lng != null).forEach(c => {
       const marker = add(new AdvancedMarkerElement({
         map,
@@ -157,7 +183,7 @@ export default function GoogleHotspotMap(props) {
       });
     });
 
-    // User location
+    // ── User location (not clustered) ──
     if (userLocation) {
       add(new AdvancedMarkerElement({
         map,
@@ -168,7 +194,7 @@ export default function GoogleHotspotMap(props) {
       }));
     }
 
-    // Expedition route polyline (dashed)
+    // ── Expedition route polyline ──
     if (expeditionRoute.length >= 2) {
       add(new g.Polyline({
         map,
@@ -182,7 +208,7 @@ export default function GoogleHotspotMap(props) {
       }));
     }
 
-    // Community activity heat — translucent circles around finds
+    // ── Community activity heat ──
     if (showHeatMap) {
       geoSpecimens.forEach(s => {
         add(new g.Circle({
@@ -197,6 +223,17 @@ export default function GoogleHotspotMap(props) {
     }
   }, [status, visiblePoints, geoSpecimens, clubs, userLocation, activeId, activeLayer,
       collectionGapIds, expeditionRoute, showHeatMap, highContrast, onMarkerClick]);
+
+  // ── Cleanup clusterer on unmount ──
+  useEffect(() => {
+    return () => {
+      if (clustererRef.current) {
+        clustererRef.current.clearMarkers();
+        clustererRef.current.setMap(null);
+        clustererRef.current = null;
+      }
+    };
+  }, []);
 
   // ── Macrostrat bedrock geology overlay ──
   useEffect(() => {

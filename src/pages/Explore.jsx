@@ -34,6 +34,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import ExpeditionTeaserModal from '@/components/explore/ExpeditionTeaserModal.jsx';
 import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
+import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -287,6 +288,7 @@ export default function Explore() {
     setActiveId(h.id); setDetailHotspot(h);
   }, [isAuthenticated]);
   const handleCloseDetail = useCallback(() => { setDetailHotspot(null); setActiveId(null); }, []);
+  const handleSearchSelect = useCallback((h) => { setActiveId(h.id); handleMarkerClick(h); }, [handleMarkerClick]);
 
   // Scroll active card into view
   useEffect(() => {
@@ -361,6 +363,11 @@ export default function Explore() {
             style={{ background: 'hsla(240,30%,8%,.88)', border: '1px solid hsla(270,30%,40%,.3)', backdropFilter: 'blur(20px)' }}>
             {isAuthenticated && <SpawnStats spawns={spawns} caughtToday={caughtToday} dailyCap={dailyCap} />}
           </div>
+        </div>
+
+        {/* Search bar */}
+        <div className="pointer-events-auto mb-2">
+          <MapSearchBar hotspots={hotspots} onSelect={handleSearchSelect} />
         </div>
 
         {/* Expedition planner — teaser button for logged-out visitors */}
