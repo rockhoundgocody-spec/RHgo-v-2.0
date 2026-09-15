@@ -18,10 +18,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth model: entity automations run without a user token.
-    // Direct callers must be admin. Automation callers (no user) are allowed.
+    // Auth: require admin for direct calls. Entity-automation calls from the
+    // platform workflow system carry a service-role token that auth.me() resolves
+    // to an admin-level caller; anonymous HTTP calls resolve to null and are rejected.
     const caller = await base44.auth.me().catch(() => null);
-    if (caller && caller.role !== 'admin') {
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (caller.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 

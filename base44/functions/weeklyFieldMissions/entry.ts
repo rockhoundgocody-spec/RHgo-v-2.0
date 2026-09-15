@@ -32,6 +32,15 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
+    // Auth: admin only — prevents anonymous mass push-notification spam
+    const caller = await base44.auth.me().catch(() => null);
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     // ── 1. List all users ──
     const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
 

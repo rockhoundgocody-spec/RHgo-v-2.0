@@ -12,6 +12,16 @@ import { secrets } from 'base44:runtime';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Auth: publishing to the brand's Instagram is an admin-only action
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const hotspotId = body.hotspot_id;
 

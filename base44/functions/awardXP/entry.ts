@@ -22,6 +22,11 @@ export default async function (req) {
     if (amount == null || Number.isNaN(Number(amount))) {
       return Response.json({ error: 'Missing amount' }, { status: 400 });
     }
+    // Idempotency key is mandatory — prevents unlimited self-XP farming by
+    // repeated direct calls. Every award must reference a unique event.
+    if (!idempotency_key) {
+      return Response.json({ error: 'idempotency_key required' }, { status: 400 });
+    }
     // Server-side bounds — a client can call this endpoint directly, so never
     // trust the requested amount: positive integers only, capped per award.
     const MAX_AWARD = 500;

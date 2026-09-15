@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
 
     const { winner_mineral, opponent_mineral, xp_awarded, avatar_url } = await req.json();
 
-    await base44.entities.BattleResult.create({
+    const battleResult = await base44.entities.BattleResult.create({
       owner_email: user.email,
       winner_mineral: winner_mineral || 'Unknown',
       opponent_mineral: opponent_mineral || 'Unknown',
@@ -17,10 +17,11 @@ Deno.serve(async (req) => {
       avatar_url_at_time: avatar_url || null
     });
 
-    // Award XP via the awardXP function
+    // Award XP via the awardXP function — idempotency_key prevents duplicate awards
     const xpResult = await base44.functions.invoke('awardXP', {
       amount: xp_awarded || 0,
-      reason: `AR Battle win vs ${opponent_mineral || 'Unknown'}`
+      reason: `AR Battle win vs ${opponent_mineral || 'Unknown'}`,
+      idempotency_key: `battle_${battleResult.id}`
     });
 
     return Response.json({ saved: true, ...xpResult.data });

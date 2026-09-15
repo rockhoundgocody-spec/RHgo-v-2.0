@@ -19,14 +19,13 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Scheduled automations have no user; manual admin calls do. Allow both.
-    try {
-      const user = await base44.auth.me();
-      if (user && user.role !== 'admin') {
-        return Response.json({ error: 'Admin only' }, { status: 403 });
-      }
-    } catch {
-      // No user context (scheduled trigger) — proceed as service role.
+    // Auth: admin only — prevents anonymous credit abuse and training-data pollution
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     // Fetch all minerals

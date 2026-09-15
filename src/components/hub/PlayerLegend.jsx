@@ -67,7 +67,7 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
   useEffect(() => {
     window.__rhgo_addXP = async (amount, reason = 'XP awarded') => {
       try {
-        const res = await base44.functions.invoke('awardXP', { amount, reason });
+        const res = await base44.functions.invoke('awardXP', { amount, reason, idempotency_key: `${reason}_${Date.now()}_${Math.random().toString(36).slice(2,8)}` });
         const result = res.data;
         if (result) {
           const oldLevel = getLevel(player.totalXP);

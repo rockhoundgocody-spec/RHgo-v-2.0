@@ -46,11 +46,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth — allow both user calls and automation (service-role) calls
-    try {
-      await base44.auth.me();
-    } catch {
-      // Automation call — service role is pre-injected
+    // Auth: require admin for write operations (apply:true), allow any
+    // authenticated user for read-only queries. Entity-automation calls from
+    // the workflow system resolve to an admin-level caller via auth.me().
+    const caller = await base44.auth.me().catch(() => null);
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -64,6 +65,11 @@ Deno.serve(async (req) => {
     const lng: number | undefined = isAutomation ? body.data?.lng : body.lng;
     const apply: boolean = isAutomation ? true : body.apply === true;
     const hintRarity: string | undefined = body.rarity || body.data?.rarity;
+
+    // Write operations (depletion) require admin — stops anonymous rarity manipulation
+    if (apply && caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required to modify depletion records' }, { status: 403 });
+    }
 
     if (!mineralName || lat == null || lng == null) {
       return Response.json({
