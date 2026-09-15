@@ -240,7 +240,7 @@ export default function Pricing() {
               {nativeApp && tier.id !== 'free' ? (
                 <div className="w-full py-2.5 rounded-xl text-center text-[11px] text-white/40"
                   style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}>
-                  Subscribe on rhgo.me
+                  Plans available on the web
                 </div>
               ) : (
                 <button onClick={() => handleUpgrade(tier)}

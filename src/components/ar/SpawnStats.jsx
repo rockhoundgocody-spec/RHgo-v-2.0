@@ -4,6 +4,9 @@
 import React from 'react';
 
 export default function SpawnStats({ spawns = [], caughtToday, dailyCap }) {
+  // Don't show thin "0 nearby" — earn credibility through quality, not empty counts
+  if (spawns.length === 0 && caughtToday === 0) return null;
+
   const legendary = spawns.filter(s => s.rarity === 'legendary').length;
   const rare      = spawns.filter(s => s.rarity === 'rare').length;
   const progress  = Math.min(caughtToday / dailyCap, 1);

@@ -100,7 +100,7 @@ export default function Scan() {
   const handleShutter = async () => {
     if (!canScan) {
       if (isGuest) {
-        navigate(guestLoginUrl('/scan'));
+        setStage('guestLimit');
         return;
       }
       navigate('/pricing');
@@ -125,12 +125,15 @@ export default function Scan() {
         .then(res => res?.data?.cutout_url || null)
         .catch(() => null);
 
-      const agiDeliberation = await deliberateGeologicalSpecimen({
-        imageUrls: [file_url],
-        locality: gpsCoords,
-        scanMode: 'rock',
-        userTier: isPaid ? 'pro' : 'free',
-      });
+      // Guest fast path: skip Macrostrat geology fetch for faster first value
+      const agiDeliberation = isGuest
+        ? { systemPrompt: 'You are an expert field geologist and mineralogist analyzing a specimen photo.', geologyContext: '' }
+        : await deliberateGeologicalSpecimen({
+            imageUrls: [file_url],
+            locality: gpsCoords,
+            scanMode: 'rock',
+            userTier: isPaid ? 'pro' : 'free',
+          });
 
       const r = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
@@ -193,21 +196,23 @@ export default function Scan() {
       let resultData = r && typeof r === 'object' ? { ...r } : {};
       if (typeof r === 'string') { try { resultData = JSON.parse(r); } catch { resultData = {}; } }
 
-      try {
-        const veri = await base44.functions.invoke('identifySpecimen', {
-          image_url: file_url,
-          lat: gpsCoords?.lat, lng: gpsCoords?.lng,
-          save: false,
-          prefilled_result: resultData,
-          wet_dry: 'dry',
-          beach_name: beachName,
-        });
-        const d = veri?.data;
-        if (d?.context_integrity) resultData.context_integrity = d.context_integrity;
-        if (d?.handbook) resultData.handbook = d.handbook;
-        if (d?.essence) resultData.essence = d.essence;
-        if (typeof d?.identification?.confidence === 'number') resultData.confidence = d.identification.confidence;
-      } catch { /* best-effort */ }
+      if (!isGuest) {
+        try {
+          const veri = await base44.functions.invoke('identifySpecimen', {
+            image_url: file_url,
+            lat: gpsCoords?.lat, lng: gpsCoords?.lng,
+            save: false,
+            prefilled_result: resultData,
+            wet_dry: 'dry',
+            beach_name: beachName,
+          });
+          const d = veri?.data;
+          if (d?.context_integrity) resultData.context_integrity = d.context_integrity;
+          if (d?.handbook) resultData.handbook = d.handbook;
+          if (d?.essence) resultData.essence = d.essence;
+          if (typeof d?.identification?.confidence === 'number') resultData.confidence = d.identification.confidence;
+        } catch { /* best-effort */ }
+      }
 
       const cutoutUrl = await cutoutPromise;
       const finalUrl = cutoutUrl || file_url;
@@ -245,8 +250,11 @@ export default function Scan() {
   const handleSave = async (disposition) => {
     if (!result || !primaryUrl) return;
     if (isGuest) {
+      // Soft save: stash locally, show confirmation — never hard-redirect to login
       stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, disposition });
-      navigate(guestLoginUrl('/scan'));
+      setSheetOpen(false);
+      setStage('guestSaved');
+      setTimeout(resetToCamera, 2500);
       return;
     }
     setSheetOpen(false);
@@ -445,6 +453,26 @@ export default function Scan() {
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center" style={{ background: 'rgba(10,10,20,0.6)' }}>
           <Loader2 size={36} className="text-[#9FE8D0] animate-spin" />
           <p className="text-white/70 text-[12px] mt-3 uppercase tracking-[0.2em]">Identifying…</p>
+        </div>
+      )}
+
+      {stage === 'guestSaved' && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center" style={{ background: 'rgba(10,10,20,0.92)' }}>
+          <div className="text-center px-8">
+            <p className="text-white font-bold text-lg mb-2">Saved on this device</p>
+            <p className="text-white/50 text-sm">Create a free account to sync your finds to the cloud.</p>
+          </div>
+        </div>
+      )}
+
+      {stage === 'guestLimit' && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
+          <p className="text-white font-bold text-lg mb-2">That was your free scan</p>
+          <p className="text-white/50 text-sm text-center mb-6">Create a free account for 5 scans every month — no card needed.</p>
+          <button onClick={() => navigate('/register')} className="px-6 py-3 rounded-xl font-bold text-sm" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+            Create free account
+          </button>
+          <button onClick={resetToCamera} className="text-white/40 text-sm mt-3">Not now</button>
         </div>
       )}
 

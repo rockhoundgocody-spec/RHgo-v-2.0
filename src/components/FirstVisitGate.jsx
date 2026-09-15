@@ -115,6 +115,14 @@ export default function FirstVisitGate({ onChoice }) {
         >
           I already have an account
         </button>
+
+        {/* Guest scan — value before signup */}
+        <button
+          onClick={() => onChoice('guest')}
+          className="text-white/35 text-[12px] font-medium hover:text-white/60 transition mt-1"
+        >
+          Just try a scan first
+        </button>
       </motion.div>
     </div>
   );

@@ -41,6 +41,8 @@ export default function HomeGate() {
     if (choice === 'returning') {
       localStorage.setItem('rhgo_gate_choice', 'returning');
       navigate('/login');
+    } else if (choice === 'guest') {
+      navigate('/scan');
     } else {
       localStorage.setItem('rhgo_gate_choice', 'new');
       localStorage.setItem('rhgo_user_name', name);
