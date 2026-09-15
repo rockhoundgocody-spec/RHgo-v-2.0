@@ -49,10 +49,9 @@ export async function progressQuestsForSpecimen(specimen, userEmail) {
     if (reachedTarget) {
       // Award XP idempotently — keyed to the quest so retries can't double-grant
       try {
-        await base44.functions.invoke('awardXP', {
-          amount: quest.xp_reward || 0,
-          reason: `Quest complete: ${quest.title}`,
-          idempotency_key: `quest:${quest.id}`,
+        await base44.functions.invoke('awardVerifiedXP', {
+          event_type: 'quest',
+          event_id: quest.id,
         });
       } catch { /* best-effort — quest is still marked complete */ }
       completed.push({ ...quest, progress: newProgress, status: 'completed', completed_at: updates.completed_at });

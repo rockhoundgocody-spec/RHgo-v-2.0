@@ -293,6 +293,7 @@ export default function Scan() {
       image_url: primaryUrl, lat, lng,
       save: true, share_to_map: false, geo_privacy: 'private',
       prefilled_result: result, wet_dry: 'dry', beach_name: beachName,
+      disposition,
     });
 
     let specimenId = res?.data?.saved_specimen_id;
@@ -335,11 +336,12 @@ export default function Scan() {
       const category = disposition === 'left_in_place' ? 'steward' : disposition === 'observed' ? 'explorer' : 'collector';
       const empty = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
       try {
-        await base44.functions.invoke('awardXP', {
-          amount: xp,
-          reason: `scan_${disposition}`,
-          idempotency_key: `scan:${specimenId}:${disposition}`,
-        });
+        // If identifySpecimen didn't save (fallback path), award XP server-side
+        if (!res?.data?.saved_specimen_id) {
+          await base44.functions.invoke('awardVerifiedXP', {
+            event_type: 'specimen', event_id: specimenId, disposition,
+          });
+        }
       } catch { /* best-effort */ }
       try {
         const profiles = await base44.entities.PlayerProfile.filter({ owner_email: currentUser.email });

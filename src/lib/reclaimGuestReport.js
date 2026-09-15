@@ -101,10 +101,9 @@ export async function reclaimGuestReport() {
     const currentUser = await base44.auth.me().catch(() => null);
     if (currentUser?.email) {
       try {
-        await base44.functions.invoke('awardXP', {
-          amount: xp,
-          reason: `scan_${disposition}`,
-          idempotency_key: `scan:${specimenId}:${disposition}`,
+        await base44.functions.invoke('awardVerifiedXP', {
+          event_type: 'guest_reclaim',
+          event_id: specimenId,
         });
       } catch {
         /* best-effort — specimen already saved */

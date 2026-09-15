@@ -65,20 +65,21 @@ export default function PlayerLegend({ userEmail, onXPUpdate }) {
 
   // Expose addXP globally so DailyRoulette + ARRockBattle can call it
   useEffect(() => {
-    window.__rhgo_addXP = async (amount, reason = 'XP awarded') => {
+    window.__rhgo_addXP = async () => {
+      // XP is now awarded server-side only — this just refreshes the UI
       try {
-        const res = await base44.functions.invoke('awardXP', { amount, reason, idempotency_key: `${reason}_${Date.now()}_${Math.random().toString(36).slice(2,8)}` });
-        const result = res.data;
-        if (result) {
+        const profiles = await base44.entities.PlayerProfile.filter({ owner_email: userEmail });
+        if (profiles[0]) {
           const oldLevel = getLevel(player.totalXP);
-          setPlayer(prev => ({ ...prev, totalXP: result.newXP, badges: result.badges || prev.badges }));
-          base44.analytics.track({ eventName: 'player_xp_gained', properties: { amount, total_xp: result.newXP, level: result.newLevel } });
-          if (result.leveledUp) {
-            const newTitle = getTitle(result.newLevel);
-            base44.analytics.track({ eventName: 'player_level_up', properties: { old_level: oldLevel, new_level: result.newLevel, title: newTitle } });
+          const newTotalXP = profiles[0].total_xp || 0;
+          const newLevel = getLevel(newTotalXP);
+          setPlayer(prev => ({ ...prev, totalXP: newTotalXP, badges: profiles[0].badges || [] }));
+          if (newLevel > oldLevel) {
+            const newTitle = getTitle(newLevel);
+            base44.analytics.track({ eventName: 'player_level_up', properties: { old_level: oldLevel, new_level: newLevel, title: newTitle } });
             setLevelUpTitle(newTitle);
           }
-          if (onXPUpdate) onXPUpdate(result.newXP, result.leveledUp, getTitle(result.newLevel));
+          if (onXPUpdate) onXPUpdate(newTotalXP, newLevel > oldLevel, getTitle(newLevel));
         }
       } catch { /* non-critical */ }
     };

@@ -9,6 +9,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 import { computeEssence } from '../../shared/essence.ts';
+import { awardXPServerSide } from '../../shared/awardXP.ts';
 import {
   buildLocationSubmission,
   getStoredLocation,
@@ -160,6 +161,7 @@ Deno.serve(async (req) => {
       beach_name = null,
       post_storm = false,
       season = null,
+      disposition = null,
     } = body;
     const storedLocation = getStoredLocation(lat, lng, geo_privacy);
 
@@ -358,16 +360,33 @@ Deno.serve(async (req) => {
         found_at:      beach_name || null,
         verified:      false,
         geo_privacy:   storedLocation.geoPrivacy,
+        ...(disposition ? {
+          disposition,
+          collected: disposition === 'collected',
+          left_in_place: disposition === 'left_in_place',
+        } : {}),
         ...(storedLocation.lat != null ? { lat: storedLocation.lat, lng: storedLocation.lng } : {}),
       });
 
+      // Award rarity XP server-side (idempotent, keyed to specimen)
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
-      // Idempotent: keyed to the specimen — retries can never double-award
-      base44.functions.invoke('awardXP', {
-        amount: xpMap[identification.rarity] || 10,
-        reason: `Logged ${identification.top_match}`,
-        idempotency_key: `specimen:${savedSpecimen.id}`,
-      }).catch(() => {});
+      awardXPServerSide(
+        base44, user.email,
+        xpMap[identification.rarity] || 10,
+        `Logged ${identification.top_match}`,
+        `specimen:${savedSpecimen.id}`,
+      ).catch(() => {});
+
+      // Award disposition XP server-side (idempotent, keyed to specimen+disposition)
+      if (disposition) {
+        const dispXpMap: Record<string, number> = { collected: 25, left_in_place: 40, observed: 15 };
+        awardXPServerSide(
+          base44, user.email,
+          dispXpMap[disposition] || 0,
+          `scan_${disposition}`,
+          `scan:${savedSpecimen.id}:${disposition}`,
+        ).catch(() => {});
+      }
 
       // Queue for community verification when the handbook requires review
       if (enforcement.expert_review_required) {

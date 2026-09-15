@@ -179,7 +179,10 @@ export default function DailyRoulette() {
     } catch (_) {}
 
     // Award XP to PlayerLegend
-    if (window.__rhgo_addXP) window.__rhgo_addXP(challenge.xp);
+    try {
+      await base44.functions.invoke('awardVerifiedXP', { event_type: 'roulette' });
+    } catch { /* non-critical */ }
+    if (window.__rhgo_addXP) window.__rhgo_addXP(); // refresh UI
 
     // Show meme share card after a beat
     if (reducedMotion) {

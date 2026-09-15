@@ -15,6 +15,11 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Admin-only — prevents direct client calls from self-awarding XP.
+    // Client-facing flows use awardVerifiedXP which validates events server-side.
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden — server use only' }, { status: 403 });
+    }
 
     const body = await req.json();
     const amount = body.amount ?? body.xp; // accept both param names

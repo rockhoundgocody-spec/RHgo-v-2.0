@@ -208,7 +208,7 @@ export default function ARRockBattle() {
         avatar_url: avatarUrl,
       });
       // Sync XP to PlayerLegend widget if present
-      if (window.__rhgo_addXP) await window.__rhgo_addXP(0, 'sync'); // trigger re-render only
+      if (window.__rhgo_addXP) await window.__rhgo_addXP(); // refresh UI
     } catch { /* non-critical */ }
   };
 
@@ -266,7 +266,11 @@ export default function ARRockBattle() {
         const rarityXp = { common: 100, uncommon: 150, rare: 200, legendary: 350 };
         const xp = rarityXp[fighters[attacker].rarity] || 150;
         persistScore(fighters[attacker], xp);
-        if (window.__rhgo_addXP) window.__rhgo_addXP(xp, `AR Battle win vs ${fighters[defender].name}`);
+        base44.functions.invoke('saveBattleResult', {
+          winner_mineral: fighters[attacker].name,
+          opponent_mineral: fighters[defender].name,
+        }).then(() => { if (window.__rhgo_addXP) window.__rhgo_addXP(); })
+          .catch(() => {});
       }
     }, 900);
   };
