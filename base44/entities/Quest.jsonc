@@ -68,7 +68,7 @@
     "create": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "created_by_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -102,9 +102,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
