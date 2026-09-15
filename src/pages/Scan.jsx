@@ -334,20 +334,24 @@ export default function Scan() {
     if (currentUser?.email) {
       const category = disposition === 'left_in_place' ? 'steward' : disposition === 'observed' ? 'explorer' : 'collector';
       const empty = { collector: 0, steward: 0, scientist: 0, explorer: 0, mentor: 0 };
-      const profiles = await base44.entities.PlayerProfile.filter({ owner_email: currentUser.email });
-      if (profiles[0]) {
-        const cats = { ...empty, ...(profiles[0].xp_categories || {}) };
-        cats[category] += xp;
-        await base44.entities.PlayerProfile.update(profiles[0].id, {
-          xp_categories: cats,
-          total_xp: (profiles[0].total_xp || 0) + xp,
+      try {
+        await base44.functions.invoke('awardXP', {
+          amount: xp,
+          reason: `scan_${disposition}`,
+          idempotency_key: `scan:${specimenId}:${disposition}`,
         });
-      } else {
-        await base44.entities.PlayerProfile.create({
-          owner_email: currentUser.email, total_xp: xp,
-          xp_categories: { ...empty, [category]: xp },
-        });
-      }
+      } catch { /* best-effort */ }
+      try {
+        const profiles = await base44.entities.PlayerProfile.filter({ owner_email: currentUser.email });
+        if (profiles[0]) {
+          const cats = { ...empty, ...(profiles[0].xp_categories || {}) };
+          cats[category] = (cats[category] || 0) + xp;
+          // Categories only — awardXP owns total_xp
+          await base44.entities.PlayerProfile.update(profiles[0].id, {
+            xp_categories: cats,
+          });
+        }
+      } catch { /* best-effort */ }
       if (disposition === 'collected') logCollectedWeight(currentUser.email);
       try {
         await progressQuestsForSpecimen(
