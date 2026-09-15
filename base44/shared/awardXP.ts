@@ -19,6 +19,7 @@ interface AwardResult {
 }
 
 export async function awardXPServerSide(
+  // deno-lint-ignore no-explicit-any
   base44: any,
   ownerEmail: string,
   amount: number,
