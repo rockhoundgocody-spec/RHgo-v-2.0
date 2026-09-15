@@ -20,7 +20,7 @@ export default function CloverVoicePanel({
   phase, messages, interim, onClose, onHunt, huntLoading,
   suggestions, onDismissSuggestions, voiceSupported, onSend,
 }) {
-  const bottomRef = useRef(null);
+  const transcriptRef = useRef(null);
   const [draft, setDraft] = useState('');
   const [expandedIntel, setExpandedIntel] = useState(false);
   const isKid = useKidMode();
@@ -29,8 +29,12 @@ export default function CloverVoicePanel({
   const detectedMineral = useMemo(() => lookupMineralIntelligence(lastMsg), [lastMsg]);
   const kidMineral = useMemo(() => detectedMineral ? getKidFriendlyMineral(detectedMineral.name) : null, [detectedMineral]);
 
+  // Scroll only the panel's internal transcript — never the page.
+  // This keeps the orb in place while Clover talks.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    }
   }, [messages, interim, suggestions, detectedMineral, expandedIntel]);
 
   return (
@@ -70,7 +74,7 @@ export default function CloverVoicePanel({
       </div>
 
       {/* Transcript */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ minHeight: 90 }}>
+      <div ref={transcriptRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ minHeight: 90 }}>
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -139,35 +143,6 @@ export default function CloverVoicePanel({
           </div>
         )}
 
-        {/* Quick prompt chips for fast 1-tap inquiries */}
-        {messages.length <= 2 && !interim && phase !== 'thinking' && (
-          <div className="pt-1.5 pb-1 flex flex-wrap gap-1.5 justify-start">
-            {(isKid ? [
-              'Did dinosaurs see this rock? 🦖',
-              'Tell me about volcano rocks! 🌋',
-              'Which rocks glow in the dark? ✨',
-              'Tell me a secret treasure clue! 🕵️',
-            ] : [
-              'Where can I hunt nearby?',
-              'How to spot agates?',
-              'Field hardness test tips',
-              'Tell me a rock secret',
-            ]).map((chip) => (
-              <button
-                key={chip}
-                onClick={() => onSend?.(chip)}
-                className="text-[10px] font-medium px-2 py-1 rounded-lg transition-all active:scale-95 text-white/70 hover:text-white"
-                style={{
-                  background: 'hsla(270,50%,25%,0.4)',
-                  border: '1px solid hsla(270,60%,50%,0.25)',
-                }}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        )}
-
         {phase === 'thinking' && (
           <div className="flex justify-start">
             <div className="px-3 py-2 rounded-xl" style={{ background: 'hsla(255,25%,20%,0.6)' }}>
@@ -209,7 +184,6 @@ export default function CloverVoicePanel({
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
       {/* Status line — replaces the old text box */}

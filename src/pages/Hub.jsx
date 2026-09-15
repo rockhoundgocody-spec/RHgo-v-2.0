@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
-import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
-import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 
@@ -13,8 +11,6 @@ const LAND_LABEL = {
 };
 
 export default function Hub() {
-  const [bufferDone, setBufferDone] = useState(() => localStorage.getItem('rhgo_buffer_seen') === '1');
-  const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -32,13 +28,6 @@ export default function Hub() {
         .catch(() => {});
     }).catch(() => {});
   }, []);
-
-  if (!bufferDone) {
-    return <OpeningBuffer onDone={() => { localStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
-  }
-  if (showCinematic) {
-    return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
-  }
 
   const totalXp = profile?.total_xp || 0;
   const level = getLevel(totalXp);

@@ -135,7 +135,12 @@ export default function HotspotProximityWatcher() {
   };
 
   const hotspotId = nearby?.hotspot?.id;
-  const visible = Boolean(nearby && !dismissedIds[hotspotId]);
+  const visible = Boolean(
+    nearby &&
+    nearby.hotspot?.name &&
+    nearby.distance_m > 0 &&
+    !dismissedIds[hotspotId]
+  );
 
   useHotspotAnalytics(nearby);
   useAutoDismiss({ visible, hotspotId, onDismiss: dismiss });

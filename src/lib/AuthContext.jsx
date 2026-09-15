@@ -23,14 +23,10 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       try {
-        // Check auth by attempting to get the current user
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
+        // Always try me() — the SDK's internal token (set by loginViaEmailPassword)
+        // may be valid even if appParams.token hasn't picked it up from storage yet.
+        // If there's no token at all, me() throws and we handle it gracefully.
+        await checkUserAuth();
         setAppPublicSettings({ id: appParams.appId });
         setIsLoadingPublicSettings(false);
       } catch (appError) {

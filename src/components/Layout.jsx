@@ -185,11 +185,11 @@ export default function Layout() {
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        {!isFullscreenCamera && <HotspotProximityWatcher />}
-        {!isFullscreenCamera && <StreakReminderBanner />}
-        {!isFullscreenCamera && <OracleOverlays />}
-        <BadgeUnlockWatcher />
-        {!isFullscreenCamera && <FloatingCloverCompanion />}
+        {!isFullscreenCamera && isAuthenticated && <HotspotProximityWatcher />}
+        {!isFullscreenCamera && isAuthenticated && <StreakReminderBanner />}
+        {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
+        {isAuthenticated && <BadgeUnlockWatcher />}
+        {!isFullscreenCamera && isAuthenticated && <FloatingCloverCompanion />}
       </div>
       </BadgeAwarderProvider>
     </OracleProvider>
