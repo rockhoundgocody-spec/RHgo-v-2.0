@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
@@ -17,29 +18,44 @@ export default function Hub() {
   const [user, setUser] = useState(null);
   const [hotspot, setHotspot] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [companion, setCompanion] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    let cancelled = false;
+    (async () => {
+      try {
+        const u = await base44.auth.me();
+        if (cancelled) return;
+        setUser(u);
+        if (u?.email) {
+          const [profiles] = await Promise.all([
+            base44.entities.PlayerProfile.filter({ owner_email: u.email }).catch(() => []),
+          ]);
+          if (!cancelled) setProfile(profiles?.[0] || null);
+        }
+      } catch {
+        /* unauthenticated hub is handled by HomeGate */
+      }
+    })();
+
     base44.entities.Hotspot.list('-trust_score', 1)
-      .then(h => setHotspot(h[0]))
+      .then((h) => { if (!cancelled) setHotspot(h[0]); })
       .catch(() => {});
-    // Load player profile for XP
-    base44.auth.me().then(u => {
-      if (!u?.email) return;
-      base44.entities.PlayerProfile.filter({ owner_email: u.email })
-        .then(p => setProfile(p[0] || null))
-        .catch(() => {});
-    }).catch(() => {});
+
+    base44.functions.invoke('getCompanionState', {})
+      .then((res) => { if (!cancelled) setCompanion(res?.data?.companion || null); })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
   }, []);
 
-  // Once per browser session after auth: sync any stashed guest find
   useEffect(() => {
     if (!user?.email) return;
     try {
       if (sessionStorage.getItem('rhgo_guest_reclaim_done') === '1') return;
       sessionStorage.setItem('rhgo_guest_reclaim_done', '1');
     } catch {
-      /* private mode — still attempt once via in-memory guard below */
+      /* private mode */
     }
     let cancelled = false;
     (async () => {
@@ -53,7 +69,7 @@ export default function Hub() {
         if (out.specimenId) navigate(`/specimen/${out.specimenId}`);
         else navigate('/collection');
       } catch {
-        /* best-effort — stash re-preserved by helper on hard failure */
+        /* stash preserved on hard failure */
       }
     })();
     return () => { cancelled = true; };
@@ -71,7 +87,6 @@ export default function Hub() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
-      {/* Header — logo + profile only */}
       <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
         <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
         <Link
@@ -86,12 +101,10 @@ export default function Hub() {
         </Link>
       </header>
 
-      {/* Clover — she's home when you're home */}
       <div className="flex justify-center mt-6">
-        <HeroOrb companion={profile} size={120} />
+        <HeroOrb companion={companion || profile} size={120} />
       </div>
 
-      {/* XP / Level — the progression anchor */}
       <section className="px-5 mt-5">
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="text-white font-bold text-[13px] tracking-tight">{title}</span>
@@ -115,7 +128,6 @@ export default function Hub() {
         </div>
       </section>
 
-      {/* Scan — the only mint element */}
       <div className="flex justify-center mt-7">
         <Link
           to="/scan"
@@ -131,8 +143,11 @@ export default function Hub() {
         </Link>
       </div>
 
-      {/* Today's hunt */}
-      <section className="px-5 mt-10">
+      <section className="px-5 mt-8">
+        <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion((prev) => ({ ...prev, ...updated, last_check_in_date: new Date().toISOString().slice(0, 10) }))} />
+      </section>
+
+      <section className="px-5 mt-4">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Today</h2>
         {hotspot ? (
           <Link to="/explore" className="block">
@@ -140,8 +155,13 @@ export default function Hub() {
             <div className="text-white/45 text-[12px] mt-0.5 capitalize">{huntLine}</div>
           </Link>
         ) : (
-          <div className="text-white/30 text-[12px]">Loading…</div>
+          <div className="text-white/30 text-[12px]">Looking for a hunt nearby…</div>
         )}
+        <div className="flex gap-3 mt-3">
+          <Link to="/quests" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Quests</Link>
+          <Link to="/find-of-the-week" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Vote</Link>
+          <Link to="/companion" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Clover</Link>
+        </div>
       </section>
     </div>
   );
