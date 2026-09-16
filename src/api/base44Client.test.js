@@ -25,7 +25,7 @@ describe('base44Client', () => {
       appId: 'test-app-id',
       token: 'test-token-123',
       functionsVersion: 'v2',
-      requiresAuth: true,
+      requiresAuth: false,
       appBaseUrl: 'https://test.base44.app',
     });
 
