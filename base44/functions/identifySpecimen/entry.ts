@@ -6,6 +6,7 @@
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 import { computeEssence } from '../../shared/essence.ts';
@@ -189,6 +190,10 @@ Deno.serve(async (req) => {
     }
 
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
+
+    if (!isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
+    }
 
     // ── LOCAL GEOLOGY CONTEXT (Macrostrat) ────────────────────────────────────
     let geologyContext = '';
