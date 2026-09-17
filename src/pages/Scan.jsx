@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -11,7 +11,7 @@ import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
-import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
+import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, PROVENANCE } from '@/lib/scanSave';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
@@ -20,7 +20,6 @@ import { progressQuestsForSpecimen } from '@/lib/questProgress';
 import {
   consumeGuestScan,
   getGuestQuota,
-  guestLoginUrl,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
 
