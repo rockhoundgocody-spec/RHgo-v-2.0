@@ -1,36 +1,21 @@
-# RockHound-GO standalone (off Base44)
+# RockHound-GO standalone
 
-This branch starts the move off Base44.
+Project: `ooswefjhwanailebjrkq`
+URL: https://ooswefjhwanailebjrkq.supabase.co
 
-## Stack
-- Host: Vercel
-- Auth + DB + Storage: Supabase
-- App: existing Vite/React (unchanged UI)
+Frontend uses `@supabase/supabase-js` (not `@supabase/server` — that is for Edge/API only).
 
-## You must create (I cannot do this without your login)
-1. https://supabase.com → New project `rhgo`
-2. Authentication → Providers → enable **Email** (confirm email optional for now)
-3. Also enable Google / Facebook if you want those buttons
-4. SQL editor → paste `supabase/schema.sql`
-5. Project Settings → API → copy URL + anon key
-
-## Env (Vercel + `.env.local`)
+## Local / Vercel env
 ```
 VITE_BACKEND=supabase
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_URL=https://ooswefjhwanailebjrkq.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_--znZ5PXuzO3fcxOh-sDhA_xcueq3uH
 ```
 
-When `VITE_BACKEND` is unset, the app still uses Base44 (current rhgo.me).
-When set to `supabase`, login/register/me/logout use Supabase.
+Secret key stays in Supabase / server env only. Do not put it in Vite.
 
-## Cutover order
-1. Create Supabase project + run schema
-2. Put keys in Vercel
-3. Deploy this branch to a preview URL
-4. Test email signup on the preview
-5. Export Base44 data → import to Postgres
-6. Point rhgo.me DNS at Vercel
-7. Leave Base44 up until data matches
-
-Entities not fully mapped yet stay on Base44 until ported.
+## Still required in dashboard
+1. Auth → Email provider ON
+2. Run `supabase/schema.sql`
+3. `npm i @supabase/supabase-js`
+4. Deploy this branch with `VITE_BACKEND=supabase`

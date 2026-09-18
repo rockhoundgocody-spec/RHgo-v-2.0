@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { base44 as base44Legacy } from './base44Legacy';
 
 const useSupabase = import.meta.env.VITE_BACKEND === 'supabase';
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || 'https://ooswefjhwanailebjrkq.supabase.co';
+const supabaseAnon =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'sb_publishable_--znZ5PXuzO3fcxOh-sDhA_xcueq3uH';
 
 export const supabase =
   useSupabase && supabaseUrl && supabaseAnon
