@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@base44/sdk": "^0.8.48",
-    "@base44/vite-plugin": "^1.0.40",
+    "@base44/vite-plugin": "^1.0.41",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@hello-pangea/dnd": "^17.0.0",
     "@supabase/supabase-js": "^2.57.4",
