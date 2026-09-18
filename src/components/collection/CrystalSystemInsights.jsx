@@ -82,7 +82,10 @@ export function getMineralLookup(minerals) {
 }
 
 export default function CrystalSystemInsights({ specimens }) {
-  const { data: mineralData, isLoading: loading } = useEntityList('Mineral');
+  // Optimization (Bolt): Request only required fields via projection to minimize network payload size and memory footprint
+  const { data: mineralData, isLoading: loading } = useEntityList('Mineral', undefined, undefined, {
+    fields: ['id', 'name', 'crystal_system'],
+  });
   const minerals = mineralData ?? EMPTY_MINERALS;
 
   // Build name → crystal_system lookup map (case-insensitive & trimmed)
