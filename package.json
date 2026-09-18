@@ -17,6 +17,7 @@
     "@base44/vite-plugin": "^1.0.39",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@hello-pangea/dnd": "^17.0.0",
+    "@supabase/supabase-js": "^2.57.4",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -94,21 +95,5 @@
     "typescript": "^5.8.2",
     "vite": "^6.1.0",
     "vitest": "^4.1.9"
-  },
-  "description": "RockHound-GO is being consolidated into one controlled deploy target: **one repo, one build, one URL, one server path**.",
-  "main": "eslint.config.js",
-  "directories": {
-    "doc": "docs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rockhoundgocody-spec/RHgo-v-2.0.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/rockhoundgocody-spec/RHgo-v-2.0/issues"
-  },
-  "homepage": "https://github.com/rockhoundgocody-spec/RHgo-v-2.0#readme"
+  }
 }
