@@ -49,6 +49,7 @@ const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
 const Clubs = lazy(() => import('@/pages/Clubs'));
 
+const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const About = lazy(() => import('@/pages/About'));
 const Paywall = lazy(() => import('@/pages/Paywall'));
 const Demo = lazy(() => import('@/pages/Demo'));
@@ -101,6 +102,7 @@ const AuthenticatedApp = () => {
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="/scan" element={<Scan />} />
+            <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
@@ -122,6 +124,7 @@ const AuthenticatedApp = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/scan" element={<Scan />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
 
         <Route element={<Layout />}>
           <Route path="/" element={<HomeGate />} />

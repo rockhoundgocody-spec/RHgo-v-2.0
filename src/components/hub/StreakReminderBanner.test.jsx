@@ -17,8 +17,8 @@ if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'sessionStorage', { value: mockStorage(), writable: true });
   Object.defineProperty(window, 'localStorage', { value: mockStorage(), writable: true });
 } else {
-  global.sessionStorage = mockStorage();
-  global.localStorage = mockStorage();
+  globalThis.sessionStorage = mockStorage();
+  globalThis.localStorage = mockStorage();
 }
 
 vi.mock('framer-motion', () => ({
@@ -53,8 +53,8 @@ vi.mock('@/lib/bannerMutex', () => ({
 
 describe('StreakReminderBanner', () => {
   beforeEach(() => {
-    global.sessionStorage.clear();
-    global.localStorage.clear();
+    globalThis.sessionStorage.clear();
+    globalThis.localStorage.clear();
   });
 
   it('contains expected accessibility attributes in component source code', () => {
