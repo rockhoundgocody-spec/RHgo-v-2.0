@@ -17,6 +17,7 @@ import {
   hasValidPrivateLocation,
   type PrivateSpecimenLocation,
 } from '../../shared/locationSubmission.ts';
+import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -150,8 +151,7 @@ async function submitLocationForReview(
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user?.email) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json();
     const {
@@ -163,12 +163,31 @@ Deno.serve(async (req) => {
       post_storm = false,
       season = null,
       disposition = null,
+      guest_device_id = null,
     } = body;
+
+    const isGuest = !user?.email;
+    if (isGuest) {
+      if (save || share_to_map) {
+        return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
+      }
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
+      if (!gate.ok) {
+        return Response.json(
+          { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
+          { status: gate.status || 429 },
+        );
+      }
+    } else if (!user?.email) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const storedLocation = getStoredLocation(lat, lng, geo_privacy);
 
     // A share request can only submit the caller's existing owner-scoped
     // specimen for moderation. No coordinates are copied into the queue.
     if (share_to_map && !save) {
+      if (isGuest) return Response.json({ error: 'Unauthorized' }, { status: 401 });
       if (!specimen_id) {
         return Response.json({ error: 'specimen_id is required for location review' }, { status: 400 });
       }
@@ -349,6 +368,9 @@ Deno.serve(async (req) => {
     // ── OPTIONAL SAVE ─────────────────────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
+      if (!user?.email) {
+        return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
+      }
       const richNotes = [
         identification.description,
         identification.scientific_name && `Scientific name: ${identification.scientific_name}`,

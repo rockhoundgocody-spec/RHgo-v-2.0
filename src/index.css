@@ -342,15 +342,60 @@
     border-radius: 1.1rem;
   }
 
+  .hub-aurora-secondary {
+    inset: 10% -15% 0;
+    opacity: 0.55;
+    animation-duration: 22s;
+    animation-direction: reverse;
+    background:
+      radial-gradient(ellipse 40% 30% at 70% 30%, hsla(160, 90%, 45%, 0.16), transparent 65%),
+      radial-gradient(ellipse 35% 25% at 15% 55%, hsla(300, 90%, 50%, 0.12), transparent 70%);
+  }
+  .hub-scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 3px,
+      hsla(190, 100%, 70%, 0.015) 3px,
+      hsla(190, 100%, 70%, 0.015) 4px
+    );
+    mask-image: linear-gradient(180deg, black, transparent 70%);
+    pointer-events: none;
+  }
+  .hub-shimmer-overlay {
+    background: linear-gradient(110deg, transparent 20%, hsla(0,0%,100%,0.08) 45%, transparent 70%);
+    background-size: 200% 100%;
+    animation: rhgo-shimmer 2.4s ease-in-out infinite;
+  }
+  .desktop-phone-frame {
+    animation: desktop-frame-in 0.6s ease-out;
+  }
+  @keyframes desktop-frame-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  .result-holo {
+    background:
+      linear-gradient(145deg, hsla(265, 50%, 18%, 0.55), hsla(240, 30%, 8%, 0.9)),
+      radial-gradient(circle at 20% 0%, hsla(280, 100%, 70%, 0.12), transparent 50%);
+    border: 1px solid hsla(280, 70%, 65%, 0.25);
+    box-shadow: inset 0 1px 0 hsla(280, 90%, 90%, 0.12), 0 0 40px -12px hsla(280, 90%, 50%, 0.35);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .hub-aurora,
+    .hub-aurora-secondary,
     .clover-listen-ring,
     .animate-orb-ring,
     .animate-amethyst-pulse,
     .animate-orb-speak,
     .animate-hud-scan,
     .animate-liquid-shift,
-    .rhgo-shimmer {
+    .rhgo-shimmer,
+    .hub-shimmer-overlay,
+    .desktop-phone-frame {
       animation: none !important;
     }
   }

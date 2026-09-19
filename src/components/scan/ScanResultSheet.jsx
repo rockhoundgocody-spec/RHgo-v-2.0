@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag, GitCompareArrows, ShieldCheck } from 'lucide-react';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 
 const CONFIDENCE_BAND = (c) => {
@@ -20,7 +20,9 @@ export default function ScanResultSheet({
   provenance, onProvenanceChange, locationExhausted,
   foundLocation, onFoundLocationChange,
 }) {
+  const navigate = useNavigate();
   const [testsOpen, setTestsOpen] = useState(false);
+  const [legalOk, setLegalOk] = useState(false);
   const [fieldReport, setFieldReport] = useState({
     field_habit: '', field_luster: '', field_matrix: '', field_next_test: '',
   });
@@ -34,6 +36,7 @@ export default function ScanResultSheet({
       field_next_test: result.field_next_test || '',
     });
     setTestsOpen((result.confidence ?? 1) < 0.6);
+    setLegalOk(false);
   }, [result]);
 
   if (!result) return null;
@@ -93,7 +96,7 @@ export default function ScanResultSheet({
               /* ── Result ── */
               <div className="px-5 pb-8 pt-2">
                 {/* Name + confidence */}
-                <div className="flex items-start gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4 p-3 -mx-1 rounded-2xl result-holo">
                   {imageUrl && (
                     <img
                       src={imageUrl}
@@ -168,7 +171,16 @@ export default function ScanResultSheet({
 
                 {Array.isArray(result.lookalikes) && result.lookalikes.length > 0 && (
                   <div className="mb-4 rounded-xl px-3 py-2.5" style={{ background: 'hsla(38,80%,20%,0.18)', border: '1px solid hsla(38,80%,50%,0.2)' }}>
-                    <div className="text-amber-200/80 text-[10px] uppercase tracking-[0.18em] mb-1">Don’t confuse with</div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-amber-200/80 text-[10px] uppercase tracking-[0.18em]">Don’t confuse with</div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#9FE8D0]"
+                      >
+                        <GitCompareArrows size={11} /> Compare
+                      </button>
+                    </div>
                     {result.lookalikes.slice(0, 3).map((l, i) => (
                       <div key={l.name || i} className="text-[11px] text-white/65 leading-snug mt-1">
                         <b className="text-white/85">{l.name}</b>
@@ -176,6 +188,17 @@ export default function ScanResultSheet({
                       </div>
                     ))}
                   </div>
+                )}
+
+                {((result.candidates?.length || 0) > 1 || (result.lookalikes?.length || 0) > 0) && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
+                    className="mb-4 w-full py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98]"
+                    style={{ background: 'hsla(280,60%,30%,0.25)', border: '1px solid hsla(280,70%,55%,0.35)', color: 'hsl(280,90%,85%)' }}
+                  >
+                    <GitCompareArrows size={14} /> Side-by-side lookalike lab
+                  </button>
                 )}
 
                 {/* Field Report card — AI-filled, user-editable */}
@@ -241,11 +264,32 @@ export default function ScanResultSheet({
                   </div>
                 )}
 
+                <label className="mb-3 flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer"
+                  style={{ background: legalOk ? 'hsla(160,50%,20%,0.25)' : 'hsla(0,0%,100%,0.04)', border: `1px solid ${legalOk ? 'hsla(160,70%,50%,0.4)' : 'hsla(0,0%,100%,0.1)'}` }}>
+                  <input
+                    type="checkbox"
+                    checked={legalOk}
+                    onChange={(e) => setLegalOk(e.target.checked)}
+                    className="mt-0.5 accent-emerald-400"
+                  />
+                  <span className="text-[11px] text-white/65 leading-snug">
+                    <span className="inline-flex items-center gap-1 text-white/85 font-semibold">
+                      <ShieldCheck size={12} /> I can legally collect here
+                    </span>
+                    <span className="block text-white/40 mt-0.5">Required to Keep. Leave / Observed never remove material.</span>
+                  </span>
+                </label>
+
                 {/* Primary: Keep / Leave / Observed */}
                 <div className="grid grid-cols-3 gap-2 mb-2">
-                  <SheetButton label="Keep" onClick={() => onKeep(fieldReport)} disabled={saved} primary />
-                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport)} disabled={saved} />
-                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport)} disabled={saved} />
+                  <SheetButton
+                    label="Keep"
+                    onClick={() => onKeep(fieldReport, { legalConfirmed: true })}
+                    disabled={saved || !legalOk}
+                    primary
+                  />
+                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport, { legalConfirmed: false })} disabled={saved} />
+                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
                 </div>
 
                 {/* Secondary: Tests / Save / Ask */}
@@ -255,7 +299,7 @@ export default function ScanResultSheet({
                     onClick={() => setTestsOpen(t => !t)}
                     active={testsOpen}
                   />
-                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport)} disabled={saved} />
+                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
                   <SheetButton label="Ask" icon={MessageCircle} onClick={onAsk} />
                 </div>
 

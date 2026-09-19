@@ -71,12 +71,25 @@ Deno.serve(async (req) => {
       leveled = true;
     }
 
+    // Continue streak if yesterday (or same calendar continuity via last_check_in_date)
+    const prev = companion.last_check_in_date;
+    let streak = Number(companion.streak_days) || 0;
+    if (prev) {
+      const prevDate = new Date(`${prev}T12:00:00Z`);
+      const todayDate = new Date(`${today}T12:00:00Z`);
+      const gapDays = Math.round((todayDate.getTime() - prevDate.getTime()) / 86400000);
+      streak = gapDays === 1 ? streak + 1 : 1;
+    } else {
+      streak = 1;
+    }
+
     const updated = await base44.entities.Companion.update(companion.id, {
       energy: 100,
       mood: newMood,
       last_check_in_date: today,
       last_mood_label: mood_label,
       last_intention: intention || null,
+      streak_days: streak,
       xp,
       level,
     });

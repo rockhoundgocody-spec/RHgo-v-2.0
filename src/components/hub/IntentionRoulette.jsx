@@ -39,13 +39,31 @@ export default function IntentionRoulette() {
         lng = pos.coords.longitude;
       } catch (_) { /* use fallback */ }
 
-      const response = await base44.functions.invoke('intentionRoulette', {
-        lat, lng,
-        radiusMiles: 5,
-        intention: intentionText,
-      });
-
-      setResult({ ...response.data, usedIntention: intentionText });
+      try {
+        const response = await base44.functions.invoke('intentionRoulette', {
+          lat, lng,
+          radiusMiles: 8,
+          intention: intentionText,
+        });
+        setResult({ ...response.data, usedIntention: intentionText });
+      } catch {
+        // Client fallback if the function isn't deployed yet
+        const hotspots = await base44.entities.Hotspot.list('-trust_score', 80);
+        const withGeo = (hotspots || []).filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number');
+        const scored = withGeo.map((h) => {
+          const dLat = h.lat - lat;
+          const dLng = h.lng - lng;
+          return { h, d: Math.sqrt(dLat * dLat + dLng * dLng) };
+        }).sort((a, b) => a.d - b.d);
+        const pick = scored[Math.floor(Math.random() * Math.min(8, scored.length))]?.h || scored[0]?.h;
+        if (!pick) throw new Error('no hotspots');
+        setResult({
+          usedIntention: intentionText,
+          nearestHotspot: pick,
+          cloversMessage: `Clover whispers: chase "${intentionText}" toward ${pick.name}. The stones already know you're coming.`,
+          randomPoint: { lat: pick.lat, lng: pick.lng },
+        });
+      }
     } catch (e) {
       setError('The rocks are shy today. Try again!');
     } finally {

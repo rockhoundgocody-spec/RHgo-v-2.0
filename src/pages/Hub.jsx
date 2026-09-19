@@ -7,6 +7,12 @@ import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import CloverSuggests from '@/components/hub/CloverSuggests.jsx';
+import SeasonBanner from '@/components/hub/SeasonBanner.jsx';
+import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
+import NewUserTour from '@/components/hub/NewUserTour.jsx';
+import StreakAtRiskCard from '@/components/hub/StreakAtRiskCard.jsx';
+import WeeklyDigestCard from '@/components/hub/WeeklyDigestCard.jsx';
+import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
 import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
@@ -104,8 +110,12 @@ export default function Hub() {
   return (
     <div className="relative min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
       <HubAtmosphere />
+      <NewUserTour />
       <header className="relative z-10 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
-        <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
+        <div>
+          <div className="text-[9px] uppercase tracking-[0.28em] text-white/35 font-semibold">Field OS</div>
+          <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
+        </div>
         <Link
           to="/profile"
           aria-label="Profile"
@@ -119,7 +129,11 @@ export default function Hub() {
       </header>
 
       <div className="relative z-10 flex justify-center mt-3">
-        <HeroOrb companion={companion || profile} size={156} />
+        <div className="relative">
+          <div className="absolute inset-0 -m-6 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, hsla(280,100%,60%,0.18), transparent 70%)', filter: 'blur(8px)' }} />
+          <HeroOrb companion={companion || profile} size={168} />
+        </div>
       </div>
 
       <section className="relative z-10 px-5 mt-4">
@@ -158,12 +172,23 @@ export default function Hub() {
         </Link>
       </div>
 
-      <section className="relative z-10 px-5 mt-7">
+      <section className="relative z-10 px-5 mt-7 space-y-3">
+        <StreakAtRiskCard companion={companion} />
         <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion((prev) => ({ ...prev, ...updated, last_check_in_date: new Date().toISOString().slice(0, 10) }))} />
+        <SeasonBanner />
       </section>
 
       <section className="relative z-10 px-5 mt-4">
         <CloverSuggests gps={gps} />
+      </section>
+
+      <section className="relative z-10 px-5 mt-4 space-y-3">
+        <DailyRoulette />
+        <IntentionRoulette />
+      </section>
+
+      <section className="relative z-10 px-5 mt-4">
+        <WeeklyDigestCard />
       </section>
 
       <section className="relative z-10 px-5 mt-5 pb-10">
@@ -222,10 +247,12 @@ export default function Hub() {
           </div>
         )}
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-wrap gap-3 mt-4">
           <Link to="/quests" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Quests</Link>
           <Link to="/find-of-the-week" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Vote</Link>
           <Link to="/companion" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Clover</Link>
+          <Link to="/collections" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Albums</Link>
+          <Link to="/badges" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Badges</Link>
         </div>
       </section>
     </div>

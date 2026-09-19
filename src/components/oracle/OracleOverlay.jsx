@@ -80,10 +80,12 @@ export default function OracleOverlay() {
     setThinking(true);
     let replyText;
     try {
+      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
       const res = await base44.functions.invoke('cloverChat', {
         history: next.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'clover', content: m.content })),
         companion: null,
         todays_finds: 0,
+        guest_device_id: getOrCreateGuestId(),
       });
       replyText = res?.data?.reply || "I'm here with you.";
     } catch {

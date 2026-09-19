@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -21,7 +22,18 @@ Deno.serve(async (req) => {
       research_query = null,
       location = null,
       user_utterance = '',
+      guest_device_id = null,
     } = await req.json();
+
+    if (!user?.email) {
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'cloverChat', { consume: true });
+      if (!gate.ok) {
+        return Response.json(
+          { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },
+          { status: gate.status || 429 },
+        );
+      }
+    }
 
     const c = companion;
     const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);

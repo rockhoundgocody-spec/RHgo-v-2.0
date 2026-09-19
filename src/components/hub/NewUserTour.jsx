@@ -97,7 +97,12 @@ export default function NewUserTour() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-sm rounded-3xl p-7 flex flex-col items-center text-center relative"
+            className="w-full max-w-sm rounded-3xl p-7 flex flex-col items-center text-center relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(160deg, hsla(265,45%,16%,0.98), hsla(245,30%,8%,0.99))',
+              border: '1px solid hsla(280,70%,60%,0.35)',
+              boxShadow: '0 0 60px -10px hsla(280,90%,50%,0.45)',
+            }}
             style={{
               background: 'linear-gradient(180deg, hsl(252 22% 13%) 0%, hsl(248 24% 8%) 100%)',
               border: '1px solid hsla(270,50%,60%,0.28)',

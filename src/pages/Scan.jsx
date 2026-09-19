@@ -24,6 +24,7 @@ import { progressQuestsForSpecimen } from '@/lib/questProgress';
 import {
   consumeGuestScan,
   getGuestQuota,
+  getOrCreateGuestId,
   guestLoginUrl,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
@@ -124,6 +125,22 @@ export default function Scan() {
     setStage('processing');
 
     try {
+      if (isGuest) {
+        try {
+          await base44.functions.invoke('guestScanGate', {
+            guest_device_id: getOrCreateGuestId(),
+            action: 'identify',
+          });
+        } catch (gateErr) {
+          const status = gateErr?.status || gateErr?.data?.status || gateErr?.response?.status;
+          if (status === 429 || /rate|guest|already used/i.test(String(gateErr?.message || gateErr?.data?.error || ''))) {
+            setStage('guestLimit');
+            return;
+          }
+          throw gateErr;
+        }
+      }
+
       const clean = await stripExif(blob);
       const file = new File([clean], 'shot1.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
@@ -300,11 +317,19 @@ export default function Scan() {
     await processPhoto(file);
   };
 
-  const handleSave = async (disposition, fieldReport) => {
+  const handleSave = async (disposition, fieldReport, meta = {}) => {
     if (!result || !primaryUrl) return;
+    if (disposition === 'collected' && !meta.legalConfirmed) {
+      toast({
+        title: 'Confirm legal access',
+        description: 'Check “I can legally collect here” before Keep.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (isGuest) {
       // Soft save: stash locally, show confirmation — never hard-redirect to login
-      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport });
+      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport, legalConfirmed: !!meta.legalConfirmed });
       setSheetOpen(false);
       setStage('guestSaved');
       setTimeout(resetToCamera, 2500);
@@ -355,9 +380,11 @@ export default function Scan() {
       disposition,
       collected: disposition === 'collected',
       left_in_place: disposition === 'left_in_place',
-      legal_status: disposition === 'collected' ? 'pending_user' : 'not_collected',
+      legal_status: disposition === 'collected'
+        ? (meta.legalConfirmed ? 'user_confirmed' : 'pending_user')
+        : 'not_collected',
       ethics_prompt_shown: true,
-      user_confirmed_legal_access: false,
+      user_confirmed_legal_access: disposition === 'collected' && !!meta.legalConfirmed,
       found_at: place.found_at || beachName || null,
       provenance,
       geo_privacy: geoPrivacy,
@@ -618,9 +645,9 @@ export default function Scan() {
         result={result}
         imageUrl={primaryUrl}
         saved={!!savedId}
-        onKeep={(fr) => handleSave('collected', fr)}
-        onLeave={(fr) => handleSave('left_in_place', fr)}
-        onObserve={(fr) => handleSave('observed', fr)}
+        onKeep={(fr, meta) => handleSave('collected', fr, meta)}
+        onLeave={(fr, meta) => handleSave('left_in_place', fr, meta)}
+        onObserve={(fr, meta) => handleSave('observed', fr, meta)}
         onAsk={handleAsk}
         onRetry={resetToCamera}
         onClose={resetToCamera}

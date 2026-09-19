@@ -88,9 +88,11 @@ export function useSpeechSynthesis() {
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
 
+      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
         voice: voiceConfig.voice || 'honey',
+        guest_device_id: getOrCreateGuestId(),
       });
 
       const audioUrl = res?.data?.audioUrl;

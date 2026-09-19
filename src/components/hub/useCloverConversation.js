@@ -93,6 +93,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       const cognitiveContext = getCognitiveMemoryContext();
       let gps = null;
       try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
+      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
@@ -102,6 +103,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         research_query: local.researchQuery || null,
         location: gps,
         user_utterance: text,
+        guest_device_id: getOrCreateGuestId(),
       });
       const data = res?.data;
       reply = data?.reply || reply;
@@ -114,8 +116,11 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
           onFindLogged?.(data.find_details.split(' ').slice(0, 3).join(' '));
         } catch {}
       }
-    } catch {
-      reply = "I lost you for a second there. Still with me?";
+    } catch (err) {
+      const msg = String(err?.message || err?.data?.error || '');
+      reply = /429|rate limit|Guest rate/i.test(msg)
+        ? "That's my free chatter for now — sign in and I'll keep the conversation going."
+        : "I lost you for a second there. Still with me?";
     }
 
     if (!activeRef.current) return;

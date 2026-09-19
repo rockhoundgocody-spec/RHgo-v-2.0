@@ -27,6 +27,26 @@ const MESSAGES = [
   { text: 'A quick check-in keeps Clover happy and your streak burning 🔥', cta: 'Check In', to: '/companion' },
 ];
 
+function pickMessage(streakDays) {
+  if (streakDays >= 7) {
+    return {
+      text: `${streakDays}-day streak on the line — one check-in saves the run.`,
+      cta: 'Save streak',
+      to: '/companion',
+      urgent: true,
+    };
+  }
+  if (streakDays >= 3) {
+    return {
+      text: `${streakDays} days strong. Don't drop it tonight.`,
+      cta: 'Check In',
+      to: '/companion',
+      urgent: true,
+    };
+  }
+  return MESSAGES[new Date().getDay() % MESSAGES.length];
+}
+
 export default function StreakReminderBanner() {
   const [visible, setVisible] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -72,13 +92,14 @@ export default function StreakReminderBanner() {
       .invoke('getCompanionState', {})
       .then((res) => {
         if (cancelled) return;
-        const checkedInToday = res?.data?.companion?.last_check_in_date === getTodayStr();
+        const companion = res?.data?.companion;
+        const checkedInToday = companion?.last_check_in_date === getTodayStr();
         if (checkedInToday) return;
-        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
+        schedule(pickMessage(Number(companion?.streak_days) || 0));
       })
       .catch(() => {
         if (cancelled) return;
-        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
+        schedule(pickMessage(0));
       });
 
     return () => {

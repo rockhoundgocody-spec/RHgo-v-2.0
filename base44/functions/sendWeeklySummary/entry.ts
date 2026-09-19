@@ -107,26 +107,40 @@ function buildEmail(user, recent, companion) {
     `
     : `<p style="color:#6b7280;">No new finds logged this week — the field is patient. Try a new spot soon.</p>`;
 
+  const today = new Date().toISOString().slice(0, 10);
+  const streakDays = companion?.streak_days ?? 0;
+  const streakAtRisk = streakDays >= 2 && companion?.last_check_in_date && companion.last_check_in_date !== today;
+  const streakHtml = streakAtRisk
+    ? `<p style="margin:16px 0;padding:12px 14px;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;color:#9a3412;font-size:14px;"><strong>${streakDays}-day streak at risk.</strong> Open the app and check in with Clover today so it doesn't reset.</p>`
+    : '';
+
   const companionHtml = companion
     ? `
-      <h2 style="font-size:18px;color:#7c3aed;margin:24px 0 8px;">${escapeHtml(companion.name || 'Amethyst')}'s progress</h2>
+      <h2 style="font-size:18px;color:#7c3aed;margin:24px 0 8px;">${escapeHtml(companion.name || 'Clover')}'s progress</h2>
       <table style="border-collapse:collapse;font-size:14px;color:#1f2937;">
         <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Level</td><td><strong>${companion.level ?? 1}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">XP</td><td><strong>${companion.xp ?? 0}</strong></td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Streak</td><td><strong>${companion.streak_days ?? 0} day${companion.streak_days === 1 ? '' : 's'}</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Streak</td><td><strong>${streakDays} day${streakDays === 1 ? '' : 's'}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Mood</td><td><strong>${escapeHtml(companion.mood || 'calm')}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Energy</td><td><strong>${companion.energy ?? 80}/100</strong></td></tr>
       </table>
     `
     : '';
 
+  const huntTip = `
+      <h2 style="font-size:18px;color:#0f766e;margin:24px 0 8px;">This week's hunt tip</h2>
+      <p style="color:#334155;font-size:14px;line-height:1.5;">Open Explore, allow location, and let Clover Suggests pick the nearest public-land gap in your collection. One short walk beats a long wishlist.</p>
+    `;
+
   const body = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#ffffff;color:#1f2937;">
       <h1 style="font-size:22px;margin:0 0 4px;color:#0f172a;">Hey ${escapeHtml(name)},</h1>
       <p style="color:#6b7280;margin:0 0 8px;">Here's your week in RockHound-GO.</p>
+      ${streakHtml}
       ${findsHtml}
       ${companionHtml}
-      <p style="margin-top:32px;color:#9ca3af;font-size:12px;">— The Amethyst Oracle</p>
+      ${huntTip}
+      <p style="margin-top:32px;color:#9ca3af;font-size:12px;">— Clover 🍀</p>
     </div>
   `;
 
