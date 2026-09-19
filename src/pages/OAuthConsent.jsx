@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { appParams } from "@/lib/app-params";
+import { appParams, getSafeRedirectUrl } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
@@ -11,6 +11,32 @@ import AuthLayout from "@/components/AuthLayout";
 // the categories of access being granted, and posts the approve/deny decision.
 // Do not change the fetch calls, headers, or the `ctx` handle handling — styling
 // and copy are safe to edit.
+
+const BLOCKED_SCHEMES = new Set(['javascript:', 'data:', 'vbscript:', 'file:', 'about:']);
+
+export const getSafeOAuthRedirectUrl = (rawUrl, fallback = '/') => {
+  if (!rawUrl || typeof rawUrl !== 'string') return fallback;
+  const url = rawUrl.trim();
+  if (!url) return fallback;
+
+  // Relative URLs and standard HTTP/HTTPS targets pass through getSafeRedirectUrl,
+  // which enforces same-origin or valid relative path constraints.
+  if (url.startsWith('/') || /^https?:/i.test(url)) {
+    return getSafeRedirectUrl(url, fallback);
+  }
+
+  // Handle custom URI schemes (e.g. cursor:// for native AI clients).
+  try {
+    const parsed = new URL(url);
+    if (BLOCKED_SCHEMES.has(parsed.protocol.toLowerCase())) {
+      return fallback;
+    }
+    return parsed.href;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function OAuthConsent() {
   const ctx = new URLSearchParams(window.location.search).get("ctx");
   const [info, setInfo] = useState(null);
@@ -112,7 +138,7 @@ export default function OAuthConsent() {
         // Show a terminal reconnect state, not an impossible "try again".
         if ([400, 403, 404, 409].includes(res.status)) {
           let detail = "";
-          try { detail = (await res.json()).detail; } catch (_) { /* keep default */ }
+          try { detail = (await res.json()).detail; } catch { /* keep default */ }
           setReconnect(detail || "This authorization can no longer be completed. Reconnect from your AI client to try again.");
           setSubmitting(false);
           return;
@@ -120,8 +146,9 @@ export default function OAuthConsent() {
         throw new Error("Could not complete authorization. Please try again.");
       }
       const data = await res.json();
-      window.location.href = data.redirect_url;
-      if (!/^https?:/i.test(data.redirect_url)) {
+      const safeRedirectUrl = getSafeOAuthRedirectUrl(data.redirect_url, '/');
+      window.location.href = safeRedirectUrl;
+      if (!/^https?:/i.test(safeRedirectUrl)) {
         // Custom-scheme redirect (native AI clients, e.g. cursor://): browsers
         // may block or not visibly navigate, so show a terminal state instead
         // of an eternal spinner.

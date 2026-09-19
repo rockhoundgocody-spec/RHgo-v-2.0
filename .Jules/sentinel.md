@@ -13,3 +13,11 @@
 **Learning:** Using string `endsWith` for hostname domain checking without an exact match or leading dot (`.`) allows domain suffix spoofing bypasses.
 
 **Prevention:** Ensure URL hostname validation checks exact domain equality (`host === domain`) or subdomains with a leading dot (`host.endsWith('.' + domain)`), and strictly enforce HTTP/HTTPS protocols.
+
+## 2026-08-26 - Unvalidated Redirect in OAuth Consent
+
+**Vulnerability:** `data.redirect_url` in `OAuthConsent.jsx` was assigned directly to `window.location.href` without client-side validation, allowing potential open redirects to external untrusted domains or dangerous URI schemes.
+
+**Learning:** Server-provided redirect targets in client consent flows cannot be assumed safe for raw window navigation without verifying origin, protocol, and scheme.
+
+**Prevention:** Validate redirect URLs against `getSafeRedirectUrl` for standard web protocols (http/https/relative) and filter out dangerous URI schemes (`javascript:`, `data:`, `vbscript:`, `file:`, `about:`) before setting `window.location.href`.
