@@ -33,7 +33,8 @@ export default function Login() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       await checkUserAuth();
-      navigate("/");
+      const next = new URLSearchParams(window.location.search).get('from_url') || '/';
+      navigate(next.startsWith('/') ? next : '/');
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -44,7 +45,8 @@ export default function Login() {
   const handleOAuth = (provider) => {
     if (oauthLoading || loading) return;
     setOauthLoading(provider);
-    base44.auth.loginWithProvider(provider, "/");
+    const next = new URLSearchParams(window.location.search).get('from_url') || '/';
+    base44.auth.loginWithProvider(provider, next.startsWith('/') ? next : '/');
   };
 
   return (

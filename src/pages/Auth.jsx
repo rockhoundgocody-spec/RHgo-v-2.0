@@ -58,7 +58,7 @@ export default function Auth() {
     e.preventDefault();
     setError('');
     if (password !== confirm) return setError("Passwords don't match");
-    if (password.length < 6) return setError('Password must be at least 6 characters');
+    if (password.length < 8) return setError('Password must be at least 8 characters');
     setLoading(true);
     try {
       await base44.auth.register({ email, password });

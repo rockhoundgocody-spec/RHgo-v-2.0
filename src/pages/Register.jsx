@@ -28,8 +28,8 @@ export default function Register() {
       setError("Passwords don't match — try again");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
     setLoading(true);
@@ -50,6 +50,10 @@ export default function Register() {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
+      }
+      const savedName = localStorage.getItem('rhgo_user_name');
+      if (savedName && savedName !== 'Explorer' && base44.auth.updateMe) {
+        try { await base44.auth.updateMe({ full_name: savedName }); } catch { /* optional */ }
       }
       base44.analytics.track({ eventName: "user_registered" });
       // Redeem referral code if present — awards companion XP to the inviter
@@ -218,7 +222,7 @@ export default function Register() {
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="Min. 6 characters"
+              placeholder="Min. 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"

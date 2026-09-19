@@ -96,16 +96,20 @@ export function specimenPinEl(rarity, highContrast) {
 }
 
 export function userPinEl(highContrast) {
-  const s = highContrast ? 36 : 28;
+  const s = highContrast ? 44 : 36;
   return toEl(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 28 28">
-      <circle cx="14" cy="14" r="12" fill="#22d3ee" opacity="0.2">
-        <animate attributeName="r" values="10;16;10" dur="2.5s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="14" fill="#22d3ee" opacity="0.18">
+        <animate attributeName="r" values="10;16;10" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.35;0;0.35" dur="2.2s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="14" cy="14" r="7" fill="#22d3ee" opacity="0.95" style="filter:drop-shadow(0 0 6px #22d3ee)"/>
-      <circle cx="14" cy="14" r="7" fill="none" stroke="white" stroke-width="2"/>
-      <circle cx="14" cy="14" r="2.5" fill="white"/>
+      <circle cx="18" cy="18" r="11" fill="none" stroke="#9FE8D0" stroke-width="1.4" opacity="0.7">
+        <animate attributeName="r" values="8;13;8" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.8;0.15;0.8" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="18" cy="18" r="7" fill="#22d3ee" opacity="0.98" style="filter:drop-shadow(0 0 8px #22d3ee)"/>
+      <circle cx="18" cy="18" r="7" fill="none" stroke="white" stroke-width="2"/>
+      <circle cx="18" cy="18" r="2.6" fill="white"/>
     </svg>`);
 }
 

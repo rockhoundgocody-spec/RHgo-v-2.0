@@ -43,15 +43,16 @@ export default function HomeGate() {
       navigate('/login');
     } else if (choice === 'guest') {
       navigate('/scan');
+    } else if (choice === 'google') {
+      localStorage.setItem('rhgo_gate_choice', 'new');
+      if (name) localStorage.setItem('rhgo_user_name', name);
     } else {
       localStorage.setItem('rhgo_gate_choice', 'new');
-      localStorage.setItem('rhgo_user_name', name);
-      setUserName(name);
-      if (localStorage.getItem('rhgo_buffer_seen') === '1') {
-        setGateState('cinematic');
-      } else {
-        setGateState('buffer');
-      }
+      localStorage.setItem('rhgo_user_name', name || 'Explorer');
+      setUserName(name || 'Explorer');
+      // Skip cinematic on the critical path — first scan is the product.
+      localStorage.setItem('rhgo_intro_seen', '1');
+      navigate('/register');
     }
   };
 

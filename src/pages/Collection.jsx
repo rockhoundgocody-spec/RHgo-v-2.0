@@ -21,13 +21,20 @@ export default function Collection() {
   const [view, setView] = useState('crystal'); // 'crystal' | 'gallery' | 'grid' | 'map' | 'dashboard'
   const [rarityFilter, setRarityFilter] = useState('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
     let list = specimens;
     if (rarityFilter !== 'all') list = list.filter(s => s.rarity === rarityFilter);
     if (verifiedOnly) list = list.filter(s => s.verified || (s.ai_confidence && s.ai_confidence >= 0.8));
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((s) =>
+        [s.mineral_name, s.common_name, s.found_at, s.notes].some((v) => String(v || '').toLowerCase().includes(q)),
+      );
+    }
     return list;
-  }, [specimens, rarityFilter, verifiedOnly]);
+  }, [specimens, rarityFilter, verifiedOnly, query]);
 
   const RARITY_COLORS = { all: 'hsla(270,50%,60%,1)', common: '#94a3b8', uncommon: '#34d399', rare: '#38bdf8', legendary: '#a78bfa' };
 
@@ -55,6 +62,14 @@ export default function Collection() {
       {/* Rarity + verified filters */}
       {(view === 'crystal' || view === 'grid' || view === 'gallery') && (
         <div className="mb-4 space-y-2">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search minerals, places…"
+            className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/30 outline-none"
+            style={{ background: 'hsla(245,30%,10%,0.8)', border: '1px solid hsla(270,30%,35%,0.25)' }}
+          />
           <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filters">
             {RARITY_FILTERS.map(r => (
               <button key={r} onClick={() => setRarityFilter(r)}

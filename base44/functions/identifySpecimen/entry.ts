@@ -220,11 +220,19 @@ Deno.serve(async (req) => {
     // Auto-detect if we're in the Great Lakes region (~lat 41-48, lng -76 to -92)
     const isGreatLakes = lat != null && lng != null
       ? (lat >= 41 && lat <= 48 && lng >= -92 && lng <= -76)
-      : true; // default to GL mode if no GPS
+      : false; // never force Great Lakes IDs when GPS is missing
 
     const glContext = isGreatLakes
       ? buildGreatLakesContext({ beachName: beach_name, wetDry: wet_dry, postStorm: post_storm, season })
-      : '';
+      : [
+          'WORLDWIDE FIELD SPECIALIST MODE.',
+          'Do not restrict identification to a regional list.',
+          'Use GPS and local geology as Bayesian priors, not a hard filter — glacial erratics, road gravel, fill, and shop specimens appear out of bedrock context.',
+          'If the visual ID conflicts with local bedrock, lower geological_plausibility and say so.',
+          'Prefer common field stones over exotic gems unless diagnostics are strong.',
+          'Always return lookalikes and a single cheapest field test.',
+          'Calibrate confidence downward for dark, cropped, wet-glare, or single-angle photos.',
+        ].join(' ');
 
     // ── SELF-IMPROVEMENT LOOP ─────────────────────────────────────────────────
     // Feed verified community corrections back into the model as priors, so the
@@ -253,6 +261,7 @@ Deno.serve(async (req) => {
           'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
           'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates, field_habit (crystal habit/form you observe), field_luster (luster type), field_matrix (host rock matrix), field_next_test (single most useful next test to try). ' +
           'Never refuse — always give best attempt with calibrated confidence. ' +
+          'GPS is a prior, not a whitelist. Return geological_plausibility 0-1. ' +
           AGATE_PROMPT_BLOCK + ' ' +
           handbookPromptBlock() +
           glContext + geologyContext + learnedContext,
@@ -275,6 +284,7 @@ Deno.serve(async (req) => {
             fun_fact:            { type: 'string' },
             collection_value:    { type: 'string' },
             image_quality_score: { type: 'number' },
+            geological_plausibility: { type: 'number' },
             field_clue:          { type: 'string' },
             wet_dry_note:        { type: 'string' },
             observed_features: {
@@ -433,7 +443,7 @@ Deno.serve(async (req) => {
       essence,
       local_geology: localGeology,
       great_lakes_mode: isGreatLakes,
-      meta: { model: 'gemini_3_flash', user_email: user.email, timestamp: new Date().toISOString() },
+      meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -16,8 +16,9 @@ import LeafletHotspotMap from '@/components/explore/HotspotMap.jsx';
 import {
   LAND_COLORS, hotspotPinEl, specimenPinEl, userPinEl, clubPinEl, clusterPinEl,
 } from '@/components/explore/googleMapIcons.js';
+import { escapeHtml } from '@/lib/geo';
 
-const RARE_MINERALS = ['quartz', 'garnet', 'tourmaline', 'topaz', 'sapphire'];
+const RARE_MINERALS = ['tourmaline', 'topaz', 'sapphire', 'emerald', 'ruby', 'alexandrite', 'tanzanite'];
 
 export default function GoogleHotspotMap(props) {
   const {
@@ -129,7 +130,7 @@ export default function GoogleHotspotMap(props) {
     clustererRef.current = new MarkerClusterer({
       map,
       markers: hotspotMarkers,
-      algorithm: new SuperClusterAlgorithm({ radius: 80, maxZoom: 7 }),
+      algorithm: new SuperClusterAlgorithm({ radius: 72, maxZoom: 9 }),
       renderer: {
         render: ({ count, position }) => new AdvancedMarkerElement({
           position,
@@ -151,9 +152,9 @@ export default function GoogleHotspotMap(props) {
         marker.addListener('click', () => {
           infoRef.current?.setContent(
             `<div style="font-family:system-ui;font-size:12px;min-width:120px;color:#1e293b">
-              <div style="font-weight:600">🪨 ${s.mineral_name || ''}</div>
-              ${s.found_date ? `<div style="color:#64748b;margin-top:2px">Found: ${s.found_date}</div>` : ''}
-              ${s.rarity ? `<div style="color:#a78bfa;font-weight:500;margin-top:2px">${s.rarity}</div>` : ''}
+              <div style="font-weight:600">🪨 ${escapeHtml(s.mineral_name || '')}</div>
+              ${s.found_date ? `<div style="color:#64748b;margin-top:2px">Found: ${escapeHtml(s.found_date)}</div>` : ''}
+              ${s.rarity ? `<div style="color:#a78bfa;font-weight:500;margin-top:2px">${escapeHtml(s.rarity)}</div>` : ''}
             </div>`
           );
           infoRef.current?.open({ map, anchor: marker });
@@ -173,9 +174,9 @@ export default function GoogleHotspotMap(props) {
       marker.addListener('click', () => {
         infoRef.current?.setContent(
           `<div style="font-family:system-ui;font-size:12px;min-width:140px;color:#1e293b">
-            <div style="font-weight:700;color:#0f766e">🏛️ ${c.name || ''}</div>
-            ${c.location_label ? `<div style="color:#64748b;margin-top:3px">${c.location_label}</div>` : ''}
-            ${c.meeting_schedule ? `<div style="color:#94a3b8;margin-top:2px;font-size:11px">${c.meeting_schedule}</div>` : ''}
+            <div style="font-weight:700;color:#0f766e">🏛️ ${escapeHtml(c.name || '')}</div>
+            ${c.location_label ? `<div style="color:#64748b;margin-top:3px">${escapeHtml(c.location_label)}</div>` : ''}
+            ${c.meeting_schedule ? `<div style="color:#94a3b8;margin-top:2px;font-size:11px">${escapeHtml(c.meeting_schedule)}</div>` : ''}
             <a href="/clubs" style="color:#7c3aed;margin-top:4px;display:inline-block;font-size:11px">View chapter →</a>
           </div>`
         );
@@ -270,7 +271,7 @@ export default function GoogleHotspotMap(props) {
     if (status !== 'ready' || !mapRef.current || !userLocation || flewRef.current) return;
     flewRef.current = true;
     mapRef.current.panTo({ lat: userLocation.lat, lng: userLocation.lng });
-    mapRef.current.setZoom(9);
+    mapRef.current.setZoom(11);
   }, [status, userLocation]);
 
   if (status === 'fallback') return <LeafletHotspotMap {...props} />;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown, Leaf, ShoppingBag } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag } from 'lucide-react';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 
 const CONFIDENCE_BAND = (c) => {
@@ -32,6 +33,7 @@ export default function ScanResultSheet({
       field_matrix: result.field_matrix || '',
       field_next_test: result.field_next_test || '',
     });
+    setTestsOpen((result.confidence ?? 1) < 0.6);
   }, [result]);
 
   if (!result) return null;
@@ -118,15 +120,59 @@ export default function ScanResultSheet({
                   </div>
                 </div>
 
+                {result.description && (
+                  <p className="text-white/60 text-[12px] leading-relaxed mb-3">{result.description}</p>
+                )}
+
                 {/* 3 why-bullets */}
                 {bullets.length > 0 && (
-                  <div className="space-y-1.5 mb-5">
+                  <div className="space-y-1.5 mb-4">
                     {bullets.map((b, i) => (
                       <div key={i} className="flex items-start gap-2 text-white/65 text-[12px] leading-snug">
                         <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: '#9FE8D0' }} />
                         <span>
                           <b className="text-white/85 capitalize">{b.feature}</b>: {b.value}
                         </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {typeof result.geological_plausibility === 'number' && (
+                  <div className="mb-4 text-[11px] text-white/45">
+                    Local geology fit:{' '}
+                    <span style={{ color: result.geological_plausibility >= 0.6 ? '#9FE8D0' : '#fbbf24' }}>
+                      {Math.round(result.geological_plausibility * 100)}%
+                    </span>
+                    {result.geological_plausibility < 0.45 && (
+                      <span className="text-white/35"> — could be glacial, fill, or store-bought.</span>
+                    )}
+                  </div>
+                )}
+
+                {Array.isArray(result.candidates) && result.candidates.length > 1 && (
+                  <div className="mb-4">
+                    <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mb-1.5">Also possible</div>
+                    <div className="space-y-1">
+                      {result.candidates.slice(0, 3).map((c, i) => (
+                        <div key={c.name || i} className="flex items-center justify-between text-[12px]">
+                          <span className="text-white/70 truncate">{c.name}</span>
+                          {typeof c.confidence === 'number' && (
+                            <span className="text-white/35 tabular-nums ml-2">{Math.round(c.confidence * 100)}%</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Array.isArray(result.lookalikes) && result.lookalikes.length > 0 && (
+                  <div className="mb-4 rounded-xl px-3 py-2.5" style={{ background: 'hsla(38,80%,20%,0.18)', border: '1px solid hsla(38,80%,50%,0.2)' }}>
+                    <div className="text-amber-200/80 text-[10px] uppercase tracking-[0.18em] mb-1">Don’t confuse with</div>
+                    {result.lookalikes.slice(0, 3).map((l, i) => (
+                      <div key={l.name || i} className="text-[11px] text-white/65 leading-snug mt-1">
+                        <b className="text-white/85">{l.name}</b>
+                        {l.differentiator ? ` — ${l.differentiator}` : ''}
                       </div>
                     ))}
                   </div>
@@ -214,7 +260,12 @@ export default function ScanResultSheet({
                 </div>
 
                 {saved && (
-                  <div className="text-center text-[11px] text-[#9FE8D0] mb-2">Saved to your cabinet</div>
+                  <div className="text-center mb-3 space-y-2">
+                    <div className="text-[11px] text-[#9FE8D0]">Saved to your cabinet</div>
+                    <Link to="/explore" className="inline-flex text-[11px] font-bold uppercase tracking-wider text-white/70 hover:text-white">
+                      Hunt nearby next →
+                    </Link>
+                  </div>
                 )}
 
                 {/* Tests panel */}

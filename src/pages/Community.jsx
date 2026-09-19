@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Users } from 'lucide-react';
 import PostCard from '@/components/community/PostCard.jsx';
@@ -115,7 +116,8 @@ export default function Community() {
         <div className="text-center py-12">
           <div className="text-4xl mb-3">🪨</div>
           <p className="text-white/50 text-sm font-semibold">No posts yet</p>
-          <p className="text-white/30 text-xs mt-1">Be the first to share a find!</p>
+          <p className="text-white/30 text-xs mt-1">Scan a find, then share it here.</p>
+          <Link to="/scan" className="inline-block mt-4 text-[12px] font-bold uppercase tracking-wider text-[#9FE8D0]">Scan first find</Link>
         </div>
       ) : (
         <div className="space-y-4">

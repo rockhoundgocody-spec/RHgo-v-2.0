@@ -5,6 +5,8 @@ import { AnimatePresence } from 'framer-motion';
 import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import useCameraStream from '@/components/scan/useCameraStream.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
+import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
+import { toast } from '@/components/ui/use-toast';
 import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
@@ -13,6 +15,7 @@ import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
+import { persistLastGps } from '@/lib/geo';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
@@ -50,6 +53,7 @@ export default function Scan() {
   const [beachName, setBeachName] = useState(null);
   const [foundLocation, setFoundLocation] = useState({ found_at: '', lat: null, lng: null });
   const [provenance, setProvenance] = useState(PROVENANCE.NATURE);
+  const [wetDry, setWetDry] = useState('dry');
   const [recentSpecimens, setRecentSpecimens] = useState([]);
   const [locationExhausted, setLocationExhausted] = useState(false);
 
@@ -67,9 +71,9 @@ export default function Scan() {
   const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(monthKey) || 0));
   const [guestQuota, setGuestQuota] = useState(() => getGuestQuota());
   const isGuest = authReady && !me;
-  const canScan = !authReady
+  const canScan = !authReady || subLoading
     ? false
-    : isPaid || subLoading
+    : isPaid
       ? true
       : isGuest
         ? guestQuota.allowed
@@ -87,6 +91,7 @@ export default function Scan() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        persistLastGps(coords);
         setGpsCoords(coords);
         const name = await reverseGeocode(coords.lat, coords.lng);
         if (name) setBeachName(name);
@@ -154,6 +159,13 @@ export default function Scan() {
           'image_quality_score (0-1), ' +
           'geological_plausibility (0-1), fun_fact, collection_value, rarity (common/uncommon/rare/legendary), ' +
           'and up to 3 ranked candidates. Never say "I cannot identify" — always give a best guess. ' +
+          'GPS is a prior, not a filter — glacial erratics, road gravel, and shop specimens appear out of bedrock. ' +
+          'If visual ID conflicts with local geology, lower geological_plausibility and say so. ' +
+          'Prefer common field stones over exotic gems unless diagnostics are strong. ' +
+          'Calibrate confidence down for dark, cropped, wet-glare, or single-angle photos. ' +
+          (wetDry === 'wet'
+            ? 'CONDITION: specimen is WET — banding, coral patterns, and translucency are enhanced. '
+            : 'CONDITION: specimen is DRY — patterns and luster may be muted. ') +
           AGATE_PROMPT_BLOCK + agiDeliberation.geologyContext,
         file_urls: [file_url],
         response_json_schema: {
@@ -212,7 +224,7 @@ export default function Scan() {
             lat: gpsCoords?.lat, lng: gpsCoords?.lng,
             save: false,
             prefilled_result: resultData,
-            wet_dry: 'dry',
+            wet_dry: wetDry,
             beach_name: beachName,
           });
           const d = veri?.data;
@@ -250,9 +262,12 @@ export default function Scan() {
         setTimeout(() => speak(line), 600);
       }
     } catch (err) {
-      console.error('Scan failed:', err);
+      toast({
+        title: 'Scan failed',
+        description: err?.message || 'Could not identify that photo. Try more light or another angle.',
+        variant: 'destructive',
+      });
       setStage('camera');
-      setFrozenFrame(null);
     }
   };
 
@@ -301,7 +316,7 @@ export default function Scan() {
       ? foundLocation
       : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, source: 'gps' };
     const pickedSpot = place.source === 'picked';
-    const geoPrivacy = pickedSpot ? 'exact' : 'private';
+    const geoPrivacy = pickedSpot ? 'exact' : (place.lat != null ? 'approximate' : 'private');
     const { lat, lng } = applyGeoPrivacy(
       { lat: place.lat, lng: place.lng },
       geoPrivacy,
@@ -313,7 +328,7 @@ export default function Scan() {
     const res = await base44.functions.invoke('identifySpecimen', {
       image_url: primaryUrl, lat, lng,
       save: true, share_to_map: false, geo_privacy: geoPrivacy,
-      prefilled_result: result, wet_dry: 'dry', beach_name: place.found_at || beachName,
+      prefilled_result: result, wet_dry: wetDry, beach_name: place.found_at || beachName,
       disposition,
     });
 
@@ -340,9 +355,9 @@ export default function Scan() {
       disposition,
       collected: disposition === 'collected',
       left_in_place: disposition === 'left_in_place',
-      legal_status: 'user_confirmed',
+      legal_status: disposition === 'collected' ? 'pending_user' : 'not_collected',
       ethics_prompt_shown: true,
-      user_confirmed_legal_access: true,
+      user_confirmed_legal_access: false,
       found_at: place.found_at || beachName || null,
       provenance,
       geo_privacy: geoPrivacy,
@@ -503,11 +518,14 @@ export default function Scan() {
         />
       )}
 
-      {stage === 'camera' && showHint && (
-        <div className="absolute inset-x-0 z-20 flex justify-center" style={{ bottom: '32%' }}>
-          <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
-            {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
-          </span>
+      {stage === 'camera' && (
+        <div className="absolute inset-x-0 z-20 flex flex-col items-center gap-3 pointer-events-auto" style={{ bottom: '30%' }}>
+          <WetDryToggle value={wetDry} onChange={setWetDry} />
+          {showHint && (
+            <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
+              {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
+            </span>
+          )}
         </div>
       )}
 

@@ -16,6 +16,7 @@ import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
 import { useAuth } from '@/lib/AuthContext';
+import useReducedMotion from '@/lib/useReducedMotion';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
@@ -98,7 +99,7 @@ function SubrouteBackButton({ onBack }) {
   );
 }
 
-function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
+function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion }) {
   return (
     <main
       className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
@@ -117,10 +118,10 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={pathname}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            variants={reduceMotion ? undefined : pageVariants}
+            initial={reduceMotion ? false : 'initial'}
+            animate={reduceMotion ? undefined : 'animate'}
+            exit={reduceMotion ? undefined : 'exit'}
             transition={pageTransition}
           >
             <Outlet />
@@ -135,6 +136,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const reduceMotion = useReducedMotion();
   // Every authenticated app route is private — keep it out of search results.
   useSeoRobots(false);
 
@@ -179,6 +181,7 @@ export default function Layout() {
           isAdminOrDocs={isAdminOrDocs}
           isFullscreenMap={isFullscreenMap}
           pathname={location.pathname}
+          reduceMotion={reduceMotion}
         />
 
         {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (

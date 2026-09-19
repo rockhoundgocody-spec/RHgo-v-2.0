@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import GoogleIcon from '@/components/GoogleIcon';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
@@ -63,6 +65,17 @@ export default function Landing() {
           >
             Scan one free
           </Link>
+          <button
+            type="button"
+            onClick={() => base44.auth.loginWithProvider('google', '/')}
+            className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white/80 text-center flex items-center justify-center gap-2 transition active:scale-95 hover:text-white"
+            style={{
+              background: 'hsla(0,0%,100%,0.05)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            <GoogleIcon className="w-4 h-4" /> Continue with Google
+          </button>
           <Link
             to="/login"
             className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white/70 text-center flex items-center justify-center transition active:scale-95 hover:text-white"
@@ -71,7 +84,7 @@ export default function Landing() {
               border: '1px solid rgba(255,255,255,0.12)',
             }}
           >
-            Sign in
+            Sign in with email
           </Link>
           {/* Privacy + Terms — accessible without account */}
           <div className="flex items-center justify-center gap-3 pt-1 text-white/30 text-[11px]">

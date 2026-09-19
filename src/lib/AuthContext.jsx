@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
         setAppPublicSettings({ id: appParams.appId });
         setIsLoadingPublicSettings(false);
       } catch (appError) {
-        console.error('App state check failed:', appError);
+        /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
         if (reason === 'auth_required' || appError?.status === 401) {
           setAuthError({ type: 'auth_required', message: 'Authentication required' });
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      console.error('User auth check failed:', error);
+      /* visitor is simply logged out */
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);

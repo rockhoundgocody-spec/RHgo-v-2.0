@@ -37,6 +37,7 @@ import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
 import ExploreEmptyState from '@/components/explore/ExploreEmptyState.jsx';
 import { useNavigate } from 'react-router-dom';
+import { formatDistance, persistLastGps, rankHotspots } from '@/lib/geo';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -55,7 +56,7 @@ function StatPill({ value, label, color }) {
 }
 
 // Compact hotspot card in the bottom sheet list (Memoized to prevent unnecessary re-renders)
-const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick }) {
+const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick, distanceMi }) {
   const color = hasGap ? '#c084fc' : LAND_COLORS[hotspot.land_type] || LAND_COLORS.unknown;
   // Determine rarity-themed border for special hotspots
   const hasLegendary = (hotspot.minerals||[]).some(m =>
@@ -116,7 +117,9 @@ const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick
           </div>
         )}
         <div className="flex items-center justify-between pt-1.5 border-t" style={{ borderColor: 'hsla(255,30%,30%,.15)' }}>
-          <span className="text-[9px] text-white/50">{hotspot.state||'—'}</span>
+          <span className="text-[9px] text-white/50">
+            {distanceMi != null ? formatDistance(distanceMi) : (hotspot.state||'—')}
+          </span>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full"
               style={{ background: `hsl(${Math.round((hotspot.trust_score||.5)*120)},80%,55%)` }} />
@@ -185,18 +188,35 @@ export default function Explore() {
     if (!navigator.geolocation) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      pos => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocating(false); },
+      pos => {
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        persistLastGps(next);
+        setUserLocation(next);
+        setLocating(false);
+      },
       ()  => setLocating(false),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
   useEffect(() => { locate(); }, [locate]);
 
-  // Deep-link from Hub "Weekend Family Adventure" — start on public land layer
+  // Deep-link from Hub / Clover: ?focus=family or ?spot=id|name
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('focus') === 'family') setActiveLayer('public');
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const spot = params.get('spot');
+    if (!spot || !hotspots.length) return;
+    const key = spot.toLowerCase();
+    const match = hotspots.find((h) => h.id === spot || (h.name && h.name.toLowerCase() === key));
+    if (!match) return;
+    setActiveId(match.id);
+    if (isAuthenticated) setDetailHotspot(match);
+    else { setTeaserHotspot(match); setTeaserOpen(true); }
+  }, [hotspots, isAuthenticated]);
 
   // Collected minerals set
   const collectedMinerals = useMemo(
@@ -224,10 +244,11 @@ export default function Explore() {
 
   // Collection gap hotspot IDs (logged-out users have no collection → no gaps)
   const collectionGapIds = useMemo(() => {
-    if (!isAuthenticated) return new Set();
+    if (!isAuthenticated || collectedMinerals.size === 0) return new Set();
     const ids = new Set();
     hotspots.forEach(h => {
-      if ((h.minerals||[]).some(m => !collectedMinerals.has(m.toLowerCase()))) ids.add(h.id);
+      const missing = (h.minerals||[]).filter(m => m && !collectedMinerals.has(m.toLowerCase()));
+      if (missing.length >= 2) ids.add(h.id);
     });
     return ids;
   }, [hotspots, collectedMinerals, isAuthenticated]);
@@ -274,7 +295,7 @@ export default function Explore() {
   const filteredHotspots = useMemo(() => {
     let list = hotspots;
     // Layer-specific filtering for card list
-    if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite'].includes(m.toLowerCase())));
+    if (activeLayer === 'rare')   list = list.filter(h => (h.minerals||[]).some(m => ['tourmaline','topaz','sapphire','emerald','ruby','alexandrite','tanzanite'].includes(m.toLowerCase())));
     if (activeLayer === 'gaps')   list = list.filter(h => collectionGapIds.has(h.id));
     if (activeLayer === 'public') list = list.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
     if (activeLayer === 'land')   list = list.filter(h => h.access_status && h.access_status !== 'unknown' && h.access_status !== 'open');
@@ -283,24 +304,15 @@ export default function Explore() {
     if (selectedMineralsLower.size > 0) {
       list = list.filter(h => (h.minerals || []).some(m => selectedMineralsLower.has(m.toLowerCase())));
     }
-    return list;
-  }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower]);
+    return rankHotspots(list, { userLocation, collectedMinerals });
+  }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower, userLocation]);
 
   const hasNearbyHotspots = useMemo(() => {
-    if (!userLocation) return false;
-    return hotspots.some(h => {
-      if (h.lat == null || h.lng == null) return false;
-      const R = 6371000;
-      const dLat = (h.lat - userLocation.lat) * Math.PI / 180;
-      const dLng = (h.lng - userLocation.lng) * Math.PI / 180;
-      const lat1 = userLocation.lat * Math.PI / 180;
-      const lat2 = h.lat * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
-      return 2 * R * Math.asin(Math.sqrt(a)) * 0.000621371 <= 500;
-    });
+    if (!userLocation) return true;
+    return rankHotspots(hotspots, { userLocation }).some((h) => h.distanceMi != null && h.distanceMi <= 75);
   }, [hotspots, userLocation]);
 
-  const showEmptyPanel = !loading && (!userLocation || !hasNearbyHotspots);
+  const showEmptyPanel = !loading && !!userLocation && !hasNearbyHotspots;
 
   const handleEmptyAction = useCallback((action) => {
     if (action === 'filter') setFilterOpen(true);
@@ -574,10 +586,10 @@ export default function Explore() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h2 className="text-white font-bold text-sm">
-                        Nearby Hotspots
+                        {userLocation ? 'Nearest hunts' : 'Hotspots'}
                       </h2>
                       <p className="text-white/50 text-[10px] uppercase tracking-[.2em]">
-                        {hotspots.length} total · {publicCount} open
+                        {filteredHotspots.length} shown · {publicCount} open
                       </p>
                     </div>
                     <button onClick={() => setSheetOpen(false)}
@@ -612,6 +624,7 @@ export default function Explore() {
                           hotspot={h}
                           active={activeId === h.id}
                           hasGap={collectionGapIds.has(h.id)}
+                          distanceMi={h.distanceMi}
                           onClick={() => { setActiveId(h.id); setDetailHotspot(h); }}
                         />
                       </div>

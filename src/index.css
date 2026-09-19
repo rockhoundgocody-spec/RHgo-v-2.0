@@ -320,4 +320,38 @@
     40%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   }
+
+  @keyframes rhgo-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .rhgo-shimmer {
+    background: linear-gradient(90deg, hsla(0,0%,100%,0.04) 0%, hsla(280,80%,80%,0.16) 45%, hsla(0,0%,100%,0.04) 100%);
+    background-size: 200% 100%;
+    animation: rhgo-shimmer 1.6s ease-in-out infinite;
+  }
+  .mint-cta {
+    background: #9FE8D0;
+    color: #0a0a14;
+    box-shadow: 0 0 36px -8px rgba(159,232,208,0.45);
+  }
+  .page-card {
+    background: linear-gradient(160deg, hsla(250, 28%, 12%, 0.88), hsla(240, 24%, 7%, 0.94));
+    border: 1px solid hsla(265, 40%, 55%, 0.18);
+    box-shadow: inset 0 1px 0 hsla(265, 80%, 95%, 0.08), 0 10px 28px -12px hsla(245, 50%, 4%, 0.7);
+    border-radius: 1.1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hub-aurora,
+    .clover-listen-ring,
+    .animate-orb-ring,
+    .animate-amethyst-pulse,
+    .animate-orb-speak,
+    .animate-hud-scan,
+    .animate-liquid-shift,
+    .rhgo-shimmer {
+      animation: none !important;
+    }
+  }
 }

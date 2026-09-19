@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS_MI = 3959;
-const MAX_RADIUS_MI = 25;
+const FALLBACK_RADIUS_MI = [25, 80, 200];
 
 // Haversine distance in miles with pre-calculated user latitude radian / cosine parameters
 function distanceMi(
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       : 'No specimens logged yet.';
 
     // 2. Nearby hotspots — public read, sort by distance if geo available
-    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-updated_date', 100);
+    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
     let scored;
     if (lat != null && lng != null) {
       const userLatRad = lat * DEG_TO_RAD;
@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
         const dist = hasGeo
           ? distanceMi(lat, lng, h.lat, h.lng, userLatRad, cosUserLat)
           : null;
+        const publicLand = ['public', 'blm', 'forest_service', 'state_park'].includes(h.land_type);
         return {
+          id: h.id,
           name: h.name,
           state: h.state,
           lat: h.lat,
@@ -65,14 +67,22 @@ Deno.serve(async (req) => {
           difficulty: h.difficulty,
           trust_score: h.trust_score,
           land_type: h.land_type,
-          distanceMi: dist != null ? Math.round(dist) : null,
+          distanceMi: dist != null ? Math.round(dist * 10) / 10 : null,
+          huntScore: (dist == null ? 0 : Math.max(0, 40 - dist * 0.8))
+            + (publicLand ? 12 : 0)
+            + (Number(h.trust_score) || 0) * 15,
         };
       });
-      // Only keep hotspots within the 25-mile suggestion radius
-      scored = scored.filter(h => h.distanceMi != null && h.distanceMi <= MAX_RADIUS_MI);
-      scored.sort((a, b) => (a.distanceMi ?? 9999) - (b.distanceMi ?? 9999));
+      let inRange = [];
+      for (const radius of FALLBACK_RADIUS_MI) {
+        inRange = scored.filter(h => h.distanceMi != null && h.distanceMi <= radius);
+        if (inRange.length >= 3) break;
+      }
+      scored = (inRange.length ? inRange : scored.filter(h => h.distanceMi != null))
+        .sort((a, b) => (b.huntScore ?? 0) - (a.huntScore ?? 0) || (a.distanceMi ?? 9999) - (b.distanceMi ?? 9999));
     } else {
       scored = hotspots.map(h => ({
+        id: h.id,
         name: h.name,
         state: h.state,
         lat: h.lat,
@@ -108,8 +118,8 @@ ${collectedSummary}
 
 NEARBY HOTSPOTS (closest first):
 ${hotspotContext || (lat != null && lng != null
-  ? `No mapped hotspots within ${MAX_RADIUS_MI} miles — set hotspot_name and distance_mi to null and suggest based on collection gaps + local geology.`
-  : 'No mapped hotspots nearby — suggest based on general Michigan / Great Lakes geology.')}
+  ? 'No mapped hotspots in range — set hotspot_name and distance_mi to null and suggest based on collection gaps + local geology.'
+  : 'No GPS — suggest based on collection gaps and common US field stones, not a single region.')}
 
 MINERALS AVAILABLE NEARBY THEY HAVEN'T FOUND YET:
 ${uncollectedNearby.length ? uncollectedNearby.join(', ') : 'Cross-reference collection gaps with hotspot minerals.'}
@@ -120,7 +130,7 @@ Rules:
 - For each, name the best nearby hotspot, what to look for, and why it's a good next target.
 - If no geolocation was given, still suggest based on collection gaps + general Midwest geology.
 - Be accurate — only reference minerals that genuinely occur at the named hotspots.
-- Only name hotspots from the list above (all within ${MAX_RADIUS_MI} miles). Never suggest a site farther than ${MAX_RADIUS_MI} miles away.
+- Only name hotspots from the list above. Prefer public land and minerals they do not already have.
 - Keep each suggestion's "why" to one sentence.
 
 Output a JSON object:
@@ -180,6 +190,7 @@ Output a JSON object:
         const match = nearbyByName.get(String(s.hotspot_name || '').toLowerCase());
         return {
           ...s,
+          hotspot_id: match ? match.id : null,
           hotspot_name: match ? match.name : null,
           distance_mi: match ? match.distanceMi : null,
         };

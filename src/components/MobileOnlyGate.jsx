@@ -15,6 +15,8 @@ const PUBLIC_ROUTES = [
   '/about',
   '/contact',
   '/demo',
+  '/scan',
+  '/onboarding',
   '/agate-guide',
   '/clubs',
   '/find-of-the-week',

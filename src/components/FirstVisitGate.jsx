@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import IntroOrb from '@/components/hub/IntroOrb.jsx';
+import { base44 } from '@/api/base44Client';
+import GoogleIcon from '@/components/GoogleIcon';
 
 /**
  * FirstVisitGate — the very first screen a new visitor sees.
@@ -9,15 +11,17 @@ import IntroOrb from '@/components/hub/IntroOrb.jsx';
  */
 export default function FirstVisitGate({ onChoice }) {
   const [name, setName] = useState('');
-  const [touched, setTouched] = useState(false);
 
   const handleBegin = () => {
-    const trimmed = name.trim().slice(0, 30);
-    if (!trimmed) {
-      setTouched(true);
-      return;
-    }
+    const trimmed = name.trim().slice(0, 30) || 'Explorer';
     onChoice('new', trimmed);
+  };
+
+  const handleGoogle = () => {
+    const trimmed = name.trim().slice(0, 30);
+    if (trimmed) localStorage.setItem('rhgo_user_name', trimmed);
+    onChoice('google', trimmed);
+    base44.auth.loginWithProvider('google', '/');
   };
 
   const handleReturning = () => {
@@ -63,7 +67,7 @@ export default function FirstVisitGate({ onChoice }) {
         <div className="text-center">
           <h1 className="text-white font-bold text-xl tracking-tight">Welcome to RockHound-GO</h1>
           <p className="text-white/50 text-[14px] font-light mt-1.5">
-            What should we call you?
+            Scan a rock in seconds — name is optional.
           </p>
         </div>
 
@@ -74,15 +78,13 @@ export default function FirstVisitGate({ onChoice }) {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleBegin(); }}
           maxLength={30}
-          placeholder="Your name…"
+          placeholder="Name (optional)"
           aria-label="Your name"
           autoFocus
           className="w-full px-5 py-4 rounded-2xl text-white text-center text-base font-medium outline-none placeholder:text-white/25 focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           style={{
             background: 'hsla(255, 30%, 12%, 0.7)',
-            border: touched && !name.trim()
-              ? '1px solid hsla(0, 70%, 60%, 0.5)'
-              : '1px solid hsla(280, 80%, 65%, 0.4)',
+            border: '1px solid hsla(280, 80%, 65%, 0.4)',
             boxShadow: '0 0 24px hsla(280, 80%, 50%, 0.15), inset 0 1px 0 hsla(280, 80%, 90%, 0.1)',
             backdropFilter: 'blur(12px)',
           }}
@@ -99,8 +101,16 @@ export default function FirstVisitGate({ onChoice }) {
             border: '1px solid hsla(280, 80%, 65%, 0.4)',
           }}
         >
-          Begin your journey
+          Start hunting
         </motion.button>
+
+        <button
+          type="button"
+          onClick={handleGoogle}
+          className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 transition"
+        >
+          <GoogleIcon className="w-4 h-4" /> Continue with Google
+        </button>
 
         {/* Divider */}
         <div className="w-full flex items-center gap-3">
@@ -122,7 +132,7 @@ export default function FirstVisitGate({ onChoice }) {
           onClick={() => onChoice('guest')}
           className="text-white/35 text-[12px] font-medium hover:text-white/60 transition mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
         >
-          Just try a scan first
+          Just scan one first — no account
         </button>
       </motion.div>
     </div>
