@@ -75,8 +75,9 @@ export default function FirstVisitGate({ onChoice }) {
           onKeyDown={(e) => { if (e.key === 'Enter') handleBegin(); }}
           maxLength={30}
           placeholder="Your name…"
+          aria-label="Your name"
           autoFocus
-          className="w-full px-5 py-4 rounded-2xl text-white text-center text-base font-medium outline-none placeholder:text-white/25"
+          className="w-full px-5 py-4 rounded-2xl text-white text-center text-base font-medium outline-none placeholder:text-white/25 focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           style={{
             background: 'hsla(255, 30%, 12%, 0.7)',
             border: touched && !name.trim()
@@ -91,7 +92,7 @@ export default function FirstVisitGate({ onChoice }) {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={handleBegin}
-          className="w-full h-14 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2"
+          className="w-full h-14 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           style={{
             background: 'linear-gradient(135deg, hsla(280, 80%, 50%, 0.85), hsla(265, 70%, 40%, 0.9))',
             boxShadow: '0 0 30px hsla(280, 80%, 50%, 0.3)',
@@ -111,7 +112,7 @@ export default function FirstVisitGate({ onChoice }) {
         {/* Returning user link */}
         <button
           onClick={handleReturning}
-          className="text-white/55 text-[14px] font-medium hover:text-white/80 transition"
+          className="text-white/55 text-[14px] font-medium hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
         >
           I already have an account
         </button>
@@ -119,7 +120,7 @@ export default function FirstVisitGate({ onChoice }) {
         {/* Guest scan — value before signup */}
         <button
           onClick={() => onChoice('guest')}
-          className="text-white/35 text-[12px] font-medium hover:text-white/60 transition mt-1"
+          className="text-white/35 text-[12px] font-medium hover:text-white/60 transition mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
         >
           Just try a scan first
         </button>
