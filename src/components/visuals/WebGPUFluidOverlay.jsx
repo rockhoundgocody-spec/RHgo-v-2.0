@@ -4,6 +4,7 @@ import {
   Fn, vec2, vec3, vec4, float, int, uniform, uv, mix, fract,
   length, smoothstep, mx_fractal_noise_float, abs, clamp,
   textureStore, textureLoad, instanceIndex, ivec2, time,
+  mx_hsvtorgb,
 } from 'three/tsl';
 
 /**
@@ -145,9 +146,7 @@ export default function WebGPUFluidOverlay({
           const sat = float(0.85);
           const val = clamp(dens.mul(uIntensity).mul(2.0), float(0.0), float(1.4));
 
-          const K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-          const pp = abs(fract(vec3(h, h, h).add(K.xyz)).mul(6.0).sub(K.www));
-          const rgb = val.mul(mix(K.xxx, pp.sub(K.xxx).clamp(0, 1), sat));
+          const rgb = mx_hsvtorgb(vec3(h, sat, val));
 
           const centered = uv().sub(0.5);
           const r = length(centered);
