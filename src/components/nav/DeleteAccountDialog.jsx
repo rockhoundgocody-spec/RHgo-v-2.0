@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export function deleteUserData(client, email) {
   return Promise.all([
@@ -18,40 +19,9 @@ export default function DeleteAccountDialog({ onClose }) {
   const [error, setError] = useState('');
   const dialogRef = useRef(null);
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    const dialog = dialogRef.current;
-    const getControls = () => Array.from(dialog?.querySelectorAll(
-      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    ) || []);
-    (getControls()[0] || dialog)?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const controls = getControls();
-      if (controls.length === 0) return;
-      const first = controls[0];
-      const last = controls[controls.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus?.();
-    };
-  }, [onClose]);
+  useFocusTrap(dialogRef, true, {
+    onEscape: onClose,
+  });
 
   const handleDelete = async () => {
     setConfirming(true);

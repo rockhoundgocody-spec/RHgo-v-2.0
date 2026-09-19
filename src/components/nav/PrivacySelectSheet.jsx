@@ -1,6 +1,7 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const OPTIONS = [
   { value: 'private', label: 'Private', description: 'Only you can see your locations' },
@@ -16,40 +17,11 @@ export default function PrivacySelectSheet({ value, onChange }) {
   const dialogId = useId();
   const titleId = useId();
 
-  useEffect(() => {
-    if (!open) return;
-
-    const sheet = sheetRef.current;
-    const focusable = () => Array.from(sheet?.querySelectorAll('button:not([disabled])') || []);
-    const selected = sheet?.querySelector('[aria-checked="true"]');
-    (selected || focusable()[0] || sheet)?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const controls = focusable();
-      if (controls.length === 0) return;
-      const first = controls[0];
-      const last = controls[controls.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      triggerRef.current?.focus();
-    };
-  }, [open]);
+  useFocusTrap(sheetRef, open, {
+    onEscape: () => setOpen(false),
+    initialFocusSelector: '[aria-checked="true"]',
+    triggerRef,
+  });
 
   return (
     <>

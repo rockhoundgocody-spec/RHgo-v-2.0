@@ -44,6 +44,7 @@ vi.mock('react', async (importOriginal) => {
     useEffect: (fn) => {
       effectStore.push(fn);
     },
+    useRef: (initial) => ({ current: initial }),
   };
 });
 

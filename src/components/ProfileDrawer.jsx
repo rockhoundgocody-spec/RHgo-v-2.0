@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, ChevronRight, X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 function DrawerHeader({ onClose }) {
   return (
@@ -85,6 +86,8 @@ export default function ProfileDrawer() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const triggerRef = useRef(null);
+  const drawerRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -100,40 +103,10 @@ export default function ProfileDrawer() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return undefined;
-
-    const trigger = document.getElementById('profile-drawer-trigger');
-    const drawer = document.getElementById('profile-drawer');
-    const focusable = drawer?.querySelectorAll(
-      'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    const first = focusable?.[0];
-    const last = focusable?.[focusable.length - 1];
-    first?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab' || !first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      trigger?.focus();
-    };
-  }, [isOpen]);
+  useFocusTrap(drawerRef, isOpen, {
+    onEscape: () => setIsOpen(false),
+    triggerRef,
+  });
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -163,6 +136,7 @@ export default function ProfileDrawer() {
     <>
       {/* Drawer trigger button */}
       <button
+        ref={triggerRef}
         id="profile-drawer-trigger"
         type="button"
         onClick={() => setIsOpen(true)}
@@ -185,6 +159,7 @@ export default function ProfileDrawer() {
             aria-hidden="true"
           />
           <div
+            ref={drawerRef}
             id="profile-drawer"
             role="dialog"
             aria-modal="true"
