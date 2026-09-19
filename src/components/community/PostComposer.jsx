@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { stripExif } from '@/lib/stripExif';
 import { Loader2, ImagePlus, Send } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 
@@ -28,7 +29,9 @@ export default function PostComposer({ onPosted }) {
     if (!file) return;
     setBusy(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Strip EXIF metadata (e.g. embedded GPS coordinates) before upload
+      const clean = await stripExif(file);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: clean });
       setImageUrl(file_url);
     } finally {
       setBusy(false);
