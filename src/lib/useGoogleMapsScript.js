@@ -2,12 +2,8 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
 /**
- * Loads the Google Maps API, reusing an existing Rockhound Maps script when present.
- * Requests an API key from the backend when one is not configured in the client.
- *
- * @param {string} libraries - Comma-separated Maps library names to request.
- * @returns {{mapsReady: boolean, apiKey: string|null, loadError: boolean}} The API key and
- * flags indicating whether Maps is available or could not be loaded.
+ * Custom hook to load and manage Google Maps API script state.
+ * Prevents duplicate script tag injection by polling if an existing script is present.
  */
 export function useGoogleMapsScript(libraries = 'places,geometry') {
   const [mapsReady, setMapsReady] = useState(() => !!globalThis.window?.google?.maps?.Map);
