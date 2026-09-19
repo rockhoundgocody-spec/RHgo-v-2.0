@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import GoogleIcon from '@/components/GoogleIcon';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import SeoJsonLd from '@/components/SeoJsonLd.jsx';
 import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
 
 const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/e29b0b8c6_generated_image.png';
@@ -23,6 +24,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-between relative overflow-hidden"
       style={{ background: '#0a0a14' }}>
+      <SeoJsonLd />
 
       {/* Geodesic orb background — drifting glowing spheres */}
       <GeodesicOrbBackground />

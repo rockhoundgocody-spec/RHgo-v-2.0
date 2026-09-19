@@ -180,6 +180,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     historyRef.current = [];
     setMessages([{ role: 'assistant', content: openingLine }]);
     historyRef.current = [{ role: 'assistant', content: openingLine }];
+    import('@/lib/analytics').then(({ trackEvent }) => trackEvent('clover_session_start')).catch(() => {});
     say(openingLine);
   }, [say, unlock]);
 

@@ -1,8 +1,15 @@
 import React from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 export default function About() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'About RockHound-GO — Field companion for rockhounds',
+    'RockHound-GO helps collectors identify minerals, find legal dig sites, and build a Geo-DEX collection with Clover as your field companion.',
+  );
   return (
     <div className="px-4 lg:px-8 pt-6 pb-24 max-w-3xl mx-auto">
       <GlassPanel variant="amethyst">

@@ -10,8 +10,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RockHound GO" />
 
-    <!-- SEO — public pages are indexable; authenticated app routes flip to noindex via useSeoRobots -->
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" id="robots-meta" />
+    <!-- Default noindex; public pages call useSeoRobots(true). GTM/GA4 load via VITE_* env in analytics.js -->
+    <meta name="robots" content="noindex, nofollow" id="robots-meta" />
+    <!-- Optional: set VITE_GSC_VERIFICATION in env to inject google-site-verification at runtime -->
     <meta name="description" content="RockHound-GO — AI-powered field companion for rockhounds. Identify minerals instantly with AR scan, discover hotspots, and build your Geo-DEX collection." />
     <meta name="keywords" content="rockhounding, mineral identification, geology app, crystal collecting, AI rock ID, rock identifier, mineral scanner, geology field app" />
     <link rel="canonical" href="https://rhgo.me" />
