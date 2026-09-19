@@ -3,13 +3,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Public app: guests can talk to Clover too. If there's no authenticated
+    // user, fall back to a generic name instead of rejecting the request.
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch {
+      user = null;
+    }
 
     const { history = [], companion, todays_finds = 0 } = await req.json();
 
     const c = companion;
-    const name = (user.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
+    const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
 
     const stateBits = c
       ? [
