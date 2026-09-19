@@ -43,12 +43,26 @@ const GUIDANCE_CARDS = [
  */
 export default function ExploreEmptyState({ hotspots, userLocation, onSelectHotspot, onAction }) {
   const nearest = useMemo(() => {
-    if (!userLocation) return [];
-    return [...hotspots]
-      .filter(h => h.lat != null && h.lng != null)
-      .map(h => ({ ...h, _dist: haversineMiles(userLocation, h) }))
-      .sort((a, b) => a._dist - b._dist)
-      .slice(0, 3);
+    if (!userLocation || !hotspots?.length) return [];
+
+    // Bolt Optimization: Perform a single-pass O(N) scan to maintain the top 3 nearest hotspots.
+    // This avoids O(N log N) full array sorting, array cloning, and intermediate map/filter allocations per render.
+    const top3 = [];
+    for (let i = 0; i < hotspots.length; i++) {
+      const h = hotspots[i];
+      if (!h || h.lat == null || h.lng == null) continue;
+      const dist = haversineMiles(userLocation, h);
+      const item = { ...h, _dist: dist };
+
+      if (top3.length < 3) {
+        top3.push(item);
+        top3.sort((a, b) => a._dist - b._dist);
+      } else if (dist < top3[2]._dist) {
+        top3[2] = item;
+        top3.sort((a, b) => a._dist - b._dist);
+      }
+    }
+    return top3;
   }, [hotspots, userLocation]);
 
   const hasNearby = nearest.length > 0 && nearest[0]._dist <= RADIUS_MILES;
