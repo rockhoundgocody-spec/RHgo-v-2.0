@@ -35,15 +35,15 @@ export default function QuestEngine({ userEmail }) {
     if (!userEmail || generating) return;
     setGenerating(true);
     const picks = [...QUEST_TEMPLATES].sort(() => Math.random() - 0.5).slice(0, 3);
-    await Promise.all(picks.map((t) =>
-      base44.entities.Quest.create({
+    await base44.entities.Quest.bulkCreate(
+      picks.map((t) => ({
         owner_email: userEmail,
         ...t,
         status: 'active',
         progress: 0,
         expires_at: getExpiryDate(t.quest_type),
-      })
-    ));
+      }))
+    );
     setGenerating(false);
     refetch();
   };

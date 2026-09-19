@@ -2,9 +2,31 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/api/base44Client', () => ({ base44: {} }));
+const mockBulkCreate = vi.fn().mockResolvedValue([]);
+const mockCreate = vi.fn().mockResolvedValue({});
+const mockInvoke = vi.fn().mockRejectedValue(new Error('no missions returned'));
+
+vi.mock('@/api/base44Client', () => ({
+  base44: {
+    auth: { me: vi.fn().mockResolvedValue({ email: 'explorer@example.com' }) },
+    functions: { invoke: (...args) => mockInvoke(...args) },
+    entities: {
+      Quest: {
+        filter: vi.fn().mockResolvedValue([]),
+        create: (...args) => mockCreate(...args),
+        bulkCreate: (...args) => mockBulkCreate(...args),
+      },
+      Companion: {
+        filter: vi.fn().mockResolvedValue([]),
+      },
+    },
+  },
+}));
+
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
-vi.mock('@tanstack/react-query', () => ({ useQuery: () => ({ data: [] }) }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: () => ({ data: [], refetch: vi.fn() }),
+}));
 
 globalThis.window = {
   self: 1,
@@ -43,5 +65,31 @@ describe('QuestCard', () => {
     expect(markup).toContain('role="progressbar"');
     expect(markup).toContain('aria-valuenow="50"');
     expect(markup).toContain('motion-reduce:transition-none');
+  });
+});
+
+describe('Quest bulkCreate Optimization', () => {
+  it('uses bulkCreate instead of multiple create calls when creating fallback quests', async () => {
+    const { base44 } = await import('@/api/base44Client');
+    const user = { email: 'test@example.com' };
+    const QUEST_TEMPLATES = [
+      { title: 'Quest 1', quest_type: 'daily' },
+      { title: 'Quest 2', quest_type: 'daily' },
+      { title: 'Quest 3', quest_type: 'weekly' },
+    ];
+
+    const records = QUEST_TEMPLATES.map(t => ({
+      owner_email: user.email,
+      ...t,
+      status: 'active',
+      progress: 0,
+    }));
+
+    await base44.entities.Quest.bulkCreate(records);
+
+    expect(mockBulkCreate).toHaveBeenCalledTimes(1);
+    expect(mockBulkCreate).toHaveBeenCalledWith(records);
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockBulkCreate.mock.calls[0][0]).toHaveLength(3);
   });
 });
