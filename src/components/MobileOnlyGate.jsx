@@ -27,6 +27,8 @@ const PUBLIC_ROUTES = [
   '/reset-password',
   // MCP OAuth consent — AI clients (Claude, ChatGPT) run on desktop
   '/oauth/consent',
+  // MCP connection instructions — users read these on desktop
+  '/connect',
 ];
 
 function isPublicPath(pathname) {
