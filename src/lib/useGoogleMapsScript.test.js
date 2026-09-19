@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as React from 'react';
 
-// Mock react's useState and useEffect to inspect hook execution
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
@@ -22,140 +21,238 @@ vi.mock('@/api/base44Client', () => ({
 import { base44 } from '@/api/base44Client';
 import { useGoogleMapsScript } from './useGoogleMapsScript.js';
 
+const flushPromises = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
 describe('useGoogleMapsScript', () => {
-  let mockSetMapsReady;
-  let mockSetApiKey;
-  let mockSetLoadError;
+  let effects;
+  let setMapsReady;
+  let setApiKey;
+  let setLoadError;
   let originalWindow;
   let originalDocument;
+  let hadWindow;
+  let hadDocument;
+
+  const renderHook = (libraries) => useGoogleMapsScript(libraries);
+  const runEffect = (index) => effects[index]();
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockSetMapsReady = vi.fn();
-    mockSetApiKey = vi.fn();
-    mockSetLoadError = vi.fn();
-
+    hadWindow = Object.prototype.hasOwnProperty.call(globalThis, 'window');
+    hadDocument = Object.prototype.hasOwnProperty.call(globalThis, 'document');
     originalWindow = globalThis.window;
     originalDocument = globalThis.document;
 
-    base44.functions.invoke.mockResolvedValue({ data: { apiKey: 'default-key' } });
+    setMapsReady = vi.fn();
+    setApiKey = vi.fn();
+    setLoadError = vi.fn();
+    effects = [];
 
-    // Standard mock setup for useState
-    let stateCallCount = 0;
+    const setters = [setMapsReady, setApiKey, setLoadError];
+    let stateIndex = 0;
     React.useState.mockImplementation((initial) => {
-      const callIndex = stateCallCount++;
-      const val = typeof initial === 'function' ? initial() : initial;
-      if (callIndex % 3 === 0) return [val, mockSetMapsReady];
-      if (callIndex % 3 === 1) return [val, mockSetApiKey];
-      return [val, mockSetLoadError];
+      const value = typeof initial === 'function' ? initial() : initial;
+      return [value, setters[stateIndex++]];
     });
+    React.useEffect.mockImplementation((effect) => effects.push(effect));
 
-    React.useEffect.mockImplementation((effect) => {
-      const cleanup = effect();
-      if (typeof cleanup === 'function') {
-        React._lastCleanup = cleanup;
-      }
-    });
+    globalThis.window = {};
+    globalThis.document = {
+      querySelector: vi.fn(() => null),
+      createElement: vi.fn(() => ({ dataset: {} })),
+      head: { appendChild: vi.fn() },
+    };
+    base44.functions.invoke.mockReset();
+    base44.functions.invoke.mockResolvedValue({ data: { apiKey: 'backend-key' } });
   });
 
   afterEach(() => {
-    globalThis.window = originalWindow;
-    globalThis.document = originalDocument;
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    if (hadWindow) globalThis.window = originalWindow;
+    else delete globalThis.window;
+    if (hadDocument) globalThis.document = originalDocument;
+    else delete globalThis.document;
   });
 
-  it('detects when window.google.maps.Map is already defined', () => {
-    globalThis.window = {
-      google: { maps: { Map: class {} } },
-    };
+  it('starts ready and skips key fetching when Google Maps and a window key already exist', () => {
+    const Map = class {};
+    window.google = { maps: { Map } };
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
 
-    const res = useGoogleMapsScript();
-    expect(res.mapsReady).toBe(true);
+    const result = renderHook();
+    runEffect(0);
+    runEffect(1);
+
+    expect(result).toEqual({ mapsReady: true, apiKey: 'window-key', loadError: false });
+    expect(base44.functions.invoke).not.toHaveBeenCalled();
+    expect(document.querySelector).not.toHaveBeenCalled();
+    expect(setMapsReady).toHaveBeenCalledWith(true);
   });
 
-  it('fetches API key from base44 backend function when missing', async () => {
-    globalThis.window = {};
-    const promise = Promise.resolve({ data: { apiKey: 'backend-key-123' } });
-    base44.functions.invoke.mockReturnValueOnce(promise);
+  it('uses the Vite environment key when no window key is configured', () => {
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'vite-key');
 
-    useGoogleMapsScript();
+    const result = renderHook();
+    runEffect(0);
 
+    expect(result.apiKey).toBe('vite-key');
+    expect(base44.functions.invoke).not.toHaveBeenCalled();
+  });
+
+  it('is safe to initialize without a window during server-side rendering', () => {
+    delete globalThis.window;
+
+    const result = renderHook();
+
+    expect(result).toEqual({ mapsReady: false, apiKey: null, loadError: false });
+  });
+
+  it.each([
+    [{ data: { apiKey: 'api-key-field' } }, 'api-key-field'],
+    [{ data: { key: 'legacy-key-field' } }, 'legacy-key-field'],
+  ])('fetches a missing API key from the backend response %#', async (response, expectedKey) => {
+    base44.functions.invoke.mockResolvedValueOnce(response);
+    renderHook();
+
+    runEffect(0);
+    await flushPromises();
+
+    expect(base44.functions.invoke).toHaveBeenCalledOnce();
     expect(base44.functions.invoke).toHaveBeenCalledWith('getMapsKey', {});
-    await promise;
-    expect(mockSetApiKey).toHaveBeenCalledWith('backend-key-123');
+    expect(setApiKey).toHaveBeenCalledWith(expectedKey);
+    expect(setLoadError).not.toHaveBeenCalled();
   });
 
-  it('sets loadError when base44 function fails', async () => {
-    globalThis.window = {};
-    const promise = Promise.reject(new Error('Network error'));
-    base44.functions.invoke.mockReturnValueOnce(promise);
+  it('reports an error when the backend returns no usable key', async () => {
+    base44.functions.invoke.mockResolvedValueOnce({ data: {} });
+    renderHook();
 
-    useGoogleMapsScript();
+    runEffect(0);
+    await flushPromises();
 
-    try {
-      await promise;
-    } catch {
-      // Expected rejection
-    }
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockSetLoadError).toHaveBeenCalledWith(true);
+    expect(setApiKey).not.toHaveBeenCalled();
+    expect(setLoadError).toHaveBeenCalledWith(true);
   });
 
-  it('creates script element and appends to head when apiKey is present', () => {
-    const appendedScripts = [];
-    globalThis.window = { GOOGLE_MAPS_API_KEY: 'test-api-key' };
-    globalThis.document = {
-      querySelector: vi.fn().mockReturnValue(null),
-      createElement: vi.fn().mockImplementation((tag) => {
-        const el = {
-          tagName: tag.toUpperCase(),
-          dataset: {},
-        };
-        return el;
-      }),
-      head: {
-        appendChild: vi.fn((el) => {
-          appendedScripts.push(el);
-        }),
-      },
-    };
+  it('reports an error when fetching the key rejects', async () => {
+    base44.functions.invoke.mockRejectedValueOnce(new Error('network unavailable'));
+    renderHook();
 
-    useGoogleMapsScript('places,geometry');
+    runEffect(0);
+    await flushPromises();
 
-    expect(document.createElement).toHaveBeenCalledWith('script');
-    expect(appendedScripts[0].src).toContain('https://maps.googleapis.com/maps/api/js?key=test-api-key');
-    expect(appendedScripts[0].src).toContain('libraries=places,geometry');
-    expect(appendedScripts[0].dataset.rockhoundGmaps).toBe('1');
-
-    // Simulate onload callback
-    appendedScripts[0].onload();
-    expect(mockSetMapsReady).toHaveBeenCalledWith(true);
-
-    // Simulate onerror callback
-    appendedScripts[0].onerror();
-    expect(mockSetLoadError).toHaveBeenCalledWith(true);
+    expect(setApiKey).not.toHaveBeenCalled();
+    expect(setLoadError).toHaveBeenCalledWith(true);
   });
 
-  it('polls when script element with data-rockhound-gmaps already exists in DOM', () => {
-    vi.useFakeTimers();
-    const existingScript = {};
-    globalThis.window = { GOOGLE_MAPS_API_KEY: 'test-api-key' };
-    globalThis.document = {
-      querySelector: vi.fn().mockReturnValue(existingScript),
-    };
+  it('does not inspect or inject scripts until an API key is available', () => {
+    renderHook();
 
-    useGoogleMapsScript();
+    const cleanup = runEffect(1);
+
+    expect(cleanup).toBeUndefined();
+    expect(document.querySelector).not.toHaveBeenCalled();
+    expect(document.createElement).not.toHaveBeenCalled();
+  });
+
+  it('injects a tagged async script with the default libraries and handles a successful load', () => {
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    const script = { dataset: {} };
+    document.createElement.mockReturnValue(script);
+    renderHook();
+
+    runEffect(1);
 
     expect(document.querySelector).toHaveBeenCalledWith('script[data-rockhound-gmaps]');
+    expect(document.createElement).toHaveBeenCalledWith('script');
+    expect(script).toMatchObject({
+      src: 'https://maps.googleapis.com/maps/api/js?key=window-key&v=weekly&libraries=places,geometry',
+      async: true,
+      dataset: { rockhoundGmaps: '1' },
+    });
+    expect(document.head.appendChild).toHaveBeenCalledOnce();
+    expect(document.head.appendChild).toHaveBeenCalledWith(script);
 
-    // Before window.google maps is ready
+    window.google = { maps: { Map: class {} } };
+    script.onload();
+    expect(setMapsReady).toHaveBeenCalledWith(true);
+  });
+
+  it('includes custom libraries in the injected script URL', () => {
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    const script = { dataset: {} };
+    document.createElement.mockReturnValue(script);
+    renderHook('drawing,visualization');
+
+    runEffect(1);
+
+    expect(script.src).toBe(
+      'https://maps.googleapis.com/maps/api/js?key=window-key&v=weekly&libraries=drawing,visualization'
+    );
+  });
+
+  it('reports an injected script load failure', () => {
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    const script = { dataset: {} };
+    document.createElement.mockReturnValue(script);
+    renderHook();
+
+    runEffect(1);
+    script.onerror();
+
+    expect(setLoadError).toHaveBeenCalledWith(true);
+    expect(setMapsReady).not.toHaveBeenCalled();
+  });
+
+  it('polls an existing script until Google Maps becomes available', () => {
+    vi.useFakeTimers();
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    document.querySelector.mockReturnValue({});
+    renderHook();
+
+    runEffect(1);
     vi.advanceTimersByTime(100);
-    expect(mockSetMapsReady).not.toHaveBeenCalled();
+    expect(setMapsReady).not.toHaveBeenCalled();
 
-    // Now set window.google.maps.Map
-    globalThis.window.google = { maps: { Map: class {} } };
+    window.google = { maps: { Map: class {} } };
     vi.advanceTimersByTime(100);
-    expect(mockSetMapsReady).toHaveBeenCalledWith(true);
 
-    vi.useRealTimers();
+    expect(setMapsReady).toHaveBeenCalledWith(true);
+    expect(setLoadError).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(document.createElement).not.toHaveBeenCalled();
+  });
+
+  it('times out after 100 polls when an existing script never becomes ready', () => {
+    vi.useFakeTimers();
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    document.querySelector.mockReturnValue({});
+    renderHook();
+
+    runEffect(1);
+    vi.advanceTimersByTime(10_000);
+
+    expect(setMapsReady).not.toHaveBeenCalled();
+    expect(setLoadError).toHaveBeenCalledWith(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('cancels existing-script polling during effect cleanup', () => {
+    vi.useFakeTimers();
+    window.GOOGLE_MAPS_API_KEY = 'window-key';
+    document.querySelector.mockReturnValue({});
+    renderHook();
+
+    const cleanup = runEffect(1);
+    cleanup();
+    window.google = { maps: { Map: class {} } };
+    vi.advanceTimersByTime(10_000);
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(setMapsReady).not.toHaveBeenCalled();
+    expect(setLoadError).not.toHaveBeenCalled();
   });
 });
