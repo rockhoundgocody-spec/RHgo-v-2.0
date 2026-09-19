@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -7,6 +8,10 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { image_url, quick_result, lat, lng } = await req.json();
+
+    if (image_url && !isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
+    }
 
     // Fetch local bedrock geology for locality plausibility
     let geologyContext = '';
