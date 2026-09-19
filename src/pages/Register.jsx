@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,11 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { toast } from "@/components/ui/use-toast";
+import { clearGateChoice, resetGateFlow } from "@/lib/gateStorage";
 
 export default function Register() {
+  const navigate = useNavigate();
+  useEffect(() => { clearGateChoice(); }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -263,6 +266,17 @@ export default function Register() {
         </Button>
       </form>
 
+      <p className="text-center text-sm text-white/40 mt-4">
+        Already have an account?{" "}
+        <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">Sign in</Link>
+      </p>
+      <button
+        type="button"
+        onClick={() => { resetGateFlow(); navigate('/', { replace: true }); }}
+        className="w-full mt-3 text-center text-[12px] text-white/35 hover:text-white/65"
+      >
+        ← Back to welcome / start over
+      </button>
       <p className="text-center text-[10px] text-white/20 mt-4">
         By signing up you agree to our Terms & Privacy Policy
       </p>
