@@ -51,10 +51,13 @@ export default function LiquidGlassShader({ hue = 0.78, intensity = 1.0, speed =
         uniform float u_intensity;
         uniform vec2 u_resolution;
 
+        // Converts HSV (x: hue [0..1], y: saturation [0..1], z: value [0..1]) to RGB.
+        // Uses branchless vector operations for optimal GPU performance.
         vec3 hsv2rgb(vec3 c) {
-          vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+          vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
           vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-          return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+          vec3 rgb = clamp(p - K.xxx, 0.0, 1.0);
+          return c.z * mix(K.xxx, rgb, c.y);
         }
 
         float noise(vec2 p) {
