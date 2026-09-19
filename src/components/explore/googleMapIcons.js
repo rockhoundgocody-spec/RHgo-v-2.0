@@ -14,10 +14,50 @@ export const LAND_COLORS = {
 
 const DIFF_BADGE = { easy: '●', moderate: '◆', hard: '▲', expert: '★' };
 
+function sanitizeSvgNode(node) {
+  if (!node || node.nodeType !== 1) return;
+  const tag = node.localName ? node.localName.toLowerCase() : node.nodeName.toLowerCase();
+  const FORBIDDEN_TAGS = ['script', 'foreignobject', 'iframe', 'object', 'embed', 'style'];
+  if (FORBIDDEN_TAGS.includes(tag)) {
+    node.remove();
+    return;
+  }
+  if (node.attributes) {
+    const attrs = Array.from(node.attributes);
+    for (const attr of attrs) {
+      const name = attr.name.toLowerCase();
+      const val = attr.value.trim().toLowerCase();
+      if (name.startsWith('on')) {
+        node.removeAttribute(attr.name);
+      } else if ((name === 'href' || name === 'xlink:href' || name === 'src') && (val.startsWith('javascript:') || val.startsWith('data:'))) {
+        node.removeAttribute(attr.name);
+      }
+    }
+  }
+  const children = Array.from(node.children);
+  for (const child of children) {
+    sanitizeSvgNode(child);
+  }
+}
+
 function toEl(svg) {
   const div = document.createElement('div');
-  div.innerHTML = svg.trim();
   div.style.transform = 'translateY(50%)';
+  if (typeof DOMParser === 'undefined') return div;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg.trim(), 'image/svg+xml');
+    if (doc.querySelector('parsererror')) return div;
+    const svgEl = doc.querySelector('svg') || (doc.documentElement && doc.documentElement.localName === 'svg' ? doc.documentElement : null);
+    if (svgEl) {
+      sanitizeSvgNode(svgEl);
+      div.appendChild(document.importNode(svgEl, true));
+    }
+  } catch {
+    // If parsing fails, return empty container div safely
+  }
+
   return div;
 }
 
