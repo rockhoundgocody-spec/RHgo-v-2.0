@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, X, Sparkles, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -18,9 +18,11 @@ const TYPE_COLOR = {
  */
 export default function QuestShareCard({ quests, onDismiss }) {
   const [sharing, setSharing] = useState(false);
+  const dialogId = useId();
+  const titleId = useId();
 
   // Show one card at a time; the parent passes newly-completed quests.
-  const quest = quests[0];
+  const quest = quests?.[0];
   if (!quest) return null;
 
   const color = TYPE_COLOR[quest.quest_type] || '#a78bfa';
@@ -67,6 +69,10 @@ export default function QuestShareCard({ quests, onDismiss }) {
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto" onClick={onDismiss} />
 
         <motion.div
+          id={dialogId}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
           initial={{ y: 80, opacity: 0, scale: 0.95 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 60, opacity: 0 }}
@@ -84,12 +90,13 @@ export default function QuestShareCard({ quests, onDismiss }) {
 
           {/* Close button */}
           <button
+            type="button"
             onClick={onDismiss}
-            aria-label="Dismiss"
-            className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition"
+            aria-label="Dismiss quest completion card"
+            className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             style={{ background: 'hsla(0,0%,100%,0.06)' }}
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
 
           <div className="px-5 pt-5 pb-4">
@@ -101,15 +108,15 @@ export default function QuestShareCard({ quests, onDismiss }) {
               >
                 {quest.quest_type} · Complete
               </span>
-              <Sparkles size={13} style={{ color }} className="animate-pulse" />
+              <Sparkles size={13} style={{ color }} className="animate-pulse" aria-hidden="true" />
             </div>
 
             {/* Quest title */}
-            <h2 className="text-lg font-black text-white leading-tight mb-1">{quest.title}</h2>
+            <h2 id={titleId} className="text-lg font-black text-white leading-tight mb-1">{quest.title}</h2>
 
             {/* XP reward */}
             <div className="flex items-center gap-1.5 mb-3">
-              <Zap size={14} style={{ color }} />
+              <Zap size={14} style={{ color }} aria-hidden="true" />
               <span className="text-sm font-bold" style={{ color }}>+{quest.xp_reward} XP earned</span>
             </div>
 
@@ -119,16 +126,17 @@ export default function QuestShareCard({ quests, onDismiss }) {
                 className="flex items-start gap-2 px-3 py-2.5 rounded-xl mb-4"
                 style={{ background: `${color}08`, borderLeft: `2px solid ${color}50` }}
               >
-                <span className="text-base leading-none mt-0.5">🍀</span>
+                <span className="text-base leading-none mt-0.5" aria-hidden="true">🍀</span>
                 <p className="text-[11px] italic text-white/55 leading-relaxed">"{quest.clover_message}"</p>
               </div>
             )}
 
             {/* Share button */}
             <button
+              type="button"
               onClick={handleShare}
               disabled={sharing}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
               style={{
                 background: `linear-gradient(135deg, ${color}30 0%, ${color}15 100%)`,
                 border: `1px solid ${color}50`,
@@ -136,7 +144,7 @@ export default function QuestShareCard({ quests, onDismiss }) {
                 boxShadow: `0 0 20px -6px ${color}40`,
               }}
             >
-              <Share2 size={15} />
+              <Share2 size={15} aria-hidden="true" />
               {sharing ? 'Sharing…' : 'Share this win'}
             </button>
           </div>
