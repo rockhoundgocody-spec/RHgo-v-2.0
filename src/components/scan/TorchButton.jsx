@@ -8,11 +8,13 @@ import { Flashlight, FlashlightOff } from 'lucide-react';
 export default function TorchButton({ supported, on, onToggle, className = '' }) {
   if (!supported) return null;
   const Icon = on ? Flashlight : FlashlightOff;
+  const label = on ? 'Turn flashlight off' : 'Turn flashlight on';
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-label={on ? 'Turn flashlight off' : 'Turn flashlight on'}
+      aria-label={label}
+      title={label}
       aria-pressed={on}
       className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500/50 ${className}`}
       style={{
