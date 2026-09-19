@@ -257,6 +257,49 @@
   .animate-hud-scan { animation: hud-scan 3s linear infinite; }
   .animate-liquid-shift { animation: liquid-shift 12s ease-in-out infinite; }
 
+  @keyframes clover-listen-ring {
+    0% { transform: scale(0.72); opacity: 0.55; }
+    100% { transform: scale(1.45); opacity: 0; }
+  }
+  .clover-listen-ring {
+    position: absolute;
+    inset: -8%;
+    border-radius: 9999px;
+    border: 1.5px solid hsla(160, 90%, 62%, 0.55);
+    box-shadow: 0 0 24px hsla(175, 100%, 55%, 0.25);
+    animation: clover-listen-ring 1.8s ease-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes hub-aurora-shift {
+    0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.05); opacity: 0.55; }
+    50% { transform: translate3d(8%, 6%, 0) scale(1.12); opacity: 0.85; }
+  }
+  .hub-aurora {
+    position: absolute;
+    inset: -20% -10% 20%;
+    background:
+      radial-gradient(ellipse 50% 40% at 20% 10%, hsla(275, 90%, 55%, 0.28), transparent 60%),
+      radial-gradient(ellipse 45% 35% at 85% 18%, hsla(190, 100%, 50%, 0.18), transparent 62%),
+      radial-gradient(ellipse 40% 30% at 50% 0%, hsla(330, 90%, 50%, 0.12), transparent 70%);
+    filter: blur(28px);
+    animation: hub-aurora-shift 16s ease-in-out infinite;
+  }
+  .hub-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(hsla(190, 80%, 60%, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(190, 80%, 60%, 0.04) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 80% 55% at 50% 18%, black 10%, transparent 75%);
+  }
+  .hub-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, transparent 40%, hsl(240 20% 4% / 0.72) 100%);
+  }
+
   /* Hide scrollbars on any element that opts in — keeps the Hub and other
      clean surfaces free of the gutter while staying scrollable. */
   .scrollbar-none {

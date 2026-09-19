@@ -41,12 +41,19 @@ export default function AmethystOrb({
   sublabel,
   orbState = 'idle',
   speaking = false,        // kept for backwards compat — derived from orbState if not set
+  listening = false,
+  thinking = false,
   level = 1,               // companion level — drives visual evolution
   getAmplitude,
   getSpectrum,
   getInteraction,          // liquid-metal response to screen interaction
 }) {
-  const effectiveState = orbState !== 'idle' ? orbState : (speaking ? 'speaking' : 'idle');
+  const effectiveState = orbState !== 'idle'
+    ? orbState
+    : thinking ? 'thinking'
+    : listening ? 'listening'
+    : speaking ? 'speaking'
+    : 'idle';
   const tier = growthTier(level);
   // Drive CSS variables from amplitude + spectrum on each frame — physical pulse,
   // no React re-renders. Spectrum drives the hovering afterglow aura intensity.

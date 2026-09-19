@@ -216,10 +216,10 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
 // - Silence timer only fires final stop when speech goes quiet
 // - confidence gate is lenient (Chrome often reports 0)
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.45;
+const CONFIDENCE_THRESHOLD = 0.12;
 const MIN_TRANSCRIPT_CHARS = 2;
 const MIN_WORD_COUNT       = 1;
-const SILENCE_TIMEOUT_MS   = 4500;
+const SILENCE_TIMEOUT_MS   = 2800;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
@@ -264,9 +264,9 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
     setListening(true);
 
     const rec            = new SR();
-    rec.continuous       = false;
+    rec.continuous       = true;
     rec.interimResults   = true;
-    rec.maxAlternatives  = 1;
+    rec.maxAlternatives  = 3;
     rec.lang             = 'en-US';
     recRef.current       = rec;
 
@@ -277,15 +277,18 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
+        let best = r[0];
+        for (let a = 1; a < r.length; a++) {
+          if ((r[a].confidence || 0) > (best.confidence || 0)) best = r[a];
+        }
         if (r.isFinal) {
-          finalText += r[0].transcript;
-          finalConf  = Math.min(finalConf, r[0].confidence ?? 1);
+          finalText += best.transcript;
+          finalConf  = Math.min(finalConf, best.confidence ?? 0);
         } else {
-          interim += r[0].transcript;
+          interim += best.transcript;
         }
       }
 
-      // Reset silence timer whenever user is speaking (interim or final)
       if (interim || finalText) _resetSilenceTimer(rec);
 
       if (interim && onInterimRef.current) onInterimRef.current(interim);
@@ -295,12 +298,14 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         const wordCount = clean.split(/\s+/).filter(Boolean).length;
         const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
         const tooFew    = wordCount < MIN_WORD_COUNT;
-        const isNoise   = finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD;
+        const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
 
         onInterimRef.current?.('');
         gotFinalRef.current = true;
 
         if (!tooShort && !tooFew && !isNoise) {
+          deadRef.current = true;
+          try { rec.stop(); } catch {}
           onResultRef.current?.(clean);
         }
       }

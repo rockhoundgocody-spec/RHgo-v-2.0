@@ -18,7 +18,7 @@ const PHASE_TEXT = {
  */
 export default function CloverVoicePanel({
   phase, messages, interim, onClose, onHunt, huntLoading,
-  suggestions, onDismissSuggestions, voiceSupported, onSend,
+  suggestions, onDismissSuggestions, voiceSupported, onSend, onListen,
 }) {
   const transcriptRef = useRef(null);
   const [draft, setDraft] = useState('');
@@ -186,27 +186,27 @@ export default function CloverVoicePanel({
         )}
       </div>
 
-      {/* Status line — replaces the old text box */}
-      <div className="px-3 py-2 border-t border-white/8">
-        {voiceSupported ? (
-          <div className="flex items-center justify-center gap-1.5 text-[10px] text-white/35">
-            <VoiceDots active={phase === 'listening'} />
-            <span>{PHASE_TEXT[phase] || ''}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Keyboard size={12} className="text-white/25 shrink-0" />
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }
-              }}
-              placeholder="Voice isn't available here — type instead"
-              className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none"
-            />
-          </div>
-        )}
+      <div className="px-3 py-2 border-t border-white/8 space-y-2">
+        <button
+          type="button"
+          onClick={() => onListen?.()}
+          className="w-full flex items-center justify-center gap-1.5 text-[10px] text-white/45 py-1"
+        >
+          <VoiceDots active={phase === 'listening'} />
+          <span>{PHASE_TEXT[phase] || 'tap to talk'}</span>
+        </button>
+        <div className="flex items-center gap-2">
+          <Keyboard size={12} className="text-white/25 shrink-0" />
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }
+            }}
+            placeholder={voiceSupported ? 'Or type if it is noisy out' : "Voice isn't available — type"}
+            className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none"
+          />
+        </div>
       </div>
     </div>
   );

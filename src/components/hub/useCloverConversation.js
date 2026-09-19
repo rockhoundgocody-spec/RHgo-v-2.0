@@ -24,7 +24,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   const quietTurnsRef = useRef(0);
   const gotResultRef = useRef(false);
 
-  const { speak, stop: stopSpeech, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
+  const { speak, stop: stopSpeech, speaking, getAmplitude, getSpectrum, unlock } = useSpeechSynthesis();
 
   const sendRef = useRef(null);
   const voice = useVoiceInput({
@@ -91,6 +91,8 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     let reply = "Sorry, I missed that — one more time?";
     try {
       const cognitiveContext = getCognitiveMemoryContext();
+      let gps = null;
+      try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
@@ -98,6 +100,8 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         cognitive_context: cognitiveContext,
         brain: getCloverBrain(),
         research_query: local.researchQuery || null,
+        location: gps,
+        user_utterance: text,
       });
       const data = res?.data;
       reply = data?.reply || reply;
@@ -165,13 +169,14 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [phase, voice.listening, beginListening]);
 
   const start = useCallback((openingLine) => {
+    unlock();
     activeRef.current = true;
     quietTurnsRef.current = 0;
     historyRef.current = [];
     setMessages([{ role: 'assistant', content: openingLine }]);
     historyRef.current = [{ role: 'assistant', content: openingLine }];
     say(openingLine);
-  }, [say]);
+  }, [say, unlock]);
 
   const end = useCallback(() => {
     activeRef.current = false;
@@ -192,8 +197,8 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   useEffect(() => () => { activeRef.current = false; }, []);
 
   return {
-    phase, messages, interim, start, end, stop: end, nudge, send,
-    active: activeRef.current,
+    phase, messages, interim, start, end, stop: end, nudge, send, unlock,
+    active: phase !== 'idle',
     voiceSupported: voice.supported,
     getAmplitude, getSpectrum,
   };

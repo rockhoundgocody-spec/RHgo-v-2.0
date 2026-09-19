@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { ScanLine } from 'lucide-react';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
 import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
 import { toast } from '@/components/ui/use-toast';
@@ -86,8 +87,9 @@ export default function Hub() {
     : null;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
-      <header className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
+    <div className="relative min-h-screen flex flex-col overflow-hidden" style={{ background: '#0a0a14' }}>
+      <HubAtmosphere />
+      <header className="relative z-10 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
         <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
         <Link
           to="/profile"
@@ -101,11 +103,11 @@ export default function Hub() {
         </Link>
       </header>
 
-      <div className="flex justify-center mt-6">
-        <HeroOrb companion={companion || profile} size={120} />
+      <div className="relative z-10 flex justify-center mt-4">
+        <HeroOrb companion={companion || profile} size={156} />
       </div>
 
-      <section className="px-5 mt-5">
+      <section className="relative z-10 px-5 mt-4">
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="text-white font-bold text-[13px] tracking-tight">{title}</span>
           <span className="text-white/40 text-[11px] tabular-nums">
@@ -128,7 +130,7 @@ export default function Hub() {
         </div>
       </section>
 
-      <div className="flex justify-center mt-7">
+      <div className="relative z-10 flex justify-center mt-6">
         <Link
           to="/scan"
           className="flex items-center gap-2.5 px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-[0.18em] transition-all active:scale-95"
@@ -136,6 +138,7 @@ export default function Hub() {
             background: '#9FE8D0',
             color: '#0a0a14',
             boxShadow: '0 0 40px -8px rgba(159,232,208,0.5)',
+            animation: 'orb-ring 2.8s ease-in-out infinite',
           }}
         >
           <ScanLine size={18} strokeWidth={2.5} />
@@ -143,11 +146,11 @@ export default function Hub() {
         </Link>
       </div>
 
-      <section className="px-5 mt-8">
+      <section className="relative z-10 px-5 mt-8">
         <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion((prev) => ({ ...prev, ...updated, last_check_in_date: new Date().toISOString().slice(0, 10) }))} />
       </section>
 
-      <section className="px-5 mt-4">
+      <section className="relative z-10 px-5 mt-4 pb-8">
         <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em] mb-2">Today</h2>
         {hotspot ? (
           <Link to="/explore" className="block">

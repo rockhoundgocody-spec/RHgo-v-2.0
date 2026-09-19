@@ -27,19 +27,21 @@ export default function FloatingCloverCompanion() {
   const handleOrbClick = () => {
     playOrbChime(528, 1.2);
     triggerOrbHaptic('tap');
-    if (!expanded) {
+    clover.unlock?.();
+    if (!expanded || clover.phase === 'idle' || clover.phase === 'resting') {
       setExpanded(true);
-      if (clover.phase === 'idle') {
+      if (clover.phase === 'idle' || clover.phase === 'resting') {
         const openers = [
           "Here, hound. What are we checking?",
           "Clover's up. Find or site?",
           "Talk. I'll pull the vault or open scan.",
         ];
         clover.start(openers[Math.floor(Math.random() * openers.length)]);
+      } else {
+        clover.nudge();
       }
     } else {
-      setExpanded(false);
-      clover.end();
+      clover.nudge();
     }
   };
 
@@ -65,6 +67,7 @@ export default function FloatingCloverCompanion() {
               huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
+              onListen={clover.nudge}
             />
           </motion.div>
         )}
@@ -84,6 +87,7 @@ export default function FloatingCloverCompanion() {
         <div className="w-full h-full rounded-full overflow-hidden">
           <AmethystOrb
             size={56}
+            orbState={clover.phase === 'resting' || clover.phase === 'idle' ? 'idle' : clover.phase}
             speaking={clover.phase === 'speaking'}
             listening={clover.phase === 'listening'}
             thinking={clover.phase === 'thinking'}

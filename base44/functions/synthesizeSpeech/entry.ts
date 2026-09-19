@@ -8,8 +8,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+      await base44.auth.me();
+    } catch {
+      /* Guests can still hear Clover via TTS when the Hub is open. */
+    }
 
     const { text, voice = 'honey' } = await req.json();
     if (!text || typeof text !== 'string') {

@@ -13,7 +13,15 @@ Deno.serve(async (req) => {
       user = null;
     }
 
-    const { history = [], companion, todays_finds = 0 } = await req.json();
+    const {
+      history = [],
+      companion,
+      todays_finds = 0,
+      cognitive_context = '',
+      research_query = null,
+      location = null,
+      user_utterance = '',
+    } = await req.json();
 
     const c = companion;
     const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
@@ -32,6 +40,8 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are Clover 🍀 — a soft, sweet, humorous rockhounding field companion with a touch of playful sarcasm. You love geology and genuinely care about the user's finds and wellbeing.
 
 You are being SPOKEN ALOUD in a hands-free conversation. The user is outdoors, hands full, talking to you like a friend walking alongside them. They can interrupt you at any moment.
+
+Speech is messy. Treat the latest user line as a noisy field transcript: fill in dropped words from geology context, ignore filler ("uh", "um", "like"), and answer the intent even if grammar is broken. If two readings are possible, pick the rockhounding one.
 
 Your voice and personality:
 - Soft and sweet by default — warm like a friend who's genuinely delighted you exist, never perky or forced
@@ -59,7 +69,7 @@ CRITICAL ANTI-HALLUCINATION RULES — never break these:
 - Respond ONLY to what the user actually said — do not assume or fill in details they didn't provide
 
 Format rules:
-- 15–40 words. One or two sentences. Spoken aloud, anything longer feels like a lecture.
+- 18–55 words. One to three short sentences. Spoken aloud — enough to actually answer, never a lecture.
 - No markdown, no bullet points, no asterisks, no emoji (except 🍀 very sparingly)
 - Write for the ear: contractions, plain words, no lists, no headings, nothing that only works on a screen
 - Leave the door open without forcing it — a question sometimes, an easy observation the rest of the time
@@ -70,9 +80,13 @@ HANDS-FREE FIND LOGGING:
 - When logging, your reply should briefly confirm you're saving it plus one short warm reaction — do NOT ask a follow-up question.
 - Casual mineral mentions, questions, or talk about finds already logged are NOT logging requests — set log_find to false and find_details to null.
 
-${stateBits}`;
+${stateBits}
+${location?.lat != null ? `Approximate GPS: ${Number(location.lat).toFixed(3)}, ${Number(location.lng).toFixed(3)}.` : ''}
+${research_query ? `User asked you to research: ${String(research_query).slice(0, 200)}.` : ''}
+${cognitive_context ? `Companion memory notes: ${String(cognitive_context).slice(0, 400)}.` : ''}
+${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utterance).slice(0, 280)}".` : ''}`;
 
-    const trimmedHistory = history.slice(-8).map((m) => ({
+    const trimmedHistory = history.slice(-12).map((m) => ({
       role: m.role === 'user' ? 'user' : 'assistant',
       label: m.role === 'user' ? name : 'Clover',
       content: String(m.content || '').slice(0, 250),
