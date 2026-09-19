@@ -9,7 +9,11 @@ export default function Dashboard() {
   const [quests, setQuests] = useState([]);
 
   useEffect(() => {
-    base44.entities.Specimen.list('-found_date').then(setSpecimens).catch(() => setSpecimens([]));
+    // Bolt Optimization: Request only necessary fields for dashboard stats (rarity, lat, lng, location, found_date, created_date)
+    // to significantly reduce network payload and memory overhead compared to fetching full specimen objects.
+    base44.entities.Specimen.list('-found_date', undefined, undefined, ['id', 'rarity', 'lat', 'lng', 'location', 'found_date', 'created_date'])
+      .then(setSpecimens)
+      .catch(() => setSpecimens([]));
     base44.entities.Quest.filter({ status: 'active' }, 'expires_at', 5)
       .then(setQuests).catch(() => {});
   }, []);
