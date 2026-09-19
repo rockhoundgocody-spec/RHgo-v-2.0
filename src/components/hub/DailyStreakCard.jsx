@@ -63,6 +63,8 @@ export default function DailyStreakCard({ companion }) {
         {!revealed ? (
           <button
             type="button"
+            aria-expanded={revealed}
+            aria-label="Reveal today's mystery mineral"
             onClick={() => setRevealed(true)}
             className="w-full group relative flex flex-col items-center justify-center py-6 rounded-xl border border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
             style={{ borderColor: `${color}40`, background: `${color}08` }}
