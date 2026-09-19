@@ -72,11 +72,14 @@ export function computeBadgeMetrics(specimens = [], context = {}) {
   const sortedDays = [...dayKeys].sort();
   let currentDayStreak = sortedDays.length ? 1 : 0;
   let maxDayStreak = currentDayStreak;
-  for (let i = 1; i < sortedDays.length; i += 1) {
-    const previous = Date.parse(`${sortedDays[i - 1]}T00:00:00Z`);
-    const current = Date.parse(`${sortedDays[i]}T00:00:00Z`);
-    currentDayStreak = current - previous === 86_400_000 ? currentDayStreak + 1 : 1;
-    maxDayStreak = Math.max(maxDayStreak, currentDayStreak);
+  if (sortedDays.length > 0) {
+    let previous = Date.parse(`${sortedDays[0]}T00:00:00Z`);
+    for (let i = 1; i < sortedDays.length; i += 1) {
+      const current = Date.parse(`${sortedDays[i]}T00:00:00Z`);
+      currentDayStreak = current - previous === 86_400_000 ? currentDayStreak + 1 : 1;
+      if (currentDayStreak > maxDayStreak) maxDayStreak = currentDayStreak;
+      previous = current;
+    }
   }
 
   confidenceSequence.sort((a, b) => a.createdAt - b.createdAt || a.index - b.index);
