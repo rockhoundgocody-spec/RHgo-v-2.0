@@ -239,15 +239,13 @@ export default function QuestDashboard() {
     } catch {
       // Fallback to static templates
       const picks = [...QUEST_TEMPLATES].sort(() => Math.random() - 0.5).slice(0, 3);
-      await Promise.all(picks.map(t =>
-        base44.entities.Quest.create({
-          owner_email: user.email,
-          ...t,
-          status: 'active',
-          progress: 0,
-          expires_at: getExpiryDate(t.quest_type),
-        })
-      ));
+      await base44.entities.Quest.bulkCreate(picks.map(t => ({
+        owner_email: user.email,
+        ...t,
+        status: 'active',
+        progress: 0,
+        expires_at: getExpiryDate(t.quest_type),
+      })));
     } finally {
       setGenerating(false);
       refetch();
