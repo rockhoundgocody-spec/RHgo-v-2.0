@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -11,7 +11,8 @@ import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
-import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, PROVENANCE } from '@/lib/scanSave';
+import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
+import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
@@ -20,6 +21,7 @@ import { progressQuestsForSpecimen } from '@/lib/questProgress';
 import {
   consumeGuestScan,
   getGuestQuota,
+  guestLoginUrl,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
 
@@ -46,6 +48,7 @@ export default function Scan() {
   const [torchWasOn, setTorchWasOn] = useState(false);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [beachName, setBeachName] = useState(null);
+  const [foundLocation, setFoundLocation] = useState({ found_at: '', lat: null, lng: null });
   const [provenance, setProvenance] = useState(PROVENANCE.NATURE);
   const [recentSpecimens, setRecentSpecimens] = useState([]);
   const [locationExhausted, setLocationExhausted] = useState(false);
@@ -82,21 +85,31 @@ export default function Scan() {
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
-          .then(r => r.json())
-          .then(d => {
-            const a = d?.address;
-            const name = a?.beach || a?.suburb || a?.city || a?.county || '';
-            if (name) setBeachName(name);
-          })
-          .catch(() => {});
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setGpsCoords(coords);
+        const name = await reverseGeocode(coords.lat, coords.lng);
+        if (name) setBeachName(name);
+        setFoundLocation((prev) => {
+          if (prev.source === 'picked') return prev;
+          return { found_at: name || prev.found_at || '', lat: coords.lat, lng: coords.lng, source: 'gps' };
+        });
       },
       () => {},
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
+
+  useEffect(() => {
+    if (!me?.email) return;
+    base44.entities.Specimen.filter({ created_by: me.email }, '-found_date', 50)
+      .then((rows) => {
+        const list = rows || [];
+        setRecentSpecimens(list);
+        if (gpsCoords) setLocationExhausted(countNearbyScans(list, gpsCoords) >= LOCATION_SCAN_CAP);
+      })
+      .catch(() => {});
+  }, [me?.email, gpsCoords]);
 
   const processPhoto = async (blob) => {
     const frameUrl = URL.createObjectURL(blob);
@@ -276,7 +289,7 @@ export default function Scan() {
     if (!result || !primaryUrl) return;
     if (isGuest) {
       // Soft save: stash locally, show confirmation — never hard-redirect to login
-      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, disposition, fieldReport });
+      stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport });
       setSheetOpen(false);
       setStage('guestSaved');
       setTimeout(resetToCamera, 2500);
@@ -284,14 +297,23 @@ export default function Scan() {
     }
     setSheetOpen(false);
 
-    const { lat, lng } = applyGeoPrivacy(gpsCoords, 'private');
+    const place = foundLocation?.found_at || foundLocation?.lat != null
+      ? foundLocation
+      : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, source: 'gps' };
+    const pickedSpot = place.source === 'picked';
+    const geoPrivacy = pickedSpot ? 'exact' : 'private';
+    const { lat, lng } = applyGeoPrivacy(
+      { lat: place.lat, lng: place.lng },
+      geoPrivacy,
+    );
     const rqs = calculateRarityQualityScore(result.rarity, result.confidence);
-    const xp = disposition === 'left_in_place' ? 40 : disposition === 'observed' ? 15 : 25;
+    const nearbyCount = countNearbyScans(recentSpecimens, { lat: place.lat, lng: place.lng });
+    const xp = calculateAwardedXp({ disposition, provenance, nearbyCount });
 
     const res = await base44.functions.invoke('identifySpecimen', {
       image_url: primaryUrl, lat, lng,
-      save: true, share_to_map: false, geo_privacy: 'private',
-      prefilled_result: result, wet_dry: 'dry', beach_name: beachName,
+      save: true, share_to_map: false, geo_privacy: geoPrivacy,
+      prefilled_result: result, wet_dry: 'dry', beach_name: place.found_at || beachName,
       disposition,
     });
 
@@ -306,7 +328,9 @@ export default function Scan() {
         notes: buildSpecimenNotes(result),
         rarity: result.rarity,
         found_date: new Date().toISOString().split('T')[0],
-        geo_privacy: 'private',
+        found_at: place.found_at || beachName || null,
+        provenance,
+        geo_privacy: geoPrivacy,
         ...(lat != null ? { lat, lng } : {}),
       });
       specimenId = created.id;
@@ -319,9 +343,12 @@ export default function Scan() {
       legal_status: 'user_confirmed',
       ethics_prompt_shown: true,
       user_confirmed_legal_access: true,
-      geo_privacy: 'private',
+      found_at: place.found_at || beachName || null,
+      provenance,
+      geo_privacy: geoPrivacy,
       rarity_quality_score: rqs,
       xp_awarded: xp,
+      ...(lat != null ? { lat, lng } : {}),
       ...(fieldReport?.field_habit ? { field_habit: fieldReport.field_habit } : {}),
       ...(fieldReport?.field_luster ? { field_luster: fieldReport.field_luster } : {}),
       ...(fieldReport?.field_matrix ? { field_matrix: fieldReport.field_matrix } : {}),
@@ -579,6 +606,11 @@ export default function Scan() {
         onAsk={handleAsk}
         onRetry={resetToCamera}
         onClose={resetToCamera}
+        provenance={provenance}
+        onProvenanceChange={setProvenance}
+        locationExhausted={locationExhausted}
+        foundLocation={foundLocation}
+        onFoundLocationChange={setFoundLocation}
       />
 
       <AnimatePresence>

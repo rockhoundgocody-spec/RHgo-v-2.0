@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
+import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 
 const RARITY_CONFIG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.35)',  gradient: 'from-slate-900 to-slate-800',   border: 'border-white/10' },
@@ -66,8 +67,7 @@ export default function SpecimenDetail() {
 
   const { data: specimen, isLoading } = useQuery({
     queryKey: ['specimen', id],
-    queryFn: () => base44.entities.Specimen.filter({ id }),
-    select: (rows) => rows?.[0],
+    queryFn: () => base44.entities.Specimen.get(id),
     enabled: !!id,
   });
 
@@ -203,6 +203,14 @@ export default function SpecimenDetail() {
             )}
           </div>
         </div>
+
+        <FoundLocationPicker
+          persistId={specimen.id}
+          value={{ found_at: specimen.found_at, lat: specimen.lat, lng: specimen.lng }}
+          onChange={(next) => {
+            queryClient.setQueryData(['specimen', id], (prev) => prev ? { ...prev, ...next } : prev);
+          }}
+        />
 
         {/* Honest AI confidence banner */}
         {conf != null && (

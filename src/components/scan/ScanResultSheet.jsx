@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag } from 'lucide-react';
+import { X, FlaskConical, Save, MessageCircle, RotateCcw, ChevronDown, Leaf, ShoppingBag } from 'lucide-react';
+import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 
 const CONFIDENCE_BAND = (c) => {
   if (c >= 0.85) return { label: 'high', color: '#9FE8D0' };
@@ -16,6 +17,7 @@ export default function ScanResultSheet({
   open, result, imageUrl, saved,
   onKeep, onLeave, onObserve, onAsk, onRetry, onClose,
   provenance, onProvenanceChange, locationExhausted,
+  foundLocation, onFoundLocationChange,
 }) {
   const [testsOpen, setTestsOpen] = useState(false);
   const [fieldReport, setFieldReport] = useState({
@@ -54,7 +56,7 @@ export default function ScanResultSheet({
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="absolute bottom-0 inset-x-0 z-50 rounded-t-3xl overflow-hidden"
+            className="absolute bottom-0 inset-x-0 z-50 rounded-t-3xl overflow-hidden max-h-[88vh] overflow-y-auto"
             style={{ background: '#0a0a14', borderTop: '1px solid hsla(0,0%,100%,0.12)' }}
           >
             {/* Drag handle + close */}
@@ -156,6 +158,14 @@ export default function ScanResultSheet({
                     />
                   </div>
                 </div>
+
+                {onFoundLocationChange && (
+                  <FoundLocationPicker
+                    compact
+                    value={foundLocation}
+                    onChange={onFoundLocationChange}
+                  />
+                )}
 
                 {/* Provenance toggle — nature vs store-bought */}
                 {onProvenanceChange && (
