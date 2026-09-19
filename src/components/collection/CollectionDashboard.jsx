@@ -79,35 +79,49 @@ export function computeCollectionStats(specimens, now = new Date()) {
   const rarityCounts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
   const mineralCounts = new Map();
   const locationCounts = new Map();
-  const uniqueNames = new Set();
   const rarestFinds = [];
+  const nowMs = typeof now === 'number' ? now : (now.getTime ? now.getTime() : Number(now));
   const weeklyFinds = Array.from({ length: 8 }, (_, index) => {
-    const start = new Date(now);
+    const start = new Date(nowMs);
     start.setDate(start.getDate() - (7 - index) * 7);
-    return { label: `W${index + 1}`, count: 0, start };
+    return { label: `W${index + 1}`, count: 0, startTime: start.getTime() };
   });
   let verified = 0;
   let rarePlus = 0;
   let confidenceTotal = 0;
   let confidenceCount = 0;
 
-  for (const specimen of specimens) {
-    if (rarityCounts[specimen.rarity] !== undefined) rarityCounts[specimen.rarity] += 1;
+  for (let i = 0; i < specimens.length; i += 1) {
+    const specimen = specimens[i];
+    const rarity = specimen.rarity;
+
+    if (rarityCounts[rarity] !== undefined) {
+      rarityCounts[rarity] += 1;
+    }
 
     const mineralName = specimen.mineral_name?.trim();
     if (mineralName) {
-      mineralCounts.set(mineralName, (mineralCounts.get(mineralName) || 0) + 1);
-      uniqueNames.add(mineralName);
+      const count = mineralCounts.get(mineralName);
+      mineralCounts.set(mineralName, count ? count + 1 : 1);
     }
 
-    const location = specimen.found_at?.split(',')[0]?.trim() || 'Unknown';
-    locationCounts.set(location, (locationCounts.get(location) || 0) + 1);
+    let location = 'Unknown';
+    if (specimen.found_at) {
+      const commaIdx = specimen.found_at.indexOf(',');
+      const rawLoc = commaIdx === -1 ? specimen.found_at : specimen.found_at.slice(0, commaIdx);
+      location = rawLoc.trim() || 'Unknown';
+    }
+    const locCount = locationCounts.get(location);
+    locationCounts.set(location, locCount ? locCount + 1 : 1);
 
     if (specimen.found_date) {
-      const foundAt = new Date(specimen.found_date);
-      if (Number.isFinite(foundAt.getTime())) {
+      const foundAtTime = typeof specimen.found_date === 'number'
+        ? specimen.found_date
+        : (specimen.found_date instanceof Date ? specimen.found_date.getTime() : Date.parse(specimen.found_date));
+
+      if (Number.isFinite(foundAtTime)) {
         for (let index = weeklyFinds.length - 1; index >= 0; index -= 1) {
-          if (foundAt >= weeklyFinds[index].start) {
+          if (foundAtTime >= weeklyFinds[index].startTime) {
             weeklyFinds[index].count += 1;
             break;
           }
@@ -115,11 +129,17 @@ export function computeCollectionStats(specimens, now = new Date()) {
       }
     }
 
-    if ((specimen.rarity === 'rare' || specimen.rarity === 'legendary') && rarestFinds.length < 3) {
-      rarestFinds.push(specimen);
+    const isRareOrLegendary = rarity === 'rare' || rarity === 'legendary';
+    if (isRareOrLegendary) {
+      rarePlus += 1;
+      if (rarestFinds.length < 3) {
+        rarestFinds.push(specimen);
+      }
     }
-    if (specimen.verified) verified += 1;
-    if (specimen.rarity === 'rare' || specimen.rarity === 'legendary') rarePlus += 1;
+
+    if (specimen.verified) {
+      verified += 1;
+    }
 
     const confidence = Number(specimen.ai_confidence);
     if (Number.isFinite(confidence)) {
@@ -146,7 +166,7 @@ export function computeCollectionStats(specimens, now = new Date()) {
     rarestFinds,
     summaryStats: {
       verified,
-      uniqueNames: uniqueNames.size,
+      uniqueNames: mineralCounts.size,
       rarePlus,
       avgConf: confidenceCount ? confidenceTotal / confidenceCount : 0,
     },
