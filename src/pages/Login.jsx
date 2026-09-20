@@ -10,6 +10,14 @@ import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { motion } from "framer-motion";
 import { clearGateChoice, resetGateFlow } from "@/lib/gateStorage";
+import { getSafeRedirectUrl } from "@/lib/app-params";
+
+/**
+ * Validates and sanitizes the target redirect path to prevent open redirects.
+ */
+export function getLoginRedirectUrl(rawFromUrl) {
+  return getSafeRedirectUrl(rawFromUrl, '/');
+}
 
 const FEATURES = [
   { icon: Gem,     label: 'AI Mineral ID',   desc: 'Instant identification' },
@@ -33,8 +41,8 @@ export default function Login() {
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
-      const next = new URLSearchParams(window.location.search).get('from_url') || '/';
-      navigate(next.startsWith('/') ? next : '/', { replace: true });
+      const next = new URLSearchParams(window.location.search).get('from_url');
+      navigate(getLoginRedirectUrl(next), { replace: true });
     }
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
@@ -47,8 +55,8 @@ export default function Login() {
       await base44.auth.loginViaEmailPassword(email.trim(), password);
       await checkUserAuth();
       clearGateChoice();
-      const next = new URLSearchParams(window.location.search).get('from_url') || '/';
-      navigate(next.startsWith('/') ? next : '/');
+      const next = new URLSearchParams(window.location.search).get('from_url');
+      navigate(getLoginRedirectUrl(next));
     } catch (err) {
       setError(err?.message || err?.data?.message || "Invalid email or password");
     } finally {
@@ -60,10 +68,10 @@ export default function Login() {
     if (oauthLoading || loading) return;
     setError("");
     setOauthLoading(provider);
-    const next = new URLSearchParams(window.location.search).get('from_url') || '/';
+    const next = new URLSearchParams(window.location.search).get('from_url');
     try {
       await Promise.resolve(
-        base44.auth.loginWithProvider(provider, next.startsWith('/') ? next : '/'),
+        base44.auth.loginWithProvider(provider, getLoginRedirectUrl(next)),
       );
       // Provider redirect should leave the page; if it returns, clear spinner.
     } catch (err) {
