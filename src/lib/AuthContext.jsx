@@ -1,6 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { toast } from '@/components/ui/use-toast';
+
+// If the session check hasn't settled by then, stop blocking the app and
+// continue as logged-out. A late result still applies when it arrives.
+const AUTH_CHECK_TIMEOUT_MS = 6000;
 
 const AuthContext = createContext();
 
@@ -23,12 +28,14 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       try {
+        // Public settings don't depend on the session check — never let a slow
+        // or hung auth call keep this flag (and the boot spinner) stuck.
+        setAppPublicSettings({ id: appParams.appId });
+        setIsLoadingPublicSettings(false);
         // Always try me() — the SDK's internal token (set by loginViaEmailPassword)
         // may be valid even if appParams.token hasn't picked it up from storage yet.
         // If there's no token at all, me() throws and we handle it gracefully.
         await checkUserAuth();
-        setAppPublicSettings({ id: appParams.appId });
-        setIsLoadingPublicSettings(false);
       } catch (appError) {
         /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
@@ -54,22 +61,40 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    setIsLoadingAuth(true);
+    let settled = false;
+    // Timeout fallback: a session check that never resolves (stale stored
+    // session, stuck auth lock, unreachable auth server) must not hang the
+    // whole app on the boot spinner.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      console.warn('[auth] Session check timed out — continuing as logged out.');
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
+      toast({
+        title: "Couldn't restore your session",
+        description: 'Please sign in again to continue.',
+        variant: 'destructive',
+      });
+    }, AUTH_CHECK_TIMEOUT_MS);
+
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
     } catch (error) {
       /* visitor is simply logged out */
-      setIsLoadingAuth(false);
+      setUser(null);
       setIsAuthenticated(false);
-      setAuthChecked(true);
       // Public app: a failed auth check just means the visitor isn't logged in.
       // Don't block them from entering — let the main app routes render, and
       // individual pages can prompt login only when a protected action is taken.
+    } finally {
+      settled = true;
+      clearTimeout(timer);
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
     }
   };
 
