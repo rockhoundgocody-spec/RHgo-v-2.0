@@ -6,7 +6,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, X, MapPin } from 'lucide-react';
 
-export default function MapSearchBar({ hotspots, onSelect }) {
+export default function MapSearchBar({ hotspots = [], onSelect }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const containerRef = useRef(null);
@@ -34,10 +34,12 @@ export default function MapSearchBar({ hotspots, onSelect }) {
   }, []);
 
   const handleSelect = (h) => {
-    onSelect(h);
+    onSelect?.(h);
     setQuery('');
     setFocused(false);
   };
+
+  const isQuerying = Boolean(query.trim());
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -50,23 +52,31 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           boxShadow: focused ? '0 0 16px hsla(280,80%,50%,0.15)' : 'none',
         }}
       >
-        <Search size={15} className="text-white/40 shrink-0" />
+        <Search size={15} className="text-white/40 shrink-0" aria-hidden="true" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="Search hotspots, minerals, states…"
-          className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none ml-2"
+          aria-label="Search hotspots, minerals, or states"
+          className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none ml-2 focus-visible:outline-none"
         />
         {query && (
-          <button onClick={() => setQuery('')} className="text-white/30 hover:text-white/60 transition shrink-0">
-            <X size={14} />
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            aria-label="Clear search query"
+            className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-sm"
+          >
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
 
-      {query.trim() && results.length > 0 && (
+      {isQuerying && focused && (
         <div
+          role="region"
+          aria-label="Search results"
           className="absolute top-full mt-1.5 left-0 right-0 rounded-2xl overflow-hidden z-[1001]"
           style={{
             background: 'hsla(240,30%,8%,.97)',
@@ -75,21 +85,29 @@ export default function MapSearchBar({ hotspots, onSelect }) {
             boxShadow: '0 12px 40px hsla(240,50%,5%,.6)',
           }}
         >
-          {results.map(h => (
-            <button
-              key={h.id}
-              onClick={() => handleSelect(h)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0"
-            >
-              <MapPin size={13} className="text-amethyst-glow shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
-                <div className="text-[10px] text-white/40 truncate">
-                  {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+          {results.length > 0 ? (
+            results.map(h => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => handleSelect(h)}
+                aria-label={`Select ${h.name}, ${h.state || 'Unknown location'}`}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:bg-white/10"
+              >
+                <MapPin size={13} className="text-amethyst-glow shrink-0" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
+                  <div className="text-[10px] text-white/40 truncate">
+                    {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-3 text-[11px] text-white/40 text-center">
+              No matching hotspots found
+            </div>
+          )}
         </div>
       )}
     </div>
