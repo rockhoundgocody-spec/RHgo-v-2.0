@@ -145,10 +145,13 @@ export default function Scan() {
       const file = new File([clean], 'shot1.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      const cutoutPromise = base44.functions
-        .invoke('removeSpecimenBackground', { image_url: file_url })
-        .then(res => res?.data?.cutout_url || null)
-        .catch(() => null);
+      // Guests skip cutout — removeSpecimenBackground requires auth (401 tax).
+      const cutoutPromise = isGuest
+        ? Promise.resolve(null)
+        : base44.functions
+            .invoke('removeSpecimenBackground', { image_url: file_url })
+            .then(res => res?.data?.cutout_url || null)
+            .catch(() => null);
 
       // Guest fast path: skip Macrostrat geology fetch for faster first value
       const agiDeliberation = isGuest
@@ -294,7 +297,7 @@ export default function Scan() {
         setStage('guestLimit');
         return;
       }
-      navigate('/pricing');
+      setStage('freeLimit');
       return;
     }
     const blob = await camera.capture();
@@ -311,7 +314,7 @@ export default function Scan() {
         setStage('guestLimit');
         return;
       }
-      navigate('/pricing');
+      setStage('freeLimit');
       return;
     }
     await processPhoto(file);
@@ -583,6 +586,17 @@ export default function Scan() {
         </div>
       )}
 
+      {stage === 'freeLimit' && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
+          <p className="text-white font-bold text-lg mb-2">You've used this month's free scans</p>
+          <p className="text-white/50 text-sm text-center mb-6">Keep exploring the map — upgrade when you're ready for more scans.</p>
+          <button onClick={resetToCamera} className="px-6 py-3 rounded-xl font-bold text-sm" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+            Keep exploring
+          </button>
+          <button onClick={() => navigate('/pricing')} className="text-white/40 text-sm mt-3">See Premium</button>
+        </div>
+      )}
+
       {stage === 'camera' && (
         <div className="absolute bottom-0 inset-x-0 z-30 flex items-center justify-between px-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom,0px), 24px)', marginBottom: '8px' }}>
           <div className="w-14 flex justify-center">
@@ -597,7 +611,7 @@ export default function Scan() {
 
           <button
             onClick={handleShutter}
-            disabled={!camera.ready || !canScan}
+            disabled={!camera.ready || (isGuest && !canScan)}
             aria-label="Capture"
             className="rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-50"
             style={{ width: 72, height: 72, background: '#9FE8D0', boxShadow: '0 0 30px -4px rgba(159,232,208,0.6)' }}
