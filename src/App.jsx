@@ -103,6 +103,7 @@ const AuthenticatedApp = () => {
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="/scan" element={<Scan />} />
+            <Route path="/explore" element={<Explore />} />
             <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/connect" element={<Connect />} />
             <Route path="*" element={<Landing />} />
