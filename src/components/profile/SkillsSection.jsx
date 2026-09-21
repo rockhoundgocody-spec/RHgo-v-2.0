@@ -151,7 +151,11 @@ function SkillCard({ skill }) {
             style={{ background: LEVEL_COLORS[skill.level], color: LEVEL_TEXT[skill.level] }}>
             {skill.level}
           </span>
-          {open ? <ChevronUp size={13} className="text-white/30" /> : <ChevronDown size={13} className="text-white/30" />}
+          {open ? (
+            <ChevronUp size={13} className="text-white/30" aria-hidden="true" />
+          ) : (
+            <ChevronDown size={13} className="text-white/30" aria-hidden="true" />
+          )}
         </div>
       </div>
       {open && (
