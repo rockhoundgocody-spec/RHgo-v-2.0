@@ -46,15 +46,24 @@ export default function ShareSpecimenButton({ specimen, className = '' }) {
     }
   };
 
+  const ariaLabel = copied
+    ? 'Copied specimen details to clipboard'
+    : specimen?.mineral_name
+      ? `Share ${specimen.mineral_name}`
+      : 'Share specimen';
+
+  const titleTooltip = copied ? 'Copied to clipboard!' : 'Share specimen';
+
   return (
     <button
       type="button"
       onClick={handleShare}
-      aria-label="Share specimen"
+      aria-label={ariaLabel}
+      title={titleTooltip}
       className={`inline-flex items-center justify-center gap-1.5 min-h-[36px] min-w-[36px] px-2.5 rounded-lg border border-amethyst/30 bg-amethyst/10 hover:bg-amethyst/20 text-amethyst-glow text-[10px] uppercase tracking-wider transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ${className}`}
     >
-      {copied ? <Check size={12} /> : <Share2 size={12} />}
-      <span>{copied ? 'Copied' : 'Share'}</span>
+      {copied ? <Check size={12} aria-hidden="true" /> : <Share2 size={12} aria-hidden="true" />}
+      <span aria-live="polite">{copied ? 'Copied' : 'Share'}</span>
     </button>
   );
 }
