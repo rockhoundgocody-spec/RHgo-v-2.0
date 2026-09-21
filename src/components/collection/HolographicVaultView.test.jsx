@@ -169,7 +169,7 @@ describe('HolographicVaultView', () => {
     const [hardnessCol, systemCol, appraisalCol] = metricsContainer.props.children;
     expect(hardnessCol.props.children[1].props.children).toBe('7.0M');
     expect(systemCol.props.children[1].props.children).toBe('Trigonal');
-    expect(appraisalCol.props.children[1].props.children).toBe('$15–$35');
+    expect(appraisalCol.props.children[1].props.children).toBe('Value not estimated');
 
     // Dossier link
     expect(linkContainer.props.children.props.to).toBe('/specimen/specimen-sparse');
