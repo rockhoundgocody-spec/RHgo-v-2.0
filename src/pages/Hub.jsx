@@ -72,7 +72,6 @@ export default function Hub() {
     if (!user?.email) return;
     try {
       if (sessionStorage.getItem('rhgo_guest_reclaim_done') === '1') return;
-      sessionStorage.setItem('rhgo_guest_reclaim_done', '1');
     } catch {
       /* private mode */
     }
@@ -81,6 +80,11 @@ export default function Hub() {
       try {
         const out = await reclaimGuestReport();
         if (cancelled || !out?.synced) return;
+        try {
+          sessionStorage.setItem('rhgo_guest_reclaim_done', '1');
+        } catch {
+          /* private mode */
+        }
         toast({
           title: 'Synced your guest find.',
           description: out.mineralName || undefined,
