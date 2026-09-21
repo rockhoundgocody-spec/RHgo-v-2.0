@@ -126,7 +126,7 @@ export default function HolographicVaultView({ specimens = [] }) {
             </div>
             <div>
               <span className="text-[8px] uppercase tracking-wider text-white/40 block">Appraisal</span>
-              <span className="text-xs font-black text-emerald-400">{current.value_estimate || '$15–$35'}</span>
+              <span className="text-xs font-black text-emerald-400">{current.value_estimate || 'Value not estimated'}</span>
             </div>
           </div>
 
