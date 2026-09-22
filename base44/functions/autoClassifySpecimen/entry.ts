@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 /**
  * autoClassifySpecimen — entity-automation handler that fires on every new
@@ -42,9 +43,12 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: 'specimen not found' });
     }
 
-    // Need an image to classify
+    // Need an image to classify, and it must originate from an authorized domain to prevent SSRF
     if (!specimen.image_url) {
       return Response.json({ skipped: true, reason: 'no image_url' });
+    }
+    if (!isValidImageUrl(specimen.image_url)) {
+      return Response.json({ skipped: true, reason: 'untrusted image_url host' });
     }
 
     // Skip if user already provided an explicit mineral_name and it isn't a placeholder

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -28,7 +28,6 @@ import {
   consumeGuestScan,
   getGuestQuota,
   getOrCreateGuestId,
-  guestLoginUrl,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
 
