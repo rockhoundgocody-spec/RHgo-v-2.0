@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHRONOLITH — investigateCase
@@ -30,6 +31,15 @@ Deno.serve(async (req) => {
       specimen_label,
       case_id,
     } = body;
+
+    // SSRF guard: validate that user-provided image URLs originate from trusted storage domains
+    if (Array.isArray(image_urls)) {
+      if (!image_urls.every((url: string) => isValidImageUrl(url))) {
+        return Response.json({ error: 'image_urls must be from trusted storage domains' }, { status: 400 });
+      }
+    } else if (image_urls != null) {
+      return Response.json({ error: 'image_urls must be an array' }, { status: 400 });
+    }
 
     // ── Cartographer: fetch bedrock geology from Macrostrat ──
     let geologicUnit = '';
