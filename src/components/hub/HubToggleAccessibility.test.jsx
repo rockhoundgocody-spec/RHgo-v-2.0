@@ -32,6 +32,8 @@ describe('hub toggle accessibility', () => {
     const markup = renderToStaticMarkup(<DailyStreakCard companion={{ streak_days: 2 }} />);
 
     expect(markup).toContain('type="button"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-label="Reveal today&#x27;s mystery mineral"');
     expect(markup).toContain('focus-visible:ring-orange-400/70');
     expect(markup).toContain('motion-reduce:transition-none');
   });
