@@ -78,11 +78,13 @@ export default function FloatingCloverCompanion() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={handleOrbClick}
-        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus:outline-none"
+        aria-expanded={expanded}
+        aria-controls="clover-voice-panel"
+        aria-label={expanded ? 'Close Clover Voice' : 'Talk to Clover'}
+        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         style={{
           boxShadow: '0 0 24px hsla(270,90%,60%,0.45), 0 0 10px hsla(190,100%,50%,0.3)',
         }}
-        aria-label="Talk to Clover"
       >
         <div className="w-full h-full rounded-full overflow-hidden">
           <AmethystOrb
