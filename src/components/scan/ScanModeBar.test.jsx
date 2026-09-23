@@ -10,6 +10,8 @@ vi.mock('react', async (importOriginal) => {
     ...actual,
     useState: (initial) => [mockTipsOpen !== null ? mockTipsOpen : initial, vi.fn()],
     useMemo: (factory) => factory(),
+    useRef: (initial) => ({ current: initial }),
+    useEffect: vi.fn(),
     useId: () => `:r${++idCounter}:`,
   };
 });
@@ -102,6 +104,7 @@ describe('ScanModeBar', () => {
     expect(dialogSheet.props.role).toBe('dialog');
     expect(dialogSheet.props['aria-modal']).toBe('true');
     expect(dialogSheet.props['aria-labelledby']).toBeDefined();
+    expect(dialogSheet.ref).toBeDefined();
 
     const [headerContainer] = dialogSheet.props.children;
     const [titleContainer] = headerContainer.props.children;
