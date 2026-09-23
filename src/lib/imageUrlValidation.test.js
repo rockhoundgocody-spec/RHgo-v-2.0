@@ -32,4 +32,18 @@ describe('isValidImageUrl', () => {
     expect(isValidImageUrl('')).toBe(false);
     expect(isValidImageUrl('not-a-url')).toBe(false);
   });
+
+  it('validates arrays of image URLs as required by progressiveVerify', () => {
+    const validUrls = [
+      'https://base44.app/photos/specimen1.jpg',
+      'https://s3.us-east-1.amazonaws.com/bucket/specimen2.png',
+    ];
+    const invalidUrls = [
+      'https://base44.app/photos/specimen1.jpg',
+      'https://evilbase44.app/attack.jpg',
+    ];
+
+    expect(validUrls.every((url) => isValidImageUrl(url))).toBe(true);
+    expect(invalidUrls.every((url) => isValidImageUrl(url))).toBe(false);
+  });
 });
