@@ -29,8 +29,8 @@ export default function JuniorExplorerCard({
       }}
     >
       {/* Playful background stars */}
-      <div className="absolute top-2 right-2 text-2xl opacity-40 select-none">✨</div>
-      <div className="absolute bottom-2 left-2 text-2xl opacity-20 select-none">🦖</div>
+      <div className="absolute top-2 right-2 text-2xl opacity-40 select-none" aria-hidden="true">✨</div>
+      <div className="absolute bottom-2 left-2 text-2xl opacity-20 select-none" aria-hidden="true">🦖</div>
 
       {/* Header Badge */}
       <div className="flex items-center justify-between gap-2 mb-3">
@@ -46,7 +46,9 @@ export default function JuniorExplorerCard({
             triggerOrbHaptic('tap');
             onToggleMode?.();
           }}
-          className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 transition active:scale-95 text-white/80"
+          aria-pressed={isKidMode}
+          aria-label={isKidMode ? 'Switch to Pro View' : 'Switch to Kid View'}
+          className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 transition active:scale-95 text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
           title="Switch between Kid Mode and Pro Mode"
         >
           {isKidMode ? '🎒 Kid View ON' : '🔬 Switch to Kid View'}
@@ -87,7 +89,7 @@ export default function JuniorExplorerCard({
           border: '1px solid hsla(160,60%,40%,0.3)',
         }}
       >
-        <span className="text-xl shrink-0">🦖</span>
+        <span className="text-xl shrink-0" aria-hidden="true">🦖</span>
         <div className="text-[11px] font-bold text-emerald-200 leading-tight">
           {kidData.age_badge}
         </div>
@@ -102,7 +104,8 @@ export default function JuniorExplorerCard({
         }}
       >
         <div className="text-[10px] uppercase font-black tracking-wider text-sky-300 flex items-center gap-1.5">
-          <span>🕵️ SECRET DETECTIVE CLUE</span>
+          <span aria-hidden="true">🕵️</span>
+          <span>SECRET DETECTIVE CLUE</span>
         </div>
         <p className="text-[11px] text-white/85 leading-relaxed font-medium">
           {kidData.detective_secret}
@@ -114,7 +117,8 @@ export default function JuniorExplorerCard({
         <button
           type="button"
           onClick={handlePlaySound}
-          className="px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition active:scale-95"
+          aria-label="Play discovery chime"
+          className="px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
         >
           <Volume2 size={12} /> Play Discovery Chime 🔔
         </button>
