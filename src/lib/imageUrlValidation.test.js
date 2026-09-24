@@ -33,7 +33,7 @@ describe('isValidImageUrl', () => {
     expect(isValidImageUrl('not-a-url')).toBe(false);
   });
 
-  it('validates arrays of image URLs as required by progressiveVerify', () => {
+  it('validates arrays of image URLs as required by progressiveVerify and investigateCase', () => {
     const validUrls = [
       'https://base44.app/photos/specimen1.jpg',
       'https://s3.us-east-1.amazonaws.com/bucket/specimen2.png',
