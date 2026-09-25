@@ -217,9 +217,12 @@ Deno.serve(async (req) => {
     // ── LOCAL GEOLOGY CONTEXT (Macrostrat) ────────────────────────────────────
     let geologyContext = '';
     let localGeology = null;
-    if (lat != null && lng != null) {
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+    const hasValidCoords = lat != null && lng != null && typeof lat !== 'boolean' && typeof lng !== 'boolean' && Number.isFinite(numLat) && Number.isFinite(numLng) && numLat >= -90 && numLat <= 90 && numLng >= -180 && numLng <= 180;
+    if (hasValidCoords) {
       try {
-        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}`);
+        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`);
         if (geoRes.ok) {
           const geoJson = await geoRes.json();
           const units = geoJson?.success?.data || [];
@@ -237,8 +240,8 @@ Deno.serve(async (req) => {
 
     // ── GREAT LAKES CONTEXT ───────────────────────────────────────────────────
     // Auto-detect if we're in the Great Lakes region (~lat 41-48, lng -76 to -92)
-    const isGreatLakes = lat != null && lng != null
-      ? (lat >= 41 && lat <= 48 && lng >= -92 && lng <= -76)
+    const isGreatLakes = hasValidCoords
+      ? (numLat >= 41 && numLat <= 48 && numLng >= -92 && numLng <= -76)
       : false; // never force Great Lakes IDs when GPS is missing
 
     const glContext = isGreatLakes
