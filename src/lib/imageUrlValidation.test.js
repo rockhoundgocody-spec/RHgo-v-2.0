@@ -46,4 +46,9 @@ describe('isValidImageUrl', () => {
     expect(validUrls.every((url) => isValidImageUrl(url))).toBe(true);
     expect(invalidUrls.every((url) => isValidImageUrl(url))).toBe(false);
   });
+
+  it('validates hotspot image URLs as required by publishHotspotToInstagram', () => {
+    expect(isValidImageUrl('https://base44.app/hotspots/1.jpg')).toBe(true);
+    expect(isValidImageUrl('https://evilbase44.app/hotspots/1.jpg')).toBe(false);
+  });
 });
