@@ -56,10 +56,11 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="Search hotspots, minerals, states…"
+          aria-label="Search hotspots, minerals, states"
           className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none ml-2"
         />
         {query && (
-          <button onClick={() => setQuery('')} className="text-white/30 hover:text-white/60 transition shrink-0">
+          <button onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
             <X size={14} />
           </button>
         )}
@@ -79,7 +80,7 @@ export default function MapSearchBar({ hotspots, onSelect }) {
             <button
               key={h.id}
               onClick={() => handleSelect(h)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
             >
               <MapPin size={13} className="text-amethyst-glow shrink-0" />
               <div className="min-w-0 flex-1">

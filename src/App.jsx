@@ -10,6 +10,7 @@ import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import HomeGate from '@/components/HomeGate.jsx';
+import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -178,6 +179,7 @@ function App() {
     <QueryClientProvider client={queryClientInstance}>
       <MobileOnlyGate>
         <BrowserRouter>
+          <AnalyticsRouteListener />
           <AuthProvider>
             <AuthenticatedApp />
           </AuthProvider>

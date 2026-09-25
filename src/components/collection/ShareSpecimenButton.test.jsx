@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import React from 'react';
 
 const mockSetCopied = vi.fn();
 let mockCopiedState = false;
@@ -79,19 +78,22 @@ describe('ShareSpecimenButton', () => {
     expect(tree).toBeDefined();
     expect(tree.type).toBe('button');
     expect(tree.props.type).toBe('button');
-    expect(tree.props['aria-label']).toBe('Share specimen');
+    expect(tree.props['aria-label']).toBe('Share Amethyst specimen');
     expect(tree.props.className).toContain('custom-share-btn');
     expect(tree.props.className).toContain('focus-visible:ring-2');
 
     const [icon, span] = tree.props.children;
+    expect(icon.props['aria-hidden']).toBe('true');
     expect(span.props.children).toBe('Share');
   });
 
-  it('renders Copied state when copied is true', () => {
+  it('renders Copied state when copied is true with dynamic aria-label', () => {
     mockCopiedState = true;
     const tree = ShareSpecimenButton({ specimen: sampleRareSpecimen });
 
+    expect(tree.props['aria-label']).toBe('Copied link for Amethyst');
     const [icon, span] = tree.props.children;
+    expect(icon.props['aria-hidden']).toBe('true');
     expect(span.props.children).toBe('Copied');
   });
 

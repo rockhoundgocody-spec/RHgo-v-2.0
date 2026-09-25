@@ -1,31 +1,39 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import IntroOrb from '@/components/hub/IntroOrb.jsx';
 import { base44 } from '@/api/base44Client';
 import GoogleIcon from '@/components/GoogleIcon';
 
 /**
- * FirstVisitGate — the very first screen a new visitor sees.
- * Asks for their name, or offers "I already have an account" to skip
- * straight to login. Shown outside the Hub for unauthenticated users.
+ * FirstVisitGate — first screen for unauthenticated visitors on `/`.
+ * Prefer real <Link> to /login so sign-in is never blocked by gate state.
  */
 export default function FirstVisitGate({ onChoice }) {
   const [name, setName] = useState('');
+  const [oauthBusy, setOauthBusy] = useState(false);
+  const [oauthError, setOauthError] = useState('');
 
   const handleBegin = () => {
     const trimmed = name.trim().slice(0, 30) || 'Explorer';
     onChoice('new', trimmed);
   };
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
+    if (oauthBusy) return;
+    setOauthError('');
+    setOauthBusy(true);
     const trimmed = name.trim().slice(0, 30);
-    if (trimmed) localStorage.setItem('rhgo_user_name', trimmed);
+    if (trimmed) {
+      try { localStorage.setItem('rhgo_user_name', trimmed); } catch { /* */ }
+    }
     onChoice('google', trimmed);
-    base44.auth.loginWithProvider('google', '/');
-  };
-
-  const handleReturning = () => {
-    onChoice('returning');
+    try {
+      await Promise.resolve(base44.auth.loginWithProvider('google', '/'));
+    } catch (err) {
+      setOauthBusy(false);
+      setOauthError(err?.message || 'Google sign-in failed. Try email login.');
+    }
   };
 
   return (
@@ -33,19 +41,18 @@ export default function FirstVisitGate({ onChoice }) {
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-8 overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 40%, hsl(265 50% 12%) 0%, hsl(245 35% 4%) 100%)' }}
     >
-      {/* Subtle starfield */}
       {Array.from({ length: 24 }).map((_, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full bg-white pointer-events-none"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            width: 1 + Math.random() * 1.5,
-            height: 1 + Math.random() * 1.5,
+            left: `${(i * 37) % 100}%`,
+            top: `${(i * 53) % 100}%`,
+            width: 1 + (i % 3) * 0.5,
+            height: 1 + (i % 3) * 0.5,
           }}
           animate={{ opacity: [0, 0.5, 0] }}
-          transition={{ duration: 2 + Math.random() * 3, delay: Math.random() * 3, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 2 + (i % 5), delay: (i % 7) * 0.3, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
 
@@ -53,9 +60,8 @@ export default function FirstVisitGate({ onChoice }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="w-full max-w-sm flex flex-col items-center gap-7 relative z-10"
+        className="w-full max-w-sm flex flex-col items-center gap-6 relative z-10"
       >
-        {/* Orb */}
         <motion.div
           animate={{ y: [0, -8, 0], scale: [1, 1.04, 1] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -63,7 +69,6 @@ export default function FirstVisitGate({ onChoice }) {
           <IntroOrb size={72} />
         </motion.div>
 
-        {/* Heading */}
         <div className="text-center">
           <h1 className="text-white font-bold text-xl tracking-tight">Welcome to RockHound-GO</h1>
           <p className="text-white/50 text-[14px] font-light mt-1.5">
@@ -71,7 +76,6 @@ export default function FirstVisitGate({ onChoice }) {
           </p>
         </div>
 
-        {/* Name input */}
         <input
           type="text"
           value={name}
@@ -90,8 +94,8 @@ export default function FirstVisitGate({ onChoice }) {
           }}
         />
 
-        {/* Begin button */}
         <motion.button
+          type="button"
           whileTap={{ scale: 0.96 }}
           onClick={handleBegin}
           className="w-full h-14 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -107,28 +111,36 @@ export default function FirstVisitGate({ onChoice }) {
         <button
           type="button"
           onClick={handleGoogle}
-          className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 transition"
+          disabled={oauthBusy}
+          className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 transition disabled:opacity-50"
         >
-          <GoogleIcon className="w-4 h-4" /> Continue with Google
+          <GoogleIcon className="w-4 h-4" />
+          {oauthBusy ? 'Connecting…' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
+        {oauthError && (
+          <p className="text-red-300 text-[12px] text-center leading-snug">{oauthError}</p>
+        )}
+
         <div className="w-full flex items-center gap-3">
           <div className="flex-1 h-px bg-white/10" />
           <span className="text-white/30 text-[11px] uppercase tracking-[0.2em]">or</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 
-        {/* Returning user link */}
-        <button
-          onClick={handleReturning}
-          className="text-white/55 text-[14px] font-medium hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
+        {/* Hard navigation — never depends on gate callbacks */}
+        <Link
+          to="/login"
+          onClick={() => {
+            try { localStorage.setItem('rhgo_gate_choice', 'returning'); } catch { /* */ }
+          }}
+          className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center border border-white/20 bg-white/5 hover:bg-white/10 transition"
         >
-          I already have an account
-        </button>
+          I already have an account — Sign in
+        </Link>
 
-        {/* Guest scan — value before signup */}
         <button
+          type="button"
           onClick={() => onChoice('guest')}
           className="text-white/35 text-[12px] font-medium hover:text-white/60 transition mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
         >

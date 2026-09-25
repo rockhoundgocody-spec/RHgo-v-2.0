@@ -9,6 +9,7 @@ import {
   AGATE_VARIETIES,
 } from '@/lib/agateData';
 import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const RARITY_STYLES = {
   common:    { color: '#94a3b8', bg: 'hsla(210,20%,30%,0.3)',  label: 'Common' },
@@ -19,6 +20,10 @@ const RARITY_STYLES = {
 
 export default function AgateGuide() {
   useSeoRobots(true);
+  useSeoMeta(
+    'Agate Guide — varieties, banding, and where to find them',
+    'Field guide to agate varieties, optical traits, regions, and how to tell lookalikes apart with RockHound-GO.',
+  );
   const [selected, setSelected] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [rarityFilter, setRarityFilter] = useState('all');

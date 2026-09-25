@@ -52,3 +52,9 @@
 ## 2024-05-18 - Native File Upload Accessibility
 **Learning:** Using JavaScript `useRef` to proxy clicks from an inaccessible `<button>` to a hidden `<input type="file" className="hidden">` fundamentally breaks keyboard accessibility, as the hidden input cannot receive focus and the button lacks native file picker semantics.
 **Action:** When implementing custom file upload buttons in this codebase, wrap the `<input type="file">` inside a `<label>`. Use `className="sr-only"` on the input to keep it visually hidden but focusable, and apply `cursor-pointer focus-within:ring-2 focus-within:outline-none` directly to the `<label>` to leverage native HTML semantics and provide visual focus indication.
+## 2026-10-31 - Map Search Bar Accessibility Focus Styles
+**Learning:** Found that custom search inputs and list elements often lack proper `aria-label`s and focus indicators (`focus-visible:ring-2`), making them inaccessible for keyboard navigation and screen readers. When a button triggers an action like clearing the search, without `aria-label` screen readers only announce 'button'.
+**Action:** When working on interactive map search components, explicitly add `aria-label` to inputs and icon-only buttons, and use `focus-visible:outline-none focus-visible:ring-2` combined with complementary theme colors (e.g. `amethyst-glow/50`) to restore keyboard usability and screen reader support.
+## 2024-10-24 - Accessibility states on dynamic mappings
+**Learning:** When using `.map()` to render dynamic filter chips that act as toggles, `aria-pressed` is required to announce the selected state to screen readers.
+**Action:** Always add `aria-pressed={state === id}` to dynamically mapped toggle buttons.

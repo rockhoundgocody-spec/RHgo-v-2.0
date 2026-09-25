@@ -39,6 +39,9 @@ export default function CloverVoicePanel({
 
   return (
     <div
+      id="clover-voice-panel"
+      role="region"
+      aria-label="Clover Voice Companion"
       className="mt-4 w-full max-w-[300px] rounded-2xl overflow-hidden flex flex-col"
       style={{
         background: 'hsla(255,30%,14%,0.97)',
@@ -61,13 +64,13 @@ export default function CloverVoicePanel({
           <button
             onClick={onHunt}
             disabled={huntLoading}
-            className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition"
+            className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             aria-label="Get hunt suggestions"
           >
             {huntLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
             <span>Hunt</span>
           </button>
-          <button onClick={onClose} aria-label="End conversation" className="text-white/25 hover:text-white/60 transition">
+          <button onClick={onClose} aria-label="End conversation" className="text-white/25 hover:text-white/60 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50">
             <X size={14} />
           </button>
         </div>
@@ -98,8 +101,18 @@ export default function CloverVoicePanel({
             }}
           >
             <div
-              className="flex items-center justify-between cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-expanded={expandedIntel}
+              aria-controls="mindat-intel-details"
+              className="flex items-center justify-between cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               onClick={() => setExpandedIntel(!expandedIntel)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setExpandedIntel(!expandedIntel);
+                }
+              }}
             >
               <div className="flex items-center gap-1.5 font-bold text-amethyst-glow">
                 <Gem size={12} />
@@ -118,7 +131,7 @@ export default function CloverVoicePanel({
             )}
 
             {expandedIntel && (
-              <div className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
+              <div id="mindat-intel-details" className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
                 <div><span className="text-white/40">Formula:</span> <span className="font-mono text-cyan-300 font-semibold">{detectedMineral.formula}</span></div>
                 <div><span className="text-white/40">System:</span> {detectedMineral.crystal_system}</div>
                 <div><span className="text-white/40">Cleavage:</span> {detectedMineral.cleavage}</div>
@@ -178,7 +191,7 @@ export default function CloverVoicePanel({
                   <p className="text-[9px] text-white/40 italic leading-relaxed">{s.why}</p>
                 </div>
               ))}
-              <button onClick={onDismissSuggestions} className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1">
+              <button onClick={onDismissSuggestions} className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50">
                 Dismiss
               </button>
             </div>
@@ -190,7 +203,7 @@ export default function CloverVoicePanel({
         <button
           type="button"
           onClick={() => onListen?.()}
-          className="w-full flex items-center justify-center gap-1.5 text-[10px] text-white/45 py-1"
+          className="w-full flex items-center justify-center gap-1.5 text-[10px] text-white/45 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         >
           <VoiceDots active={phase === 'listening'} />
           <span>{PHASE_TEXT[phase] || 'tap to talk'}</span>
@@ -203,8 +216,9 @@ export default function CloverVoicePanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }
             }}
+            aria-label="Type message to Clover"
             placeholder={voiceSupported ? 'Or type if it is noisy out' : "Voice isn't available — type"}
-            className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none"
+            className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none rounded px-1.5 py-0.5 focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
           />
         </div>
       </div>

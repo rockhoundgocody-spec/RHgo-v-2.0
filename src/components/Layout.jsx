@@ -145,8 +145,11 @@ export default function Layout() {
   const navigate = useNavigate();
   const { user, isAuthenticated, authChecked } = useAuth();
   const reduceMotion = useReducedMotion();
-  // Every authenticated app route is private — keep it out of search results.
-  useSeoRobots(false);
+  // Most Layout routes are private. A few marketing/field pages stay indexable.
+  const indexableUnderLayout = [
+    '/explore', '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact',
+  ].some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
+  useSeoRobots(indexableUnderLayout);
 
   // Reset the module-level tab back-stacks when the authenticated user
   // changes so a new user never inherits the previous user's navigation history.

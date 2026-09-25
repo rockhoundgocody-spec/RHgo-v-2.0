@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -9,6 +9,15 @@ import { Mail, Lock, Loader2, Gem, Compass, Zap, Flame } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import FacebookIcon from "@/components/FacebookIcon";
 import { motion } from "framer-motion";
+import { clearGateChoice, resetGateFlow } from "@/lib/gateStorage";
+import { getSafeRedirectUrl } from "@/lib/app-params";
+
+/**
+ * Validates and sanitizes the target redirect path to prevent open redirects.
+ */
+export function getLoginRedirectUrl(rawFromUrl) {
+  return getSafeRedirectUrl(rawFromUrl, '/');
+}
 
 const FEATURES = [
   { icon: Gem,     label: 'AI Mineral ID',   desc: 'Instant identification' },
@@ -23,7 +32,19 @@ export default function Login() {
   const [loading, setLoading]   = useState(false);
   const [oauthLoading, setOauthLoading] = useState(null);
   const navigate = useNavigate();
-  const { checkUserAuth } = useAuth();
+  const { checkUserAuth, isAuthenticated, isLoadingAuth } = useAuth();
+
+  // Landed on login successfully — stop HomeGate from bouncing this tab forever.
+  useEffect(() => {
+    clearGateChoice();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      const next = new URLSearchParams(window.location.search).get('from_url');
+      navigate(getLoginRedirectUrl(next), { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,26 +52,36 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      await base44.auth.loginViaEmailPassword(email.trim(), password);
       await checkUserAuth();
-      const next = new URLSearchParams(window.location.search).get('from_url') || '/';
-      navigate(next.startsWith('/') ? next : '/');
+      clearGateChoice();
+      const next = new URLSearchParams(window.location.search).get('from_url');
+      navigate(getLoginRedirectUrl(next));
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err?.message || err?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOAuth = (provider) => {
+  const handleOAuth = async (provider) => {
     if (oauthLoading || loading) return;
+    setError("");
     setOauthLoading(provider);
-    const next = new URLSearchParams(window.location.search).get('from_url') || '/';
-    base44.auth.loginWithProvider(provider, next.startsWith('/') ? next : '/');
+    const next = new URLSearchParams(window.location.search).get('from_url');
+    try {
+      await Promise.resolve(
+        base44.auth.loginWithProvider(provider, getLoginRedirectUrl(next)),
+      );
+      // Provider redirect should leave the page; if it returns, clear spinner.
+    } catch (err) {
+      setOauthLoading(null);
+      setError(err?.message || `Could not start ${provider} sign-in. Try email instead.`);
+    }
   };
 
   return (
-    <div className="min-h-full flex flex-col lg:flex-row overflow-y-auto">
+    <div className="min-h-screen flex flex-col lg:flex-row overflow-y-auto">
 
       {/* ── LEFT HERO PANEL (desktop only) ── */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden"
@@ -217,6 +248,17 @@ export default function Login() {
               Join for free →
             </Link>
           </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              resetGateFlow();
+              navigate('/', { replace: true });
+            }}
+            className="w-full mt-4 text-center text-[12px] text-white/40 hover:text-white/70 transition"
+          >
+            ← Back to welcome / start over
+          </button>
 
           {/* Privacy + Terms — accessible without account */}
           <div className="flex items-center justify-center gap-3 mt-4 text-white/25 text-[11px]">

@@ -50,6 +50,19 @@ export default function QuickPinButton({ userLocation }) {
 
   const queueCount = getQueueLength();
 
+  const getAriaLabel = () => {
+    if (state === 'saving') return 'Saving location to private rock log...';
+    if (state === 'saved') {
+      return savedOffline
+        ? 'Location queued for offline sync'
+        : 'Location saved to private rock log';
+    }
+    if (state === 'error') {
+      return !userLocation ? 'GPS location unavailable' : 'Failed to save location';
+    }
+    return 'Save this location to my private rock log';
+  };
+
   return (
     <div className="relative flex flex-col items-center gap-1">
       <motion.button
@@ -72,7 +85,8 @@ export default function QuickPinButton({ userLocation }) {
           backdropFilter: 'blur(20px)',
           boxShadow: state === 'saved' ? '0 0 14px hsla(142,70%,50%,.3)' : 'none',
         }}
-        aria-label="Save this location to my private rock log"
+        aria-label={getAriaLabel()}
+        aria-pressed={state === 'saving' || state === 'saved'}
         aria-busy={state === 'saving'}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -97,11 +111,12 @@ export default function QuickPinButton({ userLocation }) {
       {/* Pending queue badge */}
       {queueCount > 0 && state === 'idle' && (
         <div
+          role="status"
           aria-label={`${queueCount} pending ${queueCount === 1 ? 'pin' : 'pins'}`}
           className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
           style={{ background: 'hsla(280,80%,55%,1)', border: '1.5px solid hsla(240,30%,8%,.9)' }}
         >
-          {queueCount > 9 ? '9+' : queueCount}
+          <span aria-hidden="true">{queueCount > 9 ? '9+' : queueCount}</span>
         </div>
       )}
 

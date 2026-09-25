@@ -3,9 +3,10 @@
  * Scan mode selector (Rock/Mineral, Crystal, Fossil, Mixed Matrix),
  * lighting tips panel, and scale reference toggle.
  */
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useRef } from 'react';
 import { Mountain, Gem, Bone, Layers, Lightbulb, Ruler, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 const MODES = [
   { id: 'rock',    label: 'Rock/Mineral', icon: Mountain, hint: 'Bulk rocks & hand specimens' },
@@ -24,8 +25,14 @@ const LIGHTING_TIPS = [
 
 export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle }) {
   const [tipsOpen, setTipsOpen] = useState(false);
+  const dialogRef = useRef(null);
   const dialogId = useId();
   const titleId = useId();
+
+  useFocusTrap(dialogRef, {
+    active: tipsOpen,
+    onClose: () => setTipsOpen(false),
+  });
 
   return (
     <div className="space-y-2">
@@ -97,6 +104,7 @@ export default function ScanModeBar({ mode, onModeChange, scaleOn, onScaleToggle
             onClick={() => setTipsOpen(false)}
           >
             <motion.div
+              ref={dialogRef}
               id={dialogId}
               role="dialog"
               aria-modal="true"

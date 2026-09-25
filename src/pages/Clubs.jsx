@@ -7,6 +7,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const EVENT_TYPE_CONFIG = {
   field_trip: { label: 'Field Trip', icon: Mountain, color: '#34d399' },
@@ -18,6 +20,11 @@ const EVENT_TYPE_CONFIG = {
 };
 
 export default function Clubs() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'Gem & mineral clubs near you — RockHound-GO',
+    'Discover local gem and mineral club chapters, field trips, shows, and workshops on RockHound-GO.',
+  );
   const [chapters, setChapters] = useState(null);
   const [events, setEvents] = useState(null);
   const [me, setMe] = useState(null);

@@ -32,6 +32,7 @@ import SpawnStats from '@/components/ar/SpawnStats.jsx';
 import AREncounterScreen from '@/components/ar/AREncounterScreen.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 import ExpeditionTeaserModal from '@/components/explore/ExpeditionTeaserModal.jsx';
 import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
@@ -278,6 +279,7 @@ export default function Explore() {
     return minerals;
   }, [hotspots, userLocation]);
 
+  useSeoRobots(true);
   useSeoMeta(
     'Find minerals near you - RockHound-GO',
     seoMinerals.length > 0

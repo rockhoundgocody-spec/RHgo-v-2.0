@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -16,6 +16,9 @@ import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
 import { persistLastGps } from '@/lib/geo';
+import { trackEvent } from '@/lib/analytics';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
@@ -25,7 +28,6 @@ import {
   consumeGuestScan,
   getGuestQuota,
   getOrCreateGuestId,
-  guestLoginUrl,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
 
@@ -37,6 +39,11 @@ const VOICE_LINES = {
 };
 
 export default function Scan() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'Scan a rock free — AI mineral ID | RockHound-GO',
+    'Photograph a specimen and get a field report with confidence, lookalikes, and tests. One free guest scan — no account required.',
+  );
   const navigate = useNavigate();
   const [stage, setStage] = useState('camera');
   const [facing, setFacing] = useState('environment');
@@ -263,6 +270,11 @@ export default function Scan() {
       setPrimaryUrl(finalUrl);
       setStage('result');
       setSheetOpen(true);
+      trackEvent('scan_complete', {
+        rarity: enriched?.rarity || 'unknown',
+        confidence_band: (enriched?.confidence ?? 0) >= 0.85 ? 'high' : (enriched?.confidence ?? 0) >= 0.6 ? 'likely' : 'uncertain',
+        guest: !!isGuest,
+      });
 
       if (isGuest) {
         setGuestQuota(consumeGuestScan());
@@ -401,6 +413,7 @@ export default function Scan() {
     });
 
     setSavedId(specimenId);
+    trackEvent('scan_save', { disposition, guest: false });
 
     const currentUser = await base44.auth.me().catch(() => null);
     if (currentUser?.email) {
