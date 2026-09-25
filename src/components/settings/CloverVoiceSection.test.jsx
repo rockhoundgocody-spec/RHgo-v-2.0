@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 vi.hoisted(() => {
   const mockStorage = () => {
@@ -28,7 +29,7 @@ vi.hoisted(() => {
 
 describe('CloverVoiceSection', () => {
   it('contains aria-describedby linking range sliders to hint text in component source code', () => {
-    const filePath = path.resolve(__dirname, 'CloverVoiceSection.jsx');
+    const filePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'CloverVoiceSection.jsx');
     const source = fs.readFileSync(filePath, 'utf-8');
     expect(source).toContain('aria-describedby={hintId}');
     expect(source).toContain('id={hintId}');

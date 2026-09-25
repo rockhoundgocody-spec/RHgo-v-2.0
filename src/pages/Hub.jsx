@@ -98,10 +98,16 @@ export default function Hub() {
     return () => { cancelled = true; };
   }, [user?.email, navigate]);
 
-  const ranked = useMemo(
-    () => rankHotspots(hotspots, { userLocation: gps, collectedMinerals: collected }),
-    [hotspots, gps, collected],
-  );
+  const ranked = useMemo(() => {
+    const seen = new Set();
+    return rankHotspots(hotspots, { userLocation: gps, collectedMinerals: collected })
+      .filter((h) => {
+        const key = (h.name || '').toLowerCase().trim();
+        if (!key || seen.has(key)) return !key;
+        seen.add(key);
+        return true;
+      });
+  }, [hotspots, gps, collected]);
   const nearby = ranked.filter((h) => h.distanceMi == null || h.distanceMi <= 80).slice(0, 3);
   const picks = nearby.length ? nearby : ranked.slice(0, 3);
 
