@@ -57,7 +57,7 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           onFocus={() => setFocused(true)}
           placeholder="Search hotspots, minerals, states…"
           aria-label="Search hotspots, minerals, states"
-          className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none ml-2"
+          className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ml-2"
         />
         {query && (
           <button onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
