@@ -23,6 +23,7 @@ function loadVoice() {
 }
 
 function VoiceSlider({ id, label, hint, min, max, step, value, onChange }) {
+  const hintId = `${id}-hint`;
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -36,10 +37,11 @@ function VoiceSlider({ id, label, hint, min, max, step, value, onChange }) {
         max={max}
         step={step}
         value={value}
+        aria-describedby={hintId}
         onChange={(event) => onChange(Number.parseFloat(event.target.value))}
         className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
       />
-      <p className="text-[11px] text-white/35">{hint}</p>
+      <p id={hintId} className="text-[11px] text-white/35">{hint}</p>
     </div>
   );
 }
@@ -84,6 +86,7 @@ export default function CloverVoiceSection() {
                     key={persona.id}
                     type="button"
                     aria-pressed={selected}
+                    aria-label={`${persona.label} voice persona — ${persona.desc}`}
                     onClick={() => setVoice((previous) => ({ ...previous, voice: persona.id }))}
                     className="p-2.5 rounded-xl text-left transition border select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70 motion-reduce:transition-none"
                     style={{
@@ -95,7 +98,7 @@ export default function CloverVoiceSection() {
                       {persona.label}
                       {selected && <span className="text-[10px] text-amethyst-glow font-mono" aria-hidden="true">✓</span>}
                     </span>
-                    <span className="block text-[10px] text-white/40 mt-0.5">{persona.desc}</span>
+                    <span className="block text-[10px] text-white/40 mt-0.5" aria-hidden="true">{persona.desc}</span>
                   </button>
                 );
               })}
