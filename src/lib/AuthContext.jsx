@@ -36,15 +36,18 @@ export const AuthProvider = ({ children }) => {
         // may be valid even if appParams.token hasn't picked it up from storage yet.
         // If there's no token at all, me() throws and we handle it gracefully.
         await checkUserAuth();
+        setAuthError(null);
       } catch (appError) {
         /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
-        if (reason === 'auth_required' || appError?.status === 401) {
-          setAuthError({ type: 'auth_required', message: 'Authentication required' });
-        } else if (reason === 'user_not_registered') {
+        if (reason === 'user_not_registered') {
           setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
+        } else if (reason === 'auth_required') {
+          // Only hard-gate when the platform explicitly requires auth for the app.
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
         } else {
-          setAuthError({ type: reason || 'unknown', message: appError?.message || 'Failed to load app' });
+          // Network / unknown: still allow public routes (login must stay reachable).
+          setAuthError(null);
         }
         setIsLoadingPublicSettings(false);
         setIsLoadingAuth(false);
