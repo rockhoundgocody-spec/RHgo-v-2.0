@@ -4,8 +4,7 @@ import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
-import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
-import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
+import { lazyPart } from '@/lib/lazyPart';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
@@ -18,6 +17,9 @@ import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.js
 import WakeWordListener from '@/components/oracle/WakeWordListener.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import useReducedMotion from '@/lib/useReducedMotion';
+
+const OracleOverlay = lazyPart(() => import('@/components/oracle/OracleOverlay.jsx'));
+const OracleLiveOverlay = lazyPart(() => import('@/components/oracle/OracleLiveOverlay.jsx'));
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 

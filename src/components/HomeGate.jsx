@@ -1,7 +1,6 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import Hub from '@/pages/Hub';
 import FirstVisitGate from '@/components/FirstVisitGate.jsx';
 import {
   GATE_BUFFER_KEY,
@@ -13,6 +12,7 @@ import {
 } from '@/lib/gateStorage';
 
 const Landing = React.lazy(() => import('@/pages/Landing'));
+const Hub = React.lazy(() => import('@/pages/Hub'));
 const OpeningBuffer = React.lazy(() => import('@/components/hub/OpeningBuffer.jsx'));
 const IntroCinematic = React.lazy(() => import('@/components/hub/IntroCinematic.jsx'));
 
@@ -48,7 +48,13 @@ export default function HomeGate() {
     // Do NOT auto-force /register on every visit — that blocked "I have an account".
   }, [isAuthenticated, navigate]);
 
-  if (isAuthenticated) return <Hub />;
+  if (isAuthenticated) {
+    return (
+      <Suspense fallback={<div className="min-h-screen" style={{ background: '#0a0a14' }} />}>
+        <Hub />
+      </Suspense>
+    );
+  }
 
   const handleGateChoice = (choice, name) => {
     if (choice === 'returning') {
