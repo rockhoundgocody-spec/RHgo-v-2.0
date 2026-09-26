@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -208,14 +208,20 @@ export default function QuestDashboard() {
 
   const { data: quests = [], refetch, isLoading } = useQuery({
     queryKey: ['quests-dashboard', user?.email],
-    queryFn: () => base44.entities.Quest.filter({ owner_email: user.email, status: 'active' }),
+    // Optimization (Bolt): Pass field projection array as 4th arg to filter() to fetch only required quest attributes
+    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'active' }, null, null, [
+      'id', 'title', 'description', 'quest_type', 'target_count', 'progress', 'xp_reward', 'status', 'expires_at', 'clover_message', 'target_rarity'
+    ]),
     enabled: !!user?.email,
     staleTime: 30_000,
   });
 
   const { data: completedQuests = [] } = useQuery({
     queryKey: ['quests-completed', user?.email],
-    queryFn: () => base44.entities.Quest.filter({ owner_email: user.email, status: 'completed' }),
+    // Optimization (Bolt): Pass field projection array as 4th arg to filter() to fetch only required fields for stats calculation
+    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'completed' }, null, null, [
+      'id', 'xp_reward', 'status'
+    ]),
     enabled: !!user?.email,
     staleTime: 60_000,
   });
@@ -252,19 +258,41 @@ export default function QuestDashboard() {
     }
   };
 
-  // Totals
-  const totalXP = completedQuests.reduce((s, q) => s + (q.xp_reward || 0), 0);
-  const { level, pct: lvlPct, nextLevelXp, currentLevelXp } = xpToLevel(totalXP);
+  // Totals - Optimization (Bolt): Memoize total XP calculation and level stats to avoid array iteration on every render
+  const totalXP = useMemo(
+    () => completedQuests.reduce((s, q) => s + (q.xp_reward || 0), 0),
+    [completedQuests]
+  );
+  const { level, pct: lvlPct, nextLevelXp, currentLevelXp } = useMemo(
+    () => xpToLevel(totalXP),
+    [totalXP]
+  );
   const streak = companion?.streak_days ?? 0;
   const xpToNext = nextLevelXp - currentLevelXp;
   const xpProgress = totalXP - currentLevelXp;
 
-  // Filter out expired quests from the active view
-  const now = Date.now();
-  const activeQuests = quests.filter(q => !q.expires_at || new Date(q.expires_at).getTime() > now);
-  const filtered = filter === 'all' ? activeQuests : activeQuests.filter(q => q.quest_type === filter);
-  const daily   = activeQuests.filter(q => q.quest_type === 'daily');
-  const weekly  = activeQuests.filter(q => q.quest_type === 'weekly');
+  // Optimization (Bolt): Memoize active and filtered quests array operations to prevent redundant re-filtering
+  const activeQuests = useMemo(() => {
+    const now = Date.now();
+    return quests.filter(q => !q.expires_at || new Date(q.expires_at).getTime() > now);
+  }, [quests]);
+
+  const filtered = useMemo(
+    () => (filter === 'all' ? activeQuests : activeQuests.filter(q => q.quest_type === filter)),
+    [activeQuests, filter]
+  );
+  const daily = useMemo(
+    () => activeQuests.filter(q => q.quest_type === 'daily'),
+    [activeQuests]
+  );
+  const weekly = useMemo(
+    () => activeQuests.filter(q => q.quest_type === 'weekly'),
+    [activeQuests]
+  );
+  const pendingXP = useMemo(
+    () => activeQuests.reduce((s, q) => s + (q.xp_reward || 0), 0),
+    [activeQuests]
+  );
 
   return (
     <div className="min-h-screen px-4 pt-4 max-w-2xl mx-auto" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
@@ -416,19 +444,14 @@ export default function QuestDashboard() {
           </div>
 
           {/* Pending XP */}
-          {(() => {
-            const pending = activeQuests.reduce((s, q) => s + (q.xp_reward || 0), 0);
-            return (
-              <div className="mt-3 flex items-center justify-between px-3 py-2.5 rounded-xl"
-                style={{ background: 'hsla(280,80%,15%,0.25)', border: '1px solid hsla(280,60%,50%,0.2)' }}>
-                <div className="flex items-center gap-2">
-                  <Star size={12} className="text-amethyst-glow" />
-                  <span className="text-[10px] text-white/50">Pending XP available</span>
-                </div>
-                <span className="text-sm font-black text-amethyst-glow">+{pending.toLocaleString()}</span>
-              </div>
-            );
-          })()}
+          <div className="mt-3 flex items-center justify-between px-3 py-2.5 rounded-xl"
+            style={{ background: 'hsla(280,80%,15%,0.25)', border: '1px solid hsla(280,60%,50%,0.2)' }}>
+            <div className="flex items-center gap-2">
+              <Star size={12} className="text-amethyst-glow" />
+              <span className="text-[10px] text-white/50">Pending XP available</span>
+            </div>
+            <span className="text-sm font-black text-amethyst-glow">+{pendingXP.toLocaleString()}</span>
+          </div>
         </GlassPanel>
       )}
     </div>
