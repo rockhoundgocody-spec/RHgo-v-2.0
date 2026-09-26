@@ -34,8 +34,8 @@ export default function About() {
               We believe identification shouldn't require a lab. Point your
               phone at a rock and our cloud identification service (powered by
               Google Gemini) suggests likely minerals with a confidence score,
-              lookalikes and field tests — so it needs a signal. What you log
-              while offline syncs to your collection when you're back in range,
+              lookalikes and field tests — so it needs a signal. Finds you log
+              offline sync to your collection when you're back in range,
               earn badges, and feed into your companion Amethyst, a gentle
               progress guide that learns alongside you.
             </p>
