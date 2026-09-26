@@ -26,15 +26,16 @@ export default function About() {
               RockHound-GO is a field-first companion app for rockhounds, amateur
               geologists, and curious explorers who love the thrill of finding
               something extraordinary in the dirt. The app helps you discover
-              public mineral hotspots near you, identify specimens with on-device
-              AI, and build a beautifully organized personal collection that
-              grows with every trip.
+              public mineral hotspots near you, identify specimens with on-device AI
+              (and optional cloud assist when needed), and build a beautifully
+              organized personal collection that grows with every trip.
             </p>
             <p>
               We believe identification shouldn't require a lab. Point your
               phone at a rock, and the app will suggest likely minerals using a
-              quantized neural network that runs locally — no signal required.
-              When you're back in range, your finds sync to your collection,
+              quantized neural network that prefers on-device inference — so many
+              IDs work with no signal. When a harder match needs cloud assist,
+              or you're back in range to sync, your finds update your collection,
               earn badges, and feed into your companion Amethyst, a gentle
               progress guide that learns alongside you.
             </p>
