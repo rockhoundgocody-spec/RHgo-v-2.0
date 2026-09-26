@@ -7,8 +7,14 @@ vi.mock('react', async (importOriginal) => {
     ...actual,
     useState: (initial) => [initial, vi.fn()],
     useMemo: (factory) => factory(),
+    useRef: (initial) => ({ current: initial }),
+    useEffect: () => {},
   };
 });
+
+vi.mock('@/lib/cloverWake', () => ({
+  on: () => () => {},
+}));
 
 vi.mock('react-router-dom', () => ({
   useLocation: () => ({ pathname: '/explore' }),
