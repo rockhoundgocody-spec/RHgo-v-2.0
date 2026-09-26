@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
@@ -87,6 +88,7 @@ export default function CloverVoicePanel({
                 : { background: 'hsla(255,25%,20%,0.6)', border: '1px solid hsla(255,20%,40%,0.2)', color: 'rgba(255,255,255,0.78)' }}
             >
               {m.content}
+              {m.role !== 'user' && m.sources?.length > 0 && <SourceChips sources={m.sources} />}
             </div>
           </div>
         ))}
@@ -222,6 +224,37 @@ export default function CloverVoicePanel({
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+const SOURCE_ICONS = { specimen: Gem, site: MapPin, log: NotebookPen, expedition: Route, web: Globe };
+
+/** Where Clover's answer came from — each chip opens the record. */
+function SourceChips({ sources }) {
+  const vaultFocus = sources.find((s) => s.type === 'specimen' || s.type === 'log' || s.type === 'site');
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Sources">
+      {sources.map((s) => {
+        const Icon = SOURCE_ICONS[s.type] || Gem;
+        const chip = (
+          <span className="inline-flex items-center gap-1 max-w-[180px] px-1.5 py-0.5 rounded-md text-[9px] font-semibold"
+            style={{ background: 'hsla(185,70%,40%,0.16)', border: '1px solid hsla(185,80%,60%,0.28)', color: 'hsl(185,80%,82%)' }}>
+            <Icon size={9} className="shrink-0" />
+            <span className="truncate">{s.label}{s.place ? ` · ${s.place}` : ''}</span>
+          </span>
+        );
+        return s.route
+          ? <Link key={s.key} to={s.route} className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60">{chip}</Link>
+          : <span key={s.key}>{chip}</span>;
+      })}
+      {vaultFocus && (
+        <Link to={`/vault?focus=${encodeURIComponent(vaultFocus.id)}`}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold text-amethyst-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+          style={{ background: 'hsla(275,60%,40%,0.18)', border: '1px solid hsla(280,70%,65%,0.3)' }}>
+          <Orbit size={9} /> In the galaxy
+        </Link>
+      )}
     </div>
   );
 }

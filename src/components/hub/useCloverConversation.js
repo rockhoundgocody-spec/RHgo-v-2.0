@@ -6,7 +6,7 @@ import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
 import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
-import { setCloverBusy } from '@/lib/cloverWake';
+import { setCloverBusy, emit } from '@/lib/cloverWake';
 
 const MAX_QUIET_TURNS = 3;
 
@@ -90,6 +90,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     }
 
     let reply = "Sorry, I missed that — one more time?";
+    let sources = [];
     try {
       const cognitiveContext = getCognitiveMemoryContext();
       let gps = null;
@@ -108,6 +109,9 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       });
       const data = res?.data;
       reply = data?.reply || reply;
+      sources = Array.isArray(data?.sources) ? data.sources : [];
+      // An open Vault Galaxy flies to the record Clover answered from.
+      if (data?.focus?.id) emit('vault:focus', data.focus);
 
       if (data?.log_find && data?.find_details) {
         try {
@@ -126,7 +130,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
     if (!activeRef.current) return;
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-8);
-    setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+    setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
   }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voice, stopBargeIn]);
   sendRef.current = send;
