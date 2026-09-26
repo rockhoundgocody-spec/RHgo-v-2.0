@@ -1,62 +1,60 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import Stripe from 'npm:stripe@14.25.0';
+import { entitlementOf, mapStatus, ownerEmailOf, passEnd, periodEndOf } from './subscriptionSync.ts';
 
 /**
  * stripeWebhook — keeps the Subscription entity in sync with Stripe.
  *
  * Events handled:
- *   checkout.session.completed        → activate subscription (tier from metadata)
- *   customer.subscription.updated      → refresh status + current_period_end
- *   customer.subscription.deleted      → mark cancelled
+ *   checkout.session.completed                 → activate (subscription) or grant a pass (one-time)
+ *   customer.subscription.created / updated    → refresh status + current_period_end
+ *   customer.subscription.deleted              → mark cancelled
  *
- * The subscription's tier is read from metadata.tier (set by createCheckoutSession
- * and propagated by Stripe). We never trust the client for tier.
+ * Ownership comes from metadata.owner_email stamped by createCheckoutSession
+ * (the signed-in account that started checkout); the email typed into Stripe
+ * is only a fallback for older sessions. Entitlement comes from
+ * metadata.tier, never from the client.
  *
  * Uses the service role to write Subscription records (the webhook has no user auth).
  */
-const TIER_DEFAULT = 'field_pro';
-
-function mapStatus(stripeStatus) {
-  if (stripeStatus === 'active') return 'active';
-  if (stripeStatus === 'trialing') return 'trialing';
-  if (stripeStatus === 'past_due') return 'past_due';
-  if (stripeStatus === 'canceled' || stripeStatus === 'unpaid') return 'cancelled';
-  return stripeStatus || 'active';
-}
 
 async function getCustomerEmail(stripe, customerId) {
-  if (!customerId) return null;
+  if (!customerId || typeof customerId !== 'string') return null;
   try {
     const c = await stripe.customers.retrieve(customerId);
-    return c?.email || null;
+    return c && !c.deleted && c.email ? String(c.email).toLowerCase() : null;
   } catch { return null; }
 }
 
-async function upsertSubscription(base44, email, tier, status, customerId, subscriptionId, periodEnd) {
-  if (!email) return;
-  const rows = await base44.asServiceRole.entities.Subscription.filter({ owner_email: email });
-  const existing = rows?.[0];
+async function findSubscriptionRow(base44, email, stripeSubscriptionId) {
+  if (stripeSubscriptionId) {
+    const bySub = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: stripeSubscriptionId });
+    if (bySub?.[0]) return bySub[0];
+  }
+  if (!email) return null;
+  const byEmail = await base44.asServiceRole.entities.Subscription.filter({ owner_email: email });
+  return byEmail?.[0] || null;
+}
+
+async function upsertSubscription(base44, { email, tier, plan, status, customerId, subscriptionId, periodEnd }) {
+  if (!email) {
+    console.error('stripeWebhook: no owner email — cannot credit subscription', subscriptionId || '');
+    return;
+  }
+  const existing = await findSubscriptionRow(base44, email, subscriptionId);
   const patch = {
-    tier: tier || TIER_DEFAULT,
+    tier,
     status,
-    stripe_customer_id: customerId || undefined,
-    stripe_subscription_id: subscriptionId || undefined,
+    ...(plan ? { plan } : {}),
+    ...(customerId ? { stripe_customer_id: customerId } : {}),
+    ...(subscriptionId ? { stripe_subscription_id: subscriptionId } : {}),
     ...(periodEnd ? { current_period_end: new Date(periodEnd * 1000).toISOString() } : {}),
   };
   if (existing) {
     await base44.asServiceRole.entities.Subscription.update(existing.id, patch);
   } else {
-    await base44.asServiceRole.entities.Subscription.create({
-      owner_email: email,
-      ...patch,
-    });
+    await base44.asServiceRole.entities.Subscription.create({ owner_email: email, ...patch });
   }
-}
-
-async function setSubscriptionStatus(base44, email, status) {
-  if (!email) return;
-  const rows = await base44.asServiceRole.entities.Subscription.filter({ owner_email: email });
-  if (rows?.[0]) await base44.asServiceRole.entities.Subscription.update(rows[0].id, { status });
 }
 
 Deno.serve(async (req) => {
@@ -78,20 +76,42 @@ Deno.serve(async (req) => {
     const data = event.data.object;
 
     if (event.type === 'checkout.session.completed') {
-      const email = data.customer_email || data.customer_details?.email;
-      const tier = data.metadata?.tier || TIER_DEFAULT;
-      await upsertSubscription(base44, email, tier, 'active', data.customer, data.subscription, null);
-    } else if (event.type === 'customer.subscription.updated') {
+      const email = ownerEmailOf(data) || await getCustomerEmail(stripe, data.customer);
+      const tier = entitlementOf(data.metadata);
+      const plan = data.metadata?.plan || null;
+      const customerId = typeof data.customer === 'string' ? data.customer : data.customer?.id;
+
+      if (data.mode === 'payment') {
+        // One-time pass (e.g. Season): active until the pass runs out. No
+        // Stripe subscription id, so access ends exactly at period end.
+        if (data.payment_status !== 'paid') return Response.json({ received: true, pending: true });
+        await upsertSubscription(base44, {
+          email, tier, plan, status: 'active', customerId, subscriptionId: null,
+          periodEnd: passEnd(data.metadata?.pass_days),
+        });
+      } else {
+        const subscriptionId = typeof data.subscription === 'string' ? data.subscription : data.subscription?.id;
+        await upsertSubscription(base44, {
+          email, tier, plan, status: 'active', customerId, subscriptionId, periodEnd: null,
+        });
+      }
+    } else if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
       const sub = data;
-      const email = await getCustomerEmail(stripe, sub.customer);
-      const tier = sub.metadata?.tier || TIER_DEFAULT;
-      const status = mapStatus(sub.status);
-      const periodEnd = sub.current_period_end;
-      await upsertSubscription(base44, email, tier, status, sub.customer, sub.id, periodEnd);
+      const email = ownerEmailOf(sub) || await getCustomerEmail(stripe, sub.customer);
+      await upsertSubscription(base44, {
+        email,
+        tier: entitlementOf(sub.metadata),
+        plan: sub.metadata?.plan || null,
+        status: mapStatus(sub.status),
+        customerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id,
+        subscriptionId: sub.id,
+        periodEnd: periodEndOf(sub),
+      });
     } else if (event.type === 'customer.subscription.deleted') {
       const sub = data;
-      const email = await getCustomerEmail(stripe, sub.customer);
-      await setSubscriptionStatus(base44, email, 'cancelled');
+      const email = ownerEmailOf(sub) || await getCustomerEmail(stripe, sub.customer);
+      const row = await findSubscriptionRow(base44, email, sub.id);
+      if (row) await base44.asServiceRole.entities.Subscription.update(row.id, { status: 'cancelled' });
     }
 
     return Response.json({ received: true });
