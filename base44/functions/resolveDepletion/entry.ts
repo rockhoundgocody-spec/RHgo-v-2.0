@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Temporal-Depletion Engine — resolveDepletion
@@ -71,14 +72,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required to modify depletion records' }, { status: 403 });
     }
 
+    const coords = parseCoordinates(lat, lng);
+
     // Automation apply with no GPS: soft-skip (never invent coordinates)
-    if (apply && (lat == null || lng == null)) {
+    if (apply && !coords) {
       return Response.json({ skipped: true, reason: 'no coordinates' }, { status: 200 });
     }
 
-    if (!mineralName || lat == null || lng == null) {
+    if (!mineralName || !coords) {
       return Response.json({
-        error: 'mineral_name, lat, lng required',
+        error: 'mineral_name, lat, lng required and lat/lng must be valid coordinates',
         received: { mineralName, lat, lng },
       }, { status: 400 });
     }
@@ -89,7 +92,7 @@ Deno.serve(async (req) => {
     let state = 'Unknown';
     try {
       const geoRes = await fetch(
-        `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&format=json`
+        `https://macrostrat.org/api/v2/geologic_units/map?lat=${coords.lat}&lng=${coords.lng}&format=json`
       );
       if (geoRes.ok) {
         const geoJson = await geoRes.json();
