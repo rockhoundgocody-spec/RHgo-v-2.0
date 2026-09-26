@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Baseline CSP that can't break third-party loads: no plugins/<object>, no <base> hijacking.
+         A full script/connect allowlist needs a response header from the host. -->
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
     <link rel="icon" type="image/png" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
     <link rel="apple-touch-icon" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -10,8 +13,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RockHound GO" />
 
-    <!-- Default noindex; public pages call useSeoRobots(true). GTM/GA4 load via VITE_* env in analytics.js -->
-    <meta name="robots" content="noindex, nofollow" id="robots-meta" />
+    <!-- Default index: crawlers skip rendering when the original HTML says noindex, so public pages must ship indexable.
+         Private app routes are Disallowed in robots.txt; admin/dev routes set noindex at runtime. GTM/GA4 load via VITE_* env in analytics.js -->
+    <meta name="robots" content="index, follow" id="robots-meta" />
     <!-- Optional: set VITE_GSC_VERIFICATION in env to inject google-site-verification at runtime -->
     <meta name="description" content="RockHound-GO — AI-powered field companion for rockhounds. Identify minerals instantly with AR scan, discover hotspots, and build your Geo-DEX collection." />
     <meta name="keywords" content="rockhounding, mineral identification, geology app, crystal collecting, AI rock ID, rock identifier, mineral scanner, geology field app" />

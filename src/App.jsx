@@ -11,6 +11,7 @@ import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
+import { prefetchWhenIdle } from '@/lib/lazyPart';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -60,6 +61,7 @@ const Live = lazy(() => import('@/pages/Live'));
 const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
 const Clubs = lazy(() => import('@/pages/Clubs'));
+const VaultGalaxy = lazy(() => import('@/pages/VaultGalaxy'));
 
 const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const Connect = lazy(() => import('@/pages/Connect'));
@@ -165,6 +167,7 @@ const AuthenticatedApp = () => {
           <Route path="/live/:streamId" element={<LiveStreamView />} />
           <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
           <Route path="/clubs" element={<Clubs />} />
+          <Route path="/vault" element={<VaultGalaxy />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
@@ -184,6 +187,13 @@ const AuthenticatedApp = () => {
     </Suspense>
   );
 };
+
+// Warm the screens people open next, once the first screen is idle.
+prefetchWhenIdle([
+  () => import('@/pages/Scan'),
+  () => import('@/pages/Explore.jsx'),
+  () => import('@/pages/Hub'),
+]);
 
 function App() {
   return (

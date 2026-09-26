@@ -7,6 +7,9 @@ vi.mock("@/api/base44Client", () => ({
     auth: {
       me: vi.fn(),
     },
+    functions: {
+      invoke: vi.fn(() => Promise.resolve({ data: { newXP: 150 } })),
+    },
     entities: {
       Specimen: {
         create: vi.fn(),
@@ -70,7 +73,7 @@ describe("saveCatchToCollection", () => {
     vi.clearAllMocks();
   });
 
-  it("creates a Specimen entity and updates total_xp on player profile", async () => {
+  it("creates a Specimen entity and asks the server to award verified XP", async () => {
     const spawn = {
       mineral_name: "Quartz",
       rarity: "common",
@@ -79,10 +82,6 @@ describe("saveCatchToCollection", () => {
 
     base44.auth.me.mockResolvedValue({ email: "geologist@example.com" });
     base44.entities.Specimen.create.mockResolvedValue({ id: "spec-1" });
-    base44.entities.PlayerProfile.filter.mockResolvedValue([
-      { id: "profile-1", total_xp: 100 },
-    ]);
-    base44.entities.PlayerProfile.update.mockResolvedValue({ id: "profile-1", total_xp: 150 });
 
     await saveCatchToCollection(spawn, "success");
 
@@ -94,14 +93,12 @@ describe("saveCatchToCollection", () => {
         xp_awarded: 50,
       })
     );
-    expect(base44.entities.PlayerProfile.filter).toHaveBeenCalledWith(
-      { owner_email: "geologist@example.com" },
-      "-created_date",
-      1
-    );
-    expect(base44.entities.PlayerProfile.update).toHaveBeenCalledWith("profile-1", {
-      total_xp: 150,
+    expect(base44.functions.invoke).toHaveBeenCalledWith("awardVerifiedXP", {
+      event_type: "ar_catch",
+      event_id: "spec-1",
     });
+    // The browser never writes total_xp directly.
+    expect(base44.entities.PlayerProfile.update).not.toHaveBeenCalled();
   });
 
   it("doubles XP for shiny or critical catches", async () => {

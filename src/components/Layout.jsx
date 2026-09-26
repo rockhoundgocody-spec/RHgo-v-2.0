@@ -4,8 +4,7 @@ import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
-import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
-import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
+import { lazyPart } from '@/lib/lazyPart';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
@@ -19,11 +18,14 @@ import WakeWordListener from '@/components/oracle/WakeWordListener.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import useReducedMotion from '@/lib/useReducedMotion';
 
+const OracleOverlay = lazyPart(() => import('@/components/oracle/OracleOverlay.jsx'));
+const OracleLiveOverlay = lazyPart(() => import('@/components/oracle/OracleLiveOverlay.jsx'));
+
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
 // Layout routes a logged-out visitor may view. Everything else under the
 // Layout is protected and redirects to /login.
-const PUBLIC_LAYOUT_ROUTES = ['/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
+const PUBLIC_LAYOUT_ROUTES = ['/explore', '/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
 export function isPublicLayoutRoute(pathname) {
   if (pathname === '/') return true;
   return PUBLIC_LAYOUT_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -51,7 +53,8 @@ export function getActiveTab(pathname) {
   return '/';
 }
 
-function AdminHeader({ pathname }) {
+function AdminHeader({ pathname, isAdmin }) {
+  const links = isAdmin ? secondaryRoutes : secondaryRoutes.filter((r) => r.to !== '/admin');
   return (
     <header className="sticky top-0 z-40 hud-panel border-b border-hud-cyan/20 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -65,7 +68,7 @@ function AdminHeader({ pathname }) {
       </div>
       <div className="flex items-center gap-3">
         <nav className="flex gap-2">
-          {secondaryRoutes.map(({ to, label, icon: Icon }) => (
+          {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -185,14 +188,14 @@ export default function Layout() {
   // Logged-out visitor on a protected route → straight to login (no spinner).
   if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?from_url=${encodeURIComponent(from)}`} replace />;
+    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
   }
 
   return (
     <OracleProvider>
       <BadgeAwarderProvider>
       <div className="w-full min-h-screen text-foreground flex flex-col overflow-x-hidden">
-        {isAdminOrDocs && <AdminHeader pathname={location.pathname} />}
+        {isAdminOrDocs && <AdminHeader pathname={location.pathname} isAdmin={user?.role === 'admin'} />}
         {!isAdminOrDocs && !isRoot && <SubrouteBackButton onBack={() => navigate(-1)} />}
 
         <MainContent

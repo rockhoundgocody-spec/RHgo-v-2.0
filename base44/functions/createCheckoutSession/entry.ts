@@ -1,17 +1,23 @@
 import Stripe from 'npm:stripe@14.25.0';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isValidRedirectTarget } from './redirectValidation.ts';
 import { resolveCheckoutPrice } from './tierPricing.ts';
 
 /**
- * createCheckoutSession — starts a Stripe Checkout (subscription mode) for a
- * RockHound-GO tier. Public app (no login required), so we do NOT call
- * base44.auth.me(); the caller may pass an optional customerEmail.
+ * createCheckoutSession — starts Stripe Checkout for a Pricing-page plan.
  *
- * Body: { successUrl, cancelUrl, tier }
+ * Body: { successUrl, cancelUrl, tier }   (tier = plan id: season | hound |
+ *       steward | club, or legacy field_pro | family)
  * Returns: { url } — redirect the browser there.
  *
- * metadata.tier is propagated to the subscription so the webhook can sync the
- * Subscription entity without needing a price-id→tier map.
+ * The buyer must be signed in: the checkout is bound to their account
+ * (customer email, client_reference_id and metadata.owner_email), so the
+ * webhook credits the subscription to the account that paid — not to
+ * whatever email was typed into Stripe.
+ *
+ * Price and entitlement come only from the server plan catalog
+ * (tierPricing.ts). Recurring prices open a subscription; a one-time price
+ * is sold as a fixed-length pass (plan.passDays).
  */
 Deno.serve(async (req) => {
   try {
@@ -24,45 +30,56 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target' }, { status: 400 });
     }
 
-    const pricing = resolveCheckoutPrice(
-      tier,
-      requestedPriceId,
-      (name) => Deno.env.get(name),
-    );
-    if (!pricing.ok) return Response.json({ error: pricing.error }, { status: 400 });
-
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
-
-    // Derive tier SERVER-SIDE from the price's product — never trust the
-    // client-supplied `tier` (a caller could buy the cheap price but claim
-    // the 'family' entitlement in the webhook otherwise).
-    const PRODUCT_TIERS: Record<string, string> = {
-      'prod_UoyNC9AKOB5ZDh': 'field_pro',
-      'prod_UoyNPk13OVCr11': 'family',
-    };
-    const price = await stripe.prices.retrieve(pricing.priceId);
-    const productId = typeof price.product === 'string' ? price.product : price.product?.id;
-    const resolvedTier = PRODUCT_TIERS[productId];
-    if (!resolvedTier || resolvedTier !== tier) {
-      return Response.json({ error: 'Configured price does not match the requested tier' }, { status: 400 });
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me().catch(() => null);
+    if (!user?.email) {
+      return Response.json({ error: 'Sign in to subscribe', code: 'auth_required' }, { status: 401 });
     }
 
+    const pricing = resolveCheckoutPrice(tier, requestedPriceId, (name) => Deno.env.get(name));
+    if (!pricing.ok) return Response.json({ error: pricing.error, code: pricing.code }, { status: 400 });
+
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
+    const price = await stripe.prices.retrieve(pricing.priceId);
+    if (!price?.active) {
+      return Response.json({ error: 'This plan is not available right now', code: 'price_inactive' }, { status: 400 });
+    }
+    const recurring = price.type === 'recurring';
+    if (!recurring && !pricing.passDays) {
+      console.error(`createCheckoutSession: ${pricing.plan} is configured with a one-time price`);
+      return Response.json({ error: 'This plan is misconfigured', code: 'bad_config' }, { status: 500 });
+    }
+
+    // Reuse the buyer's Stripe customer when we already know it, so renewals,
+    // upgrades and the billing portal stay on one customer record.
+    let existingCustomer: string | null = null;
+    try {
+      const rows = await base44.asServiceRole.entities.Subscription.filter({ owner_email: user.email }, '-updated_date', 1);
+      existingCustomer = (rows?.[0]?.stripe_customer_id as string) || null;
+    } catch { /* first purchase */ }
+
+    const metadata: Record<string, string> = {
+      base44_app_id: Deno.env.get('BASE44_APP_ID') || '',
+      tier: pricing.entitlement,
+      plan: pricing.plan,
+      owner_email: user.email,
+      owner_id: String(user.id || ''),
+      ...(pricing.passDays && !recurring ? { pass_days: String(pricing.passDays) } : {}),
+    };
+
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: recurring ? 'subscription' : 'payment',
       line_items: [{ price: pricing.priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        base44_app_id: Deno.env.get('BASE44_APP_ID'),
-        tier: resolvedTier,
-      },
-      // Propagate tier onto the SUBSCRIPTION object too — without this,
-      // customer.subscription.updated events carry no metadata.tier and the
-      // webhook silently downgrades 'family' subscribers to the default tier
-      // on every renewal/update.
-      subscription_data: {
-        metadata: { tier: resolvedTier },
-      },
+      client_reference_id: String(user.id || ''),
+      ...(existingCustomer ? { customer: existingCustomer } : { customer_email: user.email }),
+      metadata,
+      // Carry ownership + entitlement onto the subscription too, so
+      // customer.subscription.* events can be credited without guessing.
+      ...(recurring
+        ? { subscription_data: { metadata } }
+        : { payment_intent_data: { metadata } }),
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
     });
@@ -70,6 +87,6 @@ Deno.serve(async (req) => {
     return Response.json({ url: session.url });
   } catch (error) {
     console.error('createCheckoutSession error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 });

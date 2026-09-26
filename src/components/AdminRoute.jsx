@@ -1,4 +1,5 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useAuth } from '@/lib/AuthContext';
 
 const DefaultFallback = () => (
@@ -14,9 +15,15 @@ const DefaultFallback = () => (
  */
 export default function AdminRoute() {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const location = useLocation();
+  // Admin and dev tools are never indexable, whatever the site default is.
+  useSeoRobots(false);
 
   if (isLoadingAuth) return <DefaultFallback />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    const from = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
+  }
   if (user?.role !== 'admin') return <Navigate to="/" replace />;
 
   return <Outlet />;

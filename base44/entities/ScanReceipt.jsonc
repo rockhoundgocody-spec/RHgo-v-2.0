@@ -1,0 +1,68 @@
+{
+  "name": "ScanReceipt",
+  "type": "object",
+  "description": "Server-issued record of each AI identification run for a signed-in member. Meters the free monthly scan allowance and lets saves trust the server's rarity instead of a client-sent result. Written only by backend functions (service role).",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Member the identification ran for"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "member_identify"
+      ],
+      "default": "member_identify"
+    },
+    "month_key": {
+      "type": "string",
+      "description": "UTC month the scan counts against, YYYY-MM"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Uploaded photo the identification ran on"
+    },
+    "top_match": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "confidence": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "owner_email",
+    "month_key"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

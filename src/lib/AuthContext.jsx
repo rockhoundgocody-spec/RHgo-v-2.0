@@ -78,6 +78,24 @@ export const AuthProvider = ({ children }) => {
     }, AUTH_CHECK_TIMEOUT_MS);
 
     try {
+      // ── BOOT-TIME TOKEN RESTORATION ──────────────────────────────────────
+      // The SDK client (base44Legacy.js) is created at module-eval time with
+      // `token` captured from appParams at that instant. If the axios client
+      // doesn't have the Authorization header wired in when me() fires on boot
+      // (stale service-worker chunk, prior-build storage-key mismatch, or the
+      // token sitting under the alternate "token" key the SDK also writes),
+      // me() rejects and the Layout guard bounces to /login — even though the
+      // token is in localStorage. Restore it here so the header is always set
+      // before we consult the platform session.
+      try {
+        const storedToken =
+          window.localStorage?.getItem('base44_access_token') ||
+          window.localStorage?.getItem('token');
+        if (storedToken && typeof base44.auth.setToken === 'function') {
+          base44.auth.setToken(storedToken, true);
+        }
+      } catch { /* localStorage may be blocked by privacy settings */ }
+
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);

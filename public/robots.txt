@@ -12,12 +12,14 @@ Allow: /live
 Allow: /find-of-the-week
 Allow: /privacy-policy
 Allow: /terms
+Allow: /docs
 
 Disallow: /admin
 Disallow: /settings
 Disallow: /profile
 Disallow: /collection
 Disallow: /collections
+Disallow: /vault
 Disallow: /companion
 Disallow: /quests
 Disallow: /badges
