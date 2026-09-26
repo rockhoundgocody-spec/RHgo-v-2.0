@@ -20,7 +20,18 @@ import ResetPassword from '@/pages/ResetPassword';
 
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 
-const Explore = lazy(() => import('@/pages/Explore.jsx'));
+// After a redeploy, an old tab may request a chunk that no longer exists —
+// reload once to pick up the new build instead of crashing.
+const lazyWithReload = (factory, key) => lazy(() => factory().catch((err) => {
+  const flag = `rhgo_chunk_reload_${key}`;
+  if (!sessionStorage.getItem(flag)) {
+    sessionStorage.setItem(flag, '1');
+    window.location.reload();
+    return new Promise(() => {});
+  }
+  throw err;
+}));
+const Explore = lazyWithReload(() => import('@/pages/Explore.jsx'), 'explore');
 const Scan = lazy(() => import('@/pages/Scan'));
 const Collection = lazy(() => import('@/pages/Collection'));
 const Collections = lazy(() => import('@/pages/Collections'));
@@ -104,6 +115,7 @@ const AuthenticatedApp = () => {
             <Route path="/live" element={<Live />} />
             <Route path="/live/:streamId" element={<LiveStreamView />} />
             <Route path="/scan" element={<Scan />} />
+            <Route path="/explore" element={<Explore />} />
             <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/connect" element={<Connect />} />
             <Route path="*" element={<Landing />} />

@@ -11,7 +11,7 @@ export default function ProvenanceCertificateModal({ open, result, savedId, gpsC
   const certId = `RHGO-${(savedId || 'SPEC').slice(-6).toUpperCase()}-${new Date().getFullYear()}`;
   const mineral = result.top_match || 'Specimen';
   const rarity = (result.rarity || 'Common').toUpperCase();
-  const value = result.value_estimate || '$15 – $40';
+  const value = result.value_estimate || 'Value not estimated';
   const hardness = result.hardness_mohs ? `${result.hardness_mohs} Mohs` : '6.5 – 7.0 Mohs';
   const formula = result.chemical_formula || 'SiO₂';
 

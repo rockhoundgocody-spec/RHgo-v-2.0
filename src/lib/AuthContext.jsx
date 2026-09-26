@@ -1,6 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+// (toast import removed — auth-persistence fix no longer toasts on timeout)
+
+// If the session check hasn't settled by then, stop blocking the app and
+// continue as logged-out. A late result still applies when it arrives.
+const AUTH_CHECK_TIMEOUT_MS = 20000;
 
 const AuthContext = createContext();
 
@@ -23,13 +28,15 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       try {
+        // Public settings don't depend on the session check — never let a slow
+        // or hung auth call keep this flag (and the boot spinner) stuck.
+        setAppPublicSettings({ id: appParams.appId });
+        setIsLoadingPublicSettings(false);
         // Always try me() — the SDK's internal token (set by loginViaEmailPassword)
         // may be valid even if appParams.token hasn't picked it up from storage yet.
         // If there's no token at all, me() throws and we handle it gracefully.
         await checkUserAuth();
-        setAppPublicSettings({ id: appParams.appId });
         setAuthError(null);
-        setIsLoadingPublicSettings(false);
       } catch (appError) {
         /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
@@ -57,22 +64,33 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    setIsLoadingAuth(true);
+    let settled = false;
+    // Safety net only: if the session check truly never settles (hung network,
+    // unreachable auth server), log a warning after the timeout — but do NOT
+    // declare the user logged out. Declaring logged out here was the root cause
+    // of the Login → Profile → Login bounce: a slow me() flipped the app to
+    // logged-out, Layout redirected to /login, then me() resolved and sent the
+    // user back — repeating on every reload. Keep the loading state so
+    // protected routes never flash-redirect before the real session resolves.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      console.warn('[auth] Session check is taking longer than expected — still waiting, not bouncing.');
+    }, AUTH_CHECK_TIMEOUT_MS);
+
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
     } catch (error) {
       /* visitor is simply logged out */
-      setIsLoadingAuth(false);
+      setUser(null);
       setIsAuthenticated(false);
+    } finally {
+      settled = true;
+      clearTimeout(timer);
       setAuthChecked(true);
-      // Public app: a failed auth check just means the visitor isn't logged in.
-      // Don't block them from entering — let the main app routes render, and
-      // individual pages can prompt login only when a protected action is taken.
+      setIsLoadingAuth(false);
     }
   };
 

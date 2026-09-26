@@ -124,7 +124,7 @@ export default function HolographicResult({
   const crystalSystem = result?.crystal_system || 'Amorphous';
   const lusterFeature = features.find(f => f.feature?.toLowerCase().includes('luster'))?.value;
   const luster = lusterFeature || 'Vitreous';
-  const valueEstimate = result?.value_estimate || '$10 – $35';
+  const valueEstimate = result?.value_estimate || 'Value not estimated';
   const scientificFormula = [result?.scientific_name, result?.chemical_formula].filter(Boolean).join(' · ');
   const topMatchLower = (result?.top_match || '').toLowerCase();
 

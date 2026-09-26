@@ -9,6 +9,7 @@ import {
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
+import { exportToCsv } from '@/lib/specimenExport';
 
 const RARITY_CONFIG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.35)',  gradient: 'from-slate-900 to-slate-800',   border: 'border-white/10' },
@@ -63,6 +64,7 @@ export default function SpecimenDetail() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('story');
   const [verifying, setVerifying] = useState(false);
+  const [busyAction, setBusyAction] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: specimen, isLoading } = useQuery({
@@ -83,6 +85,26 @@ export default function SpecimenDetail() {
     } finally {
       setVerifying(false);
     }
+  };
+
+  const handlePatch = async (key, patch) => {
+    if (busyAction) return;
+    setBusyAction(key);
+    try {
+      await base44.entities.Specimen.update(id, patch);
+      queryClient.setQueryData(['specimen', id], (prev) => (prev ? { ...prev, ...patch } : prev));
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleJournalExport = () => {
+    exportToCsv([{
+      ...specimen,
+      location_label: specimen.geo_privacy === 'private' ? '' : specimen.found_at,
+      lat: specimen.geo_privacy === 'private' ? '' : specimen.lat,
+      lng: specimen.geo_privacy === 'private' ? '' : specimen.lng,
+    }], `field-journal-${(specimen.mineral_name || 'specimen').toLowerCase().replace(/\s+/g, '-')}.csv`);
   };
 
   if (isLoading) {
@@ -254,13 +276,26 @@ export default function SpecimenDetail() {
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: '➕', label: 'Add to Collection', color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)' },
-            { icon: '🛡️', label: 'Mark Private', color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)' },
-          ].map(({ icon, label, color, bg, border }) => (
-            <button key={label}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
+            {
+              key: 'collect', icon: '➕', done: specimen.collected,
+              label: specimen.collected ? 'In Collection ✓' : 'Add to Collection',
+              patch: { collected: true, disposition: 'collected' },
+              color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)',
+            },
+            {
+              key: 'private', icon: '🛡️', done: specimen.geo_privacy === 'private',
+              label: specimen.geo_privacy === 'private' ? 'Private ✓' : 'Mark Private',
+              patch: { geo_privacy: 'private' },
+              color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)',
+            },
+          ].map(({ key, icon, label, done, patch, color, bg, border }) => (
+            <button key={key}
+              type="button"
+              onClick={() => handlePatch(key, patch)}
+              disabled={done || busyAction === key}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] disabled:opacity-60"
               style={{ background: bg, border: `1px solid ${border}`, color }}>
-              <span>{icon}</span>
+              {busyAction === key ? <Loader2 size={14} className="animate-spin" /> : <span>{icon}</span>}
               <span className="leading-tight text-left">{label}</span>
             </button>
           ))}
@@ -446,15 +481,16 @@ export default function SpecimenDetail() {
         </div>
 
         {/* Field journal export CTA */}
-        <div className="mt-4 rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+        <button type="button" onClick={handleJournalExport}
+          className="w-full text-left mt-4 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] transition-transform"
           style={{ background: 'hsla(270,40%,15%,0.4)', border: '1px solid hsla(280,50%,55%,0.18)' }}>
           <BookOpen size={16} className="text-amethyst-glow flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-white/80 text-sm font-semibold">Add to Field Journal</div>
-            <div className="text-white/35 text-xs mt-0.5">Export this specimen's full record as a field note — coming soon.</div>
+            <div className="text-white/80 text-sm font-semibold">Export to Field Journal</div>
+            <div className="text-white/35 text-xs mt-0.5">Download this specimen's record as a spreadsheet (CSV).</div>
           </div>
           <ChevronLeft size={14} className="text-white/25 rotate-180" />
-        </div>
+        </button>
       </div>
     </div>
   );

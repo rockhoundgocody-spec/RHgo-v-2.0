@@ -78,12 +78,12 @@ export default function MapFilterSheet({
                 <div className="flex items-center gap-2">
                   {activeCount > 0 && (
                     <button onClick={resetAll} aria-label="Reset all map filters"
-                      className="px-3 py-2 rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition">
+                      className="px-3 py-2 rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60">
                       Reset
                     </button>
                   )}
                   <button onClick={onClose} aria-label="Done, apply filters and close"
-                    className="px-5 py-2 rounded-full font-bold text-sm transition active:scale-95"
+                    className="px-5 py-2 rounded-full font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
                     style={{ background: '#9FE8D0', color: '#0a0a14' }}>
                     Done
                   </button>
@@ -100,7 +100,7 @@ export default function MapFilterSheet({
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search rocks"
-                  className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none"
+                  className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm"
                 />
                 {search && (
                   <button onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
@@ -141,7 +141,7 @@ export default function MapFilterSheet({
               <FilterSection title="POPULAR ROCKS">
                 {selectedMinerals.size > 0 && (
                   <button onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
-                    className="text-[11px] text-[#9FE8D0] mb-2 hover:underline">
+                    className="text-[11px] text-[#9FE8D0] mb-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm">
                     Clear all ({selectedMinerals.size})
                   </button>
                 )}
@@ -153,7 +153,7 @@ export default function MapFilterSheet({
                         key={mineral}
                         onClick={() => onToggleMineral(mineral)}
                         aria-pressed={active}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98]"
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
                         style={{
                           background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
                           border: active ? '1px solid hsla(160,60%,50%,0.4)' : '1px solid hsla(255,30%,20%,0.2)',
@@ -203,7 +203,7 @@ function FilterRadioRow({ label, sublabel, active, onClick }) {
     <button
       onClick={onClick}
       aria-pressed={active}
-      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98]"
+      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
         border: active ? '1px solid hsla(160,60%,50%,0.4)' : '1px solid hsla(255,30%,20%,0.2)',

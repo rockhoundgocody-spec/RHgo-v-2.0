@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -15,10 +15,19 @@ import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
+import WakeWordListener from '@/components/oracle/WakeWordListener.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import useReducedMotion from '@/lib/useReducedMotion';
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
+
+// Layout routes a logged-out visitor may view. Everything else under the
+// Layout is protected and redirects to /login.
+const PUBLIC_LAYOUT_ROUTES = ['/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
+export function isPublicLayoutRoute(pathname) {
+  if (pathname === '/') return true;
+  return PUBLIC_LAYOUT_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 const secondaryRoutes = [
   { to: '/admin', label: 'Admin', icon: Shield },
@@ -135,7 +144,7 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion })
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, authChecked } = useAuth();
   const reduceMotion = useReducedMotion();
   // Most Layout routes are private. A few marketing/field pages stay indexable.
   const indexableUnderLayout = [
@@ -173,6 +182,12 @@ export default function Layout() {
     }
   };
 
+  // Logged-out visitor on a protected route → straight to login (no spinner).
+  if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
+    const from = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?from_url=${encodeURIComponent(from)}`} replace />;
+  }
+
   return (
     <OracleProvider>
       <BadgeAwarderProvider>
@@ -196,6 +211,7 @@ export default function Layout() {
         {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
         {isAuthenticated && <BadgeUnlockWatcher />}
         {!isFullscreenCamera && isAuthenticated && <FloatingCloverCompanion />}
+        {!isFullscreenCamera && isAuthenticated && <WakeWordListener />}
       </div>
       </BadgeAwarderProvider>
     </OracleProvider>

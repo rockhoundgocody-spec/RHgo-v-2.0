@@ -58,3 +58,6 @@
 ## 2024-10-24 - Accessibility states on dynamic mappings
 **Learning:** When using `.map()` to render dynamic filter chips that act as toggles, `aria-pressed` is required to announce the selected state to screen readers.
 **Action:** Always add `aria-pressed={state === id}` to dynamically mapped toggle buttons.
+## 2026-10-31 - Map Search Bar and Filter Sheet Focus Accessibility
+**Learning:** Found that the `MapSearchBar` text input and `MapFilterSheet` interactive elements (buttons, inputs, toggle rows) lacked `focus-visible` styling, making them difficult to navigate via keyboard. For themed glassmorphic UI elements, the default browser outline is often stripped.
+**Action:** When working on interactive map search and filter components, ensure inputs and buttons include `focus-visible:outline-none focus-visible:ring-2` combined with complementary theme colors (e.g. `amethyst-glow/50` for general map components or `#9FE8D0/60` for the specific mint-accented Filter Sheet) to restore keyboard usability without breaking the visual aesthetic.

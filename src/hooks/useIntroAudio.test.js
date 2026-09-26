@@ -130,11 +130,14 @@ describe('useIntroAudio', () => {
     return mockAudioContext;
   }
 
-  const callHook = () => {
+  // React's hooks are mocked in this file, so the hook is invoked directly.
+  // Named as a hook so the rules-of-hooks lint accepts the call.
+  const useCallHook = () => {
     useRefCallCount = 0;
     useStateCallCount = 0;
     return useIntroAudio();
   };
+  const callHook = useCallHook;
 
   beforeEach(() => {
     effectCleanup = null;
@@ -152,13 +155,12 @@ describe('useIntroAudio', () => {
     mockAudioContext = createMockAudioContextInstance();
     const mockConstructor = vi.fn().mockImplementation(MockAudioContextConstructor);
 
-    // Set up window both on globalThis and global
+    // Set up window on globalThis (covers Node's `global` alias too)
     const mockWindow = {
       AudioContext: mockConstructor,
     };
 
     globalThis.window = mockWindow;
-    global.window = mockWindow;
 
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });

@@ -17,11 +17,10 @@ const getBrowserStorage = (storageName) => {
 
 export const isTokenKey = (paramName) => AUTH_PARAM_NAMES.has(String(paramName).toLowerCase());
 
-export const getStorageBackend = (paramName) => (
-	isTokenKey(paramName)
-		? getBrowserStorage('sessionStorage')
-		: getBrowserStorage('localStorage')
-);
+// Auth tokens persist in localStorage so the platform session survives tab
+// close and return visits (stay-signed-in). sessionStorage is tab-scoped and
+// would log users out the moment they closed the tab.
+export const getStorageBackend = (_paramName) => getBrowserStorage('localStorage');
 
 const getStoredValue = (storage, key) => {
 	try {
@@ -56,9 +55,8 @@ export const clearStoredAuthTokens = ({ includeSession = true } = {}) => {
 	}
 };
 
-// Remove credentials persisted by older releases. New credentials are scoped to
-// the current browser tab through sessionStorage.
-clearStoredAuthTokens({ includeSession: false });
+// Tokens now live in localStorage (see getStorageBackend). Do NOT wipe them on
+// load — clearing here would log the user out on every refresh.
 
 const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();

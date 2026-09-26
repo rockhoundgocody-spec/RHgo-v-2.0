@@ -63,6 +63,7 @@ export async function reclaimGuestReport() {
       prefilled_result: result,
       wet_dry: 'dry',
       beach_name: beachName,
+      disposition,
     });
 
     let specimenId = res?.data?.saved_specimen_id;
@@ -101,10 +102,14 @@ export async function reclaimGuestReport() {
     const currentUser = await base44.auth.me().catch(() => null);
     if (currentUser?.email) {
       try {
-        await base44.functions.invoke('awardVerifiedXP', {
-          event_type: 'guest_reclaim',
-          event_id: specimenId,
-        });
+        // If identifySpecimen didn't save (fallback path), award disposition XP server-side
+        if (!res?.data?.saved_specimen_id) {
+          await base44.functions.invoke('awardVerifiedXP', {
+            event_type: 'specimen',
+            event_id: specimenId,
+            disposition,
+          });
+        }
       } catch {
         /* best-effort — specimen already saved */
       }

@@ -71,6 +71,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required to modify depletion records' }, { status: 403 });
     }
 
+    // Automation apply with no GPS: soft-skip (never invent coordinates)
+    if (apply && (lat == null || lng == null)) {
+      return Response.json({ skipped: true, reason: 'no coordinates' }, { status: 200 });
+    }
+
     if (!mineralName || lat == null || lng == null) {
       return Response.json({
         error: 'mineral_name, lat, lng required',

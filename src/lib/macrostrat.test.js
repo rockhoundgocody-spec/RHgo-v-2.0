@@ -168,4 +168,25 @@ describe('fetchGeologyAt', () => {
     const result = await fetchGeologyAt(45.5, -122.6);
     expect(result).toEqual([]);
   });
+
+  it('rejects invalid, null, undefined, boolean, or malformed coordinate inputs without calling fetch', async () => {
+    globalThis.fetch = vi.fn();
+
+    expect(await fetchGeologyAt(null, -122.6)).toEqual([]);
+    expect(await fetchGeologyAt(45.5, undefined)).toEqual([]);
+    expect(await fetchGeologyAt(true, -122.6)).toEqual([]);
+    expect(await fetchGeologyAt(45.5, 'not-a-number')).toEqual([]);
+    expect(await fetchGeologyAt('45.5&admin=1', -122.6)).toEqual([]);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects out-of-bounds latitude and longitude values without calling fetch', async () => {
+    globalThis.fetch = vi.fn();
+
+    expect(await fetchGeologyAt(91, -122.6)).toEqual([]);
+    expect(await fetchGeologyAt(-90.1, -122.6)).toEqual([]);
+    expect(await fetchGeologyAt(45.5, 180.1)).toEqual([]);
+    expect(await fetchGeologyAt(45.5, -181)).toEqual([]);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
 });

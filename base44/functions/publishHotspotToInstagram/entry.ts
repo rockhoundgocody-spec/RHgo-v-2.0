@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { secrets } from 'base44:runtime';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 /**
  * Publishes a single hotspot to the app's connected Instagram Business feed.
@@ -34,6 +35,14 @@ export default async function(req) {
 
     // Image — prefer the hotspot's own photo; otherwise render a satellite
     // static map centered on the coordinates so the post always has a visual.
+    // Validate custom hotspot image_url against SSRF/untrusted storage domains.
+    if (image_url && !isValidImageUrl(image_url)) {
+      return Response.json(
+        { error: 'image_url must originate from a trusted storage domain' },
+        { status: 400 }
+      );
+    }
+
     const mapsKey = secrets.get('GOOGLE_MAPS_API_KEY');
     let imageUrl = image_url;
     if (!imageUrl && mapsKey && lat != null && lng != null) {
