@@ -76,7 +76,7 @@ function AdminHeader({ pathname }) {
                     ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
                     : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
                 )
-              )
+              }
             >
               <Icon size={14} /> {label}
             </NavLink>
@@ -147,8 +147,9 @@ export default function Layout() {
   const { user, isAuthenticated, authChecked } = useAuth();
   const reduceMotion = useReducedMotion();
   // Most Layout routes are private. A few marketing/field pages stay indexable.
+  // /explore stays noindex until a real guest map ships (robots Disallow + sitemap omit).
   const indexableUnderLayout = [
-    '/explore', '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact',
+    '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact', '/scan',
   ].some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   useSeoRobots(indexableUnderLayout);
 
@@ -185,7 +186,8 @@ export default function Layout() {
   // Logged-out visitor on a protected route → straight to login (no spinner).
   if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
+    const q = encodeURIComponent(from);
+    return <Navigate to={`/login?from_url=${q}&next=${q}`} replace />;
   }
 
   return (
