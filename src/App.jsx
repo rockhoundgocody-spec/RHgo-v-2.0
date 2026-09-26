@@ -61,6 +61,7 @@ const Live = lazy(() => import('@/pages/Live'));
 const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
 const Clubs = lazy(() => import('@/pages/Clubs'));
+const VaultGalaxy = lazy(() => import('@/pages/VaultGalaxy'));
 
 const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const Connect = lazy(() => import('@/pages/Connect'));
@@ -166,6 +167,7 @@ const AuthenticatedApp = () => {
           <Route path="/live/:streamId" element={<LiveStreamView />} />
           <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
           <Route path="/clubs" element={<Clubs />} />
+          <Route path="/vault" element={<VaultGalaxy />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />

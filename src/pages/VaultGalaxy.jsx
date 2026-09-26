@@ -150,7 +150,7 @@ export default function VaultGalaxy() {
           focusRequest={focusRequest}
           frameRequest={frameRequest}
           reducedMotion={reducedMotion}
-          onSelect={(id) => setSelectedId(id)}
+          onSelect={(id) => (id ? focusNode(id) : setSelectedId(null))}
           onHover={setHoverId}
           onError={() => setView('list')}
         />
@@ -285,7 +285,7 @@ function StarCard({ node, isSample, onClose, onAsk }) {
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="text-white/45 hover:text-white shrink-0"><X size={15} /></button>
         </div>
-        {meta.length > 0 && <div className="text-white/60 text-[11px] mt-0.5 truncate capitalize-first">{meta.join(' · ')}</div>}
+        {meta.length > 0 && <div className="text-white/60 text-[11px] mt-0.5 truncate">{meta.join(' · ')}</div>}
         <div className="flex gap-2 mt-2.5">
           {node.route && !isSample && (
             <Link to={node.route} className="px-3 py-1.5 rounded-lg text-[11px] font-bold" style={{ background: node.color, color: '#0a0a14' }}>

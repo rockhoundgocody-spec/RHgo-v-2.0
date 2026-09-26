@@ -19,6 +19,7 @@ Disallow: /settings
 Disallow: /profile
 Disallow: /collection
 Disallow: /collections
+Disallow: /vault
 Disallow: /companion
 Disallow: /quests
 Disallow: /badges
