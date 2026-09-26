@@ -85,6 +85,10 @@ function AuthToLoginRedirect() {
   return <Navigate to={`/login${search}${hash}`} replace />;
 }
 
+/**
+ * Renders routes after auth and public settings load, handling auth errors
+ * and exposing public entry points when authentication is required.
+ */
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 

@@ -51,6 +51,12 @@ export function getActiveTab(pathname) {
   return '/';
 }
 
+/**
+ * Renders admin and documentation navigation with the profile drawer.
+ * @param {Object} props - Header properties.
+ * @param {string} props.pathname - Current route path used for the section label.
+ * @returns {React.ReactElement} The navigation header.
+ */
 function AdminHeader({ pathname }) {
   return (
     <header className="sticky top-0 z-40 hud-panel border-b border-hud-cyan/20 px-6 py-3 flex items-center justify-between">
@@ -141,6 +147,12 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion })
   );
 }
 
+/**
+ * Renders nested routes with shared navigation and authenticated user overlays.
+ * Sets route indexing rules and redirects signed-out visitors from protected
+ * routes to login, preserving the requested path and query string.
+ * @returns {React.ReactElement} The application shell or a login redirect.
+ */
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();

@@ -4,6 +4,10 @@ import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 
+/**
+ * Renders the public product overview and sets its search metadata.
+ * @returns {React.ReactElement} The About page.
+ */
 export default function About() {
   useSeoRobots(true);
   useSeoMeta(

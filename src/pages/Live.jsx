@@ -7,6 +7,12 @@ import StreamCard from '@/components/live/StreamCard.jsx';
 import BroadcastStudio from '@/components/live/BroadcastStudio.jsx';
 import usePageVisible from '@/lib/usePageVisible';
 
+/**
+ * Displays live streams, polling while the page is visible, and lets signed-in
+ * users open the broadcast studio. Offers scan and demo links when no streams
+ * are available and requests location for broadcasting when supported.
+ * @returns {React.ReactElement} The live feed or broadcast studio page.
+ */
 export default function Live() {
   const [me, setMe] = useState(null);
   const [streams, setStreams] = useState(null);
