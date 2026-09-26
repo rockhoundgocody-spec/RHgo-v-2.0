@@ -1,7 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 vi.hoisted(() => {
   const mockStorage = () => {
@@ -27,6 +24,14 @@ vi.hoisted(() => {
   globalThis.document = { title: 'Test' };
 });
 
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useId: () => ':test-switch-id:',
+  };
+});
+
 import FieldModeSection from './FieldModeSection.jsx';
 
 function findElementByRole(element, role) {
@@ -44,32 +49,45 @@ function findElementByRole(element, role) {
   return null;
 }
 
+function findLabelFor(element, htmlForId) {
+  if (!element || typeof element !== 'object') return null;
+  if (element.props && element.props.htmlFor === htmlForId) return element;
+  if (element.props && element.props.children) {
+    const children = Array.isArray(element.props.children)
+      ? element.props.children
+      : [element.props.children];
+    for (const child of children) {
+      const found = findLabelFor(child, htmlForId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 describe('FieldModeSection', () => {
-  it('contains role="switch" button with aria-checked and focus styling', () => {
-    const filePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'FieldModeSection.jsx');
-    const source = fs.readFileSync(filePath, 'utf-8');
-    expect(source).toContain('role="switch"');
-    expect(source).toContain('aria-checked={Boolean(offlineMode)}');
-    expect(source).toContain('focus-visible:ring-emerald-400/70');
+  it('renders switch button linked to label via htmlFor and useId', () => {
+    const tree = FieldModeSection({ offlineMode: false, onToggle: () => {} });
+    const switchBtn = findElementByRole(tree, 'switch');
+    expect(switchBtn).not.toBeNull();
+    expect(switchBtn.props.id).toBe(':test-switch-id:');
+    expect(switchBtn.props['aria-checked']).toBe(false);
+
+    const label = findLabelFor(tree, ':test-switch-id:');
+    expect(label).not.toBeNull();
+    expect(label.props.children).toBe('Offline mode enabled');
   });
 
-  it('renders a role="switch" button with aria-checked reflecting offlineMode prop', () => {
-    const falseElement = FieldModeSection({ offlineMode: false, onToggle: () => {} });
-    const switchBtnFalse = findElementByRole(falseElement, 'switch');
-    expect(switchBtnFalse).not.toBeNull();
-    expect(switchBtnFalse.props['aria-checked']).toBe(false);
-
-    const trueElement = FieldModeSection({ offlineMode: true, onToggle: () => {} });
-    const switchBtnTrue = findElementByRole(trueElement, 'switch');
-    expect(switchBtnTrue).not.toBeNull();
-    expect(switchBtnTrue.props['aria-checked']).toBe(true);
+  it('reflects offlineMode=true on aria-checked attribute', () => {
+    const tree = FieldModeSection({ offlineMode: true, onToggle: () => {} });
+    const switchBtn = findElementByRole(tree, 'switch');
+    expect(switchBtn.props['aria-checked']).toBe(true);
   });
 
-  it('triggers onToggle callback when switch button onClick is called', () => {
+  it('invokes onToggle handler when switch button is clicked', () => {
     const handleToggle = vi.fn();
-    const element = FieldModeSection({ offlineMode: false, onToggle: handleToggle });
-    const switchBtn = findElementByRole(element, 'switch');
-    switchBtn.props.onClick({ stopPropagation: () => {} });
+    const tree = FieldModeSection({ offlineMode: false, onToggle: handleToggle });
+    const switchBtn = findElementByRole(tree, 'switch');
+    switchBtn.props.onClick();
     expect(handleToggle).toHaveBeenCalledTimes(1);
   });
 });

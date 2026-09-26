@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Zap } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SectionHeader from './SectionHeader.jsx';
 
 export default function FieldModeSection({ offlineMode, onToggle }) {
+  const switchId = useId();
+
   return (
     <div className="mb-6">
       <GlassPanel className="p-4">
@@ -14,22 +16,20 @@ export default function FieldModeSection({ offlineMode, onToggle }) {
           subtitle="Optimised for weak signal and bright outdoor conditions. Keeps scans and maps functional when off-grid."
         />
         <div className="space-y-2 ml-9">
-          <div
-            onClick={onToggle}
-            className="flex items-center justify-between gap-3 py-1 cursor-pointer select-none group"
-          >
-            <span className="text-sm text-white/80 group-hover:text-white font-medium transition-colors">
+          <div className="flex items-center justify-between gap-3 py-1">
+            <label
+              htmlFor={switchId}
+              className="text-sm text-white/80 hover:text-white font-medium cursor-pointer select-none transition-colors"
+            >
               Offline mode enabled
-            </span>
+            </label>
             <button
+              id={switchId}
               type="button"
               role="switch"
               aria-checked={Boolean(offlineMode)}
               aria-label="Offline mode enabled"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onToggle) onToggle();
-              }}
+              onClick={onToggle}
               className={`relative w-11 h-6 rounded-full shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${
                 offlineMode ? 'bg-emerald-400' : 'bg-white/10'
               }`}
