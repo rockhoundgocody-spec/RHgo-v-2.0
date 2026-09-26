@@ -51,8 +51,12 @@ export default function Register() {
     setLoading(true);
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
+      // Persist the session token durably so it survives the full-page
+      // navigation to /onboarding below. Check multiple possible response
+      // shapes since the verify-otp endpoint may nest the token differently.
+      const token = result?.access_token || result?.token || result?.session?.access_token;
+      if (token && typeof base44.auth.setToken === 'function') {
+        base44.auth.setToken(token, true);
       }
       const savedName = localStorage.getItem('rhgo_user_name');
       if (savedName && savedName !== 'Explorer' && base44.auth.updateMe) {

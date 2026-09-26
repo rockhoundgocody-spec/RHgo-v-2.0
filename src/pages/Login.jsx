@@ -56,7 +56,13 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email.trim(), password);
+      const result = await base44.auth.loginViaEmailPassword(email.trim(), password);
+      // The SDK's loginViaEmailPassword calls setToken internally, but explicitly
+      // persist to localStorage as a safety net so the session survives a full
+      // page reload even if the internal call used a different code path.
+      if (result?.access_token && typeof base44.auth.setToken === 'function') {
+        base44.auth.setToken(result.access_token, true);
+      }
       await checkUserAuth();
       clearGateChoice();
       const next = new URLSearchParams(window.location.search).get('from_url');
