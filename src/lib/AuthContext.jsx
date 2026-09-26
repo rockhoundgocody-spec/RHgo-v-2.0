@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }) => {
         // may be valid even if appParams.token hasn't picked it up from storage yet.
         // If there's no token at all, me() throws and we handle it gracefully.
         await checkUserAuth();
-        setAuthError(null);
       } catch (appError) {
         /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
