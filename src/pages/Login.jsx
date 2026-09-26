@@ -16,7 +16,7 @@ import { getSafeRedirectUrl } from "@/lib/app-params";
  * Validates and sanitizes the target redirect path to prevent open redirects.
  */
 export function getLoginRedirectUrl(rawFromUrl) {
-  return getSafeRedirectUrl(rawFromUrl, '/');
+  return getSafeRedirectUrl(rawFromUrl, '/profile');
 }
 
 const FEATURES = [
@@ -42,7 +42,11 @@ export default function Login() {
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
       const next = new URLSearchParams(window.location.search).get('from_url');
-      navigate(getLoginRedirectUrl(next), { replace: true });
+      const target = getLoginRedirectUrl(next);
+      // Guard against redirect loops: only navigate if we're not already there.
+      if (window.location.pathname !== target) {
+        navigate(target, { replace: true });
+      }
     }
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
@@ -56,7 +60,10 @@ export default function Login() {
       await checkUserAuth();
       clearGateChoice();
       const next = new URLSearchParams(window.location.search).get('from_url');
-      navigate(getLoginRedirectUrl(next));
+      const target = getLoginRedirectUrl(next);
+      if (window.location.pathname !== target) {
+        navigate(target);
+      }
     } catch (err) {
       setError(err?.message || err?.data?.message || "Invalid email or password");
     } finally {

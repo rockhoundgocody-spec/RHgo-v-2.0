@@ -23,7 +23,7 @@ const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
 // Layout routes a logged-out visitor may view. Everything else under the
 // Layout is protected and redirects to /login.
-const PUBLIC_LAYOUT_ROUTES = ['/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
+const PUBLIC_LAYOUT_ROUTES = ['/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
 export function isPublicLayoutRoute(pathname) {
   if (pathname === '/') return true;
   return PUBLIC_LAYOUT_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

@@ -1,11 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
-import { toast } from '@/components/ui/use-toast';
+// (toast import removed — auth-persistence fix no longer toasts on timeout)
 
 // If the session check hasn't settled by then, stop blocking the app and
 // continue as logged-out. A late result still applies when it arrives.
-const AUTH_CHECK_TIMEOUT_MS = 6000;
+const AUTH_CHECK_TIMEOUT_MS = 20000;
 
 const AuthContext = createContext();
 
@@ -66,20 +66,16 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     setIsLoadingAuth(true);
     let settled = false;
-    // Timeout fallback: a session check that never resolves (stale stored
-    // session, stuck auth lock, unreachable auth server) must not hang the
-    // whole app on the boot spinner.
+    // Safety net only: if the session check truly never settles (hung network,
+    // unreachable auth server), log a warning after the timeout — but do NOT
+    // declare the user logged out. Declaring logged out here was the root cause
+    // of the Login → Profile → Login bounce: a slow me() flipped the app to
+    // logged-out, Layout redirected to /login, then me() resolved and sent the
+    // user back — repeating on every reload. Keep the loading state so
+    // protected routes never flash-redirect before the real session resolves.
     const timer = setTimeout(() => {
       if (settled) return;
-      console.warn('[auth] Session check timed out — continuing as logged out.');
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      toast({
-        title: "Couldn't restore your session",
-        description: 'Please sign in again to continue.',
-        variant: 'destructive',
-      });
+      console.warn('[auth] Session check is taking longer than expected — still waiting, not bouncing.');
     }, AUTH_CHECK_TIMEOUT_MS);
 
     try {
@@ -90,9 +86,6 @@ export const AuthProvider = ({ children }) => {
       /* visitor is simply logged out */
       setUser(null);
       setIsAuthenticated(false);
-      // Public app: a failed auth check just means the visitor isn't logged in.
-      // Don't block them from entering — let the main app routes render, and
-      // individual pages can prompt login only when a protected action is taken.
     } finally {
       settled = true;
       clearTimeout(timer);
