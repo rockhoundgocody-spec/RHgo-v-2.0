@@ -19,7 +19,8 @@ const BRAIN_MODELS: Record<string, string> = {
 
 type Row = Record<string, unknown>;
 
-async function loadVault(base44, user, location): Promise<VaultItem[]> {
+// deno-lint-ignore no-explicit-any
+async function loadVault(base44: any, user: { email: string }, location: { lat: number; lng: number } | null): Promise<VaultItem[]> {
   const safe = (p: Promise<unknown>) => p.then((r) => (Array.isArray(r) ? (r as Row[]) : [])).catch(() => [] as Row[]);
   // User-scoped client: row-level security limits every read to the caller's own records.
   const [specimens, logs, capsules, hotspots] = await Promise.all([
@@ -171,12 +172,12 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
     const model = BRAIN_MODELS[String(brain || '')];
     let result;
     try {
-      result = await base44.asServiceRole.integrations.Core.InvokeLLM(model ? { ...llmParams, model } : llmParams);
+      result = await base44.asServiceRole.integrations.Core.InvokeLLM((model ? { ...llmParams, model } : llmParams) as never);
     } catch (err) {
       if (!model) throw err;
       // A brain the platform can't serve right now falls back to the default.
       console.warn(`cloverChat: model ${model} failed, using default`, (err as Error)?.message);
-      result = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
+      result = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams as never);
     }
 
     // Some models return the JSON as a raw string — parse defensively
