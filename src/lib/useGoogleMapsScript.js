@@ -2,8 +2,14 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
 /**
- * Custom hook to load and manage Google Maps API script state.
- * Prevents duplicate script tag injection by polling if an existing script is present.
+ * Provides Google Maps API loading state, obtaining an API key from client
+ * configuration or the `getMapsKey` backend function. Reuses a tagged script
+ * when present and injects one otherwise.
+ *
+ * @param {string} libraries - Comma-separated Maps libraries used only when this
+ * hook injects the script.
+ * @returns {{mapsReady: boolean, apiKey: string|null, loadError: boolean}} The current
+ * key and flags indicating whether the script is ready or key/script loading failed.
  */
 export function useGoogleMapsScript(libraries = 'places,geometry') {
   const [mapsReady, setMapsReady] = useState(() => !!globalThis.window?.google?.maps?.Map);
