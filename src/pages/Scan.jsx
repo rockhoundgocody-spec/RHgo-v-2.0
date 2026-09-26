@@ -413,6 +413,7 @@ export default function Scan() {
 
   return (
     <div className="fixed inset-0 overflow-hidden select-none" style={{ background: '#0a0a14' }}>
+      <h1 className="sr-only">Scan a specimen</h1>
       {stage === 'camera' && (
         <video
           ref={camera.videoRef}
@@ -631,8 +632,9 @@ export default function Scan() {
 
       {camera.error && stage === 'camera' && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
-          <p className="text-white/60 text-sm mb-2">Camera unavailable</p>
-          <p className="text-white/30 text-xs mb-6 text-center">{camera.error}</p>
+          <p className="text-white/75 text-sm mb-2">Camera unavailable</p>
+          <p className="text-white/55 text-xs mb-2 text-center">{camera.error}</p>
+          <p className="text-white/55 text-xs mb-6 text-center">Allow camera access in your browser settings, or pick a photo from your gallery.</p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <label className="px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
               <input

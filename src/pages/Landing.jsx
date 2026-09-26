@@ -50,7 +50,7 @@ export default function Landing() {
           <span style={{ color: '#9FE8D0' }}>Get a field report.</span>
         </h1>
 
-        <p className="text-white/40 text-[13px] text-center mb-10 max-w-[260px] leading-relaxed">
+        <p className="text-white/70 text-[13px] text-center mb-10 max-w-[260px] leading-relaxed">
           AI mineral ID, legal land access, and a collection worth keeping.
         </p>
 
@@ -95,7 +95,7 @@ export default function Landing() {
             Sign in with email
           </Link>
           {/* Privacy + Terms — accessible without account */}
-          <div className="flex items-center justify-center gap-3 pt-1 text-white/30 text-[11px]">
+          <div className="flex items-center justify-center gap-3 pt-1 text-white/60 text-[11px]">
             <Link to="/privacy-policy" className="hover:text-white/60 transition">Privacy</Link>
             <span className="text-white/15">·</span>
             <Link to="/terms" className="hover:text-white/60 transition">Terms</Link>
@@ -104,7 +104,7 @@ export default function Landing() {
       </div>
 
       {/* ── TINY FOOTER ── */}
-      <footer className="w-full px-6 pb-8 pt-4 flex items-center justify-center text-white/30 text-[11px] relative z-10">
+      <footer className="w-full px-6 pb-8 pt-4 flex items-center justify-center text-white/60 text-[11px] relative z-10">
         <Link to="/pricing" className="hover:text-white/60 transition">Pricing</Link>
       </footer>
     </div>

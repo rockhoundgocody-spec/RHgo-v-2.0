@@ -20,7 +20,7 @@ ROUTING ................... expo-router (file-based)
 STATE ..................... Zustand + React Query
 DB (LOCAL) ................ expo-sqlite (offline-first)
 DB (CLOUD) ................ Base44 entities
-AI INFERENCE .............. on-device CoreML/TFLite + cloud fallback
+AI INFERENCE .............. cloud vision (Google Gemini via Base44 functions); on-device model planned
 MAPS ...................... react-native-maps + MBTiles offline tiles
 CAMERA .................... expo-camera
 LOCATION .................. expo-location (background-capable)
