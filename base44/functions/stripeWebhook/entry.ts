@@ -48,8 +48,6 @@ async function upsertSubscription(base44, email, tier, status, customerId, subsc
   } else {
     await base44.asServiceRole.entities.Subscription.create({
       owner_email: email,
-      tier: patch.tier,
-      status,
       ...patch,
     });
   }
