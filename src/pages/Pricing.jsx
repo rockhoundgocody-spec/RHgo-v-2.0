@@ -171,7 +171,7 @@ export default function Pricing() {
       if (!url) throw new Error('No checkout URL returned');
       window.location.href = url;
     } catch (err) {
-      const code = err?.response?.data?.code || err?.data?.code;
+      const code = err?.data?.code || err?.code || err?.response?.data?.code;
       const message = code === 'plan_unconfigured' || code === 'price_inactive'
         ? `${tier.name} isn't open for purchase yet. Try another plan, or check back soon.`
         : code === 'auth_required'
@@ -259,12 +259,19 @@ export default function Pricing() {
                   Plans available on the web
                 </div>
               ) : (
-                <button onClick={() => handleUpgrade(tier)}
-                  disabled={upgrading === tier.id}
-                  className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
-                  style={tier.ctaStyle}>
-                  {upgrading === tier.id ? 'Redirecting…' : tier.cta}
-                </button>
+                <>
+                  <button onClick={() => handleUpgrade(tier)}
+                    disabled={upgrading === tier.id}
+                    className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
+                    style={tier.ctaStyle}>
+                    {upgrading === tier.id ? 'Redirecting…' : tier.cta}
+                  </button>
+                  {checkoutError?.tier === tier.id && (
+                    <p role="alert" className="mt-2 text-[11px] leading-snug text-amber-200/80">
+                      {checkoutError.message}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
