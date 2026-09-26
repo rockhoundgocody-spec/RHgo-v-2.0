@@ -15,6 +15,7 @@ import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
+import WakeWordListener from '@/components/oracle/WakeWordListener.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import useReducedMotion from '@/lib/useReducedMotion';
 
@@ -210,6 +211,7 @@ export default function Layout() {
         {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
         {isAuthenticated && <BadgeUnlockWatcher />}
         {!isFullscreenCamera && isAuthenticated && <FloatingCloverCompanion />}
+        {!isFullscreenCamera && isAuthenticated && <WakeWordListener />}
       </div>
       </BadgeAwarderProvider>
     </OracleProvider>

@@ -6,6 +6,7 @@ import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
 import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
+import { setCloverBusy } from '@/lib/cloverWake';
 
 const MAX_QUIET_TURNS = 3;
 
@@ -200,7 +201,15 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     beginListening();
   }, [phase, stopSpeech, stopBargeIn, beginListening]);
 
-  useEffect(() => () => { activeRef.current = false; }, []);
+  const busyIdRef = useRef(Math.random().toString(36).slice(2));
+  useEffect(() => {
+    setCloverBusy(busyIdRef.current, phase !== 'idle' && phase !== 'resting');
+  }, [phase]);
+
+  useEffect(() => () => {
+    activeRef.current = false;
+    setCloverBusy(busyIdRef.current, false);
+  }, []);
 
   return {
     phase, messages, interim, start, end, stop: end, nudge, send, unlock,

@@ -17,7 +17,9 @@ export default function MobileOnlyGate({ children }) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  if (!isDesktop) return children;
+  // OAuth consent must render full-width and unframed for external AI clients.
+  const isOAuth = typeof window !== 'undefined' && window.location.pathname.startsWith('/oauth');
+  if (!isDesktop || isOAuth) return children;
 
   return (
     <div

@@ -3,7 +3,8 @@
  * Visual of HeroOrb / AmethystOrb is unchanged.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { on } from '@/lib/cloverWake';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
@@ -21,6 +22,20 @@ export default function FloatingCloverCompanion() {
   );
 
   const clover = useCloverConversation();
+  const [wakePulse, setWakePulse] = useState(false);
+  const hiddenRef = useRef(false);
+  hiddenRef.current = isHub || isAdminOrDocs;
+  const startRef = useRef(clover.start);
+  startRef.current = clover.start;
+
+  useEffect(() => on('wake', () => {
+    if (hiddenRef.current) return; // HeroOrb handles the Hub
+    setWakePulse(true);
+    setTimeout(() => setWakePulse(false), 900);
+    triggerOrbHaptic('pulse');
+    setExpanded(true);
+    startRef.current("I'm here. What do you need?");
+  }), []);
 
   if (isHub || isAdminOrDocs) return null;
 
@@ -86,6 +101,10 @@ export default function FloatingCloverCompanion() {
           boxShadow: '0 0 24px hsla(270,90%,60%,0.45), 0 0 10px hsla(190,100%,50%,0.3)',
         }}
       >
+        {wakePulse && (
+          <span className="absolute inset-0 rounded-full pointer-events-none animate-ping"
+            style={{ border: '2px solid #9FE8D0' }} />
+        )}
         <div className="w-full h-full rounded-full overflow-hidden">
           <AmethystOrb
             size={56}
