@@ -385,6 +385,8 @@ export class GalaxyScene {
     if (!this.labelEls.size) return;
     const w = this.renderer.domElement.clientWidth;
     const h = this.renderer.domElement.clientHeight;
+    const placed = [];
+    const candidates = [];
     for (const [id, el] of this.labelEls) {
       const i = this.index.get(id);
       if (i == null || !el) continue;
@@ -393,14 +395,30 @@ export class GalaxyScene {
       const behind = this._tmp.z > 1;
       const x = (this._tmp.x * 0.5 + 0.5) * w;
       const y = (-this._tmp.y * 0.5 + 0.5) * h;
-      const dist = this.camera.position.distanceTo(new THREE.Vector3(...node.position));
+      const dist = this.camera.position.distanceTo(this._tmp.set(...node.position));
       const emphasized = id === this.selectedId || id === this.hoverId;
       const fade = emphasized ? 1 : Math.max(0, Math.min(1, (340 - dist) / 170));
       const dim = this.matchIds && !this.matchIds.has(id) ? 0.15 : 1;
       // Hide labels that would be cut off at the screen edge.
       const offscreen = x < 36 || x > w - 36 || y < 12 || y > h - 4;
-      el.style.opacity = behind || (offscreen && !emphasized) ? '0' : String(fade * dim);
-      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -140%)`;
+      const priority = emphasized ? 1e9 : (this.matchIds?.has(id) ? 1e6 : 0) + (node.count || 0) * 10 + (node.kind === 'species' ? 5 : 0) - dist * 0.01;
+      candidates.push({ el, x, y, opacity: behind || (offscreen && !emphasized) ? 0 : fade * dim, priority });
+    }
+    // Declutter: most important labels first; skip any that would overlap.
+    candidates.sort((a, b) => b.priority - a.priority);
+    for (const c of candidates) {
+      if (!c.el.dataset.w) c.el.dataset.w = String(c.el.offsetWidth || 60);
+      const lw = Number(c.el.dataset.w);
+      const box = { l: c.x - lw / 2 - 3, r: c.x + lw / 2 + 3, t: c.y - 26, b: c.y - 8 };
+      let visible = c.opacity > 0.02;
+      if (visible) {
+        for (const p of placed) {
+          if (box.l < p.r && box.r > p.l && box.t < p.b && box.b > p.t) { visible = false; break; }
+        }
+      }
+      if (visible) placed.push(box);
+      c.el.style.opacity = visible ? String(c.opacity) : '0';
+      c.el.style.transform = `translate(${c.x.toFixed(1)}px, ${c.y.toFixed(1)}px) translate(-50%, -140%)`;
     }
   }
 
