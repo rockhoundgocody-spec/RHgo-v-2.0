@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { getMineralStory } from '@/lib/mineralStories';
 import { BookOpen, ChevronDown, ChevronUp, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,8 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
  */
 export default function MineralStoryCard({ mineralName }) {
   const [expanded, setExpanded] = useState(true);
+  const contentId = useId();
   const story = getMineralStory(mineralName);
   if (!story) return null;
+
+  const title = `${story.mineral} — Origin Story`;
 
   return (
     <motion.div
@@ -26,27 +29,32 @@ export default function MineralStoryCard({ mineralName }) {
     >
       {/* Header */}
       <button
+        type="button"
         onClick={() => setExpanded((e) => !e)}
-        className="w-full flex items-center justify-between px-4 py-3"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
+        className="w-full flex items-center justify-between px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 rounded-2xl transition-colors"
         style={{ borderBottom: expanded ? `1px solid ${story.color}22` : 'none' }}
       >
         <div className="flex items-center gap-2.5">
-          <span className="text-xl">{story.emoji}</span>
+          <span className="text-xl" aria-hidden="true">{story.emoji}</span>
           <div className="text-left">
             <div className="text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: story.color }}>
-              {story.mineral} — Origin Story
+              {title}
             </div>
             <div className="text-[9px] text-white/30 uppercase tracking-[0.2em]">{story.era}</div>
           </div>
         </div>
         <div style={{ color: story.color }}>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {expanded ? <ChevronUp size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
         </div>
       </button>
 
       <AnimatePresence>
         {expanded && (
           <motion.div
+            id={contentId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -60,7 +68,7 @@ export default function MineralStoryCard({ mineralName }) {
               {/* Field tip */}
               <div className="flex gap-2.5 p-2.5 rounded-xl"
                 style={{ background: `${story.color}18`, border: `1px solid ${story.color}30` }}>
-                <Compass size={13} style={{ color: story.color, flexShrink: 0, marginTop: 1 }} />
+                <Compass size={13} style={{ color: story.color, flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
                 <div>
                   <div className="text-[9px] uppercase tracking-[0.2em] font-bold mb-0.5" style={{ color: story.color }}>
                     Field Tip
@@ -71,7 +79,7 @@ export default function MineralStoryCard({ mineralName }) {
 
               {/* BookOpen footer */}
               <div className="flex items-center gap-1.5 text-[9px] text-white/20 uppercase tracking-[0.2em]">
-                <BookOpen size={9} />
+                <BookOpen size={9} aria-hidden="true" />
                 Great Lakes Geo-Chronicle
               </div>
             </div>
