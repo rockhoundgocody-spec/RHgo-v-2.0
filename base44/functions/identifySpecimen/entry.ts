@@ -18,6 +18,7 @@ import {
   type PrivateSpecimenLocation,
 } from '../../shared/locationSubmission.ts';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
+import { checkMemberScanQuota, recordScanReceipt, findTrustedReceipt } from '../../shared/scanQuota.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -273,8 +274,29 @@ Deno.serve(async (req) => {
       }
     } catch { /* learning context is best-effort */ }
 
+    // ── FREE-TIER METERING (members) ─────────────────────────────────────────
+    // Only a fresh identification costs a scan; re-sending a result to save it
+    // (prefilled_result) does not.
+    let quota = null;
+    if (!isGuest && !prefilled_result) {
+      quota = await checkMemberScanQuota(base44 as never, { email: user.email, role: user.role });
+      if (!quota.ok) {
+        return Response.json(
+          { error: 'You have used your free scans for this month', code: 'scan_quota', quota },
+          { status: 402 },
+        );
+      }
+    }
+
+    const conditionNote = isGreatLakes ? '' : wet_dry === 'wet'
+      ? ' CONDITION: specimen is WET — banding, coral patterns and translucency read stronger; waxy lusters are enhanced.'
+      : wet_dry === 'dry'
+      ? ' CONDITION: specimen is DRY — patterns and luster may be muted; lower confidence slightly for pattern-dependent IDs.'
+      : '';
+
     // ── VISION IDENTIFICATION ─────────────────────────────────────────────────
     let identification = prefilled_result;
+    const ranIdentification = !identification;
     if (!identification) {
       identification = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
@@ -286,7 +308,7 @@ Deno.serve(async (req) => {
           'GPS is a prior, not a whitelist. Return geological_plausibility 0-1. ' +
           AGATE_PROMPT_BLOCK + ' ' +
           handbookPromptBlock() +
-          glContext + geologyContext + learnedContext,
+          glContext + conditionNote + geologyContext + learnedContext,
         file_urls: [image_url],
         response_json_schema: {
           type: 'object',
@@ -341,6 +363,11 @@ Deno.serve(async (req) => {
     }
 
     if (!identification) return Response.json({ error: 'Identification failed' }, { status: 500 });
+
+    if (ranIdentification && !isGuest) {
+      await recordScanReceipt(base44 as never, user.email, identification, image_url);
+      if (quota && typeof quota.used === 'number') quota = { ...quota, used: quota.used + 1 };
+    }
 
     // ── CONTEXT INTEGRITY + OPERATING HANDBOOK ENFORCEMENT ────────────────────
     const contextIntegrity = computeContextIntegrity({
@@ -408,12 +435,17 @@ Deno.serve(async (req) => {
         ...(storedLocation.lat != null ? { lat: storedLocation.lat, lng: storedLocation.lng } : {}),
       });
 
-      // Award rarity XP server-side (idempotent, keyed to specimen)
+      // Award rarity XP server-side (idempotent, keyed to specimen). The
+      // rarity must come from an identification THIS server ran — a result
+      // the client sends back (prefilled_result) is never trusted for XP.
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
+      const trusted = ranIdentification
+        ? { top_match: identification.top_match, rarity: identification.rarity }
+        : await findTrustedReceipt(base44 as never, user.email, image_url, identification.top_match);
       awardXPServerSide(
         base44, user.email,
-        xpMap[identification.rarity] || 10,
-        `Logged ${identification.top_match}`,
+        xpMap[trusted?.rarity] || xpMap.common,
+        `Logged ${trusted?.top_match || identification.top_match}`,
         `specimen:${savedSpecimen.id}`,
       ).catch(() => {});
 
@@ -468,6 +500,7 @@ Deno.serve(async (req) => {
       essence,
       local_geology: localGeology,
       great_lakes_mode: isGreatLakes,
+      quota,
       meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
