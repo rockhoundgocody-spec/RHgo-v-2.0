@@ -22,7 +22,7 @@ async function getCustomerEmail(stripe, customerId) {
   if (!customerId || typeof customerId !== 'string') return null;
   try {
     const c = await stripe.customers.retrieve(customerId);
-    return c && !c.deleted && c.email ? String(c.email).toLowerCase() : null;
+    return c && !c.deleted && c.email ? String(c.email) : null;
   } catch { return null; }
 }
 

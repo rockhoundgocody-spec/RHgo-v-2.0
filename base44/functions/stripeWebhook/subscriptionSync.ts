@@ -47,7 +47,9 @@ type StripeLike = {
 
 export function ownerEmailOf(obj: StripeLike | null | undefined): string | null {
   const email = obj?.metadata?.owner_email || obj?.customer_email || obj?.customer_details?.email || null;
-  return email ? String(email).trim().toLowerCase() || null : null;
+  // Kept exactly as the app stored it: Subscription rows are looked up by
+  // the signed-in user's email as-is.
+  return email ? String(email).trim() || null : null;
 }
 
 /** current_period_end moved onto subscription items in newer Stripe API versions. */

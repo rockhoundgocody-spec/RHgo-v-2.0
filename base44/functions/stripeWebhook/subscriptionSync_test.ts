@@ -16,7 +16,7 @@ Deno.test('every Stripe status maps into the entity enum without granting access
 
 Deno.test('owner comes from app metadata before any Stripe-side email', () => {
   assertEquals(ownerEmailOf({
-    metadata: { owner_email: 'Cody@Example.com' },
+    metadata: { owner_email: 'cody@example.com' },
     customer_email: 'other@example.com',
     customer_details: { email: 'typed@example.com' },
   }), 'cody@example.com');
