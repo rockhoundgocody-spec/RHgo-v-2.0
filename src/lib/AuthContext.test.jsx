@@ -282,7 +282,7 @@ describe('AuthContext', () => {
 
         await contextValue.checkAppState();
 
-        expect(stateMap[4].setter).toHaveBeenCalledWith({
+        expect(stateMap[4].setter).toHaveBeenLastCalledWith({
           type: 'user_not_registered',
           message: 'User not registered for this app',
         });
