@@ -8,7 +8,6 @@ import {
   parseCloverCommand,
   routeCommand,
   pullFromVault,
-  answerFromVault,
 } from '@/lib/cloverCommandRouter';
 
 const BRAIN_KEY = 'rhgo_clover_brain';
@@ -90,7 +89,7 @@ export function applyCloverUtterance(raw, { pathname = '/', specimens = [] } = {
   }
 
   if (routed.intent === INTENTS.EYES) {
-    return { handled: true, reply: routed.reply, navigateTo: '/scan' };
+    return { handled: true, reply: routed.reply, navigateTo: '/scan?live=1' };
   }
 
   if (routed.intent === INTENTS.PULL) {
@@ -101,7 +100,7 @@ export function applyCloverUtterance(raw, { pathname = '/', specimens = [] } = {
     return {
       handled: true,
       reply,
-      navigateTo: routed.route || '/collection',
+      navigateTo: routed.route || `/vault?q=${encodeURIComponent(routed.target || '')}`,
     };
   }
 
@@ -114,21 +113,17 @@ export function applyCloverUtterance(raw, { pathname = '/', specimens = [] } = {
   }
 
   if (routed.intent === INTENTS.RESEARCH) {
+    // Stay on the current screen: cloverChat runs live web research.
     return {
       handled: false,
       reply: routed.reply,
-      navigateTo: '/explore',
       researchQuery: routed.query,
       passToChat: true,
     };
   }
 
-  if (routed.useVault) {
-    const hit = answerFromVault(raw, vault);
-    if (hit.sources.length) {
-      return { handled: true, reply: hit.answer, sources: hit.sources };
-    }
-  }
+  // Questions about the hunter's own finds go to cloverChat, which answers
+  // from the full server-side vault with cited sources.
 
   return {
     handled: false,

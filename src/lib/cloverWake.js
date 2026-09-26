@@ -82,8 +82,10 @@ export function on(event, fn) {
   listeners.get(event).add(fn);
   return () => listeners.get(event)?.delete(fn);
 }
-function emit(event, payload) {
-  listeners.get(event)?.forEach((fn) => fn(payload));
+export function emit(event, payload) {
+  listeners.get(event)?.forEach((fn) => {
+    try { fn(payload); } catch (err) { console.warn('[cloverWake] listener failed:', err); }
+  });
 }
 export function emitWake() {
   emit('wake');
