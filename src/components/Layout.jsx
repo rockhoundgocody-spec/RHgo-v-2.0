@@ -76,7 +76,7 @@ function AdminHeader({ pathname }) {
                     ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
                     : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
                 )
-              )
+              }
             >
               <Icon size={14} /> {label}
             </NavLink>
