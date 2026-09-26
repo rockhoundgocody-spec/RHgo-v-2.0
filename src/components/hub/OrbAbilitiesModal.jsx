@@ -69,18 +69,19 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
     setClaimed(true);
     setJustClaimed(true);
 
-    // Award +50 Exploration XP to user profile
+    // +50 Exploration XP: granted server-side, once per day (idempotent), so
+    // repeat taps or a cleared localStorage flag can't mint extra XP.
     try {
       const me = await base44.auth.me().catch(() => null);
       if (me?.email) {
-        const profiles = await base44.entities.PlayerProfile.filter({ owner_email: me.email });
+        const res = await base44.functions.invoke('awardVerifiedXP', { event_type: 'orb_blessing' }).catch(() => null);
+        const fresh = res?.data && !res.data.already_awarded;
+        const profiles = fresh ? await base44.entities.PlayerProfile.filter({ owner_email: me.email }) : [];
         if (profiles[0]) {
+          // Category split is cosmetic; total_xp is owned by the server.
           const cats = { ...(profiles[0].xp_categories || {}) };
           cats.explorer = (cats.explorer || 0) + 50;
-          await base44.entities.PlayerProfile.update(profiles[0].id, {
-            total_xp: (profiles[0].total_xp || 0) + 50,
-            xp_categories: cats,
-          });
+          await base44.entities.PlayerProfile.update(profiles[0].id, { xp_categories: cats });
         }
       }
     } catch {}
