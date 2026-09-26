@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 vi.mock('leaflet/dist/leaflet.css', () => ({ default: {} }));
