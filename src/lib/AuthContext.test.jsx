@@ -158,14 +158,15 @@ describe('AuthContext', () => {
         expect(stateMap[3].setter).toHaveBeenCalledWith(false);
       });
 
-      it('bypasses checkUserAuth when token is null', async () => {
+      it('still tries me() when token is null and settles as logged out', async () => {
         appParams.token = null;
+        base44.auth.me.mockRejectedValueOnce(new Error('No token'));
 
         const { contextValue, stateMap } = renderProvider();
 
         await contextValue.checkAppState();
 
-        expect(base44.auth.me).not.toHaveBeenCalled();
+        expect(base44.auth.me).toHaveBeenCalled();
         expect(stateMap[2].setter).toHaveBeenCalledWith(false); // isLoadingAuth
         expect(stateMap[1].setter).toHaveBeenCalledWith(false); // isAuthenticated
         expect(stateMap[5].setter).toHaveBeenCalledWith(true); // authChecked
@@ -225,7 +226,7 @@ describe('AuthContext', () => {
         expect(stateMap[3].setter).toHaveBeenCalledWith(false);
       });
 
-      it('handles app error with custom reason', async () => {
+      it('keeps public routes reachable on an unknown app error reason', async () => {
         const { contextValue, stateMap } = renderProvider();
 
         const originalAppId = appParams.appId;
@@ -247,13 +248,12 @@ describe('AuthContext', () => {
           configurable: true,
         });
 
-        expect(stateMap[4].setter).toHaveBeenCalledWith({
-          type: 'app_suspended',
-          message: 'App is suspended',
-        });
+        expect(stateMap[4].setter).toHaveBeenLastCalledWith(null);
+        expect(stateMap[3].setter).toHaveBeenCalledWith(false);
+        expect(stateMap[2].setter).toHaveBeenCalledWith(false);
       });
 
-      it('handles app error with message but no reason', async () => {
+      it('keeps public routes reachable on a network error', async () => {
         const { contextValue, stateMap } = renderProvider();
 
         const originalAppId = appParams.appId;
@@ -272,37 +272,21 @@ describe('AuthContext', () => {
           configurable: true,
         });
 
-        expect(stateMap[4].setter).toHaveBeenCalledWith({
-          type: 'unknown',
-          message: 'Network error',
-        });
+        expect(stateMap[4].setter).toHaveBeenLastCalledWith(null);
       });
 
-      it('handles outer unexpected thrown error', async () => {
-        const { contextValue, stateMap } = renderProvider();
+      it('surfaces user_not_registered returned by the session check', async () => {
+        base44.auth.me.mockRejectedValueOnce({ data: { extra_data: { reason: 'user_not_registered' } } });
 
-        const originalToken = appParams.token;
-        Object.defineProperty(appParams, 'token', {
-          get: () => {
-            throw new Error('Fatal system crash');
-          },
-          configurable: true,
-        });
+        const { contextValue, stateMap } = renderProvider();
 
         await contextValue.checkAppState();
 
-        Object.defineProperty(appParams, 'token', {
-          value: originalToken,
-          writable: true,
-          configurable: true,
-        });
-
         expect(stateMap[4].setter).toHaveBeenCalledWith({
-          type: 'unknown',
-          message: 'Fatal system crash',
+          type: 'user_not_registered',
+          message: 'User not registered for this app',
         });
-        expect(stateMap[3].setter).toHaveBeenCalledWith(false);
-        expect(stateMap[2].setter).toHaveBeenCalledWith(false);
+        expect(stateMap[1].setter).toHaveBeenCalledWith(false);
       });
     });
 
