@@ -12,6 +12,7 @@ Allow: /live
 Allow: /find-of-the-week
 Allow: /privacy-policy
 Allow: /terms
+Allow: /docs
 
 Disallow: /admin
 Disallow: /settings

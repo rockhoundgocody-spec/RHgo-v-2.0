@@ -9,6 +9,7 @@ import usePageVisible from '@/lib/usePageVisible';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 
 export default function Live() {
+  useSeoRobots(true);
   const [me, setMe] = useState(null);
   const [streams, setStreams] = useState(null);
   const [studioOpen, setStudioOpen] = useState(false);

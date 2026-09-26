@@ -1,0 +1,5 @@
+Contact: mailto:support@rhgo.me
+Expires: 2027-09-26T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://rhgo.me/.well-known/security.txt
+Policy: https://rhgo.me/privacy-policy

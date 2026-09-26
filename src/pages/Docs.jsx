@@ -122,6 +122,7 @@ const Body = ({ body }) => (
 );
 
 export default function Docs() {
+  useSeoRobots(true);
   const [active, setActive] = useState('stack');
   const current = sections.find((s) => s.id === active);
 
