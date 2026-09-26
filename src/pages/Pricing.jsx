@@ -138,6 +138,7 @@ export default function Pricing() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(null);
+  const [checkoutError, setCheckoutError] = useState(null);
   const nativeApp = isNativeApp();
 
   const handleUpgrade = async (tier) => {
@@ -151,7 +152,15 @@ export default function Pricing() {
       return;
     }
 
+    // A subscription is credited to the signed-in account, so sign in first
+    // and come straight back here.
+    if (!user?.email) {
+      navigate(`/login?from_url=${encodeURIComponent('/pricing')}`);
+      return;
+    }
+
     setUpgrading(tier.id);
+    setCheckoutError(null);
     try {
       const res = await base44.functions.invoke('createCheckoutSession', {
         successUrl: STRIPE_CONFIG.successUrl,
@@ -161,8 +170,14 @@ export default function Pricing() {
       const url = res?.data?.url;
       if (!url) throw new Error('No checkout URL returned');
       window.location.href = url;
-    } catch {
-      alert('Unable to start checkout — please try again shortly.');
+    } catch (err) {
+      const code = err?.response?.data?.code || err?.data?.code;
+      const message = code === 'plan_unconfigured' || code === 'price_inactive'
+        ? `${tier.name} isn't open for purchase yet. Try another plan, or check back soon.`
+        : code === 'auth_required'
+          ? 'Please sign in again to subscribe.'
+          : 'Unable to start checkout — please try again shortly.';
+      setCheckoutError({ tier: tier.id, message });
     } finally {
       setUpgrading(null);
     }
@@ -175,6 +190,7 @@ export default function Pricing() {
       {/* Back */}
       <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3">
         <button onClick={() => navigate(-1)}
+          aria-label="Back"
           className="w-9 h-9 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition"
           style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}>
           <ArrowLeft size={16} />
