@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
+      setAuthError((prev) => (prev?.type === 'user_not_registered' ? null : prev));
     } catch (error) {
       /* visitor is simply logged out */
       setUser(null);
