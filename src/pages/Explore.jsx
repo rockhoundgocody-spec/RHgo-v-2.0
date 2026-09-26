@@ -261,21 +261,49 @@ export default function Explore() {
   }, [detailHotspot, collectedMinerals]);
 
   // SEO: 3 mineral names from nearest hotspots for og:description
+  // Performance Optimization: Replaced O(N log N) Array.sort() with an early-exit O(N) linear distance check loop,
+  // preventing full array copying and sorting overhead when collecting only the top 3 unique minerals.
   const seoMinerals = useMemo(() => {
-    const sorted = userLocation
-      ? [...hotspots].sort((a, b) =>
-          Math.hypot((a.lat||0) - userLocation.lat, (a.lng||0) - userLocation.lng) -
-          Math.hypot((b.lat||0) - userLocation.lat, (b.lng||0) - userLocation.lng))
-      : hotspots;
     const minerals = [];
     const seen = new Set();
-    for (const h of sorted) {
-      for (const m of (h.minerals || [])) {
-        if (m && !seen.has(m)) { seen.add(m); minerals.push(m); }
+
+    if (!userLocation) {
+      for (const h of hotspots) {
+        for (const m of (h.minerals || [])) {
+          if (m && !seen.has(m)) { seen.add(m); minerals.push(m); }
+          if (minerals.length >= 3) break;
+        }
         if (minerals.length >= 3) break;
       }
-      if (minerals.length >= 3) break;
+      return minerals;
     }
+
+    // Map hotspots with distance squared to avoid Math.sqrt/Math.hypot overhead, then find top minerals.
+    // Iteratively extract closest remaining hotspot until 3 unique minerals are gathered or candidates exhausted.
+    const candidates = hotspots.map(h => ({
+      minerals: h.minerals,
+      distSq: (h.lat != null && h.lng != null)
+        ? (h.lat - userLocation.lat) ** 2 + (h.lng - userLocation.lng) ** 2
+        : Infinity,
+    }));
+
+    while (candidates.length > 0 && minerals.length < 3) {
+      let minIdx = 0;
+      for (let i = 1; i < candidates.length; i++) {
+        if (candidates[i].distSq < candidates[minIdx].distSq) {
+          minIdx = i;
+        }
+      }
+      const [nearest] = candidates.splice(minIdx, 1);
+      for (const m of (nearest.minerals || [])) {
+        if (m && !seen.has(m)) {
+          seen.add(m);
+          minerals.push(m);
+          if (minerals.length >= 3) break;
+        }
+      }
+    }
+
     return minerals;
   }, [hotspots, userLocation]);
 
