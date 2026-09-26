@@ -359,7 +359,9 @@ export class GalaxyScene {
     const center = box.getCenter(new THREE.Vector3());
     const radius = Math.max(box.getSize(new THREE.Vector3()).length() / 2, 20);
     const dist = radius / Math.sin((this.camera.fov * Math.PI) / 360) * 0.62;
-    const endPos = center.clone().add(new THREE.Vector3(0, radius * 0.35, dist));
+    // Portrait phones: look down on the galaxy so the belt fills the tall screen.
+    const lift = this.camera.aspect < 1 ? 0.85 : 0.35;
+    const endPos = center.clone().add(new THREE.Vector3(0, radius * lift, dist));
     if (!animate || this.reducedMotion) {
       this.camera.position.copy(endPos);
       this.controls.target.copy(center);
