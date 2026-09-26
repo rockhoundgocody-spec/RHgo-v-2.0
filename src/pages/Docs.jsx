@@ -3,6 +3,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { FileCode2, Database, Network, Cpu, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 import {
   Accordion,
   AccordionItem,

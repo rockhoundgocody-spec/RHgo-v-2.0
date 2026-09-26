@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import StreamCard from '@/components/live/StreamCard.jsx';
 import BroadcastStudio from '@/components/live/BroadcastStudio.jsx';
 import usePageVisible from '@/lib/usePageVisible';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 export default function Live() {
   const [me, setMe] = useState(null);
@@ -85,8 +86,8 @@ export default function Live() {
             Connect your AI glasses as a camera and broadcast your hunt — viewers see every AI identification as you make it.
           </p>
           <div className="flex items-center justify-center gap-2 mt-5">
-            <a href="/scan" className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>Scan a specimen</a>
-            <a href="/find-of-the-week" className="px-4 py-2 rounded-xl text-xs font-semibold text-white/75" style={{ border: '1px solid hsla(0,0%,100%,0.14)' }}>Find of the week</a>
+            <Link to="/scan" className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>Scan a specimen</Link>
+            <Link to="/find-of-the-week" className="px-4 py-2 rounded-xl text-xs font-semibold text-white/75" style={{ border: '1px solid hsla(0,0%,100%,0.14)' }}>Find of the week</Link>
           </div>
         </div>
       ) : (
