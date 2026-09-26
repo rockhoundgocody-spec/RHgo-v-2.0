@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 // Map Open-Meteo WMO weather code → human label
 function weatherLabel(code) {
@@ -82,8 +83,9 @@ Deno.serve(async (req) => {
     updates.lunar_phase = lunarPhase(dateStr);
 
     // 2) Weather — only if we have coordinates
-    if (typeof specimen.lat === 'number' && typeof specimen.lng === 'number') {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${specimen.lat}&longitude=${specimen.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+    const coords = parseCoordinates(specimen.lat, specimen.lng);
+    if (coords) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph`;
       const wRes = await fetch(url);
       if (wRes.ok) {
         const wJson = await wRes.json();
