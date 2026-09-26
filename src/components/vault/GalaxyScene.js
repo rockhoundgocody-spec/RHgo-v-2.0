@@ -18,13 +18,15 @@ const STAR_VERT = /* glsl */ `
   attribute vec3 color;
   uniform float uPixelRatio;
   uniform float uScale;
+  uniform float uMaxSize;
   varying vec3 vColor;
   varying float vAlpha;
   void main() {
     vColor = color;
     vAlpha = alpha;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = size * uPixelRatio * (uScale / max(-mv.z, 0.1));
+    // Perspective size, clamped: far stars stay visible, near ones never flood the screen.
+    gl_PointSize = clamp(size * uPixelRatio * (uScale / max(-mv.z, 0.1)), 1.5 * uPixelRatio, uMaxSize);
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -189,7 +191,11 @@ export class GalaxyScene {
     this.starMaterial = new THREE.ShaderMaterial({
       vertexShader: STAR_VERT,
       fragmentShader: STAR_FRAG,
-      uniforms: { uPixelRatio: { value: this.renderer.getPixelRatio() }, uScale: { value: 260 } },
+      uniforms: {
+        uPixelRatio: { value: this.renderer.getPixelRatio() },
+        uScale: { value: 420 },
+        uMaxSize: { value: 58 * this.renderer.getPixelRatio() },
+      },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -221,8 +227,10 @@ export class GalaxyScene {
     hgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
     hgeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array([1, 1, 1]), 3));
     hgeo.setAttribute('size', new THREE.BufferAttribute(new Float32Array([0]), 1));
-    hgeo.setAttribute('alpha', new THREE.BufferAttribute(new Float32Array([0.55]), 1));
-    this.halo = new THREE.Points(hgeo, this.starMaterial);
+    hgeo.setAttribute('alpha', new THREE.BufferAttribute(new Float32Array([0.32]), 1));
+    this.haloMaterial = this.starMaterial.clone();
+    this.haloMaterial.uniforms.uMaxSize.value = 120 * this.renderer.getPixelRatio();
+    this.halo = new THREE.Points(hgeo, this.haloMaterial);
     this.halo.visible = false;
     this.group.add(this.halo);
 
@@ -237,6 +245,7 @@ export class GalaxyScene {
       obj.geometry.dispose();
     }
     this.starMaterial?.dispose();
+    this.haloMaterial?.dispose();
     this.linkMaterial?.dispose();
     this.stars = this.lines = this.halo = null;
   }
@@ -292,6 +301,10 @@ export class GalaxyScene {
       const p = this.halo.geometry.getAttribute('position');
       p.setXYZ(0, ...this.nodes[sel].position);
       p.needsUpdate = true;
+      // Halo takes the star's own color, lifted toward white.
+      const hc = new THREE.Color(this.nodes[sel].color).lerp(new THREE.Color(0xffffff), 0.45);
+      this.halo.geometry.getAttribute('color').setXYZ(0, hc.r, hc.g, hc.b);
+      this.halo.geometry.getAttribute('color').needsUpdate = true;
       this.halo.visible = true;
     } else if (this.halo) {
       this.halo.visible = false;
@@ -345,7 +358,7 @@ export class GalaxyScene {
     for (const n of this.nodes) box.expandByPoint(this._tmp.set(...n.position));
     const center = box.getCenter(new THREE.Vector3());
     const radius = Math.max(box.getSize(new THREE.Vector3()).length() / 2, 20);
-    const dist = radius / Math.sin((this.camera.fov * Math.PI) / 360) * 0.9;
+    const dist = radius / Math.sin((this.camera.fov * Math.PI) / 360) * 0.62;
     const endPos = center.clone().add(new THREE.Vector3(0, radius * 0.35, dist));
     if (!animate || this.reducedMotion) {
       this.camera.position.copy(endPos);
@@ -382,9 +395,11 @@ export class GalaxyScene {
       const y = (-this._tmp.y * 0.5 + 0.5) * h;
       const dist = this.camera.position.distanceTo(new THREE.Vector3(...node.position));
       const emphasized = id === this.selectedId || id === this.hoverId;
-      const fade = emphasized ? 1 : Math.max(0, Math.min(1, (260 - dist) / 140));
+      const fade = emphasized ? 1 : Math.max(0, Math.min(1, (340 - dist) / 170));
       const dim = this.matchIds && !this.matchIds.has(id) ? 0.15 : 1;
-      el.style.opacity = behind ? '0' : String(fade * dim);
+      // Hide labels that would be cut off at the screen edge.
+      const offscreen = x < 36 || x > w - 36 || y < 12 || y > h - 4;
+      el.style.opacity = behind || (offscreen && !emphasized) ? '0' : String(fade * dim);
       el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -140%)`;
     }
   }
@@ -492,7 +507,7 @@ export class GalaxyScene {
     if (this.halo?.visible) {
       const s = this.halo.geometry.getAttribute('size');
       const node = this.nodes[this.index.get(this.selectedId)];
-      const base = node ? node.size * 2.6 : 20;
+      const base = node ? node.size * 2.2 : 20;
       s.setX(0, base * (this.reducedMotion ? 1 : 1 + Math.sin(now * 0.004) * 0.18));
       s.needsUpdate = true;
     }
