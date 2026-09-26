@@ -76,7 +76,7 @@ function AdminHeader({ pathname }) {
                     ? 'border-hud-cyan/60 text-hud bg-hud-cyan/10 glow-hud'
                     : 'border-hud-cyan/20 text-hud-cyan/60 hover:text-hud hover:border-hud-cyan/40'
                 )
-              }
+              )
             >
               <Icon size={14} /> {label}
             </NavLink>
@@ -185,7 +185,7 @@ export default function Layout() {
   // Logged-out visitor on a protected route → straight to login (no spinner).
   if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?from_url=${encodeURIComponent(from)}`} replace />;
+    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
   }
 
   return (
