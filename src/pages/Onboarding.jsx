@@ -32,17 +32,12 @@ function AgateAgeGate({ onComplete }) {
   const [qIdx, setQIdx] = useState(0);
   const [kidPoints, setKidPoints] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [shaking, setShaking] = useState(false);
 
   const current = AGE_GATE_QUESTIONS[qIdx];
 
   const pick = (answer, idx) => {
     if (selected !== null) return;
     setSelected(idx);
-    if (answer.kid) {
-      setShaking(true);
-      setTimeout(() => setShaking(false), 500);
-    }
     setTimeout(() => {
       const newKidPts = kidPoints + (answer.kid ? 1 : 0);
       if (qIdx < AGE_GATE_QUESTIONS.length - 1) {

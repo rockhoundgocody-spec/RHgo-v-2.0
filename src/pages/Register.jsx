@@ -22,7 +22,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const [referralCode, setReferralCode] = useState(() => new URLSearchParams(window.location.search).get('ref') || '');
+  const [referralCode] = useState(() => new URLSearchParams(window.location.search).get('ref') || '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();

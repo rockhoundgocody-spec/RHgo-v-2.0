@@ -29,8 +29,6 @@ export default function Market() {
       .finally(() => setLoading(false));
   }, [createOpen]);
 
-  const activeFilterCfg = FILTERS.find(f => f.key === activeFilter) || FILTERS[0];
-
   const filtered = listings.filter(l => {
     if (l.status !== 'active') return false;
     if (activeFilter === 'rare+' && !['rare', 'legendary'].includes(l.rarity)) return false;

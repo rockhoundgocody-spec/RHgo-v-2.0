@@ -19,7 +19,6 @@ export default function ClipGenerator({ stream, me, latestId }) {
   const [title, setTitle] = useState('');
   const [aspect, setAspect] = useState('9:16');
   const [exporting, setExporting] = useState(false);
-  const [clipUrl, setClipUrl] = useState(null);
   const [clips, setClips] = useState([]);
 
   const mineralName = latestId?.mineral_name || '';
@@ -27,7 +26,6 @@ export default function ClipGenerator({ stream, me, latestId }) {
   const exportClip = useCallback(async () => {
     if (!stream?.id || !me?.email) return;
     setExporting(true);
-    setClipUrl(null);
     try {
       // Use the current stream frame as the clip source
       const frameUrl = stream.current_frame_url;
@@ -45,7 +43,6 @@ export default function ClipGenerator({ stream, me, latestId }) {
       });
 
       setClips(prev => [created, ...prev]);
-      setClipUrl(created.clip_url);
       setTitle('');
     } catch {}
     setExporting(false);

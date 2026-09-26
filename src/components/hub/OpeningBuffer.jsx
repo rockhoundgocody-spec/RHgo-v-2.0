@@ -25,8 +25,6 @@ const STORY = [
   { text: 'A shell formed around it as it slept. Touch the matter. Help it surface.',             at: 12800, hold: 2800 },
 ];
 
-const HATCH_PROMPT_AT = 8400;
-
 // First words — intimate, personal, claiming the user.
 const FIRST_WORDS =
   'I am Clover — a new form of matter, breathed up from the deep. ' +
@@ -36,7 +34,6 @@ const FIRST_WORDS =
 const STIR_AT = 3000;
 const SHELL_AT = 12800;
 const HATCHABLE_AT = 13800;   // touch can now help
-const BOND_AT = 17800;        // fully hatched, looks up
 const SPEAK_AT = 19000;
 const EXIT_AT = 27800;
 

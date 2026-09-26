@@ -100,7 +100,6 @@ export default function ExpeditionPlanner({
 
   const totalKm = useMemo(() => {
     if (!route.length) return 0;
-    const origin = userLocation || route[0];
     let km = userLocation ? haversineKm(userLocation, route[0]) : 0;
     for (let i = 1; i < route.length; i++) km += haversineKm(route[i - 1], route[i]);
     return Math.round(km);
