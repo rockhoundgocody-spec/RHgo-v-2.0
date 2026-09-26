@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
 Allow: /scan
-Allow: /explore
 Allow: /demo
 Allow: /pricing
 Allow: /agate-guide
@@ -13,6 +12,7 @@ Allow: /find-of-the-week
 Allow: /privacy-policy
 Allow: /terms
 
+Disallow: /explore
 Disallow: /admin
 Disallow: /settings
 Disallow: /profile
@@ -38,5 +38,8 @@ Disallow: /leaderboard
 Disallow: /onboarding
 Disallow: /forgot-password
 Disallow: /reset-password
+Disallow: /login
+Disallow: /register
+Disallow: /auth
 
 Sitemap: https://rhgo.me/sitemap.xml
