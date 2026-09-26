@@ -43,31 +43,31 @@ describe('getLoginRedirectUrl', () => {
   });
 
   it('rejects protocol-relative open redirect attempts (//evil.com)', () => {
-    expect(getLoginRedirectUrl('//evil.com')).toBe('/');
-    expect(getLoginRedirectUrl('//attacker.com/login')).toBe('/');
-    expect(getLoginRedirectUrl('///evil.com')).toBe('/');
+    expect(getLoginRedirectUrl('//evil.com')).toBe('/profile');
+    expect(getLoginRedirectUrl('//attacker.com/login')).toBe('/profile');
+    expect(getLoginRedirectUrl('///evil.com')).toBe('/profile');
   });
 
   it('rejects backslash and control character open redirect attempts', () => {
-    expect(getLoginRedirectUrl('/\\evil.com')).toBe('/');
-    expect(getLoginRedirectUrl('/\\attacker.com')).toBe('/');
-    expect(getLoginRedirectUrl('/\t//evil.com')).toBe('/');
-    expect(getLoginRedirectUrl('/\n//evil.com')).toBe('/');
+    expect(getLoginRedirectUrl('/\\evil.com')).toBe('/profile');
+    expect(getLoginRedirectUrl('/\\attacker.com')).toBe('/profile');
+    expect(getLoginRedirectUrl('/\t//evil.com')).toBe('/profile');
+    expect(getLoginRedirectUrl('/\n//evil.com')).toBe('/profile');
   });
 
   it('rejects absolute external URLs', () => {
-    expect(getLoginRedirectUrl('https://evil.com/phish')).toBe('/');
-    expect(getLoginRedirectUrl('http://attacker.org')).toBe('/');
+    expect(getLoginRedirectUrl('https://evil.com/phish')).toBe('/profile');
+    expect(getLoginRedirectUrl('http://attacker.org')).toBe('/profile');
   });
 
   it('rejects dangerous script schemes', () => {
-    expect(getLoginRedirectUrl('javascript:alert(1)')).toBe('/');
+    expect(getLoginRedirectUrl('javascript:alert(1)')).toBe('/profile');
   });
 
   it('falls back to default path for null, undefined, or non-string inputs', () => {
-    expect(getLoginRedirectUrl(null)).toBe('/');
-    expect(getLoginRedirectUrl(undefined)).toBe('/');
-    expect(getLoginRedirectUrl('')).toBe('/');
-    expect(getLoginRedirectUrl(12345)).toBe('/');
+    expect(getLoginRedirectUrl(null)).toBe('/profile');
+    expect(getLoginRedirectUrl(undefined)).toBe('/profile');
+    expect(getLoginRedirectUrl('')).toBe('/profile');
+    expect(getLoginRedirectUrl(12345)).toBe('/profile');
   });
 });
