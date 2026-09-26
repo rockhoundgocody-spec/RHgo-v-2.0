@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import { base44 } from '../api/base44Client.js';
+import { isPaidSubscription } from './subscriptionAccess.js';
 
 // Simple, synchronous DJB2 hash helper to obfuscate email in session storage key
 export function hashEmail(email) {
@@ -65,9 +66,11 @@ export function useSubscription(user) {
     return () => { cancelled = true; };
   }, [user?.email, reloadKey]);
 
-  const isPro = subscription?.tier === 'field_pro' && subscription?.status === 'active';
-  const isFamily = subscription?.tier === 'family' && subscription?.status === 'active';
-  const isPaid = isPro || isFamily;
+  // Trialing and past-due (Stripe still retrying) subscribers keep access;
+  // see subscriptionAccess.js — the same rule the server enforces.
+  const isPaid = isPaidSubscription(subscription);
+  const isPro = isPaid && subscription?.tier === 'field_pro';
+  const isFamily = isPaid && subscription?.tier === 'family';
 
   // Call after Stripe webhook confirms payment to refresh locally.
   // Bumping reloadKey re-runs the effect — previously this cleared state but

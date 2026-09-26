@@ -33,20 +33,20 @@
   <url>
     <loc>https://rhgo.me/find-of-the-week</loc>
     <lastmod>2026-09-26</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.75</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://rhgo.me/clubs</loc>
     <lastmod>2026-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://rhgo.me/live</loc>
     <lastmod>2026-09-26</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://rhgo.me/about</loc>
@@ -68,6 +68,12 @@
   </url>
   <url>
     <loc>https://rhgo.me/terms</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rhgo.me/docs</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>

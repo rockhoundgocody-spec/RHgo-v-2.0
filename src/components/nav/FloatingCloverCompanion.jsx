@@ -27,6 +27,8 @@ export default function FloatingCloverCompanion() {
   hiddenRef.current = isHub || isAdminOrDocs;
   const startRef = useRef(clover.start);
   startRef.current = clover.start;
+  const sendRef = useRef(clover.send);
+  sendRef.current = clover.send;
 
   useEffect(() => on('wake', () => {
     if (hiddenRef.current) return; // HeroOrb handles the Hub
@@ -35,6 +37,14 @@ export default function FloatingCloverCompanion() {
     triggerOrbHaptic('pulse');
     setExpanded(true);
     startRef.current("I'm here. What do you need?");
+  }), []);
+
+  // "Ask Clover" from anywhere in the app (e.g. a star in the Vault Galaxy).
+  useEffect(() => on('clover:ask', (question) => {
+    if (hiddenRef.current || !question) return;
+    setExpanded(true);
+    startRef.current('Pulling it up.');
+    setTimeout(() => sendRef.current?.(String(question)), 60);
   }), []);
 
   if (isHub || isAdminOrDocs) return null;

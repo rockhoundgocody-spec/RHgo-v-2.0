@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Baseline CSP that can't break third-party loads: no plugins/<object>, no <base> hijacking.
+         A full script/connect allowlist needs a response header from the host. -->
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
     <link rel="icon" type="image/png" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
     <link rel="apple-touch-icon" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import StreamCard from '@/components/live/StreamCard.jsx';
 import BroadcastStudio from '@/components/live/BroadcastStudio.jsx';
 import usePageVisible from '@/lib/usePageVisible';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 /**
  * Displays live streams, polling while the page is visible, and lets signed-in
@@ -14,6 +15,7 @@ import usePageVisible from '@/lib/usePageVisible';
  * @returns {React.ReactElement} The live feed or broadcast studio page.
  */
 export default function Live() {
+  useSeoRobots(true);
   const [me, setMe] = useState(null);
   const [streams, setStreams] = useState(null);
   const [studioOpen, setStudioOpen] = useState(false);
@@ -91,8 +93,8 @@ export default function Live() {
             Live field broadcasts will show here. Until then, identify a rock free or preview the map demo.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
-            <a href="/scan" className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>Scan one free</a>
-            <a href="/demo" className="px-4 py-2 rounded-xl text-xs font-semibold text-white/80" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>Try the demo</a>
+            <Link to="/scan" className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>Scan one free</Link>
+            <Link to="/demo" className="px-4 py-2 rounded-xl text-xs font-semibold text-white/80" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>Try the demo</Link>
           </div>
         </div>
       ) : (

@@ -37,13 +37,23 @@ export function entitlementOf(metadata: Record<string, unknown> | null | undefin
  * metadata.owner_email at checkout; the Stripe-side email is only a fallback
  * for sessions created before that existed.
  */
-export function ownerEmailOf(obj: Record<string, any> | null | undefined): string | null {
+type StripeLike = {
+  metadata?: Record<string, unknown> | null;
+  customer_email?: string | null;
+  customer_details?: { email?: string | null } | null;
+  current_period_end?: number | null;
+  items?: { data?: Array<{ current_period_end?: number | null }> } | null;
+};
+
+export function ownerEmailOf(obj: StripeLike | null | undefined): string | null {
   const email = obj?.metadata?.owner_email || obj?.customer_email || obj?.customer_details?.email || null;
-  return email ? String(email).trim().toLowerCase() || null : null;
+  // Kept exactly as the app stored it: Subscription rows are looked up by
+  // the signed-in user's email as-is.
+  return email ? String(email).trim() || null : null;
 }
 
 /** current_period_end moved onto subscription items in newer Stripe API versions. */
-export function periodEndOf(sub: Record<string, any> | null | undefined): number | null {
+export function periodEndOf(sub: StripeLike | null | undefined): number | null {
   const v = sub?.current_period_end ?? sub?.items?.data?.[0]?.current_period_end ?? null;
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }

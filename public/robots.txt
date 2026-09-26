@@ -11,6 +11,7 @@ Allow: /live
 Allow: /find-of-the-week
 Allow: /privacy-policy
 Allow: /terms
+Allow: /docs
 
 # Private routes stay crawlable so crawlers can read the X-Robots-Tag noindex header.
 Sitemap: https://rhgo.me/sitemap.xml
