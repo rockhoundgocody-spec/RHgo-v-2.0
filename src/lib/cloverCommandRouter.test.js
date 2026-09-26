@@ -14,10 +14,11 @@ describe('Clover voice routing', () => {
   it('opens the galaxy for "pull" commands', () => {
     const cmd = parseCloverCommand('Hey Clover, pull Sweetwater barite');
     expect(cmd.intent).toBe(INTENTS.PULL);
-    expect(cmd.route).toBe('/vault?q=Sweetwater%20barite');
+    // Spoken targets are matched case-insensitively, so they arrive lowercased.
+    expect(cmd.route).toBe('/vault?q=sweetwater%20barite');
     const out = applyCloverUtterance('Clover, pull Sweetwater barite');
     expect(out.handled).toBe(true);
-    expect(out.navigateTo).toBe('/vault?q=Sweetwater%20barite');
+    expect(out.navigateTo).toBe('/vault?q=sweetwater%20barite');
   });
 
   it('opens the live scanner for "what do you see"', () => {
