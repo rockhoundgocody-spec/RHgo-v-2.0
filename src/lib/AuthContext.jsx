@@ -86,6 +86,11 @@ export const AuthProvider = ({ children }) => {
       /* visitor is simply logged out */
       setUser(null);
       setIsAuthenticated(false);
+      // A signed-in account that isn't registered for this app is the one
+      // auth failure the user must see (UserNotRegisteredError screen).
+      if (error?.data?.extra_data?.reason === 'user_not_registered') {
+        setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
+      }
     } finally {
       settled = true;
       clearTimeout(timer);
