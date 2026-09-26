@@ -11,6 +11,7 @@ import CloverVoicePanel from './CloverVoicePanel.jsx';
 import useCloverConversation from './useCloverConversation.js';
 import { playOrbChime, playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { Zap } from 'lucide-react';
+import { on } from '@/lib/cloverWake';
 
 const OPENERS = [
   "Here, hound. What are we checking?",
@@ -26,6 +27,16 @@ export default function HeroOrb({ companion, size = 148 }) {
   const containerRef = useRef(null);
   const { getInteraction, injectTap } = useLiquidInteraction();
   const clover = useCloverConversation({ companion });
+
+  const [wakePulse, setWakePulse] = useState(false);
+  const startRef = useRef(clover.start);
+  startRef.current = clover.start;
+  useEffect(() => on('wake', () => {
+    setWakePulse(true);
+    setTimeout(() => setWakePulse(false), 900);
+    triggerOrbHaptic('pulse');
+    startRef.current(OPENERS[Math.floor(Math.random() * OPENERS.length)]);
+  }), []);
 
   const luckyMineral = getLuckyMineralOfTheDay();
   const isResonanceClaimed = typeof window !== 'undefined' && localStorage.getItem(`rhgo_resonance_${luckyMineral.dateKey}`) === '1';
@@ -84,6 +95,10 @@ export default function HeroOrb({ companion, size = 148 }) {
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOrbTap(e)}
           style={{ width: size, height: size }}
         >
+          {wakePulse && (
+            <span className="absolute inset-0 rounded-full pointer-events-none animate-ping"
+              style={{ border: '2px solid #9FE8D0', boxShadow: '0 0 30px #9FE8D080' }} />
+          )}
           {(orbState === 'listening' || orbState === 'speaking') && (
             <>
               <span className="clover-listen-ring" style={{ animationDelay: '0s' }} />

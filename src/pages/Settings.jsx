@@ -9,6 +9,7 @@ import NotificationsSection from '@/components/settings/NotificationsSection.jsx
 import SavedSitePacksSection from '@/components/settings/SavedSitePacksSection.jsx';
 import StealthPrivacySection from '@/components/settings/StealthPrivacySection.jsx';
 import StorageSection from '@/components/settings/StorageSection.jsx';
+import WakeWordSection from '@/components/settings/WakeWordSection.jsx';
 
 const DEFAULT_SETTINGS = {
   notifications: true,
@@ -112,6 +113,7 @@ export default function Settings() {
       <StorageSection />
       <SavedSitePacksSection />
       <CloverVoiceSection />
+      <WakeWordSection />
 
       <button
         type="button"
