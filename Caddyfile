@@ -1,6 +1,12 @@
-:80 {
+# A domain address enables automatic TLS and HTTP-to-HTTPS redirects.
+rhgo.me {
   root * /srv
   encode gzip zstd
+  # Match the original URL before the SPA fallback rewrites it to index.html.
+  # Keep private routes aligned with Layout, AdminRoute, and the auth screens.
+  @privateRoutes path_regexp privateRoutes (?i)^/(explore|admin|settings|profile|collection|collections|companion|quests|badges|market|community|oauth|connect|dev|paywall|private-log|compare|chronolith|specimen|expedition|expeditions|dashboard|leaderboard|onboarding|forgot-password|reset-password|login|register|auth|docs)(/|$)
+  header @privateRoutes X-Robots-Tag "noindex, nofollow"
+
   try_files {path} /index.html
   file_server
 

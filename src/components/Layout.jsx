@@ -159,7 +159,7 @@ export default function Layout() {
   const { user, isAuthenticated, authChecked } = useAuth();
   const reduceMotion = useReducedMotion();
   // Most Layout routes are private. A few marketing/field pages stay indexable.
-  // /explore stays noindex until a real guest map ships (robots Disallow + sitemap omit).
+  // /explore stays noindex until a real guest map ships (server noindex + sitemap omit).
   const indexableUnderLayout = [
     '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact', '/scan',
   ].some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
