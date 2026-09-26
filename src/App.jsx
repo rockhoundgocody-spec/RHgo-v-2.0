@@ -11,6 +11,7 @@ import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
+import { prefetchWhenIdle } from '@/lib/lazyPart';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -184,6 +185,13 @@ const AuthenticatedApp = () => {
     </Suspense>
   );
 };
+
+// Warm the screens people open next, once the first screen is idle.
+prefetchWhenIdle([
+  () => import('@/pages/Scan'),
+  () => import('@/pages/Explore.jsx'),
+  () => import('@/pages/Hub'),
+]);
 
 function App() {
   return (
