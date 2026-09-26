@@ -1,46 +1,50 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Gem, Mail, Lock, Loader2, Gift } from "lucide-react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useAuth } from "@/lib/AuthContext";
+import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-import FacebookIcon from "@/components/FacebookIcon";
-import { toast } from "@/components/ui/use-toast";
-import { clearGateChoice, resetGateFlow } from "@/lib/gateStorage";
+import { clearGateChoice } from "@/lib/gateStorage";
+import { getPostAuthPath, persistBase44Session, readIntendedPath, withNext } from "@/lib/authRedirect";
 
 export default function Register() {
   const navigate = useNavigate();
-  useEffect(() => { clearGateChoice(); }, []);
+  const { checkUserAuth } = useAuth();
+  useEffect(() => {
+    clearGateChoice();
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const [referralCode] = useState(() => new URLSearchParams(window.location.search).get('ref') || '');
+  const intended = readIntendedPath();
+  const target = getPostAuthPath(intended);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (password !== confirmPassword) {
-      setError("Passwords don't match — try again");
-      return;
-    }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError("Password needs 8 characters.");
       return;
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
+      await base44.auth.register({ email: email.trim(), password });
+      if (displayName.trim()) {
+        try {
+          localStorage.setItem("rhgo_user_name", displayName.trim());
+        } catch {
+          /* optional */
+        }
+      }
       setShowOtp(true);
     } catch (err) {
-      setError(err.message || "Registration failed. Try again.");
+      setError(err?.message || "Could not register. Try a different email.");
     } finally {
       setLoading(false);
     }
@@ -50,28 +54,21 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      // Persist the session token durably so it survives the full-page
-      // navigation to /onboarding below. Check multiple possible response
-      // shapes since the verify-otp endpoint may nest the token differently.
-      const token = result?.access_token || result?.token || result?.session?.access_token;
-      if (token && typeof base44.auth.setToken === 'function') {
-        base44.auth.setToken(token, true);
-      }
-      const savedName = localStorage.getItem('rhgo_user_name');
-      if (savedName && savedName !== 'Explorer' && base44.auth.updateMe) {
-        try { await base44.auth.updateMe({ full_name: savedName }); } catch { /* optional */ }
-      }
-      base44.analytics.track({ eventName: "user_registered" });
-      // Redeem referral code if present — awards companion XP to the inviter
-      if (referralCode) {
+      const result = await base44.auth.verifyOtp({ email: email.trim(), otpCode });
+      if (result?.access_token) persistBase44Session(base44, result.access_token, true);
+      const name = displayName.trim() || (typeof localStorage !== "undefined" ? localStorage.getItem("rhgo_user_name") : "");
+      if (name && name !== "Explorer" && base44.auth.updateMe) {
         try {
-          await base44.functions.invoke('processReferral', { action: 'redeem', code: referralCode });
-        } catch {}
+          await base44.auth.updateMe({ full_name: name });
+        } catch {
+          /* optional */
+        }
       }
-      window.location.href = "/onboarding";
+      await checkUserAuth();
+      clearGateChoice();
+      navigate(target, { replace: true });
     } catch (err) {
-      setError(err.message || "Invalid code — check your email and try again");
+      setError(err?.message || "Code did not match. Check the email and try again.");
     } finally {
       setLoading(false);
     }
@@ -80,210 +77,134 @@ export default function Register() {
   const handleResend = async () => {
     setError("");
     try {
-      await base44.auth.resendOtp(email);
-      toast({ title: "Code resent", description: "Check your inbox (and spam folder)." });
+      await base44.auth.resendOtp(email.trim());
     } catch (err) {
-      setError(err.message || "Failed to resend code");
+      setError(err?.message || "Could not resend. Wait a minute and try again.");
     }
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", target);
   };
 
   if (showOtp) {
     return (
       <AuthLayout
-        icon={Mail}
-        title="Check your email"
-        subtitle={`We sent a 6-digit code to ${email}`}
+        title="Check your kit bag."
+        subtitle={`Six-digit code sent to ${email}.`}
         footer={
           <>
-            Already have an account?{" "}
-            <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">Log in</Link>
+            Already in?{" "}
+            <Link to={withNext("/login")} className="text-[#2EE6A6] font-semibold">
+              Sign in
+            </Link>
           </>
         }
       >
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+          <div className="mb-3 p-3 rounded-xl bg-[rgba(240,163,163,0.1)] border border-[rgba(240,163,163,0.35)] text-[#F0A3A3] text-sm">
             {error}
           </div>
         )}
-        <p className="text-white/40 text-xs text-center mb-4">Enter the code below to activate your account</p>
-        <div className="flex justify-center mb-5">
-          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        <Button
-          className="w-full h-11 font-bold rounded-xl"
-          style={{
-            background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))',
-            boxShadow: '0 4px 20px -4px hsla(270,80%,60%,0.5)',
-          }}
+        <input
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          value={otpCode}
+          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          className="w-full h-12 rounded-xl px-3 mb-3 tracking-[0.4em] text-center bg-white/5 border border-[rgba(232,238,242,0.14)] text-[#E8EEF2]"
+          aria-label="Email code"
+        />
+        <button
+          type="button"
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
+          className="w-full min-h-12 rounded-full font-bold text-[#04140e] disabled:opacity-38"
+          style={{ background: "linear-gradient(180deg,#2EE6A6,#1DBF7A)" }}
         >
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</> : "Activate Account →"}
-        </Button>
-        <p className="text-center text-sm text-white/30 mt-4">
-          Didn't get it?{" "}
-          <button onClick={handleResend} className="text-amethyst-glow hover:underline font-medium">
-            Resend code
-          </button>
-        </p>
+          {loading ? "Checking code" : "Open the vault"}
+        </button>
+        <button type="button" onClick={handleResend} className="w-full mt-3 text-sm text-[#9AA8B0]">
+          Resend code
+        </button>
       </AuthLayout>
     );
   }
 
   return (
     <AuthLayout
-      icon={Gem}
-      title="Start your journey"
-      subtitle="Free forever — no credit card needed"
+      title="Take a field name."
+      subtitle="Email, a password, and the name your finds wear."
       footer={
         <>
-          Already a Rockhound?{" "}
-          <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">
-            Log in →
+          Already in?{" "}
+          <Link to={withNext("/login")} className="text-[#2EE6A6] font-semibold">
+            Sign in
           </Link>
         </>
       }
     >
-      {/* Social proof nudge */}
-      <div className="flex items-center justify-center gap-1.5 mb-5 text-xs text-white/30">
-        <span>🪨</span>
-        <span>Join thousands of rockhounds already exploring</span>
-      </div>
-
-      <Button
-        variant="outline"
-        className="w-full h-11 text-sm font-semibold mb-5 border-white/15 bg-white/5 hover:bg-white/10 text-white"
-        onClick={handleGoogle}
-      >
-        <GoogleIcon className="w-4 h-4 mr-2" />
-        Sign up with Google
-      </Button>
-
-      <Button
-        variant="outline"
-        className="w-full h-11 text-sm font-semibold mb-5 -mt-2 border-white/15 bg-white/5 hover:bg-white/10 text-white"
-        onClick={() => base44.auth.loginWithProvider("facebook", "/")}
-      >
-        <FacebookIcon className="w-4 h-4 mr-2" />
-        Sign up with Facebook
-      </Button>
-
-      <div className="relative mb-5">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/10" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="px-3 text-white/30">or with email</span>
-        </div>
-      </div>
-
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+        <div className="mb-3 p-3 rounded-xl bg-[rgba(240,163,163,0.1)] border border-[rgba(240,163,163,0.35)] text-[#F0A3A3] text-sm">
           {error}
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-3">
-        {referralCode && (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1"
-            style={{ background: 'hsla(280,60%,15%,0.4)', border: '1px solid hsla(280,70%,50%,0.3)' }}>
-            <Gift size={14} className="text-amethyst-glow" />
-            <span className="text-amethyst-glow text-xs font-semibold">Referred by {referralCode}</span>
-          </div>
-        )}
-        <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-white/60 text-xs uppercase tracking-wider">Email</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              autoFocus
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-white/60 text-xs uppercase tracking-wider">Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Min. 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="confirm" className="text-white/60 text-xs uppercase tracking-wider">Confirm Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <Input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-11 bg-white/5 border-white/15 text-white placeholder:text-white/25 focus:border-amethyst/60 rounded-xl"
-              required
-            />
-          </div>
-        </div>
-        <Button
+        <label className="block text-[12px] uppercase tracking-[0.12em] text-[#5C6B74]">
+          Display name
+          <input
+            required
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            className="mt-1.5 w-full h-12 rounded-xl px-3 bg-white/5 border border-[rgba(232,238,242,0.14)] text-[#E8EEF2] outline-none focus:border-[#2EE6A6]"
+          />
+        </label>
+        <label className="block text-[12px] uppercase tracking-[0.12em] text-[#5C6B74]">
+          Email
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1.5 w-full h-12 rounded-xl px-3 bg-white/5 border border-[rgba(232,238,242,0.14)] text-[#E8EEF2] outline-none focus:border-[#2EE6A6]"
+          />
+        </label>
+        <label className="block text-[12px] uppercase tracking-[0.12em] text-[#5C6B74]">
+          Password
+          <input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1.5 w-full h-12 rounded-xl px-3 bg-white/5 border border-[rgba(232,238,242,0.14)] text-[#E8EEF2] outline-none focus:border-[#2EE6A6]"
+          />
+        </label>
+        <button
           type="submit"
-          className="w-full h-11 font-bold text-sm rounded-xl !mt-4"
-          style={{
-            background: 'linear-gradient(135deg, hsl(265,70%,55%), hsl(280,90%,65%))',
-            boxShadow: '0 4px 20px -4px hsla(270,80%,60%,0.5)',
-          }}
           disabled={loading}
+          className="w-full min-h-12 rounded-full font-bold text-[#04140e] disabled:opacity-38"
+          style={{ background: "linear-gradient(180deg,#2EE6A6,#1DBF7A)" }}
         >
           {loading ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</>
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Making the name
+            </span>
           ) : (
-            "Create Free Account →"
+            "Create field name"
           )}
-        </Button>
+        </button>
       </form>
-
-      <p className="text-center text-sm text-white/40 mt-4">
-        Already have an account?{" "}
-        <Link to="/login" className="text-amethyst-glow font-semibold hover:underline">Sign in</Link>
-      </p>
       <button
         type="button"
-        onClick={() => { resetGateFlow(); navigate('/', { replace: true }); }}
-        className="w-full mt-3 text-center text-[12px] text-white/35 hover:text-white/65"
+        onClick={handleGoogle}
+        className="w-full min-h-11 mt-3 rounded-full border border-[rgba(232,238,242,0.14)] text-[#E8EEF2] text-sm font-semibold inline-flex items-center justify-center gap-2"
       >
-        ← Back to welcome / start over
+        <GoogleIcon className="w-4 h-4" />
+        Sign in with Google
       </button>
-      <p className="text-center text-[10px] text-white/20 mt-4">
-        By signing up you agree to our Terms & Privacy Policy
-      </p>
     </AuthLayout>
   );
 }
