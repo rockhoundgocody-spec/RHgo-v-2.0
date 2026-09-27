@@ -163,8 +163,8 @@ Return exactly 3 missions as JSON.`;
         const missions = result?.missions || [];
 
         // ── 5. Create Quest records ──
-        for (const m of missions) {
-          await base44.asServiceRole.entities.Quest.create({
+        if (missions.length > 0) {
+          const questRecords = missions.map((m) => ({
             owner_email: user.email,
             title: m.title,
             description: m.description,
@@ -177,7 +177,8 @@ Return exactly 3 missions as JSON.`;
             status: 'active',
             progress: 0,
             expires_at: getExpiry(m.quest_type || 'daily'),
-          });
+          }));
+          await base44.asServiceRole.entities.Quest.bulkCreate(questRecords);
         }
 
         // ── 6. Push notification to device ──
