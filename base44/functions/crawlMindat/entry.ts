@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { bulkCreateInParallel } from './operations.ts';
 
 /**
  * crawlMindat — admin-only crawler that pulls mineral species from mindat.org
@@ -11,7 +12,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  *  3. For each batch, fetch individual species pages and use InvokeLLM with a
  *     JSON schema to extract { formula, crystal_system, hardness, color, luster,
  *     streak, description, rarity, category } + multi-grade image refs.
- *  4. Bulk-create into Mineral entity via service role.
+ *  4. Bulk-create into Mineral entity via service role in parallel chunks.
  *
  * Payload:
  *   {
@@ -104,15 +105,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 4. Bulk insert
+    // 4. Bulk insert in parallel across chunks
     let writeCount = 0;
     if (created.length) {
-      // chunk into 25s to be safe
-      for (let i = 0; i < created.length; i += 25) {
-        const chunk = created.slice(i, i + 25);
-        await base44.asServiceRole.entities.Mineral.bulkCreate(chunk);
-        writeCount += chunk.length;
-      }
+      writeCount = await bulkCreateInParallel(
+        created,
+        (chunk) => base44.asServiceRole.entities.Mineral.bulkCreate(chunk),
+        25,
+      );
     }
 
     return Response.json({
@@ -168,14 +168,17 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
     } catch (e) { errors.push({ name: c.name, reason: String(e.message || e) }); }
   }
 
+  let writeCount = 0;
   if (!dryRun && created.length) {
-    for (let i = 0; i < created.length; i += 25) {
-      await base44.asServiceRole.entities.Mineral.bulkCreate(created.slice(i, i + 25));
-    }
+    writeCount = await bulkCreateInParallel(
+      created,
+      (chunk) => base44.asServiceRole.entities.Mineral.bulkCreate(chunk),
+      25,
+    );
   }
 
   return Response.json({
-    created: dryRun ? 0 : created.length,
+    created: writeCount,
     skipped: slice.length - created.length - errors.length,
     errors, sample: created.slice(0, 3),
     letter, offset, nextOffset: offset + limit,
