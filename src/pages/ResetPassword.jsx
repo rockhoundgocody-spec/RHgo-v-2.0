@@ -6,7 +6,10 @@ import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const resetToken = searchParams.get("token");
+  // Base44's reset email links to /reset-password; accept the token under any
+  // of the names the platform has used.
+  const resetToken =
+    searchParams.get("token") || searchParams.get("reset_token") || searchParams.get("resetToken");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
