@@ -4,7 +4,7 @@ rhgo.me {
   encode gzip zstd
   # Match the original URL before the SPA fallback rewrites it to index.html.
   # Keep private routes aligned with Layout, AdminRoute, and the auth screens.
-  @privateRoutes path_regexp privateRoutes (?i)^/(explore|admin|settings|profile|collection|collections|vault|companion|quests|badges|market|community|oauth|connect|dev|paywall|private-log|compare|chronolith|specimen|expedition|expeditions|dashboard|leaderboard|onboarding|forgot-password|reset-password|login|register|auth)(/|$)
+  @privateRoutes path_regexp privateRoutes (?i)^/(explore|admin|settings|profile|collection|collections|vault|companion|quests|badges|market|community|oauth|connect|dev|paywall|private-log|compare|chronolith|specimen|expedition|expeditions|dashboard|leaderboard|onboarding|forgot-password|new-password|reset-password|signin|login|register|auth)(/|$)
   header @privateRoutes X-Robots-Tag "noindex, nofollow"
 
   try_files {path} /index.html
