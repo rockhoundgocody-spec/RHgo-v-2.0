@@ -84,7 +84,7 @@ const RouteFallback = () => (
 /** Legacy /auth (purple wall) → canonical Login, keep query (from_url/next). */
 function AuthToLoginRedirect() {
   const { search, hash } = window.location;
-  return <Navigate to={`/login${search}${hash}`} replace />;
+  return <Navigate to={`/signin${search}${hash}`} replace />;
 }
 
 /**
@@ -109,11 +109,16 @@ const AuthenticatedApp = () => {
       return (
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            {/* /signin is canonical: Base44 hosting reserves /login on the app domain and
+            serves its own page there, so a full page load of /login never reaches us.
+            The /login route stays for in-app navigation and old bookmarks. */}
+        <Route path="/signin" element={<Login />} />
+        <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth" element={<AuthToLoginRedirect />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/new-password" element={<ResetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
@@ -141,10 +146,15 @@ const AuthenticatedApp = () => {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
+        {/* /signin is canonical: Base44 hosting reserves /login on the app domain and
+            serves its own page there, so a full page load of /login never reaches us.
+            The /login route stays for in-app navigation and old bookmarks. */}
+        <Route path="/signin" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth" element={<AuthToLoginRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/new-password" element={<ResetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/pricing" element={<Pricing />} />
