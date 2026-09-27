@@ -321,9 +321,14 @@ const HANDLERS = {
     // Append-only: an online deep result supersedes prior rows for the same find, never overwrites them.
     if (p.tier === 'online_deep') {
       const prior = await ctx.entities.SyncIdResult.filter({ owner_email: ctx.ownerEmail, find_client_id: p.find_id, is_superseded: false });
-      for (const r of prior) {
-        const upd = await ctx.entities.SyncIdResult.update(r.id, { is_superseded: true });
-        ctx.touched.push(upd || r);
+      if (prior.length > 0) {
+        const updated = await Promise.all(
+          prior.map(async (r) => {
+            const upd = await ctx.entities.SyncIdResult.update(r.id, { is_superseded: true });
+            return upd || r;
+          })
+        );
+        ctx.touched.push(...updated);
       }
     }
     const row = await ctx.entities.SyncIdResult.create({
