@@ -21,3 +21,9 @@
 **Learning:** Unsanitized string inputs containing URL query parameters or control characters (e.g. `lat = "45.5&admin=1"`) could alter outgoing request URL structures or trigger malformed external API calls.
 
 **Prevention:** Parse coordinates to numbers, verify `Number.isFinite(...)`, and enforce valid geographic ranges (`[-90, 90]` for latitude, `[-180, 180]` for longitude) before embedding coordinates into external API URLs.
+
+## 2025-05-18 - Non-Extractable Web Crypto Key Storage in IndexedDB
+
+**Vulnerability:** Raw AES-GCM 256-bit encryption keys were exported to Base64 strings and stored in cleartext in `localStorage` alongside the encrypted offline queue data, rendering the encryption ineffective against XSS or local storage inspection.
+**Learning:** `localStorage` is cleartext storage accessible to all JS running in origin and cannot securely hold raw symmetric key material. Web Crypto `CryptoKey` objects created with `extractable: false` cannot be exported to raw bytes, but can be persisted securely in IndexedDB via structured cloning.
+**Prevention:** Always create Web Crypto keys with `extractable: false` and persist key handles in IndexedDB (or retain in memory) instead of exporting raw key bytes to `localStorage`.

@@ -27,6 +27,7 @@ import {
   saveQueue,
   flushQueue,
   getQueueLength,
+  _resetQueueStateForTesting,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
@@ -45,6 +46,9 @@ describe("offlineQueue AES-GCM encryption", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    if (typeof _resetQueueStateForTesting === "function") {
+      _resetQueueStateForTesting();
+    }
   });
 
   it("persists items encrypted in localStorage", async () => {
@@ -142,5 +146,31 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(flushResult.remaining).toBe(0);
     expect(getQueueLength()).toBe(0);
     expect(base44.entities.Specimen.create).toHaveBeenCalledWith({ mineral_name: "Fluorite" });
+  });
+  it("never stores raw encryption keys in localStorage", async () => {
+    base44.entities.Specimen.create.mockRejectedValueOnce(new TypeError("Network error"));
+    await queueWrite({ entity: "Specimen", op: "create", data: { mineral_name: "Beryl" } });
+
+    // Encryption key must NOT be stored in localStorage under rh-offline-queue-key-v1
+    expect(localStorage.getItem("rh-offline-queue-key-v1")).toBeNull();
+  });
+
+  it("purges legacy cleartext keys from localStorage on initialization", async () => {
+    // Simulate a legacy raw key stored in localStorage
+    const sampleRawKey = new Uint8Array(32);
+    let binary = "";
+    for (let i = 0; i < sampleRawKey.length; i++) {
+      binary += String.fromCharCode(sampleRawKey[i]);
+    }
+    const legacyBase64Key = btoa(binary);
+    localStorage.setItem("rh-offline-queue-key-v1", legacyBase64Key);
+
+    expect(localStorage.getItem("rh-offline-queue-key-v1")).toBe(legacyBase64Key);
+
+    // Performing an offline queue write or key load should purge the legacy cleartext key from localStorage
+    base44.entities.Specimen.create.mockRejectedValueOnce(new TypeError("Network error"));
+    await queueWrite({ entity: "Specimen", op: "create", data: { mineral_name: "Garnet" } });
+
+    expect(localStorage.getItem("rh-offline-queue-key-v1")).toBeNull();
   });
 });
