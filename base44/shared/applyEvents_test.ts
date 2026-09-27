@@ -33,7 +33,7 @@ function createMockEntities(delayMs = 10) {
           return Promise.resolve(rows);
         },
         create: (data: Row) => {
-          const row = { id: `ledger_${Math.random()}`, ...data };
+          const row = { ...data, id: `ledger_${Math.random()}` };
           tables.SyncEventLedger.push(row);
           return Promise.resolve(row);
         },
@@ -56,7 +56,7 @@ function createMockEntities(delayMs = 10) {
           return Promise.resolve(rows);
         },
         create: (data: Row) => {
-          const row = { id: `idres_${Math.random()}`, ...data };
+          const row = { ...data, id: `idres_${Math.random()}` };
           tables.SyncIdResult.push(row);
           return Promise.resolve(row);
         },
