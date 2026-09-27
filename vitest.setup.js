@@ -1,8 +1,10 @@
-// Under jsdom, @vitejs/plugin-react's Fast Refresh wrapper throws "can't detect
-// preamble" unless the preamble flag the dev server normally injects is present.
-// Tests never hot-reload, so declaring it installed is enough.
-globalThis.__vite_plugin_react_preamble_installed__ = true;
+// Under jsdom, @vitejs/plugin-react wraps every component module in a Fast
+// Refresh header that throws "can't detect preamble" unless the dev server's
+// refresh hooks are on `window`. Tests never hot-reload, so no-op stubs are
+// enough to let component modules import.
 if (typeof globalThis.window !== 'undefined') {
+  globalThis.window.$RefreshReg$ = globalThis.window.$RefreshReg$ || (() => {});
+  globalThis.window.$RefreshSig$ = globalThis.window.$RefreshSig$ || (() => (type) => type);
   globalThis.window.__vite_plugin_react_preamble_installed__ = true;
 }
 
