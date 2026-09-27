@@ -429,16 +429,7 @@ export default function SpecimenDetail() {
                     <div className="text-[9px] uppercase tracking-[0.2em] text-white/30 mb-2 font-semibold">AI Candidates</div>
                     <div className="space-y-1.5">
                       {specimen.ai_candidates.slice(0, 4).map((c, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full transition-all"
-                              style={{ width: `${((c.confidence || c.score || 0) * 100)}%`, background: rarity.color }} />
-                          </div>
-                          <span className="text-[10px] text-white/60 w-24 truncate text-right">{c.name || c.label}</span>
-                          <span className="text-[9px] text-white/30 w-8 text-right">
-                            {((c.confidence || c.score || 0) * 100).toFixed(0)}%
-                          </span>
-                        </div>
+                        <AiCandidateRow key={i} candidate={c} color={rarity.color} />
                       ))}
                     </div>
                   </div>
@@ -520,6 +511,28 @@ function NextStep({ text }) {
     <div className="flex items-center gap-1.5 text-[10px] text-white/40">
       <span className="w-1 h-1 rounded-full bg-white/20 shrink-0" />
       {text}
+    </div>
+  );
+}
+
+export function AiCandidateRow({ candidate, color }) {
+  const score = candidate.confidence || candidate.score || 0;
+  const percentage = (score * 100).toFixed(0);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${score * 100}%`, background: color }}
+        />
+      </div>
+      <span className="text-[10px] text-white/60 w-24 truncate text-right">
+        {candidate.name || candidate.label}
+      </span>
+      <span className="text-[9px] text-white/30 w-8 text-right">
+        {percentage}%
+      </span>
     </div>
   );
 }
