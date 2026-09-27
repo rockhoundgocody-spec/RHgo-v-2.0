@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const name = (user.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
 
     // 1. User's collection profile — group specimen counts by mineral name
-    const specimens = await base44.entities.Specimen.list('-found_date', 200);
+    const specimens = await base44.entities.Specimen.list('-found_date', 200, 0, ['id', 'mineral_name']);
     const collection: Record<string, number> = {};
     for (const s of specimens) {
       const m = (s.mineral_name || '').trim();
@@ -46,7 +46,9 @@ Deno.serve(async (req) => {
       : 'No specimens logged yet.';
 
     // 2. Nearby hotspots — public read, sort by distance if geo available
-    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
+    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200, 0, [
+      'id', 'name', 'state', 'lat', 'lng', 'minerals', 'difficulty', 'trust_score', 'land_type'
+    ]);
     let scored;
     if (lat != null && lng != null) {
       const userLatRad = lat * DEG_TO_RAD;
@@ -97,11 +99,9 @@ Deno.serve(async (req) => {
     const nearby = scored.slice(0, 8);
 
     // 3. Minerals available nearby that the user has NOT collected yet
-    const nearbyMinerals = new Set<string>();
-    for (const h of nearby) {
-      for (const m of h.minerals) nearbyMinerals.add(m);
-    }
-    const uncollectedNearby = [...nearbyMinerals].filter(m => !collection[m]);
+    const uncollectedNearby = [
+      ...new Set(nearby.flatMap(h => h.minerals || []))
+    ].filter(m => !collection[m]);
 
     const hotspotContext = nearby.map(h =>
       `${h.name}${h.state ? ', ' + h.state : ''}` +

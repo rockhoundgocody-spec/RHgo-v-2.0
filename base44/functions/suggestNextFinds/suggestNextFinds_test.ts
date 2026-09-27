@@ -41,6 +41,37 @@ Deno.test('distance calculation correctness', () => {
   assertEquals(Math.round(distFast), Math.round(distOrig));
 });
 
+Deno.test('uncollectedNearby flatMap extraction correctness', () => {
+  const nearby = [
+    { name: 'Spot 1', minerals: ['Lake Superior Agate', 'Quartz', 'Jasper'] },
+    { name: 'Spot 2', minerals: ['Quartz', 'Amethyst', 'Copper'] },
+    { name: 'Spot 3', minerals: ['Copper', 'Datolite'] },
+    { name: 'Spot 4', minerals: undefined as unknown as string[] },
+  ];
+
+  const collection: Record<string, number> = {
+    'Lake Superior Agate': 3,
+    'Quartz': 1,
+  };
+
+  // Original nested loop
+  const nearbyMineralsOrig = new Set<string>();
+  for (const h of nearby) {
+    if (h.minerals) {
+      for (const m of h.minerals) nearbyMineralsOrig.add(m);
+    }
+  }
+  const uncollectedOrig = [...nearbyMineralsOrig].filter(m => !collection[m]);
+
+  // Refactored flatMap
+  const uncollectedFlatMap = [
+    ...new Set(nearby.flatMap(h => h.minerals || []))
+  ].filter(m => !collection[m]);
+
+  assertEquals(uncollectedFlatMap, ['Jasper', 'Amethyst', 'Copper', 'Datolite']);
+  assertEquals(uncollectedFlatMap, uncollectedOrig);
+});
+
 Deno.test('benchmark distance processing and sorting over hotspots', () => {
   // Generate 1000 synthetic hotspots
   const hotspots = Array.from({ length: 1000 }, (_, i) => ({
