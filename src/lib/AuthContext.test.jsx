@@ -328,12 +328,12 @@ describe('AuthContext', () => {
     });
 
     describe('navigateToLogin', () => {
-      it('sets window.location.href to /login', () => {
+      it('sets window.location.href to /signin', () => {
         const { contextValue } = renderProvider();
 
         contextValue.navigateToLogin();
 
-        expect(globalThis.window.location.href).toBe('/login');
+        expect(globalThis.window.location.href).toBe('/signin');
       });
     });
 

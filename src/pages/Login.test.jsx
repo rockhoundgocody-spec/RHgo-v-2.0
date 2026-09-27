@@ -6,8 +6,8 @@ beforeAll(async () => {
   globalThis.window = {
     location: {
       origin: 'https://rhgo.app',
-      href: 'https://rhgo.app/login',
-      pathname: '/login',
+      href: 'https://rhgo.app/signin',
+      pathname: '/signin',
       search: '',
       hash: '',
     },
@@ -44,7 +44,7 @@ describe('getLoginRedirectUrl', () => {
 
   it('rejects protocol-relative open redirect attempts (//evil.com)', () => {
     expect(getLoginRedirectUrl('//evil.com')).toBe('/profile');
-    expect(getLoginRedirectUrl('//attacker.com/login')).toBe('/profile');
+    expect(getLoginRedirectUrl('//attacker.com/signin')).toBe('/profile');
     expect(getLoginRedirectUrl('///evil.com')).toBe('/profile');
   });
 

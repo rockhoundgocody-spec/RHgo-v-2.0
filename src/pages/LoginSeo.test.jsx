@@ -34,12 +34,12 @@ describe('Login robots directive', () => {
     root = createRoot(container);
     router = createMemoryRouter([
       { path: '/auth', element: <Auth /> },
-      { path: '/login', element: <Login /> },
+      { path: '/signin', element: <Login /> },
       { path: '/about', element: <p>Public page</p> },
     ], { initialEntries: ['/auth?next=%2Fcollection#signin'] });
 
     await act(async () => root.render(<RouterProvider router={router} />));
-    expect(router.state.location.pathname).toBe('/login');
+    expect(router.state.location.pathname).toBe('/signin');
     expect(router.state.location.search).toBe('?next=%2Fcollection');
     expect(router.state.location.hash).toBe('#signin');
     expect(document.querySelectorAll('meta[name="robots"]')).toHaveLength(1);

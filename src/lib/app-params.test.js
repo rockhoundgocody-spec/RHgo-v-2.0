@@ -66,7 +66,7 @@ describe('getSafeRedirectUrl', () => {
 
 	it('blocks protocol-relative open redirect vectors (//evil.com)', () => {
 		expect(getSafeRedirectUrl('//evil.com')).toBe('/');
-		expect(getSafeRedirectUrl('//attacker.com/login')).toBe('/');
+		expect(getSafeRedirectUrl('//attacker.com/signin')).toBe('/');
 		expect(getSafeRedirectUrl('///evil.com')).toBe('/');
 	});
 

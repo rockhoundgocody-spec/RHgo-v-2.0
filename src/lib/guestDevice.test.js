@@ -86,7 +86,7 @@ describe('guestDevice', () => {
   });
 
   it('builds a login return URL that keeps /scan', () => {
-    expect(guestLoginUrl('/scan')).toBe('/login?from_url=%2Fscan');
+    expect(guestLoginUrl('/scan')).toBe('/signin?from_url=%2Fscan');
   });
 
   it('ignores a corrupt quota blob', () => {
