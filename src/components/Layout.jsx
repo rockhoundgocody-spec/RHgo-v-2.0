@@ -53,6 +53,13 @@ export function getActiveTab(pathname) {
   return '/';
 }
 
+/**
+ * Renders admin and documentation navigation with the profile drawer.
+ * @param {Object} props - Header properties.
+ * @param {string} props.pathname - Current route path used for the section label.
+ * @param {boolean} props.isAdmin - Whether to show the admin navigation link.
+ * @returns {React.ReactElement} The navigation header.
+ */
 function AdminHeader({ pathname, isAdmin }) {
   const links = isAdmin ? secondaryRoutes : secondaryRoutes.filter((r) => r.to !== '/admin');
   return (
@@ -144,14 +151,21 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion })
   );
 }
 
+/**
+ * Renders nested routes with shared navigation and authenticated user overlays.
+ * Sets route indexing rules and redirects signed-out visitors from protected
+ * routes to login, preserving the requested path and query string.
+ * @returns {React.ReactElement} The application shell or a login redirect.
+ */
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, authChecked } = useAuth();
   const reduceMotion = useReducedMotion();
   // Most Layout routes are private. A few marketing/field pages stay indexable.
+  // /explore stays noindex until a real guest map ships (server noindex + sitemap omit).
   const indexableUnderLayout = [
-    '/explore', '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact',
+    '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact', '/scan', '/docs',
   ].some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   useSeoRobots(indexableUnderLayout);
 
@@ -188,7 +202,8 @@ export default function Layout() {
   // Logged-out visitor on a protected route → straight to login (no spinner).
   if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
+    const q = encodeURIComponent(from);
+    return <Navigate to={`/login?from_url=${q}&next=${q}`} replace />;
   }
 
   return (

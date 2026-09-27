@@ -1,6 +1,12 @@
-:80 {
+# A domain address enables automatic TLS and HTTP-to-HTTPS redirects.
+rhgo.me {
   root * /srv
   encode gzip zstd
+  # Match the original URL before the SPA fallback rewrites it to index.html.
+  # Keep private routes aligned with Layout, AdminRoute, and the auth screens.
+  @privateRoutes path_regexp privateRoutes (?i)^/(explore|admin|settings|profile|collection|collections|vault|companion|quests|badges|market|community|oauth|connect|dev|paywall|private-log|compare|chronolith|specimen|expedition|expeditions|dashboard|leaderboard|onboarding|forgot-password|reset-password|login|register|auth)(/|$)
+  header @privateRoutes X-Robots-Tag "noindex, nofollow"
+
   try_files {path} /index.html
   file_server
 
@@ -8,5 +14,8 @@
     X-Content-Type-Options nosniff
     X-Frame-Options DENY
     Referrer-Policy strict-origin-when-cross-origin
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), payment=(self), usb=(), magnetometer=(), gyroscope=()"
+    Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://media.base44.com https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://unpkg.com https:; worker-src 'self' blob:; frame-src 'self' https:; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
   }
 }

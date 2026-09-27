@@ -1,20 +1,21 @@
 import { useEffect } from 'react';
 
 const ROBOTS_META_ID = 'robots-meta';
-const SAFE_DEFAULT = 'noindex, nofollow';
+const PUBLIC_DEFAULT = 'index, follow';
+const PRIVATE_DEFAULT = 'noindex, nofollow';
 
 /**
  * Controls the <meta name="robots"> tag for the current route.
  *
- * index.html ships a default `noindex, nofollow` so every authenticated
- * app screen (Hub, Explore, Scan, Collection, Profile, Admin, …) stays
- * out of search results. Call this hook with `true` only on public
- * content pages that SHOULD be crawlable (Landing, Privacy, Terms, Pricing).
+ * index.html ships a default `index, follow` so public marketing pages
+ * (Landing, Scan, Demo, Pricing, About, Contact, legal) are crawlable
+ * without every page having to opt in. Call this hook with `false` on
+ * authenticated / private app screens so they stay out of search results.
  *
- * On unmount it restores the safe default so the next authenticated
- * route is never accidentally left indexable.
+ * On unmount it restores the public default so the next marketing route
+ * is never accidentally left noindex.
  */
-export function useSeoRobots(indexable = false) {
+export function useSeoRobots(indexable = true) {
   useEffect(() => {
     let tag = document.getElementById(ROBOTS_META_ID);
     if (!tag) {
@@ -23,7 +24,7 @@ export function useSeoRobots(indexable = false) {
       tag.id = ROBOTS_META_ID;
       document.head.appendChild(tag);
     }
-    tag.content = indexable ? 'index, follow' : SAFE_DEFAULT;
-    return () => { tag.content = SAFE_DEFAULT; };
+    tag.content = indexable ? PUBLIC_DEFAULT : PRIVATE_DEFAULT;
+    return () => { tag.content = PUBLIC_DEFAULT; };
   }, [indexable]);
 }

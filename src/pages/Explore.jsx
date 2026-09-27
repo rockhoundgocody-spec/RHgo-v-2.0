@@ -279,7 +279,7 @@ export default function Explore() {
     return minerals;
   }, [hotspots, userLocation]);
 
-  useSeoRobots(true);
+  useSeoRobots(false);
   useSeoMeta(
     'Find minerals near you - RockHound-GO',
     seoMinerals.length > 0

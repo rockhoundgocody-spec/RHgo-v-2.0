@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useSeoRobots } from "@/lib/useSeoRobots";
 import { useAuth } from "@/lib/AuthContext";
 import { Loader2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -13,6 +14,7 @@ export function getLoginRedirectUrl(rawFromUrl) {
 }
 
 export default function Login() {
+  useSeoRobots(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);

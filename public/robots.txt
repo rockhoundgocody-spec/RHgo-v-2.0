@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
 Allow: /scan
-Allow: /explore
 Allow: /demo
 Allow: /pricing
 Allow: /agate-guide
@@ -14,31 +13,5 @@ Allow: /privacy-policy
 Allow: /terms
 Allow: /docs
 
-Disallow: /admin
-Disallow: /settings
-Disallow: /profile
-Disallow: /collection
-Disallow: /collections
-Disallow: /vault
-Disallow: /companion
-Disallow: /quests
-Disallow: /badges
-Disallow: /market
-Disallow: /community
-Disallow: /oauth
-Disallow: /connect
-Disallow: /dev
-Disallow: /paywall
-Disallow: /private-log
-Disallow: /compare
-Disallow: /chronolith
-Disallow: /specimen
-Disallow: /expedition
-Disallow: /expeditions
-Disallow: /dashboard
-Disallow: /leaderboard
-Disallow: /onboarding
-Disallow: /forgot-password
-Disallow: /reset-password
-
+# Private routes stay crawlable so crawlers can read the X-Robots-Tag noindex header.
 Sitemap: https://rhgo.me/sitemap.xml
