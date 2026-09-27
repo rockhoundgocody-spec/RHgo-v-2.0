@@ -1,16 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Gem, MapPin, Mountain } from 'lucide-react';
 import { useGoogleMapsScript } from '@/lib/useGoogleMapsScript';
+import { useGoogleMap } from '@/lib/useGoogleMap';
+import { rarityColor, HOTSPOT_COLOR } from '@/lib/googleMapStyles';
 import { getPinnedSpecimens } from '@/components/collection/mapSpecimens';
-
-const rarityColor = {
-  common: '#a0a0b0',
-  uncommon: '#6ee7b7',
-  rare: '#7dd3fc',
-  legendary: '#c084fc',
-};
-
-const HOTSPOT_COLOR = '#a78bfa'; // amethyst-glow
 
 function MapLoadingState() {
   return (
@@ -102,9 +95,6 @@ function SelectedPinCard({ pin, onClose }) {
 }
 
 export default function ExpeditionMapView({ specimens = [], hotspots = [] }) {
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
   const [selectedPin, setSelectedPin] = useState(null);
   const { mapsReady, apiKey, loadError } = useGoogleMapsScript();
 
@@ -133,72 +123,39 @@ export default function ExpeditionMapView({ specimens = [], hotspots = [] }) {
     })),
   ], [pinnedSpecimens, pinnedHotspots]);
 
-  // Init map
-  useEffect(() => {
-    if (!mapsReady || !mapRef.current || mapInstanceRef.current) return;
-    const center = allPins.length
-      ? { lat: allPins[0].lat, lng: allPins[0].lng }
-      : { lat: 39.5, lng: -98.35 };
-    const map = new window.google.maps.Map(mapRef.current, {
-      center,
-      zoom: allPins.length === 1 ? 10 : 5,
-      mapTypeId: 'terrain',
-      disableDefaultUI: true,
-      zoomControl: true,
-      styles: darkMapStyle,
-    });
-    mapInstanceRef.current = map;
-  }, [mapsReady, allPins]);
-
-  // Drop markers
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapsReady) return;
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = [];
-    if (!allPins.length) return;
-
-    const bounds = new window.google.maps.LatLngBounds();
-    allPins.forEach((pin) => {
-      const isSpecimen = pin.__type === 'specimen';
-      const marker = new window.google.maps.Marker({
-        position: { lat: pin.lat, lng: pin.lng },
-        map: mapInstanceRef.current,
-        title: pin.title,
-        icon: isSpecimen
-          ? {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 9,
-              fillColor: pin.color,
-              fillOpacity: 0.95,
-              strokeColor: '#fff',
-              strokeWeight: 1.5,
-            }
-          : {
-              path: 'M 0 -10 L 8 -2 L 0 10 L -8 -2 Z', // diamond
-              scale: 1.1,
-              fillColor: pin.color,
-              fillOpacity: 0.9,
-              strokeColor: '#fff',
-              strokeWeight: 1.2,
-            },
-      });
-      marker.addListener('click', () => setSelectedPin(pin));
-      markersRef.current.push(marker);
-      bounds.extend({ lat: pin.lat, lng: pin.lng });
-    });
-
-    if (allPins.length > 1) {
-      mapInstanceRef.current.fitBounds(bounds, { top: 48, right: 24, bottom: 48, left: 24 });
-    }
-
-    return () => {
-      markersRef.current.forEach((marker) => {
-        window.google.maps.event?.clearInstanceListeners(marker);
-        marker.setMap(null);
-      });
-      markersRef.current = [];
+  const getMarkerOptions = useCallback((pin) => {
+    const isSpecimen = pin.__type === 'specimen';
+    return {
+      icon: isSpecimen
+        ? {
+            path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
+            scale: 9,
+            fillColor: pin.color,
+            fillOpacity: 0.95,
+            strokeColor: '#fff',
+            strokeWeight: 1.5,
+          }
+        : {
+            path: 'M 0 -10 L 8 -2 L 0 10 L -8 -2 Z', // diamond
+            scale: 1.1,
+            fillColor: pin.color,
+            fillOpacity: 0.9,
+            strokeColor: '#fff',
+            strokeWeight: 1.2,
+          },
     };
-  }, [mapsReady, allPins]);
+  }, []);
+
+  const handlePinSelect = useCallback((pin) => {
+    setSelectedPin(pin);
+  }, []);
+
+  const { mapRef } = useGoogleMap({
+    mapsReady,
+    pins: allPins,
+    getMarkerOptions,
+    onPinSelect: handlePinSelect,
+  });
 
   if (loadError) return <MapErrorState />;
   if (!apiKey) return <MapLoadingState />;
@@ -213,16 +170,3 @@ export default function ExpeditionMapView({ specimens = [], hotspots = [] }) {
     </div>
   );
 }
-
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8080a0' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5a' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#16213e' }] },
-];
