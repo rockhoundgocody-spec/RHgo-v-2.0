@@ -11,6 +11,13 @@
  * No user context (scheduled trigger) — all operations use asServiceRole.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import {
+  chunkValues,
+  collectPages,
+  findUnvisitedHotspots,
+  groupSpecimensByUserId,
+  type SpecimenPartial,
+} from './operations.ts';
 
 function getExpiry(type: string): string {
   const d = new Date();
@@ -41,8 +48,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── 1. List all users ──
+    // ── 1. List users and hotspots once outside loop ──
     const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
+
+    // ── 2. Batch load specimens for all users to eliminate N+1 queries ──
+    const userIds = [...new Set(users.map((u) => u.id).filter(Boolean))];
+    const specimensByUserId = new Map<string, SpecimenPartial[]>();
+
+    for (const batchUserIds of chunkValues(userIds, 100)) {
+      const specimens = await collectPages((limit, skip) =>
+        base44.asServiceRole.entities.Specimen.filter(
+          { created_by_id: { $in: batchUserIds } },
+          '-created_date',
+          limit,
+          skip,
+          ['id', 'created_by_id', 'created_date', 'mineral_name', 'lat', 'lng'],
+        )
+      );
+
+      const grouped = groupSpecimensByUserId(specimens);
+      for (const [userId, userSpecimens] of grouped) {
+        const existing = specimensByUserId.get(userId) || [];
+        // Retain newest-first order and cap at 50 specimens per user (matching original per-user query limit)
+        specimensByUserId.set(userId, existing.concat(userSpecimens).slice(0, 50));
+      }
+    }
 
     let processed = 0;
     let notified = 0;
@@ -51,12 +82,8 @@ Deno.serve(async (req) => {
 
     for (const user of users) {
       try {
-        // ── 2. Load user's specimens → collection gaps + approximate location ──
-        const specimens = await base44.asServiceRole.entities.Specimen.filter(
-          { created_by_id: user.id },
-          '-created_date',
-          50,
-        );
+        // ── 3. Load user's specimens from batch map → collection gaps + approximate location ──
+        const specimens = specimensByUserId.get(user.id) || [];
         const collectedMinerals = [...new Set(specimens.map((s) => s.mineral_name).filter(Boolean))];
         const collectedSet = new Set(collectedMinerals.map((m) => m.toLowerCase()));
 
@@ -65,29 +92,8 @@ Deno.serve(async (req) => {
         const userLat = lastWithCoords?.lat;
         const userLng = lastWithCoords?.lng;
 
-        // ── 3. hotspot_manager logic: find nearby unvisited zones ──
-        const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
-
-        // Unvisited = hotspot has at least one mineral the user hasn't collected
-        let unvisited = hotspots.filter((h) => {
-          if (!h.minerals || h.minerals.length === 0) return false;
-          return h.minerals.some((m) => !collectedSet.has(m.toLowerCase()));
-        });
-
-        // Sort by distance if we have a user location
-        if (userLat != null && userLng != null) {
-          unvisited = unvisited
-            .map((h) => ({
-              ...h,
-              _dist: h.lat != null && h.lng != null ? Math.hypot(h.lat - userLat, h.lng - userLng) : 999,
-            }))
-            .sort((a, b) => {
-              const distA = ('_dist' in a) ? (a as { _dist: number })._dist : 999;
-              const distB = ('_dist' in b) ? (b as { _dist: number })._dist : 999;
-              return distA - distB;
-            });
-        }
-
+        // ── 4. hotspot_manager logic: find nearby unvisited zones using shared hotspots ──
+        const unvisited = findUnvisitedHotspots(hotspots, collectedSet, userLat, userLng);
         const topUnvisited = unvisited.slice(0, 8);
 
         // Skip users with no unvisited zones and no specimens (nothing to tailor)
@@ -96,7 +102,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // ── 4. generateFieldMissions logic: create 3 tailored Quests ──
+        // ── 5. generateFieldMissions logic: create 3 tailored Quests ──
         const locationCtx = userLat != null
           ? `User is near coordinates ${userLat.toFixed(3)}, ${userLng.toFixed(3)}.`
           : 'Location unknown.';
@@ -162,7 +168,7 @@ Return exactly 3 missions as JSON.`;
 
         const missions = result?.missions || [];
 
-        // ── 5. Create Quest records ──
+        // ── 6. Create Quest records ──
         for (const m of missions) {
           await base44.asServiceRole.entities.Quest.create({
             owner_email: user.email,
@@ -180,7 +186,7 @@ Return exactly 3 missions as JSON.`;
           });
         }
 
-        // ── 6. Push notification to device ──
+        // ── 7. Push notification to device ──
         if (missions.length > 0) {
           try {
             await base44.asServiceRole.integrations.Core.SendPushNotification({
@@ -195,13 +201,13 @@ Return exactly 3 missions as JSON.`;
             notified++;
           } catch (pushErr) {
             // Push fails if user has no native device registered — log and continue
-            console.log(`Push failed for ${user.email}: ${pushErr.message}`);
+            console.log(`Push failed for ${user.email}: ${(pushErr as Error).message}`);
           }
         }
 
         processed++;
       } catch (userErr) {
-        console.log(`Failed for ${user.email}: ${userErr.message}`);
+        console.log(`Failed for ${user.email}: ${(userErr as Error).message}`);
         errored++;
       }
     }
@@ -216,6 +222,6 @@ Return exactly 3 missions as JSON.`;
     });
   } catch (error) {
     console.error('weeklyFieldMissions fatal error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 });
