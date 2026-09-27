@@ -7,7 +7,7 @@ const supabaseUrl =
 const supabaseAnon =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_--znZ5PXuzO3fcxOh-sDhA_xcueq3uH';
+  '';
 
 export const supabase =
   useSupabase && supabaseUrl && supabaseAnon
