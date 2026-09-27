@@ -321,7 +321,7 @@ export default function Onboarding() {
 
       {/* Skip */}
       {!isLast && (
-        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/55 text-sm hover:text-white/85 transition z-10">
+        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/55 text-sm hover:text-white/85 transition z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-md px-2 py-1">
           Skip
         </button>
       )}
