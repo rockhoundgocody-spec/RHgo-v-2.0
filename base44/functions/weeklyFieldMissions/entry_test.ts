@@ -1,8 +1,19 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 
+interface Mission {
+  title: string;
+  description: string;
+  quest_type?: string;
+  target_count?: number;
+  xp_reward?: number;
+  target_rarity?: string | null;
+  target_mineral?: string | null;
+  clover_message?: string;
+}
+
 Deno.test('weeklyFieldMissions: maps missions correctly for bulkCreate', () => {
   const user = { email: 'rockhound@example.com' };
-  const missions = [
+  const missions: Mission[] = [
     {
       title: 'Find Quartz',
       description: 'Find a specimen of quartz',
@@ -67,7 +78,7 @@ Deno.test('weeklyFieldMissions: uses bulkCreate to insert all missions in a sing
     },
   };
 
-  const missions = [
+  const missions: Mission[] = [
     { title: 'Mission 1', description: 'Desc 1', quest_type: 'daily' },
     { title: 'Mission 2', description: 'Desc 2', quest_type: 'weekly' },
     { title: 'Mission 3', description: 'Desc 3', quest_type: 'monthly' },
