@@ -70,6 +70,7 @@ npm install
 npm run build
 docker compose up -d --build
 ```
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/rockhoundgocody-spec/RHgo-v-2.0?utm_source=oss&utm_medium=github&utm_campaign=rockhoundgocody-spec%2FRHgo-v-2.0&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## Build doctrine
 
