@@ -6,7 +6,7 @@ import ResetPassword from './ResetPassword.jsx';
 
 vi.mock('@/api/base44Client', () => ({ base44: { auth: {} } }));
 vi.mock('@/components/AuthLayout', () => ({
-  default: ({ title, children }) => <div><h1>{title}</h1>{children}</div>,
+  default: ({ title, children, footer }) => <div><h1>{title}</h1>{children}{footer}</div>,
 }));
 
 const render = (url) => renderToStaticMarkup(
