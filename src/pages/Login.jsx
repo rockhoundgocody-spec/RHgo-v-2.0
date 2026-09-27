@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useSeoRobots } from "@/lib/useSeoRobots";
 import { useAuth } from "@/lib/AuthContext";
 import { Loader2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import AuthLayout from "@/components/AuthLayout";
 import { clearGateChoice } from "@/lib/gateStorage";
 import { getPostAuthPath, persistBase44Session, readIntendedPath, withNext } from "@/lib/authRedirect";
+import { useSeoRobots } from "@/lib/useSeoRobots";
 
 export function getLoginRedirectUrl(rawFromUrl) {
   return getPostAuthPath(rawFromUrl);

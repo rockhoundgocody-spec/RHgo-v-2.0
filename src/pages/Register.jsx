@@ -205,6 +205,12 @@ export default function Register() {
         <GoogleIcon className="w-4 h-4" />
         Sign in with Google
       </button>
+      <p className="text-center text-[11px] text-[#5C6B74] mt-4 leading-relaxed">
+        By creating an account you agree to our{" "}
+        <Link to="/terms" className="text-[#2EE6A6] underline-offset-2 hover:underline">Terms</Link>
+        {" "}and{" "}
+        <Link to="/privacy-policy" className="text-[#2EE6A6] underline-offset-2 hover:underline">Privacy Policy</Link>.
+      </p>
     </AuthLayout>
   );
 }
