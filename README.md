@@ -1,4 +1,4 @@
-# ROCKHOUND-GO V2.5 — ONE-LOCATION OWN-SERVER DEPLOY
+# ROCKHOUND-GO — ONE-LOCATION OWN-SERVER DEPLOY
 
 RockHound-GO is being consolidated into one controlled deploy target: **one repo, one build, one URL, one server path**.
 
