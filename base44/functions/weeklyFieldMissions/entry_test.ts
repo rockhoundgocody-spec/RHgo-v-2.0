@@ -57,10 +57,10 @@ Deno.test('weeklyFieldMissions: uses bulkCreate to insert all missions in a sing
     asServiceRole: {
       entities: {
         Quest: {
-          bulkCreate: async (records: unknown[]) => {
+          bulkCreate: (records: unknown[]) => {
             bulkCreateCallCount++;
             bulkCreatedRecords = records;
-            return records;
+            return Promise.resolve(records);
           },
         },
       },
