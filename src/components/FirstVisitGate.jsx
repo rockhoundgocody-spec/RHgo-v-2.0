@@ -7,7 +7,7 @@ import GoogleIcon from '@/components/GoogleIcon';
 
 /**
  * FirstVisitGate — first screen for unauthenticated visitors on `/`.
- * Prefer real <Link> to /login so sign-in is never blocked by gate state.
+ * Prefer real <Link> to /signin so sign-in is never blocked by gate state.
  */
 export default function FirstVisitGate({ onChoice }) {
   const [name, setName] = useState('');
@@ -130,7 +130,7 @@ export default function FirstVisitGate({ onChoice }) {
 
         {/* Hard navigation — never depends on gate callbacks */}
         <Link
-          to="/login"
+          to="/signin"
           onClick={() => {
             try { localStorage.setItem('rhgo_gate_choice', 'returning'); } catch { /* */ }
           }}

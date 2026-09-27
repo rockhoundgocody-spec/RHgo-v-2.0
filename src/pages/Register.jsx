@@ -95,7 +95,7 @@ export default function Register() {
         footer={
           <>
             Already in?{" "}
-            <Link to={withNext("/login")} className="text-[#2EE6A6] font-semibold">
+            <Link to={withNext("/signin")} className="text-[#2EE6A6] font-semibold">
               Sign in
             </Link>
           </>
@@ -138,7 +138,7 @@ export default function Register() {
       footer={
         <>
           Already in?{" "}
-          <Link to={withNext("/login")} className="text-[#2EE6A6] font-semibold">
+          <Link to={withNext("/signin")} className="text-[#2EE6A6] font-semibold">
             Sign in
           </Link>
         </>

@@ -24,7 +24,7 @@ const OracleLiveOverlay = lazyPart(() => import('@/components/oracle/OracleLiveO
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
 // Layout routes a logged-out visitor may view. Everything else under the
-// Layout is protected and redirects to /login.
+// Layout is protected and redirects to /signin.
 const PUBLIC_LAYOUT_ROUTES = ['/explore', '/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
 export function isPublicLayoutRoute(pathname) {
   if (pathname === '/') return true;
@@ -203,7 +203,7 @@ export default function Layout() {
   if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
     const from = `${location.pathname}${location.search}`;
     const q = encodeURIComponent(from);
-    return <Navigate to={`/login?from_url=${q}&next=${q}`} replace />;
+    return <Navigate to={`/signin?from_url=${q}&next=${q}`} replace />;
   }
 
   return (

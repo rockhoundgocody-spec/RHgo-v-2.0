@@ -20,7 +20,7 @@ const IntroCinematic = React.lazy(() => import('@/components/hub/IntroCinematic.
  * HomeGate — unauthenticated `/` entry.
  * Authenticated users → Hub.
  * Everyone else sees FirstVisitGate (or a one-shot soft redirect to login/register).
- * Never permanently trap users away from /login.
+ * Never permanently trap users away from /signin.
  */
 export default function HomeGate() {
   const { isAuthenticated } = useAuth();
@@ -43,7 +43,7 @@ export default function HomeGate() {
 
     if (choice === 'returning') {
       try { sessionStorage.setItem(GATE_SESSION_REDIRECT_KEY, '1'); } catch { /* */ }
-      navigate('/login', { replace: true });
+      navigate('/signin', { replace: true });
     }
     // Do NOT auto-force /register on every visit — that blocked "I have an account".
   }, [isAuthenticated, navigate]);
@@ -62,7 +62,7 @@ export default function HomeGate() {
         localStorage.setItem(GATE_CHOICE_KEY, 'returning');
         sessionStorage.setItem(GATE_SESSION_REDIRECT_KEY, '1');
       } catch { /* */ }
-      navigate('/login');
+      navigate('/signin');
       return;
     }
     if (choice === 'guest') {

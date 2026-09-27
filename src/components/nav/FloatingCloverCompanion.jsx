@@ -17,7 +17,7 @@ export default function FloatingCloverCompanion() {
   const [expanded, setExpanded] = useState(false);
 
   const isHub = location.pathname === '/';
-  const isAdminOrDocs = ['/admin', '/docs', '/dev', '/login', '/register', '/onboarding'].some((p) =>
+  const isAdminOrDocs = ['/admin', '/docs', '/dev', '/signin', '/login', '/register', '/onboarding'].some((p) =>
     location.pathname.startsWith(p)
   );
 

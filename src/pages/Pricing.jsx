@@ -155,7 +155,7 @@ export default function Pricing() {
     // A subscription is credited to the signed-in account, so sign in first
     // and come straight back here.
     if (!user?.email) {
-      navigate(`/login?from_url=${encodeURIComponent('/pricing')}`);
+      navigate(`/signin?from_url=${encodeURIComponent('/pricing')}`);
       return;
     }
 
@@ -285,7 +285,7 @@ export default function Pricing() {
         </p>
         {!user && (
           <p className="text-white/30 text-xs mt-4">
-            <Link to="/login" className="text-white/60 hover:underline">Sign in</Link> to manage your subscription.
+            <Link to="/signin" className="text-white/60 hover:underline">Sign in</Link> to manage your subscription.
           </p>
         )}
       </div>

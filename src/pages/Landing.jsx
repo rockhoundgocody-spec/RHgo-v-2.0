@@ -79,7 +79,7 @@ export default function Landing() {
             <GoogleIcon className="w-4 h-4" /> Continue with Google
           </button>
           <Link
-            to="/login"
+            to="/signin"
             onClick={() => {
               try {
                 localStorage.setItem('rhgo_gate_choice', 'returning');

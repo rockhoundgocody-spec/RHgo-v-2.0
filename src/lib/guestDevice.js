@@ -265,7 +265,7 @@ export function takePendingGuestReport() {
 
 export function guestLoginUrl(returnPath = '/scan') {
   const path = returnPath.startsWith('/') ? returnPath : `/${returnPath}`;
-  return `/login?from_url=${encodeURIComponent(path)}`;
+  return `/signin?from_url=${encodeURIComponent(path)}`;
 }
 
 export async function persistGuestStorage() {

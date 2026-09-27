@@ -95,7 +95,7 @@ export default function OAuthConsent() {
           const encoded = encodeURIComponent(returnTo);
           redirecting = true; // keep the spinner while the browser navigates
           window.location.href =
-            (data.login_path || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            (data.login_path || "/signin") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         setInfo(data);
@@ -131,7 +131,7 @@ export default function OAuthConsent() {
           const returnTo = window.location.pathname + "?ctx=" + encodeURIComponent(ctx);
           const encoded = encodeURIComponent(returnTo);
           window.location.href =
-            ((info && info.login_path) || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            ((info && info.login_path) || "/signin") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         // These all come AFTER the single-use handle is atomically consumed

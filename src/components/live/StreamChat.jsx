@@ -27,7 +27,7 @@ export default function StreamChat({ streamId, me }) {
   const send = async () => {
     const body = draft.trim();
     if (!body || sending) return;
-    if (!me) { window.location.href = '/login'; return; }
+    if (!me) { window.location.href = '/signin'; return; }
     setSending(true);
     const created = await base44.entities.StreamMessage.create({
       stream_id: streamId,

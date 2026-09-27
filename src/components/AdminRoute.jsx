@@ -10,7 +10,7 @@ const DefaultFallback = () => (
 
 /**
  * AdminRoute — only renders children when the current user has role="admin".
- * Unauthenticated visitors are sent to /login with from_url preserved.
+ * Unauthenticated visitors are sent to /signin with from_url preserved.
  * Authenticated non-admins are sent to /.
  */
 export default function AdminRoute() {
@@ -22,7 +22,7 @@ export default function AdminRoute() {
   if (!isAuthenticated) {
     const from = `${location.pathname}${location.search}`;
     const q = encodeURIComponent(from);
-    return <Navigate to={`/login?from_url=${q}&next=${q}`} replace />;
+    return <Navigate to={`/signin?from_url=${q}&next=${q}`} replace />;
   }
   if (user?.role !== 'admin') return <Navigate to="/" replace />;
 

@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     // unreachable auth server), log a warning after the timeout — but do NOT
     // declare the user logged out. Declaring logged out here was the root cause
     // of the Login → Profile → Login bounce: a slow me() flipped the app to
-    // logged-out, Layout redirected to /login, then me() resolved and sent the
+    // logged-out, Layout redirected to /signin, then me() resolved and sent the
     // user back — repeating on every reload. Keep the loading state so
     // protected routes never flash-redirect before the real session resolves.
     const timer = setTimeout(() => {
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
       // doesn't have the Authorization header wired in when me() fires on boot
       // (stale service-worker chunk, prior-build storage-key mismatch, or the
       // token sitting under the alternate "token" key the SDK also writes),
-      // me() rejects and the Layout guard bounces to /login — even though the
+      // me() rejects and the Layout guard bounces to /signin — even though the
       // token is in localStorage. Restore it here so the header is always set
       // before we consult the platform session.
       try {
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    window.location.href = '/login';
+    window.location.href = '/signin';
   };
 
   return (

@@ -8,5 +8,5 @@ import { useSeoRobots } from '@/lib/useSeoRobots';
 export default function Auth() {
   useSeoRobots(false);
   const location = useLocation();
-  return <Navigate to={`/login${location.search}${location.hash}`} replace />;
+  return <Navigate to={`/signin${location.search}${location.hash}`} replace />;
 }

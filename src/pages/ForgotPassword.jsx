@@ -28,7 +28,7 @@ export default function ForgotPassword() {
       title="Reset the lock."
       subtitle="We email a Base44 reset link. Same trail, new key."
       footer={
-        <Link to={withNext("/login")} className="text-[#2EE6A6] font-semibold">
+        <Link to={withNext("/signin")} className="text-[#2EE6A6] font-semibold">
           Back to sign in
         </Link>
       }
