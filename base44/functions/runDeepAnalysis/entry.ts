@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,10 +16,11 @@ Deno.serve(async (req) => {
 
     // Fetch local bedrock geology for locality plausibility
     let geologyContext = '';
-    if (lat && lng) {
+    const coords = parseCoordinates(lat, lng);
+    if (coords) {
       try {
         const geoResp = await fetch(
-          `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&format=json`
+          `https://macrostrat.org/api/v2/geologic_units/map?lat=${coords.lat}&lng=${coords.lng}&format=json`
         );
         const geoData = await geoResp.json();
         if (geoData?.success?.data?.length > 0) {
