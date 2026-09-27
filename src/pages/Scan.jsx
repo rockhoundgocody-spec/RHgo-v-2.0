@@ -108,7 +108,7 @@ export default function Scan() {
     if (!authReady || !wantsLive) return;
     if (me) setEyesOn(true);
     else membersOnlyToast();
-  }, [authReady, wantsLive, me]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authReady, wantsLive, me]);
   const eyes = useLiveEyes({
     videoRef: camera.videoRef,
     enabled: eyesOn && !!me && stage === 'camera' && !camera.error,
