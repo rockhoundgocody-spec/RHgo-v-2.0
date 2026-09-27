@@ -21,3 +21,11 @@
 **Learning:** Unsanitized string inputs containing URL query parameters or control characters (e.g. `lat = "45.5&admin=1"`) could alter outgoing request URL structures or trigger malformed external API calls.
 
 **Prevention:** Parse coordinates to numbers, verify `Number.isFinite(...)`, and enforce valid geographic ranges (`[-90, 90]` for latitude, `[-180, 180]` for longitude) before embedding coordinates into external API URLs.
+
+## 2026-08-27 - Hardcoded Supabase Anon Key and Project URL Fallbacks
+
+**Vulnerability:** Client API adapter `src/api/standaloneClient.js` contained hardcoded fallbacks for `supabaseUrl` and `supabaseAnon` publishable keys.
+
+**Learning:** Hardcoding default API keys or URLs in source code exposes backend credentials and can inadvertently direct client traffic to unintended backend project instances when environment variables are omitted.
+
+**Prevention:** Default API keys and backend URLs to empty strings (`''`) when environment variables (`import.meta.env.*`) are missing, ensuring client instantiation evaluates to `null` or falls back securely without exposing static tokens in repository code.

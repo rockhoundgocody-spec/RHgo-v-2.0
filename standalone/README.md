@@ -9,7 +9,7 @@ Frontend uses `@supabase/supabase-js` (not `@supabase/server` — that is for Ed
 ```
 VITE_BACKEND=supabase
 VITE_SUPABASE_URL=https://ooswefjhwanailebjrkq.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_--znZ5PXuzO3fcxOh-sDhA_xcueq3uH
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
 Secret key stays in Supabase / server env only. Do not put it in Vite.
