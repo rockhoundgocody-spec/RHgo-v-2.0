@@ -86,7 +86,7 @@ export default function Landing() {
                 sessionStorage.removeItem('rhgo_gate_session_redirect');
               } catch { /* */ }
             }}
-            className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white/70 text-center flex items-center justify-center transition active:scale-95 hover:text-white"
+            className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white/90 text-center flex items-center justify-center transition active:scale-95 hover:text-white"
             style={{
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.12)',

@@ -1,6 +1,6 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
-import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useAuth } from '@/lib/AuthContext';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -10,19 +10,19 @@ const DefaultFallback = () => (
 
 /**
  * AdminRoute — only renders children when the current user has role="admin".
- * Unauthenticated visitors are sent to /login.
+ * Unauthenticated visitors are sent to /login with from_url preserved.
  * Authenticated non-admins are sent to /.
  */
 export default function AdminRoute() {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const location = useLocation();
-  // Admin and dev tools are never indexable, whatever the site default is.
   useSeoRobots(false);
 
   if (isLoadingAuth) return <DefaultFallback />;
   if (!isAuthenticated) {
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?next=${encodeURIComponent(from)}`} replace />;
+    const q = encodeURIComponent(from);
+    return <Navigate to={`/login?from_url=${q}&next=${q}`} replace />;
   }
   if (user?.role !== 'admin') return <Navigate to="/" replace />;
 

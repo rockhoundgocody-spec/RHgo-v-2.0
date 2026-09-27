@@ -1,4 +1,4 @@
-# ROCKHOUND-GO V2.5 — ONE-LOCATION OWN-SERVER DEPLOY
+# ROCKHOUND-GO — ONE-LOCATION OWN-SERVER DEPLOY
 
 RockHound-GO is being consolidated into one controlled deploy target: **one repo, one build, one URL, one server path**.
 
@@ -40,21 +40,12 @@ npm run build
 docker compose up -d --build
 ```
 
-Caddy serves the built app from `./dist` and can provide HTTPS automatically when the domain is configured.
+Caddy serves the built app from `./dist`. The configured `rhgo.me` site enables automatic HTTPS, redirects HTTP requests to HTTPS, and sends HSTS on HTTPS responses. Private SPA routes receive `X-Robots-Tag: noindex, nofollow` before the HTML fallback; they remain crawlable in `robots.txt` so search engines can read that directive.
 
 ## Custom domain
 
-1. Point your domain A-record to the server IP.
-2. Edit `Caddyfile` and replace `:80` or `localhost` with your real domain, for example:
-
-```text
-app.rockhoundgo.com {
-  root * /srv
-  encode gzip zstd
-  try_files {path} /index.html
-  file_server
-}
-```
+1. Point your domain A/AAAA records to the server IP and make ports 80 and 443 reachable so Caddy can obtain and renew certificates.
+2. For a different domain, replace only the `rhgo.me` site address in `Caddyfile`, preserving its headers and route matchers. Update the canonical URLs and sitemap for your domain too.
 
 3. Restart:
 
@@ -70,6 +61,7 @@ npm install
 npm run build
 docker compose up -d --build
 ```
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/rockhoundgocody-spec/RHgo-v-2.0?utm_source=oss&utm_medium=github&utm_campaign=rockhoundgocody-spec%2FRHgo-v-2.0&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## Build doctrine
 

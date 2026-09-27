@@ -13,8 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RockHound GO" />
 
-    <!-- Default index: crawlers skip rendering when the original HTML says noindex, so public pages must ship indexable.
-         Private app routes are Disallowed in robots.txt; admin/dev routes set noindex at runtime. GTM/GA4 load via VITE_* env in analytics.js -->
+    <!-- Public default. Caddy sends X-Robots-Tag for private URLs before this SPA runs; useSeoRobots handles client navigation. -->
     <meta name="robots" content="index, follow" id="robots-meta" />
     <!-- Optional: set VITE_GSC_VERIFICATION in env to inject google-site-verification at runtime -->
     <meta name="description" content="RockHound-GO — AI-powered field companion for rockhounds. Identify minerals instantly with AR scan, discover hotspots, and build your Geo-DEX collection." />

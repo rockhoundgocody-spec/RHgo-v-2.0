@@ -1,0 +1,46 @@
+{
+  "name": "LiveEyesMeter",
+  "type": "object",
+  "description": "Per-member daily count of Live Specimen Eyes labels (quickClassifySpecimen). Caps AI spend on the live camera preview. Written only by backend functions (service role).",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Member the live labels ran for"
+    },
+    "day_key": {
+      "type": "string",
+      "description": "UTC day the calls count against, YYYY-MM-DD"
+    },
+    "count": {
+      "type": "number",
+      "default": 0,
+      "description": "Live labels used that day"
+    }
+  },
+  "required": [
+    "owner_email",
+    "day_key"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
