@@ -128,3 +128,26 @@ Deno.test('benchmark distance processing and sorting over hotspots', () => {
   console.log(`Optimized duration (${iterations} runs, 1000 items): ${durOpt.toFixed(2)}ms`);
   console.log(`Speedup: ${(durOrig / durOpt).toFixed(2)}x`);
 });
+
+Deno.test('uncollected nearby minerals calculation using flatMap', () => {
+  const nearby = [
+    { minerals: ['Quartz', 'Agate', 'Amethyst'] },
+    { minerals: ['Quartz', 'Jasper'] },
+    { minerals: ['Calcite', 'Agate'] },
+  ];
+  const collection: Record<string, number> = { Quartz: 2, Jasper: 1 };
+
+  // Loop approach
+  const nearbySetLoop = new Set<string>();
+  for (const h of nearby) {
+    for (const m of h.minerals) nearbySetLoop.add(m);
+  }
+  const uncollectedLoop = [...nearbySetLoop].filter(m => !collection[m]);
+
+  // flatMap approach
+  const nearbySetFlatMap = new Set<string>(nearby.flatMap(h => h.minerals || []));
+  const uncollectedFlatMap = [...nearbySetFlatMap].filter(m => !collection[m]);
+
+  assertEquals(uncollectedFlatMap, uncollectedLoop);
+  assertEquals(uncollectedFlatMap, ['Agate', 'Amethyst', 'Calcite']);
+});
