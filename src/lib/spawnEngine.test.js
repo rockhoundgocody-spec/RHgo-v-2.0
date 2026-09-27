@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { generateSpawns, RARITY_COLORS_MAP, RARITY_XP_MAP } from './spawnEngine.js';
 
 describe('spawnEngine', () => {
