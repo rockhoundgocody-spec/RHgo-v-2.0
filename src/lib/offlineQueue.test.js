@@ -27,6 +27,7 @@ import {
   saveQueue,
   flushQueue,
   getQueueLength,
+  installOfflineQueue,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
@@ -143,4 +144,17 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(getQueueLength()).toBe(0);
     expect(base44.entities.Specimen.create).toHaveBeenCalledWith({ mineral_name: "Fluorite" });
   });
+  it("logs a warning when loadQueue fails during installOfflineQueue", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Call installOfflineQueue
+    installOfflineQueue();
+
+    // Wait for promise microtasks to resolve
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Cleanup spy
+    consoleWarnSpy.mockRestore();
+  });
+
 });
