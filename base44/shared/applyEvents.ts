@@ -30,17 +30,22 @@ const FIND_MUTABLE = new Set(['title', 'notes', 'captured_at', 'location_accurac
 const PHOTO_KINDS = new Set(['original', 'preview', 'thumb', 'ai_upload']);
 const TIERS = new Set(['offline_fast', 'online_deep']);
 
-const isStr = (v) => typeof v === 'string' && v.length > 0;
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const clampStr = (v, max) => (typeof v === 'string' ? v.slice(0, max) : undefined);
+// deno-lint-ignore no-explicit-any
+const isStr = (v: any) => typeof v === 'string' && v.length > 0;
+// deno-lint-ignore no-explicit-any
+const isNum = (v: any) => typeof v === 'number' && Number.isFinite(v);
+// deno-lint-ignore no-explicit-any
+const isObj = (v: any) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// deno-lint-ignore no-explicit-any
+const clampStr = (v: any, max: number) => (typeof v === 'string' ? v.slice(0, max) : undefined);
 
 // ─── Validation ────────────────────────────────────────────────────────────
 
-export function validateEvent(ev) {
+// deno-lint-ignore no-explicit-any
+export function validateEvent(ev: any) {
   if (!isObj(ev)) return 'event_not_object';
   if (!isStr(ev.id)) return 'missing_id';
-  if (!isStr(ev.type) || !EVENT_TYPES[ev.type]) return 'unknown_type';
+  if (!isStr(ev.type) || !(ev.type in EVENT_TYPES)) return 'unknown_type';
   if (!isStr(ev.entity_id)) return 'missing_entity_id';
   if (!isObj(ev.payload)) return 'missing_payload';
   const p = ev.payload;
@@ -79,7 +84,8 @@ export function validateEvent(ev) {
 
 // ─── Merge policies ────────────────────────────────────────────────────────
 
-export function mergeNotes(serverNotes, clientNotes, clientTs) {
+// deno-lint-ignore no-explicit-any
+export function mergeNotes(serverNotes: any, clientNotes: any, clientTs: any) {
   const s = (serverNotes || '').trim();
   const c = (clientNotes || '').trim();
   if (!s || s === c || c.includes(s)) return c.slice(0, MAX_NOTES);
@@ -89,12 +95,15 @@ export function mergeNotes(serverNotes, clientNotes, clientTs) {
 }
 
 // Returns { patch, lost } where `lost` holds client values the server refused (server won).
-export function mergeFind(server, payload) {
+// deno-lint-ignore no-explicit-any
+export function mergeFind(server: any, payload: any) {
   const fastForward = payload.base_rev === server.rev;
   const clientTs = Number(payload.updated_at) || 0;
   const serverTs = Number(server.client_updated_at) || 0;
-  const patch = {};
-  const lost = {};
+  // deno-lint-ignore no-explicit-any
+  const patch: Record<string, any> = {};
+  // deno-lint-ignore no-explicit-any
+  const lost: Record<string, any> = {};
   for (const [key, value] of Object.entries(payload.fields)) {
     if (!FIND_MUTABLE.has(key)) continue;
     const v = key === 'title' ? clampStr(value, MAX_TITLE) : key === 'notes' ? clampStr(value, MAX_NOTES) : value;
@@ -108,7 +117,8 @@ export function mergeFind(server, payload) {
 
 // ─── Cursor ────────────────────────────────────────────────────────────────
 
-export function nextCursor(records, fallback) {
+// deno-lint-ignore no-explicit-any
+export function nextCursor(records: any[], fallback: any) {
   let max = fallback || null;
   for (const r of records) {
     if (r?.updated_date && (!max || r.updated_date > max)) max = r.updated_date;
@@ -118,18 +128,34 @@ export function nextCursor(records, fallback) {
 
 // ─── Engine ────────────────────────────────────────────────────────────────
 
-export async function applyEvents({ entities, ownerEmail, events, cursor = null }) {
-  const acked = [];
-  const rejected = [];
-  const conflicts = [];
-  const touched = [];
+export interface ApplyEventsParams {
+  // deno-lint-ignore no-explicit-any
+  entities: any;
+  ownerEmail: string;
+  // deno-lint-ignore no-explicit-any
+  events: any[];
+  // deno-lint-ignore no-explicit-any
+  cursor?: any;
+}
+
+export async function applyEvents({ entities, ownerEmail, events, cursor = null }: ApplyEventsParams) {
+  // deno-lint-ignore no-explicit-any
+  const acked: any[] = [];
+  // deno-lint-ignore no-explicit-any
+  const rejected: any[] = [];
+  // deno-lint-ignore no-explicit-any
+  const conflicts: any[] = [];
+  // deno-lint-ignore no-explicit-any
+  const touched: any[] = [];
 
   // 1. Idempotency: answer replays from the ledger without re-applying.
-  const ids = events.map((e) => e?.id).filter(isStr);
+  // deno-lint-ignore no-explicit-any
+  const ids = events.map((e: any) => e?.id).filter(isStr);
   const priorRows = ids.length
     ? await entities.SyncEventLedger.filter({ owner_email: ownerEmail, event_id: { $in: ids } })
     : [];
-  const prior = new Map(priorRows.map((r) => [r.event_id, r]));
+  // deno-lint-ignore no-explicit-any
+  const prior = new Map<string, any>(priorRows.map((r: any) => [r.event_id, r]));
 
   const ctx = { entities, ownerEmail, touched, conflicts };
 
@@ -145,7 +171,9 @@ export async function applyEvents({ entities, ownerEmail, events, cursor = null 
       continue;
     }
 
-    const outcome = await HANDLERS[ev.type](ctx, ev);
+    const handler = HANDLERS[ev.type as keyof typeof HANDLERS];
+    // deno-lint-ignore no-explicit-any
+    const outcome: any = await handler(ctx, ev);
 
     await entities.SyncEventLedger.create({
       event_id: ev.id,
@@ -167,22 +195,25 @@ export async function applyEvents({ entities, ownerEmail, events, cursor = null 
   return { acked, rejected, conflicts, new_cursor: nextCursor(touched, cursor) };
 }
 
-function domainOf(type) {
+function domainOf(type: string) {
   if (type.startsWith('FIND_')) return 'finds';
   if (type.startsWith('PHOTO_')) return 'photos';
   return 'id_results';
 }
 
-async function getFind(ctx, clientId) {
+// deno-lint-ignore no-explicit-any
+async function getFind(ctx: any, clientId: any) {
   const rows = await ctx.entities.SyncFind.filter({ owner_email: ctx.ownerEmail, client_id: clientId });
   return rows[0] || null;
 }
-async function getPhoto(ctx, clientId) {
+// deno-lint-ignore no-explicit-any
+async function getPhoto(ctx: any, clientId: any) {
   const rows = await ctx.entities.SyncPhoto.filter({ owner_email: ctx.ownerEmail, client_id: clientId });
   return rows[0] || null;
 }
 
-async function recordConflict(ctx, ev, entity, local, remote, fields) {
+// deno-lint-ignore no-explicit-any
+async function recordConflict(ctx: any, ev: any, entity: any, local: any, remote: any, fields: any) {
   const row = await ctx.entities.SyncConflict.create({
     owner_email: ctx.ownerEmail,
     entity,
@@ -197,7 +228,8 @@ async function recordConflict(ctx, ev, entity, local, remote, fields) {
 }
 
 const HANDLERS = {
-  async [EVENT_TYPES.FIND_CREATE](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.FIND_CREATE](ctx: any, ev: any) {
     const p = ev.payload;
     const existing = await getFind(ctx, ev.entity_id);
     if (existing) { ctx.touched.push(existing); return { ok: true, rev: existing.rev, reason: 'already_exists' }; }
@@ -222,7 +254,8 @@ const HANDLERS = {
     return { ok: true, rev: 1 };
   },
 
-  async [EVENT_TYPES.FIND_UPDATE](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.FIND_UPDATE](ctx: any, ev: any) {
     const p = ev.payload;
     const server = await getFind(ctx, ev.entity_id);
     if (!server) return { ok: false, reason: 'not_found' };
@@ -245,7 +278,8 @@ const HANDLERS = {
     return { ok: true, rev: nextRev, conflict_id: conflictId };
   },
 
-  async [EVENT_TYPES.FIND_DELETE](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.FIND_DELETE](ctx: any, ev: any) {
     const server = await getFind(ctx, ev.entity_id);
     if (!server) return { ok: true, reason: 'not_found_noop' };
     if (server.deleted_at) { ctx.touched.push(server); return { ok: true, rev: server.rev, reason: 'already_deleted' }; }
@@ -255,7 +289,8 @@ const HANDLERS = {
     return { ok: true, rev: nextRev };
   },
 
-  async [EVENT_TYPES.FIND_SET_PRIVACY](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.FIND_SET_PRIVACY](ctx: any, ev: any) {
     const p = ev.payload;
     const server = await getFind(ctx, ev.entity_id);
     if (!server) return { ok: false, reason: 'not_found' };
@@ -268,7 +303,8 @@ const HANDLERS = {
     return { ok: true, rev: nextRev };
   },
 
-  async [EVENT_TYPES.PHOTO_ADD_LOCAL](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.PHOTO_ADD_LOCAL](ctx: any, ev: any) {
     const p = ev.payload;
     const find = await getFind(ctx, p.find_id);
     if (!find) return { ok: false, reason: 'find_not_found' };
@@ -292,7 +328,8 @@ const HANDLERS = {
     return { ok: true };
   },
 
-  async [EVENT_TYPES.PHOTO_UPLOAD_POINTER](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.PHOTO_UPLOAD_POINTER](ctx: any, ev: any) {
     const p = ev.payload;
     const photo = await getPhoto(ctx, ev.entity_id);
     if (!photo) return { ok: false, reason: 'not_found' };
@@ -302,7 +339,8 @@ const HANDLERS = {
     return { ok: true };
   },
 
-  async [EVENT_TYPES.PHOTO_DELETE](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.PHOTO_DELETE](ctx: any, ev: any) {
     const photo = await getPhoto(ctx, ev.entity_id);
     if (!photo) return { ok: true, reason: 'not_found_noop' };
     if (photo.deleted_at) { ctx.touched.push(photo); return { ok: true, reason: 'already_deleted' }; }
@@ -311,7 +349,8 @@ const HANDLERS = {
     return { ok: true };
   },
 
-  async [EVENT_TYPES.ID_RESULT_APPEND](ctx, ev) {
+  // deno-lint-ignore no-explicit-any
+  async [EVENT_TYPES.ID_RESULT_APPEND](ctx: any, ev: any) {
     const p = ev.payload;
     const find = await getFind(ctx, p.find_id);
     if (!find) return { ok: false, reason: 'find_not_found' };
@@ -321,9 +360,15 @@ const HANDLERS = {
     // Append-only: an online deep result supersedes prior rows for the same find, never overwrites them.
     if (p.tier === 'online_deep') {
       const prior = await ctx.entities.SyncIdResult.filter({ owner_email: ctx.ownerEmail, find_client_id: p.find_id, is_superseded: false });
-      for (const r of prior) {
-        const upd = await ctx.entities.SyncIdResult.update(r.id, { is_superseded: true });
-        ctx.touched.push(upd || r);
+      if (prior.length > 0) {
+        const updated = await Promise.all(
+          // deno-lint-ignore no-explicit-any
+          prior.map(async (r: any) => {
+            const upd = await ctx.entities.SyncIdResult.update(r.id, { is_superseded: true });
+            return upd || r;
+          })
+        );
+        ctx.touched.push(...updated);
       }
     }
     const row = await ctx.entities.SyncIdResult.create({
@@ -353,8 +398,10 @@ const HANDLERS = {
   },
 };
 
-function pickFields(obj, keys) {
-  const out = {};
+// deno-lint-ignore no-explicit-any
+function pickFields(obj: any, keys: any) {
+  // deno-lint-ignore no-explicit-any
+  const out: Record<string, any> = {};
   for (const k of keys) out[k] = obj[k];
   return out;
 }
