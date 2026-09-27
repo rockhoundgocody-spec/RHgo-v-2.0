@@ -47,7 +47,16 @@ export function installGtm() {
   if (!document.getElementById('rhgo-gtm-noscript')) {
     const noscript = document.createElement('noscript');
     noscript.id = 'rhgo-gtm-noscript';
-    noscript.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden" title="gtm"></iframe>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(GTM_ID)}`;
+    iframe.height = '0';
+    iframe.width = '0';
+    iframe.style.display = 'none';
+    iframe.style.visibility = 'hidden';
+    iframe.title = 'gtm';
+
+    noscript.appendChild(iframe);
     document.body.insertBefore(noscript, document.body.firstChild);
   }
   gtmReady = true;

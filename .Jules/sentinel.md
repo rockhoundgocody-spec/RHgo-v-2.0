@@ -21,3 +21,11 @@
 **Learning:** Unsanitized string inputs containing URL query parameters or control characters (e.g. `lat = "45.5&admin=1"`) could alter outgoing request URL structures or trigger malformed external API calls.
 
 **Prevention:** Parse coordinates to numbers, verify `Number.isFinite(...)`, and enforce valid geographic ranges (`[-90, 90]` for latitude, `[-180, 180]` for longitude) before embedding coordinates into external API URLs.
+
+## 2026-08-27 - DOM-based XSS Prevention in Analytics Tag Generation
+
+**Vulnerability:** Google Tag Manager `<noscript>` fallback iframe tag was generated via `innerHTML` string interpolation with variable inputs (`GTM_ID`).
+
+**Learning:** Assigning `innerHTML` with string templates creates DOM-based Cross-Site Scripting (XSS) risks and HTML injection vectors if variable sanitization is bypassed or altered.
+
+**Prevention:** Construct fallback tags using programmatic DOM API methods (`document.createElement`, `appendChild`) and safe property assignments with `encodeURIComponent` rather than string `innerHTML` interpolation.
