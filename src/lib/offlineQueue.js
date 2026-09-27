@@ -45,36 +45,118 @@ function base64ToBuffer(base64) {
   return bytes.buffer;
 }
 
+const DB_NAME = "rh-offline-queue-keys-v1";
+const DB_STORE = "keys";
+const DB_KEY_ID = "queue-encryption-key";
+
+function getIndexedDB() {
+  if (typeof window !== "undefined" && window.indexedDB) {
+    return window.indexedDB;
+  }
+  if (typeof globalThis !== "undefined" && globalThis.indexedDB) {
+    return globalThis.indexedDB;
+  }
+  return null;
+}
+
+function openKeyDatabase() {
+  const idb = getIndexedDB();
+  if (!idb) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    try {
+      const request = idb.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+      };
+      request.onsuccess = (e) => resolve(e.target.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function getKeyFromIDB() {
+  const db = await openKeyDatabase();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(DB_STORE, "readonly");
+      const store = tx.objectStore(DB_STORE);
+      const req = store.get(DB_KEY_ID);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function saveKeyToIDB(key) {
+  const db = await openKeyDatabase();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(DB_STORE, "readwrite");
+      const store = tx.objectStore(DB_STORE);
+      const req = store.put(key, DB_KEY_ID);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
 async function getOrCreateKey() {
   if (memoryKey) return memoryKey;
   const cryptoObj = getCrypto();
   if (!cryptoObj) return null;
 
   try {
+    // If a legacy cleartext key exists in localStorage, migrate it to IndexedDB as non-extractable and purge it from localStorage
     const storedKeyRaw = typeof localStorage !== "undefined" ? localStorage.getItem(KEY_STORAGE_KEY) : null;
     if (storedKeyRaw) {
-      const rawKeyBuffer = base64ToBuffer(storedKeyRaw);
-      memoryKey = await cryptoObj.subtle.importKey(
-        "raw",
-        rawKeyBuffer,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-      );
+      try {
+        const rawKeyBuffer = base64ToBuffer(storedKeyRaw);
+        memoryKey = await cryptoObj.subtle.importKey(
+          "raw",
+          rawKeyBuffer,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["encrypt", "decrypt"]
+        );
+        await saveKeyToIDB(memoryKey);
+      } catch (err) {
+        console.warn("offlineQueue: failed to import legacy key", err);
+      } finally {
+        try {
+          localStorage.removeItem(KEY_STORAGE_KEY);
+        } catch { /* ignore */ }
+      }
+      if (memoryKey) return memoryKey;
+    }
+
+    // Try retrieving non-extractable CryptoKey from IndexedDB
+    const storedKey = await getKeyFromIDB();
+    if (storedKey) {
+      memoryKey = storedKey;
       return memoryKey;
     }
 
+    // Generate new non-extractable CryptoKey (extractable: false prevents exportKey)
     memoryKey = await cryptoObj.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
-      true,
+      false,
       ["encrypt", "decrypt"]
     );
 
-    const exportedKey = await cryptoObj.subtle.exportKey("raw", memoryKey);
-    const keyBase64 = bufferToBase64(exportedKey);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(KEY_STORAGE_KEY, keyBase64);
-    }
+    // Save non-extractable CryptoKey in IndexedDB if available
+    await saveKeyToIDB(memoryKey);
+
     return memoryKey;
   } catch (err) {
     console.error("offlineQueue: failed to initialize encryption key", err);
@@ -337,4 +419,9 @@ export function installOfflineQueue() {
       }
     }
   });
+}
+
+export function _resetQueueStateForTesting() {
+  memoryKey = null;
+  cachedQueue = null;
 }
