@@ -11,6 +11,7 @@ import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
+import { prefetchWhenIdle } from '@/lib/lazyPart';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -60,6 +61,7 @@ const Live = lazy(() => import('@/pages/Live'));
 const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
 const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
 const Clubs = lazy(() => import('@/pages/Clubs'));
+const VaultGalaxy = lazy(() => import('@/pages/VaultGalaxy'));
 
 const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const Connect = lazy(() => import('@/pages/Connect'));
@@ -67,7 +69,7 @@ const About = lazy(() => import('@/pages/About'));
 const Paywall = lazy(() => import('@/pages/Paywall'));
 const Demo = lazy(() => import('@/pages/Demo'));
 const Contact = lazy(() => import('@/pages/Contact'));
-const Auth = lazy(() => import('@/pages/Auth'));
+// Legacy purple /auth wall removed — redirect to canonical Login (Wave-1 audit).
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 const Terms = lazy(() => import('@/pages/Terms'));
@@ -78,6 +80,17 @@ const RouteFallback = () => (
   </div>
 );
 
+
+/** Legacy /auth (purple wall) → canonical Login, keep query (from_url/next). */
+function AuthToLoginRedirect() {
+  const { search, hash } = window.location;
+  return <Navigate to={`/login${search}${hash}`} replace />;
+}
+
+/**
+ * Renders routes after auth and public settings load, handling auth errors
+ * and exposing public entry points when authentication is required.
+ */
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
@@ -98,7 +111,7 @@ const AuthenticatedApp = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={<AuthToLoginRedirect />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -130,7 +143,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={<AuthToLoginRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -165,6 +178,7 @@ const AuthenticatedApp = () => {
           <Route path="/live/:streamId" element={<LiveStreamView />} />
           <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
           <Route path="/clubs" element={<Clubs />} />
+          <Route path="/vault" element={<VaultGalaxy />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
@@ -184,6 +198,13 @@ const AuthenticatedApp = () => {
     </Suspense>
   );
 };
+
+// Warm the screens people open next, once the first screen is idle.
+prefetchWhenIdle([
+  () => import('@/pages/Scan'),
+  () => import('@/pages/Explore.jsx'),
+  () => import('@/pages/Hub'),
+]);
 
 function App() {
   return (

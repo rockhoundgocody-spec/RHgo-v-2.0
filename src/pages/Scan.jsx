@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
+import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload, Eye } from 'lucide-react';
 import useCameraStream from '@/components/scan/useCameraStream.jsx';
+import useLiveEyes from '@/components/scan/useLiveEyes';
+import LiveEyesOverlay from '@/components/scan/LiveEyesOverlay.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { toast } from '@/components/ui/use-toast';
@@ -12,14 +14,13 @@ import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
-import { AGATE_PROMPT_BLOCK } from '@/lib/agateData';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
 import { persistLastGps } from '@/lib/geo';
 import { trackEvent } from '@/lib/analytics';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
-import { deliberateGeologicalSpecimen, enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
+import { enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
@@ -94,6 +95,36 @@ export default function Scan() {
       .finally(() => setAuthReady(true));
   }, []);
 
+  // Live Specimen Eyes: preview labels while aiming (members only).
+  // Clover's "what do you see?" opens /scan?live=1 with them switched on.
+  const [searchParams] = useSearchParams();
+  const wantsLive = searchParams.get('live') === '1';
+  const [eyesOn, setEyesOn] = useState(false);
+  const membersOnlyToast = () => toast({
+    title: 'Live labels are for members',
+    description: 'Create a free account to see live labels as you aim.',
+  });
+  useEffect(() => {
+    if (!authReady || !wantsLive) return;
+    if (me) setEyesOn(true);
+    else membersOnlyToast();
+  }, [authReady, wantsLive, me]);
+  const eyes = useLiveEyes({
+    videoRef: camera.videoRef,
+    enabled: eyesOn && !!me && stage === 'camera' && !camera.error,
+    ready: camera.ready,
+    region: beachName,
+    wetDry,
+    onUnauthorized: () => setEyesOn(false),
+  });
+  const toggleEyes = () => {
+    if (!me) {
+      membersOnlyToast();
+      return;
+    }
+    setEyesOn((on) => !on);
+  };
+
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -132,22 +163,6 @@ export default function Scan() {
     setStage('processing');
 
     try {
-      if (isGuest) {
-        try {
-          await base44.functions.invoke('guestScanGate', {
-            guest_device_id: getOrCreateGuestId(),
-            action: 'identify',
-          });
-        } catch (gateErr) {
-          const status = gateErr?.status || gateErr?.data?.status || gateErr?.response?.status;
-          if (status === 429 || /rate|guest|already used/i.test(String(gateErr?.message || gateErr?.data?.error || ''))) {
-            setStage('guestLimit');
-            return;
-          }
-          throw gateErr;
-        }
-      }
-
       const clean = await stripExif(blob);
       const file = new File([clean], 'shot1.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
@@ -160,107 +175,48 @@ export default function Scan() {
             .then(res => res?.data?.cutout_url || null)
             .catch(() => null);
 
-      // Guest fast path: skip Macrostrat geology fetch for faster first value
-      const agiDeliberation = isGuest
-        ? { systemPrompt: 'You are an expert field geologist and mineralogist analyzing a specimen photo.', geologyContext: '' }
-        : await deliberateGeologicalSpecimen({
-            imageUrls: [file_url],
-            locality: gpsCoords,
-            scanMode: 'rock',
-            userTier: isPaid ? 'pro' : 'free',
-          });
-
-      const r = await base44.integrations.Core.InvokeLLM({
-        model: 'gemini_3_flash',
-        prompt:
-          agiDeliberation.systemPrompt + '\n\n' +
-          'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
-          'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, ' +
-          'crystal system geometry, surface texture, matrix rock, weathering. ' +
-          'Return: top_match, scientific_name, chemical_formula, hardness_mohs, crystal_system, ' +
-          'formation, where_to_find (array), value_estimate, confidence (0-1, conservative), ' +
-          'description (2 sentences for an excited explorer), reasoning (what features led to this ID), ' +
-          'observed_features (array of {feature, value} you ACTUALLY see), lookalikes (2-3 with differentiator), ' +
-          'verification_tests (3-5 ranked by ease with expected outcome), ' +
-          'field_habit (crystal habit/form you observe), field_luster (luster type), field_matrix (host rock), field_next_test (most useful next test to try), ' +
-          'image_quality_score (0-1), ' +
-          'geological_plausibility (0-1), fun_fact, collection_value, rarity (common/uncommon/rare/legendary), ' +
-          'and up to 3 ranked candidates. Never say "I cannot identify" — always give a best guess. ' +
-          'GPS is a prior, not a filter — glacial erratics, road gravel, and shop specimens appear out of bedrock. ' +
-          'If visual ID conflicts with local geology, lower geological_plausibility and say so. ' +
-          'Prefer common field stones over exotic gems unless diagnostics are strong. ' +
-          'Calibrate confidence down for dark, cropped, wet-glare, or single-angle photos. ' +
-          (wetDry === 'wet'
-            ? 'CONDITION: specimen is WET — banding, coral patterns, and translucency are enhanced. '
-            : 'CONDITION: specimen is DRY — patterns and luster may be muted. ') +
-          AGATE_PROMPT_BLOCK + agiDeliberation.geologyContext,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            top_match: { type: 'string' },
-            scientific_name: { type: 'string' },
-            chemical_formula: { type: 'string' },
-            hardness_mohs: { type: 'number' },
-            crystal_system: { type: 'string' },
-            formation: { type: 'string' },
-            where_to_find: { type: 'array', items: { type: 'string' } },
-            value_estimate: { type: 'string' },
-            confidence: { type: 'number' },
-            description: { type: 'string' },
-            reasoning: { type: 'string' },
-            image_quality_score: { type: 'number' },
-            geological_plausibility: { type: 'number' },
-            rarity: { type: 'string', enum: ['common', 'uncommon', 'rare', 'legendary'] },
-            fun_fact: { type: 'string' },
-            collection_value: { type: 'string' },
-            candidates: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: { name: { type: 'string' }, confidence: { type: 'number' }, features: { type: 'string' }, rationale: { type: 'string' } },
-              },
-            },
-            observed_features: {
-              type: 'array',
-              items: { type: 'object', properties: { feature: { type: 'string' }, value: { type: 'string' } } },
-            },
-            lookalikes: {
-              type: 'array',
-              items: { type: 'object', properties: { name: { type: 'string' }, differentiator: { type: 'string' } } },
-            },
-            verification_tests: {
-              type: 'array',
-              items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
-            },
-            field_habit: { type: 'string' },
-            field_luster: { type: 'string' },
-            field_matrix: { type: 'string' },
-            field_next_test: { type: 'string' },
-          },
-        },
-      });
-
-      let resultData = r && typeof r === 'object' ? { ...r } : {};
-      if (typeof r === 'string') { try { resultData = JSON.parse(r); } catch { resultData = {}; } }
-
-      if (!isGuest) {
-        try {
-          const veri = await base44.functions.invoke('identifySpecimen', {
-            image_url: file_url,
-            lat: gpsCoords?.lat, lng: gpsCoords?.lng,
-            save: false,
-            prefilled_result: resultData,
-            wet_dry: wetDry,
-            beach_name: beachName,
-          });
-          const d = veri?.data;
-          if (d?.context_integrity) resultData.context_integrity = d.context_integrity;
-          if (d?.handbook) resultData.handbook = d.handbook;
-          if (d?.essence) resultData.essence = d.essence;
-          if (typeof d?.identification?.confidence === 'number') resultData.confidence = d.identification.confidence;
-        } catch { /* best-effort */ }
+      // Identification runs on the server: one call does the vision model,
+      // Macrostrat geology, regional priors, learned corrections and the
+      // handbook checks — and meters guest and free-tier scans where they
+      // can't be bypassed.
+      let identified;
+      try {
+        const res = await base44.functions.invoke('identifySpecimen', {
+          image_url: file_url,
+          lat: gpsCoords?.lat, lng: gpsCoords?.lng,
+          save: false,
+          wet_dry: wetDry,
+          beach_name: beachName,
+          ...(isGuest ? { guest_device_id: getOrCreateGuestId() } : {}),
+        });
+        identified = res?.data;
+      } catch (idErr) {
+        const status = idErr?.status;
+        const code = idErr?.data?.code || idErr?.code;
+        if (isGuest && status === 429) {
+          setStage('guestLimit');
+          return;
+        }
+        if (!isGuest && (status === 402 || code === 'scan_quota')) {
+          const used = idErr?.data?.quota?.used;
+          if (typeof used === 'number') {
+            localStorage.setItem(monthKey, String(used));
+            setScansUsed(used);
+          }
+          setStage('freeLimit');
+          return;
+        }
+        throw idErr;
       }
+
+      const resultData = identified?.identification && typeof identified.identification === 'object'
+        ? { ...identified.identification }
+        : {};
+      if (!resultData.top_match) throw new Error('Could not identify that photo. Try more light or another angle.');
+      if (identified?.context_integrity) resultData.context_integrity = identified.context_integrity;
+      if (identified?.handbook) resultData.handbook = identified.handbook;
+      if (identified?.essence) resultData.essence = identified.essence;
+      const serverQuota = identified?.quota;
 
       const cutoutUrl = await cutoutPromise;
       const finalUrl = cutoutUrl || file_url;
@@ -280,7 +236,12 @@ export default function Scan() {
         setGuestQuota(consumeGuestScan());
         stashPendingGuestReport({ result: enriched, primaryUrl: finalUrl, gpsCoords, beachName });
       } else if (!isPaid) {
-        setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
+        if (typeof serverQuota?.used === 'number') {
+          localStorage.setItem(monthKey, String(serverQuota.used));
+          setScansUsed(serverQuota.used);
+        } else {
+          setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
+        }
       }
 
       if (!isGuest && voiceEnabled && enriched?.top_match) {
@@ -484,6 +445,7 @@ export default function Scan() {
 
   return (
     <div className="fixed inset-0 overflow-hidden select-none" style={{ background: '#0a0a14' }}>
+      <h1 className="sr-only">Scan a specimen</h1>
       {stage === 'camera' && (
         <video
           ref={camera.videoRef}
@@ -514,6 +476,19 @@ export default function Scan() {
             <X size={20} className="text-white" />
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleEyes}
+              aria-label="Live labels"
+              aria-pressed={eyesOn}
+              className="h-11 px-3 rounded-full flex items-center gap-1.5 transition active:scale-90"
+              style={{
+                background: eyesOn ? 'rgba(159,232,208,0.25)' : 'rgba(0,0,0,0.4)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <Eye size={18} aria-hidden="true" style={{ color: eyesOn ? '#9FE8D0' : '#fff' }} />
+              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: eyesOn ? '#9FE8D0' : '#fff' }}>Live</span>
+            </button>
             {camera.torchSupported && (
               <button
                 onClick={camera.toggleTorch}
@@ -561,10 +536,19 @@ export default function Scan() {
         />
       )}
 
+      {stage === 'camera' && eyesOn && !!me && !camera.error && (
+        <LiveEyesOverlay
+          eyes={eyes}
+          onLock={handleShutter}
+          lockDisabled={!camera.ready}
+          onUpgrade={() => navigate('/pricing')}
+        />
+      )}
+
       {stage === 'camera' && (
         <div className="absolute inset-x-0 z-20 flex flex-col items-center gap-3 pointer-events-auto" style={{ bottom: '30%' }}>
           <WetDryToggle value={wetDry} onChange={setWetDry} />
-          {showHint && (
+          {showHint && !eyesOn && (
             <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
               {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
             </span>
@@ -702,8 +686,9 @@ export default function Scan() {
 
       {camera.error && stage === 'camera' && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
-          <p className="text-white/60 text-sm mb-2">Camera unavailable</p>
-          <p className="text-white/30 text-xs mb-6 text-center">{camera.error}</p>
+          <p className="text-white/75 text-sm mb-2">Camera unavailable</p>
+          <p className="text-white/55 text-xs mb-2 text-center">{camera.error}</p>
+          <p className="text-white/55 text-xs mb-6 text-center">Allow camera access in your browser settings, or pick a photo from your gallery.</p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <label className="px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer focus-within:ring-2 focus-within:ring-white/50 focus-within:outline-none" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
               <input

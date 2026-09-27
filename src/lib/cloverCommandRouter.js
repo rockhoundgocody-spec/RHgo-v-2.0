@@ -179,12 +179,13 @@ function labelBrain(id) {
   return "Grok";
 }
 
-function routeForTarget(target) {
-  const t = target.toLowerCase();
-  if (/invoice|listing|coa/.test(t)) return "/Marketplace";
-  if (/site|wash|claim|hotspot|map/.test(t)) return "/Map";
-  if (/trip|itinerary/.test(t)) return "/FieldTrip";
-  return "/Collection";
+export function routeForTarget(target) {
+  const t = String(target || "").toLowerCase();
+  if (/invoice|listing|coa/.test(t)) return "/market";
+  if (/\b(map|hotspots?)\b/.test(t)) return "/explore";
+  if (/trip|itinerary|expedition/.test(t)) return "/expeditions";
+  // Specimens, sites and anything else: open the Vault Galaxy on it.
+  return `/vault?q=${encodeURIComponent(target)}`;
 }
 
 function driftLine(prev) {

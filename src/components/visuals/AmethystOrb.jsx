@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import BlackOpalShader from './BlackOpalShader.jsx';
-import WebGPUOpalShader from './WebGPUOpalShader.jsx';
-import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
+import { lazyPart } from '@/lib/lazyPart';
 import SphereVolume from './SphereVolume.jsx';
 import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
@@ -14,6 +12,29 @@ import usePageVisible from '@/lib/usePageVisible';
  *   Layer 1 (main): Black opal core with iridescent liquid-gas fire
  *   Layer 2 (overlay): Low-opacity amethyst gas shell for depth + brand tint
  */
+// CSS black-opal stand-in: shown while the WebGL/WebGPU shader chunk loads,
+// and permanently if it can't (offline, no GPU). Keeps Three.js (~0.5 MB)
+// out of the app's first download.
+function OpalFallback() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background:
+          'radial-gradient(circle at 32% 30%, hsla(190,100%,62%,0.55) 0%, transparent 38%),' +
+          'radial-gradient(circle at 70% 62%, hsla(330,90%,62%,0.45) 0%, transparent 42%),' +
+          'radial-gradient(circle at 44% 76%, hsla(45,100%,62%,0.32) 0%, transparent 36%),' +
+          'radial-gradient(circle at 62% 28%, hsla(160,90%,55%,0.35) 0%, transparent 30%),' +
+          'radial-gradient(circle at 50% 50%, hsl(265 55% 11%) 0%, hsl(250 50% 4%) 100%)',
+      }}
+    />
+  );
+}
+const BlackOpalShader = lazyPart(() => import('./BlackOpalShader.jsx'), OpalFallback);
+const WebGPUOpalShader = lazyPart(() => import('./WebGPUOpalShader.jsx'), OpalFallback);
+const WebGPUFluidOverlay = lazyPart(() => import('./WebGPUFluidOverlay.jsx'));
+
 // orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
 const STATE_CONFIG = {
   idle:      { haloBase: 'hsla(190,100%,62%,0.42)',  auraBase: 'hsla(175,90%,52%,0.42)',   innerBase: 'hsla(330,90%,60%,0.5)',   boxShadow: '0 0 80px hsla(190,100%,55%,0.35), 0 0 30px hsla(330,90%,60%,0.22), 0 0 20px hsla(45,100%,60%,0.15), inset 0 0 50px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.0, idleAuraScale: 1.0 },

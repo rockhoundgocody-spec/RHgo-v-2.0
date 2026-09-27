@@ -54,8 +54,8 @@ export function calculateCatchOutcome(spawn, throwCount, roll = Math.random()) {
 export async function saveCatchToCollection(spawn, outcome) {
   const xp = RARITY_XP_MAP[spawn.rarity] * (outcome === "shiny" || outcome === "critical" ? 2 : 1);
   try {
-    const me = await base44.auth.me();
-    await base44.entities.Specimen.create({
+    await base44.auth.me();
+    const created = await base44.entities.Specimen.create({
       mineral_name: spawn.mineral_name,
       rarity: spawn.rarity,
       ai_confidence: spawn.rarity === "legendary" ? 0.95 : 0.80,
@@ -63,12 +63,10 @@ export async function saveCatchToCollection(spawn, outcome) {
       found_date: new Date().toISOString().slice(0, 10),
       xp_awarded: xp,
     });
-    // Award XP to player profile
-    const profiles = await base44.entities.PlayerProfile.filter({ owner_email: me.email }, "-created_date", 1);
-    if (profiles[0]) {
-      await base44.entities.PlayerProfile.update(profiles[0].id, {
-        total_xp: (profiles[0].total_xp || 0) + xp,
-      });
+    // XP is granted server-side (verified, idempotent, daily-capped) — never
+    // by writing total_xp from the browser.
+    if (created?.id) {
+      await base44.functions.invoke("awardVerifiedXP", { event_type: "ar_catch", event_id: created.id }).catch(() => null);
     }
   } catch { /* no-op */ }
 }

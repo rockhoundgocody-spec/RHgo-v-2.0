@@ -10,6 +10,9 @@
  * event_type='roulette'     — daily roulette, fixed 15 XP, once per day
  * event_type='guest_reclaim'— verifies specimen owned by caller, fixed 25 XP
  * event_type='specimen'     — verifies specimen owned by caller, disposition-based XP
+ * event_type='ar_catch'     — verifies a fresh AR-catch specimen owned by caller,
+ *                              rarity-based XP, at most AR_DAILY_CAP awards per day
+ * event_type='orb_blessing' — Orb resonance blessing, fixed 50 XP, once per day
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { awardXPServerSide } from '../../shared/awardXP.ts';
@@ -18,6 +21,10 @@ const QUEST_XP_CAP = 100;
 const ROULETTE_XP = 15;
 const GUEST_RECLAIM_XP = 25;
 const DISP_XP: Record<string, number> = { collected: 25, left_in_place: 40, observed: 15 };
+const AR_XP: Record<string, number> = { common: 50, uncommon: 150, rare: 400, legendary: 500 };
+const AR_DAILY_CAP = 5;
+const AR_MAX_AGE_MS = 60 * 60 * 1000;
+const ORB_BLESSING_XP = 50;
 
 Deno.serve(async (req) => {
   try {
@@ -85,6 +92,40 @@ Deno.serve(async (req) => {
       amount = DISP_XP[disp] || 25;
       reason = `scan_${disp}`;
       idempotencyKey = `scan:${specimen.id}:${disp}`;
+
+    } else if (event_type === 'ar_catch') {
+      if (!event_id) return Response.json({ error: 'event_id required' }, { status: 400 });
+      let specimen;
+      try {
+        specimen = await base44.entities.Specimen.get(event_id);
+      } catch {
+        return Response.json({ error: 'Specimen not found' }, { status: 404 });
+      }
+      if (!specimen || specimen.created_by_id !== user.id || !String(specimen.notes || '').startsWith('AR catch')) {
+        return Response.json({ error: 'Specimen not found' }, { status: 404 });
+      }
+      const age = Date.now() - Date.parse(specimen.created_date || '');
+      if (!Number.isFinite(age) || age > AR_MAX_AGE_MS) {
+        return Response.json({ error: 'Catch is too old to award' }, { status: 400 });
+      }
+      const today = new Date().toISOString().split('T')[0];
+      const todays = await base44.asServiceRole.entities.XPAward.filter(
+        { owner_email: user.email, reason: 'AR catch', created_date: { $gte: `${today}T00:00:00` } },
+        '-created_date',
+        AR_DAILY_CAP + 1,
+      ).catch(() => []);
+      if ((todays?.length || 0) >= AR_DAILY_CAP) {
+        return Response.json({ error: 'Daily AR catch XP limit reached', already_awarded: false, capped: true }, { status: 429 });
+      }
+      amount = AR_XP[specimen.rarity] || AR_XP.common;
+      reason = 'AR catch';
+      idempotencyKey = `ar_catch:${specimen.id}`;
+
+    } else if (event_type === 'orb_blessing') {
+      const today = new Date().toISOString().split('T')[0];
+      amount = ORB_BLESSING_XP;
+      reason = 'Orb blessing';
+      idempotencyKey = `orb_blessing:${user.email}:${today}`;
 
     } else {
       return Response.json({ error: 'Unknown event type' }, { status: 400 });
