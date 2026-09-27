@@ -109,16 +109,13 @@ const AuthenticatedApp = () => {
       return (
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            {/* /signin is canonical: Base44 hosting reserves /login on the app domain and
-            serves its own page there, so a full page load of /login never reaches us.
-            The /login route stays for in-app navigation and old bookmarks. */}
-        <Route path="/signin" element={<Login />} />
-        <Route path="/login" element={<Login />} />
+            <Route path="/signin" element={<Login />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth" element={<AuthToLoginRedirect />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/new-password" element={<ResetPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
