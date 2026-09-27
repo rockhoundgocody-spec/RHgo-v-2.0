@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 
-// Mock react hooks so component function can be invoked directly as pure function
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -13,7 +12,6 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-// Mock base44Client
 vi.mock('@/api/base44Client', () => ({
   base44: {
     functions: {
@@ -22,9 +20,9 @@ vi.mock('@/api/base44Client', () => ({
   },
 }));
 
-import CollectionMap from './CollectionMap.jsx';
+import ExpeditionMapView from './ExpeditionMapView.jsx';
 
-describe('CollectionMap component', () => {
+describe('ExpeditionMapView component', () => {
   beforeAll(() => {
     globalThis.window = globalThis.window || {};
   });
@@ -33,16 +31,19 @@ describe('CollectionMap component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders CollectionMap as a pure function / component without crashing', () => {
+  it('renders ExpeditionMapView as a pure function / component without crashing', () => {
     const specimens = [
       { id: '1', mineral_name: 'Quartz', lat: 37.7749, lng: -122.4194, rarity: 'rare' },
     ];
-    const element = CollectionMap({ specimens });
+    const hotspots = [
+      { id: 'h1', name: 'Crystal Cave', lat: 37.8, lng: -122.4 },
+    ];
+    const element = ExpeditionMapView({ specimens, hotspots });
     expect(element).toBeDefined();
   });
 
-  it('handles empty specimens array by returning empty state component', () => {
-    const element = CollectionMap({ specimens: [] });
+  it('handles empty inputs', () => {
+    const element = ExpeditionMapView({ specimens: [], hotspots: [] });
     expect(element).toBeDefined();
   });
 });

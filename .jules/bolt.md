@@ -1,7 +1,5 @@
 # Bolt's Journal
 
-## 2025-05-18 - Replacing N+1 Promise.all entity creation with bulkCreate
-
-**Learning:** When creating multiple entity records concurrently, using `Promise.all(items.map(t => entity.create(...)))` results in an N+1 query pattern where N separate HTTP API requests are dispatched sequentially or concurrently to the backend server, causing network overhead and connection contention. Replacing `Promise.all(items.map(...))` with `base44.entities.<Entity>.bulkCreate(...)` merges N operations into a single network payload request.
-
-**Action:** Look for `Promise.all` wrapping `.create()` calls on Base44 entities across the codebase and replace them with `bulkCreate()` calls to cut network request counts by N-1.
+## 2026-09-27 - Map Component Abstraction
+**Learning:** Map components (`CollectionMap` and `ExpeditionMapView`) shared identical Google Map initialization logic, dark styling configuration, and marker creation/cleanup lifecycle patterns.
+**Action:** Extract shared map styles into `src/lib/googleMapStyles.js` and map instance/marker lifecycle logic into `useGoogleMap` custom hook (`src/lib/useGoogleMap.js`) to reduce code duplication and streamline map maintenance across components.

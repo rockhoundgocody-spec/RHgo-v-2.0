@@ -1,14 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Gem, MapPin } from 'lucide-react';
 import { useGoogleMapsScript } from '@/lib/useGoogleMapsScript';
+import { useGoogleMap } from '@/lib/useGoogleMap';
+import { rarityColor } from '@/lib/googleMapStyles';
 import { getPinnedSpecimens } from './mapSpecimens';
-
-const rarityColor = {
-  common: '#a0a0b0',
-  uncommon: '#6ee7b7',
-  rare: '#7dd3fc',
-  legendary: '#c084fc',
-};
 
 function MapLoadingState() {
   return (
@@ -95,79 +90,35 @@ function SelectedSpecimenCard({ specimen, onClose }) {
 }
 
 export default function CollectionMap({ specimens = [] }) {
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
   const [selectedPin, setSelectedPin] = useState(null);
   const { mapsReady, apiKey, loadError } = useGoogleMapsScript();
 
   const pinned = useMemo(() => getPinnedSpecimens(specimens), [specimens]);
 
-  // Init map once ready
-  useEffect(() => {
-    if (!mapsReady || !mapRef.current || mapInstanceRef.current) return;
-
-    const center = pinned.length
-      ? { lat: pinned[0].lat, lng: pinned[0].lng }
-      : { lat: 39.5, lng: -98.35 }; // US center fallback
-
-    const map = new window.google.maps.Map(mapRef.current, {
-      center,
-      zoom: pinned.length === 1 ? 10 : 5,
-      mapTypeId: 'terrain',
-      disableDefaultUI: true,
-      zoomControl: true,
-      styles: darkMapStyle,
-    });
-    mapInstanceRef.current = map;
-  }, [mapsReady, pinned]);
-
-  // Drop / refresh markers whenever pinned specimens change
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapsReady) return;
-
-    // Clear old markers
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = [];
-
-    if (!pinned.length) return;
-
-    const bounds = new window.google.maps.LatLngBounds();
-
-    pinned.forEach((s) => {
-      const color = rarityColor[s.rarity || 'common'];
-
-      const marker = new window.google.maps.Marker({
-        position: { lat: s.lat, lng: s.lng },
-        map: mapInstanceRef.current,
-        title: s.mineral_name,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 9,
-          fillColor: color,
-          fillOpacity: 0.95,
-          strokeColor: '#fff',
-          strokeWeight: 1.5,
-        },
-      });
-
-      marker.addListener('click', () => setSelectedPin(s));
-      markersRef.current.push(marker);
-      bounds.extend({ lat: s.lat, lng: s.lng });
-    });
-
-    if (pinned.length > 1) {
-      mapInstanceRef.current.fitBounds(bounds, { top: 48, right: 24, bottom: 48, left: 24 });
-    }
-
-    return () => {
-      markersRef.current.forEach((marker) => {
-        window.google.maps.event?.clearInstanceListeners(marker);
-        marker.setMap(null);
-      });
-      markersRef.current = [];
+  const getMarkerOptions = useCallback((s) => {
+    const color = rarityColor[s.rarity || 'common'];
+    return {
+      icon: {
+        path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
+        scale: 9,
+        fillColor: color,
+        fillOpacity: 0.95,
+        strokeColor: '#fff',
+        strokeWeight: 1.5,
+      },
     };
-  }, [mapsReady, pinned]);
+  }, []);
+
+  const handlePinSelect = useCallback((s) => {
+    setSelectedPin(s);
+  }, []);
+
+  const { mapRef } = useGoogleMap({
+    mapsReady,
+    pins: pinned,
+    getMarkerOptions,
+    onPinSelect: handlePinSelect,
+  });
 
   if (loadError) return <MapErrorState />;
 
@@ -188,16 +139,3 @@ export default function CollectionMap({ specimens = [] }) {
     </div>
   );
 }
-
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8080a0' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5a' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d1b2a' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#16213e' }] },
-];
