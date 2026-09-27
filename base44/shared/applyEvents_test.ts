@@ -100,6 +100,7 @@ Deno.test('ID_RESULT_APPEND supersedes prior online_deep results correctly', asy
   };
 
   const res = await applyEvents({
+    // deno-lint-ignore no-explicit-any
     entities: entities as any,
     ownerEmail: 'test@example.com',
     events: [event],
@@ -144,6 +145,7 @@ Deno.test('ID_RESULT_APPEND performance baseline for superseding prior results',
 
   const start = performance.now();
   await applyEvents({
+    // deno-lint-ignore no-explicit-any
     entities: entities as any,
     ownerEmail: 'test@example.com',
     events: [event],
