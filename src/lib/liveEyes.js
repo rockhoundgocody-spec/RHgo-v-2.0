@@ -18,6 +18,8 @@ export const MIN_GAP_MS = 3500;          // never classify more often than this
 export const BUDGET = { calls: 24, windowMs: 10 * 60 * 1000 };
 export const DARK_LUMA = 38;
 export const BRIGHT_LUMA = 235;
+/** On-screen aiming square, as a fraction of the camera view's width (the reticle on /scan). */
+export const RETICLE_FRACTION = 0.62;
 
 /** Mean luma (0-255) of an RGBA pixel buffer. */
 export function lumaOf(rgba) {
@@ -77,6 +79,7 @@ export function shouldClassify({
 
 /** What to tell the hunter right now. */
 export function hintFor({ reason, quality, candidates }) {
+  if (reason === 'daily') return 'Today’s live labels are used up — tap the shutter to identify';
   if (reason === 'dark' || quality === 'dark') return 'More light — try the torch';
   if (reason === 'glare' || quality === 'glare') return 'Too much glare — tilt the specimen';
   if (quality === 'blurry') return 'Hold steady — it’s blurry';
@@ -85,6 +88,23 @@ export function hintFor({ reason, quality, candidates }) {
   if (reason === 'moving' && !candidates?.length) return 'Hold steady on a specimen';
   if (!candidates?.length && reason === 'same-scene') return 'Nothing identifiable yet — try another angle';
   return null;
+}
+
+/** Reasons worth showing the hunter; every other reason clears the hint. */
+export const HINT_REASONS = new Set(['dark', 'glare', 'moving', 'same-scene', 'budget', 'daily']);
+
+/**
+ * Debounce the reason the overlay shows: a new reason must repeat for
+ * `ticks` consecutive samples before it replaces the shown one, so the hint
+ * doesn't flicker while a hand hovers around the steadiness threshold.
+ * @param {{ shown: string|null, pending: string|null, count: number }} state
+ */
+export function settleReason(state, reason, ticks = 2) {
+  const next = HINT_REASONS.has(reason) ? reason : null;
+  if (next === state.shown) return { shown: state.shown, pending: next, count: 0 };
+  const count = next === state.pending ? state.count + 1 : 1;
+  if (count >= ticks) return { shown: next, pending: next, count: 0 };
+  return { shown: state.shown, pending: next, count };
 }
 
 /** Keep only confident, well-formed candidates; best first. */
@@ -100,4 +120,35 @@ export function cleanCandidates(raw) {
     .filter((c) => c.confidence >= 0.3)
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 3);
+}
+
+/**
+ * The part of the video frame under the on-screen aiming square.
+ * The <video> uses object-fit: cover, so what's visible is a centred crop of
+ * the frame scaled by max(viewW / videoW, viewH / videoH). Only the aiming
+ * square is sent, which keeps the upload small and leaves the hunter's
+ * surroundings out of it.
+ * @returns {{ sx: number, sy: number, size: number }} square source rect, video px
+ */
+export function coverCrop({ videoW, videoH, viewW, viewH, fraction = RETICLE_FRACTION }) {
+  const vw = Math.max(0, Number(videoW) || 0);
+  const vh = Math.max(0, Number(videoH) || 0);
+  const minSide = Math.min(vw, vh);
+  if (!minSide) return { sx: 0, sy: 0, size: 0 };
+  let size = minSide;
+  if (viewW > 0 && viewH > 0) {
+    const scale = Math.max(viewW / vw, viewH / vh);
+    size = Math.min(minSide, (fraction * viewW) / scale);
+  }
+  size = Math.max(1, Math.round(size));
+  return { sx: Math.round((vw - size) / 2), sy: Math.round((vh - size) / 2), size };
+}
+
+/** One sentence for screen readers about the current best guess. */
+export function describeTop(candidates) {
+  const top = candidates?.[0];
+  if (!top) return '';
+  const pct = Math.round((Number(top.confidence) || 0) * 100);
+  const rare = top.rarity && top.rarity !== 'common' ? `, ${top.rarity}` : '';
+  return `Looks like ${top.name}, ${pct} percent sure${rare}.`;
 }
