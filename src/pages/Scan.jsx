@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
+import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload, Eye } from 'lucide-react';
 import useCameraStream from '@/components/scan/useCameraStream.jsx';
+import useLiveEyes from '@/components/scan/useLiveEyes';
+import LiveEyesOverlay from '@/components/scan/LiveEyesOverlay.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { toast } from '@/components/ui/use-toast';
@@ -92,6 +94,36 @@ export default function Scan() {
       .catch(() => setMe(null))
       .finally(() => setAuthReady(true));
   }, []);
+
+  // Live Specimen Eyes: preview labels while aiming (members only).
+  // Clover's "what do you see?" opens /scan?live=1 with them switched on.
+  const [searchParams] = useSearchParams();
+  const wantsLive = searchParams.get('live') === '1';
+  const [eyesOn, setEyesOn] = useState(false);
+  const membersOnlyToast = () => toast({
+    title: 'Live labels are for members',
+    description: 'Create a free account to see live labels as you aim.',
+  });
+  useEffect(() => {
+    if (!authReady || !wantsLive) return;
+    if (me) setEyesOn(true);
+    else membersOnlyToast();
+  }, [authReady, wantsLive, me]); // eslint-disable-line react-hooks/exhaustive-deps
+  const eyes = useLiveEyes({
+    videoRef: camera.videoRef,
+    enabled: eyesOn && !!me && stage === 'camera' && !camera.error,
+    ready: camera.ready,
+    region: beachName,
+    wetDry,
+    onUnauthorized: () => setEyesOn(false),
+  });
+  const toggleEyes = () => {
+    if (!me) {
+      membersOnlyToast();
+      return;
+    }
+    setEyesOn((on) => !on);
+  };
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -444,6 +476,19 @@ export default function Scan() {
             <X size={20} className="text-white" />
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleEyes}
+              aria-label="Live labels"
+              aria-pressed={eyesOn}
+              className="h-11 px-3 rounded-full flex items-center gap-1.5 transition active:scale-90"
+              style={{
+                background: eyesOn ? 'rgba(159,232,208,0.25)' : 'rgba(0,0,0,0.4)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <Eye size={18} aria-hidden="true" style={{ color: eyesOn ? '#9FE8D0' : '#fff' }} />
+              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: eyesOn ? '#9FE8D0' : '#fff' }}>Live</span>
+            </button>
             {camera.torchSupported && (
               <button
                 onClick={camera.toggleTorch}
@@ -491,10 +536,19 @@ export default function Scan() {
         />
       )}
 
+      {stage === 'camera' && eyesOn && !!me && !camera.error && (
+        <LiveEyesOverlay
+          eyes={eyes}
+          onLock={handleShutter}
+          lockDisabled={!camera.ready}
+          onUpgrade={() => navigate('/pricing')}
+        />
+      )}
+
       {stage === 'camera' && (
         <div className="absolute inset-x-0 z-20 flex flex-col items-center gap-3 pointer-events-auto" style={{ bottom: '30%' }}>
           <WetDryToggle value={wetDry} onChange={setWetDry} />
-          {showHint && (
+          {showHint && !eyesOn && (
             <span className="text-white/70 text-[12px] font-medium tracking-wide px-3 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}>
               {camera.focusSupported ? 'Fill the frame · tap to focus' : 'Fill the frame · daylight'}
             </span>
