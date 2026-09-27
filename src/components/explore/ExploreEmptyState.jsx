@@ -78,7 +78,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
             <button
               key={h.id}
               onClick={() => onSelectHotspot(h)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{
                 background: 'linear-gradient(145deg,hsla(255,30%,12%,.85),hsla(240,25%,7%,.9))',
                 border: '1px solid hsla(270,30%,40%,.2)',
@@ -114,7 +114,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
           <button
             key={card.action}
             onClick={() => onAction(card.action)}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98]"
+            className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             style={{
               background: 'linear-gradient(145deg,hsla(255,30%,12%,.85),hsla(240,25%,7%,.9))',
               border: '1px solid hsla(255,30%,40%,.15)',
