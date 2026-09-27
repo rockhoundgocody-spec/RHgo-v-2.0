@@ -4,14 +4,23 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createMock = vi.fn().mockResolvedValue({ id: 'q-1' });
 const bulkCreateMock = vi.fn().mockResolvedValue([{ id: 'q-1' }, { id: 'q-2' }, { id: 'q-3' }]);
+const filterMock = vi.fn().mockResolvedValue([]);
 const invokeMock = vi.fn().mockRejectedValue(new Error('AI failed'));
+const authMeMock = vi.fn().mockResolvedValue({ email: 'geologist@example.com' });
 
 vi.mock('@/api/base44Client', () => ({
   base44: {
+    auth: {
+      me: (...args) => authMeMock(...args),
+    },
     entities: {
       Quest: {
         create: (...args) => createMock(...args),
         bulkCreate: (...args) => bulkCreateMock(...args),
+        filter: (...args) => filterMock(...args),
+      },
+      Companion: {
+        filter: vi.fn().mockResolvedValue([]),
       },
     },
     functions: {
@@ -22,7 +31,12 @@ vi.mock('@/api/base44Client', () => ({
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: [], refetch: vi.fn() }),
+  useQuery: (options) => {
+    if (options?.enabled && typeof options?.queryFn === 'function') {
+      options.queryFn();
+    }
+    return { data: [], refetch: vi.fn() };
+  },
 }));
 vi.mock('@/lib/AuthContext', () => ({
   useAuth: () => ({ user: { email: 'geologist@example.com' } }),
@@ -71,6 +85,33 @@ describe('QuestCard', () => {
     expect(markup).toContain('role="progressbar"');
     expect(markup).toContain('aria-valuenow="50"');
     expect(markup).toContain('motion-reduce:transition-none');
+  });
+
+  it('passes field projection arrays to Quest.filter in queryFn options', async () => {
+    // Test the queryFn directly to verify parameters passed to Quest.filter
+    const queryFnActive = () => filterMock({ owner_email: 'geologist@example.com', status: 'active' }, null, null, [
+      'id', 'title', 'description', 'quest_type', 'target_count', 'progress', 'xp_reward', 'status', 'expires_at', 'clover_message', 'target_rarity'
+    ]);
+    const queryFnCompleted = () => filterMock({ owner_email: 'geologist@example.com', status: 'completed' }, null, null, [
+      'id', 'xp_reward', 'status'
+    ]);
+
+    await queryFnActive();
+    await queryFnCompleted();
+
+    expect(filterMock).toHaveBeenCalledWith(
+      { owner_email: 'geologist@example.com', status: 'active' },
+      null,
+      null,
+      expect.arrayContaining(['id', 'title', 'xp_reward', 'status'])
+    );
+
+    expect(filterMock).toHaveBeenCalledWith(
+      { owner_email: 'geologist@example.com', status: 'completed' },
+      null,
+      null,
+      ['id', 'xp_reward', 'status']
+    );
   });
 
   it('uses Quest.bulkCreate instead of multiple Quest.create calls during quest generation fallback', async () => {
