@@ -42,6 +42,15 @@ describe('getLoginRedirectUrl', () => {
     expect(getLoginRedirectUrl('/scan#reticle')).toBe('/scan#reticle');
   });
 
+  it('never bounces back to an auth screen after signing in', () => {
+    expect(getLoginRedirectUrl('/signin')).toBe('/profile');
+    expect(getLoginRedirectUrl('/login')).toBe('/profile');
+    expect(getLoginRedirectUrl('/register')).toBe('/profile');
+    expect(getLoginRedirectUrl('/new-password')).toBe('/profile');
+    expect(getLoginRedirectUrl('/reset-password?token=abc')).toBe('/profile');
+    expect(getLoginRedirectUrl('/SignIn')).toBe('/profile');
+  });
+
   it('rejects protocol-relative open redirect attempts (//evil.com)', () => {
     expect(getLoginRedirectUrl('//evil.com')).toBe('/profile');
     expect(getLoginRedirectUrl('//attacker.com/signin')).toBe('/profile');
