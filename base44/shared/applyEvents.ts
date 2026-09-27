@@ -172,7 +172,8 @@ export async function applyEvents({ entities, ownerEmail, events, cursor = null 
     }
 
     const handler = HANDLERS[ev.type as keyof typeof HANDLERS];
-    const outcome = await handler(ctx, ev);
+    // deno-lint-ignore no-explicit-any
+    const outcome: any = await handler(ctx, ev);
 
     await entities.SyncEventLedger.create({
       event_id: ev.id,
