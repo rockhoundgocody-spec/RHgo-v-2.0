@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -13,6 +13,7 @@ import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
+import { RouteSeo, SIGNED_IN_PATHS } from '@/lib/routeSeo';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -88,6 +89,12 @@ function AuthToLoginRedirect() {
   return <Navigate to={`/signin${search}${hash}`} replace />;
 }
 
+/** Signed-out visitor on an app screen → sign in, then come back here. */
+function SignInFirst() {
+  const { pathname, search } = useLocation();
+  return <Navigate to={`/signin?from_url=${encodeURIComponent(pathname + search)}`} replace />;
+}
+
 /**
  * Renders routes after auth and public settings load, handling auth errors
  * and exposing public entry points when authentication is required.
@@ -134,7 +141,12 @@ const AuthenticatedApp = () => {
             <Route path="/explore" element={<Explore />} />
             <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/connect" element={<Connect />} />
-            <Route path="*" element={<Landing />} />
+            <Route path="/" element={<Landing />} />
+            {SIGNED_IN_PATHS.map((p) => (
+              <Route key={p} path={p} element={<SignInFirst />} />
+            ))}
+            {/* Unknown URLs get a real "not found" page (noindex) instead of the landing page. */}
+            <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
       );
@@ -223,9 +235,11 @@ function App() {
       <MobileOnlyGate>
         <BrowserRouter>
           <AnalyticsRouteListener />
+          <a href="#main-content" className="skip-link">Skip to content</a>
           <AuthProvider>
             <AuthenticatedApp />
           </AuthProvider>
+          <RouteSeo />
           <Toaster />
         </BrowserRouter>
       </MobileOnlyGate>
