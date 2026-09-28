@@ -7,7 +7,6 @@
  * could flip the whole URL (the sign-in card shown on "/" made the homepage
  * "noindex"), and effect ordering with lazy pages made the result unpredictable.
  */
-// eslint-disable-next-line no-unused-vars
 export function useSeoRobots(_indexable = true) {
   // Intentionally a no-op; see RouteSeo.
 }
