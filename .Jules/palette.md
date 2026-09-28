@@ -64,3 +64,7 @@
 ## 2024-11-21 - Onboarding Skip Button Focus Accessibility
 **Learning:** Found that custom plain text "Skip" buttons floating over complex backgrounds (like the Age Gate/Onboarding screens) often completely omit focus rings. Keyboard users and screen reader users navigating sequentially cannot see their focus position when they reach the skip action.
 **Action:** Always ensure that floating skip buttons (or any standalone text-only buttons in modals/tours) include `focus-visible:outline-none focus-visible:ring-2` with an appropriate semi-transparent white or themed ring (`focus-visible:ring-white/50`) and a subtle border radius (`rounded-md px-2 py-1`) to create a neat focus box around the text.
+
+## 2026-10-31 - External Permit Link Accessibility
+**Learning:** Inline links within detail cards (such as "Get permit →" in `LandAccessPanel`) often lack contextual `aria-label` attributes and focus ring indicators. For screen reader users navigating by links alone, "Get permit →" provides no context as to which site or hotspot the permit belongs to.
+**Action:** Always complement external action links with descriptive `aria-label` attributes (e.g. `aria-label={`Get permit for ${siteName} (opens in new tab)`}`) and theme-matched focus ring styles (`focus-visible:ring-2 focus-visible:ring-hud-cyan/60 rounded-sm`).
