@@ -115,6 +115,7 @@ const AuthenticatedApp = () => {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
       return (
+        <main id="main-content" tabIndex={-1} className="outline-none">
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/signin" element={<Login />} />
@@ -149,6 +150,7 @@ const AuthenticatedApp = () => {
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Suspense>
+        </main>
       );
     }
   }
