@@ -1,30 +1,13 @@
-import { useEffect } from 'react';
-
-const ROBOTS_META_ID = 'robots-meta';
-const PUBLIC_DEFAULT = 'index, follow';
-const PRIVATE_DEFAULT = 'noindex, nofollow';
-
 /**
- * Controls the <meta name="robots"> tag for the current route.
+ * Kept for compatibility: pages still call useSeoRobots(true/false), but the
+ * robots meta is now decided per URL by <RouteSeo /> (src/lib/routeSeo.js),
+ * which indexes exactly the public sitemap pages.
  *
- * index.html ships a default `index, follow` so public marketing pages
- * (Landing, Scan, Demo, Pricing, About, Contact, legal) are crawlable
- * without every page having to opt in. Call this hook with `false` on
- * authenticated / private app screens so they stay out of search results.
- *
- * On unmount it restores the public default so the next marketing route
- * is never accidentally left noindex.
+ * Page-level control caused bugs: components rendered inside another page
+ * could flip the whole URL (the sign-in card shown on "/" made the homepage
+ * "noindex"), and effect ordering with lazy pages made the result unpredictable.
  */
-export function useSeoRobots(indexable = true) {
-  useEffect(() => {
-    let tag = document.getElementById(ROBOTS_META_ID);
-    if (!tag) {
-      tag = document.createElement('meta');
-      tag.name = 'robots';
-      tag.id = ROBOTS_META_ID;
-      document.head.appendChild(tag);
-    }
-    tag.content = indexable ? PUBLIC_DEFAULT : PRIVATE_DEFAULT;
-    return () => { tag.content = PUBLIC_DEFAULT; };
-  }, [indexable]);
+// eslint-disable-next-line no-unused-vars
+export function useSeoRobots(_indexable = true) {
+  // Intentionally a no-op; see RouteSeo.
 }
