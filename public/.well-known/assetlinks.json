@@ -3,8 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.rockhoundgo.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_PLAY_APP_SIGNING_SHA256"]
+      "package_name": "me.rhgo.app",
+      "sha256_cert_fingerprints": [
+        "F6:2E:52:62:FC:87:99:0F:30:9D:63:69:14:AE:4F:92:58:0F:A6:F8:5E:CC:8B:0C:58:70:DA:15:F8:41:91:70"
+      ]
     }
   }
 ]
