@@ -19,11 +19,6 @@ const DEFAULT_GRAPH = {
       url: 'https://rhgo.me',
       name: 'RockHound-GO',
       publisher: { '@id': 'https://rhgo.me/#organization' },
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: 'https://rhgo.me/explore',
-        'query-input': 'required name=search_term_string',
-      },
     },
     {
       '@type': 'WebApplication',
