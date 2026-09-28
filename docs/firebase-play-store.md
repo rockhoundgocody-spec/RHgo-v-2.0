@@ -23,8 +23,13 @@ Play needs real PNG icons, not the remote JPG/URL icons currently in `public/man
 ## 3. Build the Android bundle
 ```bash
 npm i -g @bubblewrap/cli
-bubblewrap init --manifest=https://YOUR_FIREBASE_PROJECT_ID.web.app/manifest.json   # or reuse twa-manifest.json
-bubblewrap build        # creates android.keystore (KEEP + BACK UP, never commit) and app-release-bundle.aab
+# `bubblewrap init` regenerates twa-manifest.json from the web manifest and would overwrite the
+# checked-in package id. Build from the checked-in file instead:
+bubblewrap update      # applies ./twa-manifest.json and generates the Android project
+# Create the signing key once (KEEP + BACK UP android.keystore and its passwords, never commit them).
+# Its alias must match signingKey.alias in twa-manifest.json ("android").
+keytool -genkeypair -v -keystore android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000
+bubblewrap build        # signs with android.keystore and produces app-release-bundle.aab
 ```
 `android.keystore` and `*.aab` are gitignored.
 
