@@ -1,10 +1,10 @@
 /**
-import { Link } from 'react-router-dom';
  * Clubs — Gem & Mineral Club Chapter Portal.
  * Lists club chapters, upcoming events, and lets users discover or create chapters.
  * Links testimonials and pre-signups into an institutional event management hub.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
