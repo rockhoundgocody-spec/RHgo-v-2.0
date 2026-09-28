@@ -179,7 +179,7 @@ export const AGATE_IMAGES = {
     "w960": "/agate/blue-lace-agate-960.webp",
     "width": 960,
     "height": 1280,
-    "artist": "Unknown authorUnknown author",
+    "artist": "Unknown author",
     "license": "CC0",
     "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
     "page": "https://commons.wikimedia.org/wiki/File:Blue_Lace_Agate.jpg"
