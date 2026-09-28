@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { detectTwa, isNativeApp, _resetPlayAppCache } from './isNativeApp';
 
