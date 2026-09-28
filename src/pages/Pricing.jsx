@@ -145,7 +145,7 @@ function StoreAppNotice() {
           type="button"
           onClick={() => navigate('/')}
           className="mt-6 h-10 px-5 rounded-xl font-bold text-sm transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-          style={{ background: '#E8B04A', color: '#0a0a14' }}
+          style={{ background: '#9FE8D0', color: '#0a0a14' }}
         >
           Back to the field kit
         </button>
