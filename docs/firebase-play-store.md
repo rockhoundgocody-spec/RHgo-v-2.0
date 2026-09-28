@@ -15,6 +15,11 @@ firebase deploy --only hosting
 ```
 Site: https://YOUR_FIREBASE_PROJECT_ID.web.app (add a custom domain in the Firebase console if wanted).
 
+### Sign-in (Supabase OAuth)
+Login builds its redirect from the page origin. In the Supabase dashboard (Authentication -> URL Configuration) add
+`https://YOUR_FIREBASE_PROJECT_ID.web.app/**` (and any custom domain) to the allowed Redirect URLs, and add the same
+origin in the Google OAuth client if it restricts origins. Otherwise Google sign-in cannot return to the app.
+
 ## 2. Before building the Android app
 Play needs real PNG icons, not the remote JPG/URL icons currently in `public/manifest.json`:
 - add `public/icons/icon-512.png` and `public/icons/icon-512-maskable.png` (plus 192px) and point `manifest.json` at them
