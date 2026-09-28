@@ -10,6 +10,7 @@ import {
 } from '@/lib/agateData';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import { agateImage } from '@/lib/agateImages';
 
 const RARITY_STYLES = {
   common:    { color: '#94a3b8', bg: 'hsla(210,20%,30%,0.3)',  label: 'Common' },
@@ -195,6 +196,7 @@ export default function AgateGuide() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredVarieties.map((v, i) => {
             const rs = RARITY_STYLES[v.rarity] || RARITY_STYLES.common;
+            const img = agateImage(v.image_url);
             return (
               <motion.button
                 key={v.name}
@@ -212,10 +214,15 @@ export default function AgateGuide() {
                 <div className="relative h-32 overflow-hidden flex items-center justify-center bg-purple-950/40">
                   <span className="text-3xl select-none opacity-30">💎</span>
                   <img
-                    src={v.image_url}
+                    src={img ? img.w480 : v.image_url}
+                    srcSet={img ? `${img.w480} 480w, ${img.w960} 960w` : undefined}
+                    sizes="(min-width: 640px) 33vw, 50vw"
+                    width={img?.width}
+                    height={img?.height}
                     alt={v.name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
+                    decoding="async"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                   <div
@@ -272,9 +279,12 @@ export default function AgateGuide() {
             <div className="relative h-48 overflow-hidden flex items-center justify-center bg-purple-950/40">
               <span className="text-4xl select-none opacity-30">💎</span>
               <img
-                src={selected.image_url}
+                src={agateImage(selected.image_url)?.w960 || selected.image_url}
+                width={agateImage(selected.image_url)?.width}
+                height={agateImage(selected.image_url)?.height}
                 alt={selected.name}
                 className="absolute inset-0 w-full h-full object-cover"
+                decoding="async"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
               <div
@@ -318,11 +328,33 @@ export default function AgateGuide() {
                 </div>
                 <p className="text-white/60 text-sm leading-relaxed">{selected.characteristics}</p>
               </div>
+              <PhotoCredit img={agateImage(selected.image_url)} />
             </div>
           </motion.div>
         </div>
       )}
     </div>
+  );
+}
+
+// Wikimedia Commons licenses (CC BY / BY-SA) require crediting the photographer.
+function PhotoCredit({ img }) {
+  if (!img) return null;
+  return (
+    <p className="mt-4 text-[10px] leading-relaxed text-white/35">
+      Photo: {img.artist || 'Unknown'}
+      {img.license ? (
+        <>
+          {', '}
+          {img.licenseUrl ? (
+            <a href={img.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">{img.license}</a>
+          ) : img.license}
+        </>
+      ) : null}
+      {', via '}
+      <a href={img.page} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Wikimedia Commons</a>
+      {' (resized)'}
+    </p>
   );
 }
 
