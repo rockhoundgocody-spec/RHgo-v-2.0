@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 const INTENT_MAP = {
   scan: ['identify', 'scan', 'what is', 'what mineral', 'classify', 'analyze', 'look at', 'photo', 'camera'],
@@ -41,8 +42,9 @@ Deno.serve(async (req) => {
   const intent = classifyIntent(command);
   const route = ROUTE_MAP[intent];
 
-  const locationCtx = lat && lng
-    ? `User is currently at coordinates ${lat.toFixed(4)}, ${lng.toFixed(4)}.`
+  const coords = parseCoordinates(lat, lng);
+  const locationCtx = coords
+    ? `User is currently at coordinates ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}.`
     : 'User location is unknown.';
   const collectionCtx = collection_count ? `User has ${collection_count} specimens in their collection.` : '';
 

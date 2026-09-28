@@ -81,8 +81,13 @@ export default function LandAccessPanel({ hotspot }) {
                 )}
               </div>
               {hotspot.permit_url && (
-                <a href={hotspot.permit_url} target="_blank" rel="noopener noreferrer"
-                  className="text-hud-cyan text-[10px] underline mt-0.5 inline-block">
+                <a
+                  href={hotspot.permit_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Get permit for ${hotspot.name || 'site'} (opens in new tab)`}
+                  className="text-hud-cyan text-[10px] underline mt-0.5 inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60 rounded-sm"
+                >
                   Get permit →
                 </a>
               )}

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 /**
  * Privacy: fuzz exact coordinates by up to ±200m before persisting.
@@ -74,18 +75,19 @@ Transcript: """${transcript}"""`;
     );
     // Reverse-geocode using TRUE coords (more accurate place name),
     // then fuzz before persisting so stored coords are ±200m off true location.
-    if (typeof lat === 'number' && typeof lng === 'number') {
-      const fuzzed = fuzzCoordinates(lat, lng, 200);
+    const coords = parseCoordinates(lat, lng);
+    if (coords) {
+      const fuzzed = fuzzCoordinates(coords.lat, coords.lng, 200);
       payload.lat = fuzzed.lat;
       payload.lng = fuzzed.lng;
     }
     if (!payload.found_date) payload.found_date = today;
 
-    if (!payload.found_at && typeof lat === 'number' && typeof lng === 'number') {
+    if (!payload.found_at && coords) {
       const key = Deno.env.get('GOOGLE_MAPS_API_KEY');
       if (key) {
         try {
-          const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${key}`;
+          const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${key}`;
           const geo = await fetch(url).then((r) => r.json());
           const best = geo?.results?.[0];
           if (best?.formatted_address) payload.found_at = best.formatted_address;
