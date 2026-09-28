@@ -46,7 +46,7 @@ export default function LandAccessPanel({ hotspot }) {
       {/* Status header bar */}
       <div className="px-4 py-3 flex items-center gap-3"
         style={{ background: `${access.color}18` }}>
-        <AccessIcon size={16} style={{ color: access.color }} />
+        <AccessIcon size={16} style={{ color: access.color }} aria-hidden="true" />
         <div className="flex-1">
           <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: access.color }}>
             {access.label}
@@ -59,7 +59,7 @@ export default function LandAccessPanel({ hotspot }) {
         {/* Seasonal dates */}
         {hotspot.seasonal_dates && (
           <div className="flex items-start gap-2">
-            <Clock size={12} className="text-white/40 mt-0.5 shrink-0" />
+            <Clock size={12} className="text-white/40 mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <span className="text-white/40 text-[10px] uppercase tracking-wider">Season: </span>
               <span className="text-white/70 text-[11px]">{hotspot.seasonal_dates}</span>
@@ -70,19 +70,24 @@ export default function LandAccessPanel({ hotspot }) {
         {/* Permit requirement */}
         {needsPermit && (
           <div className="flex items-start gap-2">
-            <FileText size={12} className="text-amber-400 mt-0.5 shrink-0" />
+            <FileText size={12} className="text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-amber-400 text-[10px] font-bold uppercase tracking-wider">Permit Required</span>
                 {hotspot.permit_cost && (
                   <span className="flex items-center gap-0.5 text-amber-300/70 text-[10px]">
-                    <DollarSign size={9} /> {hotspot.permit_cost}
+                    <DollarSign size={9} aria-hidden="true" /> {hotspot.permit_cost}
                   </span>
                 )}
               </div>
               {hotspot.permit_url && (
-                <a href={hotspot.permit_url} target="_blank" rel="noopener noreferrer"
-                  className="text-hud-cyan text-[10px] underline mt-0.5 inline-block">
+                <a
+                  href={hotspot.permit_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Get permit for ${hotspot.name || 'this site'} (opens in new tab)`}
+                  className="text-hud-cyan text-[10px] underline mt-0.5 inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/80 focus-visible:ring-offset-1 focus-visible:ring-offset-background rounded-sm"
+                >
                   Get permit →
                 </a>
               )}
@@ -93,7 +98,7 @@ export default function LandAccessPanel({ hotspot }) {
         {/* Claim status */}
         {hotspot.claim_type && hotspot.claim_type !== 'none' && (
           <div className="flex items-start gap-2">
-            <Shield size={12} style={{ color: claim.color }} className="mt-0.5 shrink-0" />
+            <Shield size={12} style={{ color: claim.color }} className="mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: claim.color }}>
                 {claim.label}
@@ -106,7 +111,7 @@ export default function LandAccessPanel({ hotspot }) {
         {/* Access notes */}
         {hotspot.access_notes && (
           <div className="flex items-start gap-2">
-            <MapPin size={12} className="text-white/40 mt-0.5 shrink-0" />
+            <MapPin size={12} className="text-white/40 mt-0.5 shrink-0" aria-hidden="true" />
             <p className="text-white/55 text-[11px] leading-relaxed flex-1">{hotspot.access_notes}</p>
           </div>
         )}
@@ -114,7 +119,7 @@ export default function LandAccessPanel({ hotspot }) {
         {/* Collecting rules */}
         {hotspot.collecting_rules && (
           <div className="flex items-start gap-2 pt-2 border-t" style={{ borderColor: 'hsla(255,30%,30%,0.15)' }}>
-            <Shield size={12} className="text-emerald-400/70 mt-0.5 shrink-0" />
+            <Shield size={12} className="text-emerald-400/70 mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <span className="text-emerald-400/70 text-[9px] font-bold uppercase tracking-wider">Collecting Rules</span>
               <p className="text-white/55 text-[11px] mt-0.5 leading-relaxed">{hotspot.collecting_rules}</p>
@@ -126,7 +131,7 @@ export default function LandAccessPanel({ hotspot }) {
         {isClosed && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
             style={{ background: 'hsla(0,60%,20%,0.4)', border: '1px solid hsla(0,70%,50%,0.3)' }}>
-            <Lock size={12} className="text-rose-400" />
+            <Lock size={12} className="text-rose-400" aria-hidden="true" />
             <span className="text-rose-300 text-[10px] font-semibold">
               This site is currently closed to collecting. Do not enter.
             </span>
