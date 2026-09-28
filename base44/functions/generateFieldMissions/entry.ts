@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -16,7 +17,8 @@ Deno.serve(async (req) => {
     specimens.forEach((s) => { if (s.rarity) rarityCounts[s.rarity] = (rarityCounts[s.rarity] || 0) + 1; });
 
     // Build context for the AI
-    const locationCtx = lat && lng ? `User is near coordinates ${lat.toFixed(3)}, ${lng.toFixed(3)}.` : 'Location unknown.';
+    const coords = parseCoordinates(lat, lng);
+    const locationCtx = coords ? `User is near coordinates ${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}.` : 'Location unknown.';
     const seasonCtx = season ? `Current season: ${season}.` : `Current month: ${new Date().toLocaleString('default', { month: 'long' })}.`;
     const collectionCtx = collectedMinerals.length
       ? `User has collected: ${collectedMinerals.slice(0, 15).join(', ')}.`
