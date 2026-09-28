@@ -12,6 +12,7 @@ import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
 import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
+import { isNativeApp } from '@/lib/isNativeApp';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 import Login from '@/pages/Login';
@@ -214,6 +215,9 @@ prefetchWhenIdle([
 ]);
 
 function App() {
+  // Latch Google Play app mode before any redirect drops ?source=twa.
+  isNativeApp();
+
   return (
     <QueryClientProvider client={queryClientInstance}>
       <MobileOnlyGate>
