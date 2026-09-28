@@ -10,7 +10,7 @@ const DEFAULT_GRAPH = {
       '@id': 'https://rhgo.me/#organization',
       name: 'RockHound-GO',
       url: 'https://rhgo.me',
-      logo: 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png',
+      logo: 'https://rhgo.me/icons/icon-512.png',
       sameAs: [],
     },
     {
