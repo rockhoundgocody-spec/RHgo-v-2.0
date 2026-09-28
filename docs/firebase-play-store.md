@@ -39,7 +39,7 @@ bubblewrap build        # signs with android.keystore and produces app-release-b
 `android.keystore` and `*.aab` are gitignored.
 
 ## 4. Play Console
-1. Create app with package id `com.rockhoundgo.app`, upload `app-release-bundle.aab` to an internal/closed test track.
+1. Create app with package id `me.rhgo.app`, upload `app-release-bundle.aab` to an internal/closed test track.
 2. Turn on Play App Signing. Copy the **App signing key SHA-256** (Setup → App signing).
 3. Put it in `public/.well-known/assetlinks.json`, rebuild and redeploy Firebase so
    https://YOUR_FIREBASE_PROJECT_ID.web.app/.well-known/assetlinks.json serves it. Without this the app shows a browser URL bar.

@@ -1,5 +1,5 @@
 {
-  "packageId": "com.rockhoundgo.app",
+  "packageId": "me.rhgo.app",
   "host": "YOUR_FIREBASE_PROJECT_ID.web.app",
   "name": "RockHound GO — Field Companion for Rockhounds",
   "launcherName": "RockHound GO",
