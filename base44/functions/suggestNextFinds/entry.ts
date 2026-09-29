@@ -97,7 +97,15 @@ Deno.serve(async (req) => {
     const nearby = scored.slice(0, 8);
 
     // 3. Minerals available nearby that the user has NOT collected yet
-    const uncollectedNearby = [...new Set(nearby.flatMap(h => h.minerals || []))].filter(m => !collection[m]);
+    const uncollectedSet = new Set<string>();
+    for (const h of nearby) {
+      if (h.minerals) {
+        for (const m of h.minerals) {
+          if (!collection[m]) uncollectedSet.add(m);
+        }
+      }
+    }
+    const uncollectedNearby = [...uncollectedSet];
 
     const hotspotContext = nearby.map(h =>
       `${h.name}${h.state ? ', ' + h.state : ''}` +
