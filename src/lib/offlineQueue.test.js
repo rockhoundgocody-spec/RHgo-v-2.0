@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { webcrypto } from "node:crypto";
 
 if (!globalThis.crypto) {
