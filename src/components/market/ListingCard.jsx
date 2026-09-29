@@ -11,14 +11,31 @@ const RARITY_CFG = {
 
 export default function ListingCard({ listing, index = 0, onTap }) {
   const rc = RARITY_CFG[listing.rarity] || RARITY_CFG.common;
+  const title = listing.title || listing.mineral_name;
+  const priceInfo = listing.trade_only
+    ? 'Trade only'
+    : listing.asking_price > 0
+      ? `$${listing.asking_price}`
+      : 'Offer';
+
+  const handleKeyDown = (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onTap) {
+      e.preventDefault();
+      onTap(listing);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      onClick={onTap}
-      className="rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+      onClick={() => onTap?.(listing)}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${title}, ${rc.label} rarity, ${priceInfo}${listing.location_label ? `, from ${listing.location_label}` : ''}`}
+      className="rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
       style={{
         background: 'linear-gradient(160deg, hsla(255,30%,12%,0.85), hsla(245,25%,7%,0.9))',
         border: `1px solid ${rc.glow.replace(/[\d.]+\)$/, '0.22)')}`,
@@ -29,8 +46,8 @@ export default function ListingCard({ listing, index = 0, onTap }) {
       <div className="aspect-square relative overflow-hidden flex items-center justify-center"
         style={{ background: `radial-gradient(circle at 40% 35%, ${rc.glow}, hsla(245,25%,6%,0.8))` }}>
         {listing.image_url
-          ? <img src={listing.image_url} alt={listing.mineral_name} className="w-full h-full object-cover" />
-          : <Gem size={32} style={{ color: rc.color, opacity: 0.5 }} />}
+          ? <img src={listing.image_url} alt="" className="w-full h-full object-cover" />
+          : <Gem size={32} style={{ color: rc.color, opacity: 0.5 }} aria-hidden="true" />}
         <div className="absolute top-2 left-2">
           <span className="text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full"
             style={{ background: `${rc.glow.replace(/[\d.]+\)$/, '0.25)')}`, color: rc.color, border: `1px solid ${rc.glow.replace(/[\d.]+\)$/, '0.35)')}` }}>
@@ -40,7 +57,7 @@ export default function ListingCard({ listing, index = 0, onTap }) {
         {listing.verified && (
           <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
             style={{ background: 'hsla(220,40%,5%,0.85)', border: '1px solid hsla(0,0%,100%,0.1)' }}>
-            <Shield size={10} className="text-emerald-400" />
+            <Shield size={10} className="text-emerald-400" aria-hidden="true" />
           </div>
         )}
         {listing.status === 'sold' && (
@@ -54,24 +71,24 @@ export default function ListingCard({ listing, index = 0, onTap }) {
       {/* Info */}
       <div className="p-3">
         <div className="text-white/90 text-[13px] font-bold truncate mb-0.5">
-          {listing.title || listing.mineral_name}
+          {title}
         </div>
         {listing.location_label && (
           <div className="flex items-center gap-1 text-white/35 text-[10px] mb-1.5 truncate">
-            <MapPin size={9} /> {listing.location_label}
+            <MapPin size={9} aria-hidden="true" /> {listing.location_label}
           </div>
         )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             {listing.trade_only
-              ? <><ArrowRightLeft size={10} style={{ color: rc.color }} /><span className="text-[10px] font-bold" style={{ color: rc.color }}>Trade</span></>
+              ? <><ArrowRightLeft size={10} style={{ color: rc.color }} aria-hidden="true" /><span className="text-[10px] font-bold" style={{ color: rc.color }}>Trade</span></>
               : listing.asking_price > 0
-                ? <><DollarSign size={10} style={{ color: rc.color }} /><span className="text-[11px] font-black" style={{ color: rc.color }}>{listing.asking_price.toFixed(0)}</span></>
+                ? <><DollarSign size={10} style={{ color: rc.color }} aria-hidden="true" /><span className="text-[11px] font-black" style={{ color: rc.color }}>{listing.asking_price.toFixed(0)}</span></>
                 : <span className="text-[10px] font-bold text-white/40">Offer</span>}
           </div>
           {listing.view_count > 0 && (
             <div className="flex items-center gap-0.5 text-white/25 text-[9px]">
-              <Eye size={8} /> {listing.view_count}
+              <Eye size={8} aria-hidden="true" /> {listing.view_count}
             </div>
           )}
         </div>
