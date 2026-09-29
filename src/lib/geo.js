@@ -1,5 +1,6 @@
 const GPS_KEY = 'rhgo_last_gps';
 const EARTH_MI = 3958.8;
+const noop = () => {};
 
 export const PUBLIC_LAND = new Set(['public', 'blm', 'forest_service', 'state_park']);
 
@@ -45,10 +46,10 @@ export function readLastGps(maxAgeMs = 1000 * 60 * 60 * 6) {
 }
 
 export function watchGps(onFix) {
-  if (typeof onFix !== 'function') return () => {};
+  if (typeof onFix !== 'function') return noop;
   const cached = readLastGps();
   if (cached) onFix(cached);
-  if (!navigator.geolocation) return () => {};
+  if (!navigator.geolocation) return noop;
   let cancelled = false;
   navigator.geolocation.getCurrentPosition(
     (pos) => {
@@ -57,7 +58,7 @@ export function watchGps(onFix) {
       persistLastGps(coords);
       onFix(coords);
     },
-    () => {},
+    noop,
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
   );
   return () => { cancelled = true; };

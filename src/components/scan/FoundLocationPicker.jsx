@@ -198,11 +198,11 @@ export default function FoundLocationPicker({
       style={compact ? undefined : { background: 'hsla(0,0%,100%,0.03)', border: '1px solid hsla(160,60%,70%,0.18)' }}
     >
       <div className="flex items-center gap-2">
-        <MapPin size={14} style={{ color: '#9FE8D0' }} />
+        <MapPin size={14} style={{ color: '#9FE8D0' }} aria-hidden="true" />
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
           Where you found it
         </p>
-        {saving && <Loader2 size={14} className="animate-spin ml-auto" style={{ color: '#9FE8D0' }} />}
+        {saving && <Loader2 size={14} className="animate-spin ml-auto" style={{ color: '#9FE8D0' }} aria-hidden="true" />}
       </div>
 
       {foundAt || lat != null ? (
@@ -216,11 +216,11 @@ export default function FoundLocationPicker({
           <button
             type="button"
             onClick={clearLocation}
-            className="shrink-0 p-1.5 rounded-lg text-white/40"
+            className="shrink-0 p-1.5 rounded-lg text-white/40 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 motion-reduce:transition-none"
             style={{ background: 'hsla(0,0%,100%,0.05)' }}
             aria-label="Clear found location"
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -230,17 +230,18 @@ export default function FoundLocationPicker({
       )}
 
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-xl"
+        className="flex items-center gap-2 px-3 py-2 rounded-xl focus-within:ring-2 focus-within:ring-[#9FE8D0]/60"
         style={{ background: 'hsla(0,0%,100%,0.04)', border: '1px solid hsla(0,0%,100%,0.08)' }}
       >
-        <Search size={14} className="shrink-0 text-white/35" />
+        <Search size={14} className="shrink-0 text-white/35" aria-hidden="true" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search a town, mine, or collecting site"
+          aria-label="Search collecting site or location"
           className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 outline-none min-w-0"
         />
-        {searching && <Loader2 size={14} className="animate-spin shrink-0" style={{ color: '#9FE8D0' }} />}
+        {searching && <Loader2 size={14} className="animate-spin shrink-0" style={{ color: '#9FE8D0' }} aria-hidden="true" />}
       </div>
 
       <div className="flex gap-2">
@@ -248,19 +249,23 @@ export default function FoundLocationPicker({
           type="button"
           onClick={useGps}
           disabled={gpsBusy}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
+          aria-busy={gpsBusy || undefined}
+          aria-label="Use my GPS location"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 disabled:opacity-50 motion-reduce:transition-none"
           style={{ background: 'rgba(159,232,208,0.12)', border: '1px solid rgba(159,232,208,0.28)', color: '#9FE8D0' }}
         >
-          {gpsBusy ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
+          {gpsBusy ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <Navigation size={14} aria-hidden="true" />}
           Use my GPS
         </button>
         <button
           type="button"
           onClick={() => setShowMap((v) => !v)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
+          aria-expanded={showMap}
+          aria-label={showMap ? 'Hide map view' : 'Pick location on map'}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 motion-reduce:transition-none"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)', color: 'rgba(255,255,255,0.75)' }}
         >
-          <Crosshair size={14} />
+          <Crosshair size={14} aria-hidden="true" />
           {showMap ? 'Hide map' : 'Pick on map'}
         </button>
       </div>
@@ -272,7 +277,8 @@ export default function FoundLocationPicker({
               key={site.id || site.name}
               type="button"
               onClick={() => pickCoords(site.lat, site.lng, site.name)}
-              className="w-full text-left px-3 py-2 rounded-xl"
+              aria-label={`Select location: ${site.name}`}
+              className="w-full text-left px-3 py-2 rounded-xl transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 motion-reduce:transition-none"
               style={{ background: 'hsla(0,0%,100%,0.03)', border: '1px solid hsla(0,0%,100%,0.06)' }}
             >
               <p className="text-xs font-semibold text-white truncate">{site.name}</p>
@@ -286,7 +292,8 @@ export default function FoundLocationPicker({
               key={hit.id}
               type="button"
               onClick={() => pickCoords(hit.lat, hit.lng, hit.name.split(',').slice(0, 3).join(', '))}
-              className="w-full text-left px-3 py-2 rounded-xl"
+              aria-label={`Select location: ${hit.name.split(',')[0]}`}
+              className="w-full text-left px-3 py-2 rounded-xl transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 motion-reduce:transition-none"
               style={{ background: 'hsla(0,0%,100%,0.03)', border: '1px solid hsla(0,0%,100%,0.06)' }}
             >
               <p className="text-xs font-semibold text-white truncate">{hit.name.split(',')[0]}</p>

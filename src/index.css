@@ -400,3 +400,23 @@
     }
   }
 }
+/* Keyboard "Skip to content" link: hidden until focused (WCAG 2.4.1). */
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -64px;
+  z-index: 10000;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #9FE8D0;
+  color: #0a0a14;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}

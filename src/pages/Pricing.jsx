@@ -129,7 +129,36 @@ const TIERS = [
   },
 ];
 
+// Store apps (Google Play): memberships can't be bought through Stripe there,
+// so the whole page is replaced by a short notice with no prices or links out.
+function StoreAppNotice() {
+  const navigate = useNavigate();
+  useSeoRobots(false);
+  return (
+    <main className="min-h-screen flex items-center justify-center px-4 py-16" style={{ background: '#0a0a14' }}>
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-black text-white tracking-tight">Memberships aren't sold in the app</h1>
+        <p className="mt-2 text-white/60 text-sm leading-relaxed">
+          If you already have a membership, sign in with the same account and all of your perks are active here.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mt-6 h-10 px-5 rounded-xl font-bold text-sm transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          style={{ background: '#9FE8D0', color: '#0a0a14' }}
+        >
+          Back to the field kit
+        </button>
+      </div>
+    </main>
+  );
+}
+
 export default function Pricing() {
+  return isNativeApp() ? <StoreAppNotice /> : <PricingPage />;
+}
+
+function PricingPage() {
   useSeoRobots(true);
   useSeoMeta(
     'RockHound-GO Pricing — Field, Season, Hound, Steward & Club',

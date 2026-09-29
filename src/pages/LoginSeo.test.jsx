@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, Outlet, RouterProvider } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Auth from './Auth';
 import Login from './Login';
+import { RouteSeo } from '@/lib/routeSeo';
 
 vi.mock('@/api/base44Client', () => ({ base44: { auth: {} } }));
 vi.mock('@/lib/AuthContext', () => ({
@@ -32,10 +33,18 @@ describe('Login robots directive', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    // Same shape as App: RouteSeo sits next to the routes and decides robots per URL.
     router = createMemoryRouter([
-      { path: '/auth', element: <Auth /> },
-      { path: '/signin', element: <Login /> },
-      { path: '/about', element: <p>Public page</p> },
+      {
+        element: <><Outlet /><RouteSeo /></>,
+        children: [
+          { path: '/auth', element: <Auth /> },
+          { path: '/signin', element: <Login /> },
+          { path: '/about', element: <p>Public page</p> },
+          // The homepage shows the sign-in card to signed-out visitors; it must stay indexable.
+          { path: '/', element: <Login /> },
+        ],
+      },
     ], { initialEntries: ['/auth?next=%2Fcollection#signin'] });
 
     await act(async () => root.render(<RouterProvider router={router} />));
@@ -47,5 +56,9 @@ describe('Login robots directive', () => {
 
     await act(async () => router.navigate('/about'));
     expect(document.getElementById('robots-meta').content).toBe('index, follow');
+
+    await act(async () => router.navigate('/'));
+    expect(document.getElementById('robots-meta').content).toBe('index, follow');
+    expect(document.querySelector('link[rel="canonical"]').getAttribute('href')).toBe('https://rhgo.me/');
   });
 });

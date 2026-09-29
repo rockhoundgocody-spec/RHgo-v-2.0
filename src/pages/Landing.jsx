@@ -17,8 +17,8 @@ const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835e
 export default function Landing() {
   useSeoRobots(true);
   useSeoMeta(
-    'RockHound-GO — Photograph it. Get a field report.',
-    'AI mineral identification, legal land access, and a collection worth keeping. Built by collectors, for collectors.'
+    'RockHound-GO — AI Rock & Mineral ID for Rockhounds',
+    'Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds.'
   );
 
   return (

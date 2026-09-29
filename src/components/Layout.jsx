@@ -121,7 +121,9 @@ function SubrouteBackButton({ onBack }) {
 function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion }) {
   return (
     <main
-      className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
+      id="main-content"
+      tabIndex={-1}
+      className={cn('relative outline-none', isAdminOrDocs ? 'pb-8' : '')}
       style={
         isAdminOrDocs || isFullscreenMap
           ? undefined

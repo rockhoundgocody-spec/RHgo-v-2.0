@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { bulkCreateInChunks } from './bulkCreateInChunks.ts';
 
 /**
  * crawlMindat — admin-only crawler that pulls mineral species from mindat.org
@@ -104,15 +105,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 4. Bulk insert
+    // 4. Bulk insert in parallel chunks
     let writeCount = 0;
     if (created.length) {
-      // chunk into 25s to be safe
-      for (let i = 0; i < created.length; i += 25) {
-        const chunk = created.slice(i, i + 25);
-        await base44.asServiceRole.entities.Mineral.bulkCreate(chunk);
-        writeCount += chunk.length;
-      }
+      writeCount = await bulkCreateInChunks(
+        base44.asServiceRole.entities.Mineral,
+        created,
+        25
+      );
     }
 
     return Response.json({
@@ -130,6 +130,8 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+export { bulkCreateInChunks };
 
 // Fallback: parse mindat species list (used if strunz page is restricted)
 async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
@@ -169,9 +171,11 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
   }
 
   if (!dryRun && created.length) {
-    for (let i = 0; i < created.length; i += 25) {
-      await base44.asServiceRole.entities.Mineral.bulkCreate(created.slice(i, i + 25));
-    }
+    await bulkCreateInChunks(
+      base44.asServiceRole.entities.Mineral,
+      created,
+      25
+    );
   }
 
   return Response.json({

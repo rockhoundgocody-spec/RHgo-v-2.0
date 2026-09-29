@@ -13,5 +13,6 @@ Allow: /privacy-policy
 Allow: /terms
 Allow: /docs
 
-# Private routes stay crawlable so crawlers can read the X-Robots-Tag noindex header.
+# Sign-in and app screens stay crawlable on purpose: the app marks them
+# "noindex, nofollow" (src/lib/routeSeo.js), and crawlers must load them to see that.
 Sitemap: https://rhgo.me/sitemap.xml

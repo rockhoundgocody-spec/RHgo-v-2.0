@@ -2,28 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Baseline CSP that can't break third-party loads: no plugins/<object>, no <base> hijacking.
-         A full script/connect allowlist needs a response header from the host. -->
-    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
-    <link rel="icon" type="image/png" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
-    <link rel="apple-touch-icon" href="https://media.base44.com/images/public/69f35dd14650b54681c835ec/ef9cbe044_generated_image.png" />
+    <!-- CSP as a meta tag (Base44 hosting can't send response headers): HTTPS-only sources,
+         no plugins/<object>, no <base> hijacking, forms post only to HTTPS.
+         frame-ancestors/HSTS need real headers from the host (see Caddyfile for self-hosting). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss: data: blob: ws://localhost:*; media-src 'self' data: blob: https:; worker-src 'self' blob:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self' https:" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a14" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RockHound GO" />
 
-    <!-- Public default. Caddy sends X-Robots-Tag for private URLs before this SPA runs; useSeoRobots handles client navigation. -->
+    <!-- Public default. src/lib/routeSeo.js switches this to "noindex, nofollow" on every
+         URL that isn't a public sitemap page (sign-in, app screens, unknown URLs). -->
     <meta name="robots" content="index, follow" id="robots-meta" />
     <!-- Optional: set VITE_GSC_VERIFICATION in env to inject google-site-verification at runtime -->
-    <meta name="description" content="RockHound-GO — AI-powered field companion for rockhounds. Identify minerals instantly with AR scan, discover hotspots, and build your Geo-DEX collection." />
+    <meta name="description" content="Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds." />
     <meta name="keywords" content="rockhounding, mineral identification, geology app, crystal collecting, AI rock ID, rock identifier, mineral scanner, geology field app" />
-    <link rel="canonical" href="https://rhgo.me" />
+    <!-- Canonical is set per route by src/lib/routeSeo.js (one static tag would point every URL at the homepage). -->
 
     <!-- Open Graph / Social share -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="RockHound-GO" />
-    <meta property="og:url" content="https://rhgo.me" />
+    <meta property="og:url" content="https://rhgo.me/" />
     <meta property="og:title" content="RockHound-GO — AI Field Companion for Rockhounds" />
     <meta property="og:description" content="Identify minerals instantly with AR scan · Discover nearby hotspots · Build your Geo-DEX collection · Level up with daily quests" />
     <meta property="og:image" content="https://media.base44.com/images/public/69f35dd14650b54681c835ec/d14952ce3_generated_image.png" />
@@ -33,13 +37,12 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://rhgo.me" />
     <meta name="twitter:title" content="RockHound-GO — AI Field Companion for Rockhounds" />
     <meta name="twitter:description" content="Identify minerals instantly with AR scan · Discover nearby hotspots · Build your Geo-DEX collection" />
     <meta name="twitter:image" content="https://media.base44.com/images/public/69f35dd14650b54681c835ec/d14952ce3_generated_image.png" />
 
     <link rel="manifest" href="/manifest.json" />
-    <title>RockHound-GO — Field Companion for Rockhounds</title>
+    <title>RockHound-GO — AI Rock &amp; Mineral ID for Rockhounds</title>
   </head>
   <body>
     <div id="root"></div>
