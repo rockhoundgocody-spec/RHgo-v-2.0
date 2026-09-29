@@ -17,7 +17,7 @@ export const HOME_FEATURES = [
   {
     icon: Map,
     title: 'Check land status',
-    body: 'Browse collecting sites marked as BLM, national forest, state park or other public land before you head out. Always confirm the rules with the land manager.',
+    body: 'Browse collecting sites on the map marked as BLM, Forest Service, state park or other public land, and filter to public land only before you head out. Always confirm the rules with the land manager.',
   },
   {
     icon: BookOpen,
@@ -42,7 +42,8 @@ export default function HomeFeatures() {
         What you can do with RockHound-GO
       </h2>
       <p className="text-white/65 text-sm text-center mt-2">
-        An AI field kit for rockhounds, from the first scan to a finished collection.
+        An AI field kit for rockhounds, from the first scan to a finished collection. It runs in the
+        browser on your phone or computer, so there is nothing to install.
       </p>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2">
         {HOME_FEATURES.map(({ icon: Icon, title, body }) => (
