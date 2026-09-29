@@ -4,12 +4,17 @@ import { motion } from 'framer-motion';
 import IntroOrb from '@/components/hub/IntroOrb.jsx';
 import { base44 } from '@/api/base44Client';
 import GoogleIcon from '@/components/GoogleIcon';
+import HomeFeatures from '@/components/HomeFeatures.jsx';
+import { isNativeApp } from '@/lib/isNativeApp';
 
 /**
  * FirstVisitGate — first screen for unauthenticated visitors on `/`.
  * Prefer real <Link> to /signin so sign-in is never blocked by gate state.
+ * On the website, a short "what you can do" section sits below the card
+ * (hidden inside the Android app).
  */
 export default function FirstVisitGate({ onChoice }) {
+  const [showFeatures] = useState(() => !isNativeApp());
   const [name, setName] = useState('');
   const [oauthBusy, setOauthBusy] = useState(false);
   const [oauthError, setOauthError] = useState('');
@@ -38,9 +43,10 @@ export default function FirstVisitGate({ onChoice }) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-8 overflow-hidden select-none"
+      className="fixed inset-0 z-[9999] overflow-y-auto overflow-x-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 40%, hsl(265 50% 12%) 0%, hsl(245 35% 4%) 100%)' }}
     >
+      <div aria-hidden="true" className="fixed inset-0 overflow-hidden pointer-events-none">
       {Array.from({ length: 24 }).map((_, i) => (
         <motion.div
           key={i}
@@ -55,7 +61,9 @@ export default function FirstVisitGate({ onChoice }) {
           transition={{ duration: 2 + (i % 5), delay: (i % 7) * 0.3, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
+      </div>
 
+      <div className="relative min-h-[100svh] flex flex-col items-center justify-center px-8 py-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -147,6 +155,19 @@ export default function FirstVisitGate({ onChoice }) {
           Just scan one first — no account
         </button>
       </motion.div>
+
+        {showFeatures && (
+          <button
+            type="button"
+            onClick={() => document.getElementById('home-features')?.scrollIntoView({ behavior: 'smooth' })}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/45 text-[12px] font-medium hover:text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
+          >
+            See what you can do ↓
+          </button>
+        )}
+      </div>
+
+      {showFeatures && <HomeFeatures />}
     </div>
   );
 }
