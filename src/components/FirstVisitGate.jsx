@@ -160,7 +160,7 @@ export default function FirstVisitGate({ onChoice }) {
           <button
             type="button"
             onClick={() => document.getElementById('home-features')?.scrollIntoView({ behavior: 'smooth' })}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/45 text-[12px] font-medium hover:text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
+            className="relative z-10 mt-8 text-white/45 text-[12px] font-medium hover:text-white/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow rounded px-2 py-1"
           >
             See what you can do ↓
           </button>
