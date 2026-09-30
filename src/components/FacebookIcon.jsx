@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function FacebookIcon({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg">
