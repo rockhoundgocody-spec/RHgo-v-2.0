@@ -77,8 +77,9 @@ No prose, no markdown — JSON only.`;
 
     const data = await res.json();
     if (!res.ok) {
+      console.error('ditClassify upstream error:', res.status, data);
       return Response.json(
-        { error: data?.error?.message || 'DIT vision request failed', details: data },
+        { error: 'Vision classification service error' },
         { status: res.status }
       );
     }
@@ -95,6 +96,7 @@ No prose, no markdown — JSON only.`;
 
     return Response.json(parsed);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('ditClassify error:', error);
+    return Response.json({ error: 'Failed to process image classification' }, { status: 500 });
   }
 });

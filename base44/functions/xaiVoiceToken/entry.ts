@@ -24,12 +24,14 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       const err = await res.text();
-      return Response.json({ error: err }, { status: res.status });
+      console.error('xaiVoiceToken upstream error:', res.status, err);
+      return Response.json({ error: 'Voice token service unavailable' }, { status: res.status });
     }
 
     const data = await res.json();
     return Response.json({ token: data.value, expires_at: data.expires_at });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('xaiVoiceToken error:', error);
+    return Response.json({ error: 'Failed to mint voice session token' }, { status: 500 });
   }
 });
