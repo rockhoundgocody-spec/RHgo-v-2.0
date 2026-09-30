@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, MapPin, X } from 'lucide-react';
 import useHotspotProximity from '@/lib/useHotspotProximity';
