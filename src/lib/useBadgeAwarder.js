@@ -52,7 +52,8 @@ export function useBadgeAwarder() {
       const recordsByCode = {};
       (ownedRecords || []).forEach((r) => { recordsByCode[r.code] = r; });
       const ownedCodes = new Set(Object.keys(recordsByCode));
-      const qualifiedCodes = evaluateEarnedCodes(nextSpecimens, context);
+      // Performance Optimization: Pass precomputed metrics object calculated from nextSpecimens to avoid redundant duplicate computeBadgeMetrics calculation
+      const qualifiedCodes = evaluateEarnedCodes(metrics, context);
       const newCodes = qualifiedCodes.filter((c) => !ownedCodes.has(c));
 
       if (newCodes.length) {
