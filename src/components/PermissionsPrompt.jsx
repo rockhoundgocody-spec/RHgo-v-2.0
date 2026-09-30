@@ -2,7 +2,7 @@
  * PermissionsPrompt — requests push notifications, location, and PWA update in one card.
  * Dismisses permanently via localStorage once all are granted or skipped.
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Bell, MapPin, RefreshCw, X } from 'lucide-react';
 import PermissionItem from './PermissionItem';
 import { requestCurrentPosition, requestNotificationPermission } from './permissionActions';
