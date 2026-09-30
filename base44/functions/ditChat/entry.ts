@@ -47,8 +47,9 @@ Deno.serve(async (req) => {
 
     const data = await res.json();
     if (!res.ok) {
+      console.error('ditChat upstream error:', res.status, data);
       return Response.json(
-        { error: data?.error?.message || 'DIT request failed', details: data },
+        { error: 'AI chat service error' },
         { status: res.status }
       );
     }
@@ -59,6 +60,7 @@ Deno.serve(async (req) => {
       usage: data?.usage || null,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('ditChat error:', error);
+    return Response.json({ error: 'Failed to process chat request' }, { status: 500 });
   }
 });
