@@ -59,6 +59,8 @@ Deno.serve(async (req) => {
       usage: data?.usage || null,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Log detailed error server-side, but do not leak internal exception details to client
+    console.error('ditChat exception:', error);
+    return Response.json({ error: 'An error occurred while processing the request' }, { status: 500 });
   }
 });
