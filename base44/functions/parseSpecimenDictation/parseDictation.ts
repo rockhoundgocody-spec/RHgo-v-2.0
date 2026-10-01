@@ -25,6 +25,7 @@ export function fuzzCoordinates(lat: number, lng: number, radiusMeters = 200) {
  */
 export async function handleParseSpecimenDictation(req: Request, customBase44?: unknown): Promise<Response> {
   try {
+    // deno-lint-ignore no-explicit-any
     const base44 = (customBase44 || createClientFromRequest(req)) as any;
     const user = await base44.auth.me();
     if (!user) {
