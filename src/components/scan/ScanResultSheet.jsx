@@ -70,7 +70,7 @@ export default function ScanResultSheet({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3"
+                className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 style={{ background: 'hsla(0,0%,100%,0.06)' }}
               >
                 <X size={16} className="text-white/50" />
@@ -86,7 +86,7 @@ export default function ScanResultSheet({
                 </p>
                 <button
                   onClick={onRetry}
-                  className="mt-5 w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                  className="mt-5 w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a14]"
                   style={{ background: '#9FE8D0', color: '#0a0a14' }}
                 >
                   <RotateCcw size={16} /> Retry
@@ -176,7 +176,7 @@ export default function ScanResultSheet({
                       <button
                         type="button"
                         onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#9FE8D0]"
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#9FE8D0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm"
                       >
                         <GitCompareArrows size={11} /> Compare
                       </button>
@@ -194,7 +194,7 @@ export default function ScanResultSheet({
                   <button
                     type="button"
                     onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
-                    className="mb-4 w-full py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98]"
+                    className="mb-4 w-full py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
                     style={{ background: 'hsla(280,60%,30%,0.25)', border: '1px solid hsla(280,70%,55%,0.35)', color: 'hsl(280,90%,85%)' }}
                   >
                     <GitCompareArrows size={14} /> Side-by-side lookalike lab
@@ -270,7 +270,7 @@ export default function ScanResultSheet({
                     type="checkbox"
                     checked={legalOk}
                     onChange={(e) => setLegalOk(e.target.checked)}
-                    className="mt-0.5 accent-emerald-400"
+                    className="mt-0.5 accent-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a14] rounded-sm"
                   />
                   <span className="text-[11px] text-white/65 leading-snug">
                     <span className="inline-flex items-center gap-1 text-white/85 font-semibold">
@@ -306,7 +306,7 @@ export default function ScanResultSheet({
                 {saved && (
                   <div className="text-center mb-3 space-y-2">
                     <div className="text-[11px] text-[#9FE8D0]">Saved to your cabinet</div>
-                    <Link to="/explore" className="inline-flex text-[11px] font-bold uppercase tracking-wider text-white/70 hover:text-white">
+                    <Link to="/explore" className="inline-flex text-[11px] font-bold uppercase tracking-wider text-white/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm">
                       Hunt nearby next →
                     </Link>
                   </div>
@@ -347,7 +347,8 @@ function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) 
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40"
+      aria-expanded={active !== undefined ? active : undefined}
+      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: primary ? '#9FE8D020' : active ? 'hsla(0,0%,100%,0.1)' : 'hsla(0,0%,100%,0.04)',
         border: `1px solid ${primary ? '#9FE8D050' : active ? 'hsla(0,0%,100%,0.2)' : 'hsla(0,0%,100%,0.08)'}`,
@@ -361,15 +362,17 @@ function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) 
 }
 
 function FieldInput({ label, value, onChange }) {
+  const id = React.useId();
   return (
     <div>
-      <div className="text-white/40 text-[10px] uppercase tracking-[0.15em] mb-1">{label}</div>
+      <label htmlFor={id} className="block text-white/40 text-[10px] uppercase tracking-[0.15em] mb-1">{label}</label>
       <input
+        id={id}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="—"
-        className="w-full px-3 py-2 rounded-lg text-white text-[12px] outline-none placeholder:text-white/20"
+        className="w-full px-3 py-2 rounded-lg text-white text-[12px] outline-none placeholder:text-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/50"
         style={{
           background: 'hsla(255,30%,12%,0.6)',
           border: '1px solid hsla(0,0%,100%,0.08)',
@@ -383,7 +386,8 @@ function ProvenancePill({ active, onClick, icon: Icon, label, sub }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-all active:scale-95"
+      aria-pressed={active}
+      className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: active ? '#9FE8D015' : 'hsla(0,0%,100%,0.04)',
         border: `1px solid ${active ? '#9FE8D050' : 'hsla(0,0%,100%,0.08)'}`,
