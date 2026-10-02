@@ -16,9 +16,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RockHound GO" />
 
-    <!-- Public default. src/lib/routeSeo.js switches this to "noindex, nofollow" on every
-         URL that isn't a public sitemap page (sign-in, app screens, unknown URLs). -->
-    <meta name="robots" content="index, follow" id="robots-meta" />
+    <!-- Safe-by-default: every URL is served this same index.html, so the raw HTML
+         must carry noindex,nofollow for crawlers and preview fetchers that don't run JS.
+         src/lib/routeSeo.js flips this to "index, follow" after render for the public
+         sitemap pages only (Google renders JS, so those stay indexable). -->
+    <meta name="robots" content="noindex, nofollow" id="robots-meta" />
     <!-- Optional: set VITE_GSC_VERIFICATION in env to inject google-site-verification at runtime -->
     <meta name="description" content="Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds." />
     <meta name="keywords" content="rockhounding, mineral identification, geology app, crystal collecting, AI rock ID, rock identifier, mineral scanner, geology field app" />

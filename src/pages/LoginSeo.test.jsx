@@ -25,10 +25,11 @@ afterEach(async () => {
 });
 
 describe('Login robots directive', () => {
-  it.each([true, false])('keeps Auth → Login noindex and restores the public default (existing meta: %s)', async (existingMeta) => {
+  it.each([true, false])('keeps Auth → Login noindex and flips public pages to indexable (initial meta present: %s)', async (existingMeta) => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     if (existingMeta) {
-      document.head.innerHTML = '<meta name="robots" id="robots-meta" content="index, follow">';
+      // Matches the safe-by-default raw HTML in index.html.
+      document.head.innerHTML = '<meta name="robots" id="robots-meta" content="noindex, nofollow">';
     }
     const container = document.createElement('div');
     document.body.appendChild(container);

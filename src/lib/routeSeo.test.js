@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { PUBLIC_INDEXABLE_PATHS, SIGNED_IN_PATHS, isIndexablePath, canonicalFor, normalizePath } from './routeSeo';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('routeSeo', () => {
   it('indexable pages are exactly the sitemap pages', () => {
@@ -32,5 +35,12 @@ describe('routeSeo', () => {
     expect(canonicalFor('/About/')).toBe('https://rhgo.me/about');
     expect(canonicalFor('/pricing?ref=x#top')).toBe('https://rhgo.me/pricing');
     expect(normalizePath('')).toBe('/');
+  });
+
+  it('raw index.html ships a safe-by-default noindex robots meta', () => {
+    const html = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf8');
+    const match = html.match(/<meta\s+name="robots"\s+content="([^"]+)"\s+id="robots-meta"\s*\/?>/);
+    expect(match).not.toBeNull();
+    expect(match[1]).toBe('noindex, nofollow');
   });
 });
