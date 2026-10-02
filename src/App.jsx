@@ -234,8 +234,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <MobileOnlyGate>
-        <BrowserRouter>
+      <BrowserRouter>
+        <MobileOnlyGate>
           <AnalyticsRouteListener />
           <a href="#main-content" className="skip-link">Skip to content</a>
           <AuthProvider>
@@ -243,8 +243,8 @@ function App() {
           </AuthProvider>
           <RouteSeo />
           <Toaster />
-        </BrowserRouter>
-      </MobileOnlyGate>
+        </MobileOnlyGate>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }
