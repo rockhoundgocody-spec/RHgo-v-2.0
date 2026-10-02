@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag, GitCompareArrows, ShieldCheck } from 'lucide-react';
@@ -59,6 +59,9 @@ export default function ScanResultSheet({
             style={{ background: 'rgba(0,0,0,0.4)' }}
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Scan result details"
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             className="absolute bottom-0 inset-x-0 z-50 rounded-t-3xl overflow-hidden max-h-[88vh] overflow-y-auto"
@@ -68,12 +71,13 @@ export default function ScanResultSheet({
             <div className="flex items-center justify-between px-4 pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/15 mx-auto" style={{ margin: '0 auto' }} />
               <button
+                type="button"
                 onClick={onClose}
-                aria-label="Close"
-                className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3"
+                aria-label="Close scan result panel"
+                className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 style={{ background: 'hsla(0,0%,100%,0.06)' }}
               >
-                <X size={16} className="text-white/50" />
+                <X size={16} className="text-white/50" aria-hidden="true" />
               </button>
             </div>
 
@@ -85,11 +89,12 @@ export default function ScanResultSheet({
                   The photo is too dark to identify. Try again in daylight or use the flash.
                 </p>
                 <button
+                  type="button"
                   onClick={onRetry}
-                  className="mt-5 w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+                  className="mt-5 w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                   style={{ background: '#9FE8D0', color: '#0a0a14' }}
                 >
-                  <RotateCcw size={16} /> Retry
+                  <RotateCcw size={16} aria-hidden="true" /> Retry
                 </button>
               </div>
             ) : (
@@ -176,9 +181,10 @@ export default function ScanResultSheet({
                       <button
                         type="button"
                         onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#9FE8D0]"
+                        aria-label={`Compare ${result.top_match} with lookalikes`}
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#9FE8D0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 rounded-sm"
                       >
-                        <GitCompareArrows size={11} /> Compare
+                        <GitCompareArrows size={11} aria-hidden="true" /> Compare
                       </button>
                     </div>
                     {result.lookalikes.slice(0, 3).map((l, i) => (
@@ -194,10 +200,11 @@ export default function ScanResultSheet({
                   <button
                     type="button"
                     onClick={() => navigate('/compare', { state: { result, primaryImageUrl: imageUrl } })}
-                    className="mb-4 w-full py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98]"
+                    aria-label="Open side-by-side lookalike lab"
+                    className="mb-4 w-full py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
                     style={{ background: 'hsla(280,60%,30%,0.25)', border: '1px solid hsla(280,70%,55%,0.35)', color: 'hsl(280,90%,85%)' }}
                   >
-                    <GitCompareArrows size={14} /> Side-by-side lookalike lab
+                    <GitCompareArrows size={14} aria-hidden="true" /> Side-by-side lookalike lab
                   </button>
                 )}
 
@@ -264,17 +271,17 @@ export default function ScanResultSheet({
                   </div>
                 )}
 
-                <label className="mb-3 flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer"
+                <label className="mb-3 flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer focus-within:ring-2 focus-within:ring-emerald-400/50"
                   style={{ background: legalOk ? 'hsla(160,50%,20%,0.25)' : 'hsla(0,0%,100%,0.04)', border: `1px solid ${legalOk ? 'hsla(160,70%,50%,0.4)' : 'hsla(0,0%,100%,0.1)'}` }}>
                   <input
                     type="checkbox"
                     checked={legalOk}
                     onChange={(e) => setLegalOk(e.target.checked)}
-                    className="mt-0.5 accent-emerald-400"
+                    className="mt-0.5 accent-emerald-400 focus-visible:outline-none"
                   />
                   <span className="text-[11px] text-white/65 leading-snug">
                     <span className="inline-flex items-center gap-1 text-white/85 font-semibold">
-                      <ShieldCheck size={12} /> I can legally collect here
+                      <ShieldCheck size={12} aria-hidden="true" /> I can legally collect here
                     </span>
                     <span className="block text-white/40 mt-0.5">Required to Keep. Leave / Observed never remove material.</span>
                   </span>
@@ -345,31 +352,36 @@ export default function ScanResultSheet({
 function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40"
+      aria-pressed={active !== undefined ? Boolean(active) : undefined}
+      aria-label={label}
+      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
       style={{
         background: primary ? '#9FE8D020' : active ? 'hsla(0,0%,100%,0.1)' : 'hsla(0,0%,100%,0.04)',
         border: `1px solid ${primary ? '#9FE8D050' : active ? 'hsla(0,0%,100%,0.2)' : 'hsla(0,0%,100%,0.08)'}`,
         color: primary ? '#9FE8D0' : 'rgba(255,255,255,0.7)',
       }}
     >
-      {Icon && <Icon size={15} />}
+      {Icon && <Icon size={15} aria-hidden="true" />}
       {label}
     </button>
   );
 }
 
 function FieldInput({ label, value, onChange }) {
+  const inputId = useId();
   return (
     <div>
-      <div className="text-white/40 text-[10px] uppercase tracking-[0.15em] mb-1">{label}</div>
+      <label htmlFor={inputId} className="text-white/40 text-[10px] uppercase tracking-[0.15em] mb-1 block">{label}</label>
       <input
+        id={inputId}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="—"
-        className="w-full px-3 py-2 rounded-lg text-white text-[12px] outline-none placeholder:text-white/20"
+        className="w-full px-3 py-2 rounded-lg text-white text-[12px] outline-none placeholder:text-white/20 focus-visible:ring-2 focus-visible:ring-emerald-400/50"
         style={{
           background: 'hsla(255,30%,12%,0.6)',
           border: '1px solid hsla(0,0%,100%,0.08)',
@@ -382,14 +394,17 @@ function FieldInput({ label, value, onChange }) {
 function ProvenancePill({ active, onClick, icon: Icon, label, sub }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-all active:scale-95"
+      aria-pressed={active}
+      aria-label={`${label}: ${sub}`}
+      className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
       style={{
         background: active ? '#9FE8D015' : 'hsla(0,0%,100%,0.04)',
         border: `1px solid ${active ? '#9FE8D050' : 'hsla(0,0%,100%,0.08)'}`,
       }}
     >
-      <Icon size={16} className="mt-0.5 shrink-0" style={{ color: active ? '#9FE8D0' : 'rgba(255,255,255,0.5)' }} />
+      <Icon size={16} className="mt-0.5 shrink-0" style={{ color: active ? '#9FE8D0' : 'rgba(255,255,255,0.5)' }} aria-hidden="true" />
       <div className="min-w-0">
         <div className="text-[12px] font-semibold leading-tight" style={{ color: active ? '#9FE8D0' : 'rgba(255,255,255,0.8)' }}>
           {label}
