@@ -55,6 +55,8 @@ export default function WeatherPanel({ userLocation, hudMode, onClose }) {
 
   return (
     <motion.div
+      role="region"
+      aria-label="Beach Weather Conditions"
       initial={{ opacity: 0, y: -8, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.97 }}
@@ -76,7 +78,7 @@ export default function WeatherPanel({ userLocation, hudMode, onClose }) {
               Beach Conditions
             </span>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-white/30 hover:text-white/60 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-hud-cyan/60 rounded-sm">
+          <button onClick={onClose} aria-label="Close weather conditions" className="text-white/30 hover:text-white/60 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-hud-cyan/60 rounded-sm">
             <X size={14} />
           </button>
         </div>
@@ -124,7 +126,7 @@ export default function WeatherPanel({ userLocation, hudMode, onClose }) {
             {/* Tip */}
             <div className="rounded-xl px-3 py-2" style={{ background: `${hunt.color}0e`, border: `1px solid ${hunt.color}22` }}>
               <p className="text-[10px] leading-relaxed" style={{ color: hunt.color }}>
-                🪨 {hunt.tip}
+                <span aria-hidden="true">🪨 </span>{hunt.tip}
               </p>
             </div>
           </>
