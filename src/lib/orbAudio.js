@@ -4,6 +4,7 @@
  */
 
 let audioCtx = null;
+const noop = () => {};
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -13,7 +14,7 @@ function getAudioContext() {
     audioCtx = new AudioContextClass();
   }
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
+    audioCtx.resume().catch(noop);
   }
   return audioCtx;
 }
