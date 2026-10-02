@@ -88,9 +88,18 @@ const RING_CFG = {
 // Progress label for each milestone bracket
 const BRACKET_LABEL = ['Starter', 'Collector', 'Expert', 'Master'];
 
-function MilestoneBar({ count }) {
+function MilestoneBar({ count, tierLabel }) {
+  const completedCount = MILESTONES.filter((m) => count >= m).length;
   return (
-    <div className="flex items-center gap-0.5">
+    <div
+      role="progressbar"
+      aria-label={`${tierLabel} milestone progress`}
+      aria-valuenow={completedCount}
+      aria-valuemin={0}
+      aria-valuemax={MILESTONES.length}
+      aria-valuetext={`${completedCount} of ${MILESTONES.length} milestones reached`}
+      className="flex items-center gap-0.5"
+    >
       {MILESTONES.map((m) => {
         const hit = count >= m;
         return (
@@ -104,7 +113,10 @@ function MilestoneBar({ count }) {
               }}
             />
             {/* tooltip on hover */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[8px] bg-black/80 text-white/70 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition z-10">
+            <div
+              aria-hidden="true"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[8px] bg-black/80 text-white/70 px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition z-10"
+            >
               {m}+
             </div>
           </div>
@@ -120,9 +132,12 @@ function TierCard({ tier, count, earned }) {
   const bracket   = badge.bracket;
   const OCT       = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)';
   const BADGE_SIZE = 88;
+  const cardLabel = earned
+    ? `${badge.label} tier: ${count} collected, ${BRACKET_LABEL[bracket]} rank`
+    : `${badge.label} tier: Locked`;
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div role="region" aria-label={cardLabel} className="flex flex-col items-center gap-2">
       <div className="relative flex items-center justify-center" style={{ width: BADGE_SIZE + 28, height: BADGE_SIZE + 28 }}>
         {/* Outer ambient glow */}
         {earned && (
@@ -189,7 +204,7 @@ function TierCard({ tier, count, earned }) {
         {/* Lock icon if not earned */}
         {!earned && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <Lock size={18} className="text-white/20" />
+            <Lock size={18} className="text-white/20" aria-hidden="true" />
           </div>
         )}
       </div>
@@ -211,7 +226,7 @@ function TierCard({ tier, count, earned }) {
             >
               {BRACKET_LABEL[bracket]}
             </div>
-            <MilestoneBar count={count} />
+            <MilestoneBar count={count} tierLabel={badge.label} />
           </>
         ) : (
           <div className="text-[7px] text-white/25 uppercase tracking-widest">Locked</div>
@@ -281,7 +296,7 @@ export default function RarityBadgeShowcase({ earnedCodes, rarityCounts = {} }) 
         <div className="flex items-center gap-2">
           {MILESTONES.map((m, i) => (
             <div key={m} className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'hsla(280,80%,65%,0.7)' }} />
+              <div className="w-2.5 h-2.5 rounded-sm" aria-hidden="true" style={{ background: 'hsla(280,80%,65%,0.7)' }} />
               <span className="text-[7px] text-white/30">{m}+ → {BRACKET_LABEL[i]}</span>
             </div>
           ))}
