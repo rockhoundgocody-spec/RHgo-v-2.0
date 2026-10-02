@@ -576,10 +576,10 @@ export default function Scan() {
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
           <p className="text-white font-bold text-lg mb-2">That was your free scan</p>
           <p className="text-white/50 text-sm text-center mb-6">Create a free account for 5 scans every month — no card needed.</p>
-          <button onClick={() => navigate('/register')} className="px-6 py-3 rounded-xl font-bold text-sm" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+          <button onClick={() => navigate('/register')} className="px-6 py-3 rounded-xl font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
             Create free account
           </button>
-          <button onClick={resetToCamera} className="text-white/40 text-sm mt-3">Not now</button>
+          <button onClick={resetToCamera} className="text-white/40 text-sm mt-3 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-md px-2 py-1">Not now</button>
         </div>
       )}
 
@@ -587,10 +587,10 @@ export default function Scan() {
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
           <p className="text-white font-bold text-lg mb-2">You've used this month's free scans</p>
           <p className="text-white/50 text-sm text-center mb-6">Keep exploring the map — upgrade when you're ready for more scans.</p>
-          <button onClick={resetToCamera} className="px-6 py-3 rounded-xl font-bold text-sm" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+          <button onClick={resetToCamera} className="px-6 py-3 rounded-xl font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
             Keep exploring
           </button>
-          <button onClick={() => navigate('/pricing')} className="text-white/40 text-sm mt-3">See Premium</button>
+          <button onClick={() => navigate('/pricing')} className="text-white/40 text-sm mt-3 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-md px-2 py-1">See Premium</button>
         </div>
       )}
 
