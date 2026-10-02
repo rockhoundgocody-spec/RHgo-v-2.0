@@ -30,7 +30,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
   // over or hide the nav (iOS WebKit fixed-position bug).
   return createPortal(
     <nav
-      className="fixed left-1/2 z-[5000] flex items-center"
+      className="rhgo-crystal-nav fixed left-1/2 z-[5000] flex items-center"
       style={{
         bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         transform: 'translateX(-50%) translateZ(0)',
