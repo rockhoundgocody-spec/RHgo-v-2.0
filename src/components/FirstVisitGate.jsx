@@ -120,7 +120,7 @@ export default function FirstVisitGate({ onChoice }) {
             type="button"
             onClick={handleGoogle}
             disabled={oauthBusy}
-            className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 transition disabled:opacity-50"
+            className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/15 bg-white/5 hover:bg-white/10 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <GoogleIcon className="w-4 h-4" />
             {oauthBusy ? 'Connecting…' : 'Continue with Google'}
@@ -142,7 +142,7 @@ export default function FirstVisitGate({ onChoice }) {
             onClick={() => {
               try { localStorage.setItem('rhgo_gate_choice', 'returning'); } catch { /* */ }
             }}
-            className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center border border-white/20 bg-white/5 hover:bg-white/10 transition"
+            className="w-full h-12 rounded-2xl text-white font-semibold text-sm flex items-center justify-center border border-white/20 bg-white/5 hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             I already have an account — Sign in
           </Link>
