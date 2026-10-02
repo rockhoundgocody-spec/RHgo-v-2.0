@@ -26,6 +26,9 @@ export default function ExpeditionTeaserModal({ open, onClose, minerals = [], ho
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="expedition-teaser-title"
             initial={{ scale: 0.92, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.92, y: 20, opacity: 0 }}
@@ -41,9 +44,9 @@ export default function ExpeditionTeaserModal({ open, onClose, minerals = [], ho
             <button
               onClick={onClose}
               aria-label="Close"
-              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-white/10"
+              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
             >
-              <X size={18} className="text-white/40 hover:text-white/70 transition" />
+              <X size={18} className="text-white/40 hover:text-white/70 transition" aria-hidden="true" />
             </button>
 
             <div className="p-6 pt-8 text-center">
@@ -55,17 +58,17 @@ export default function ExpeditionTeaserModal({ open, onClose, minerals = [], ho
                   border: '1px solid hsla(280,80%,65%,0.3)',
                 }}
               >
-                <Route size={24} className="text-amethyst-glow" />
+                <Route size={24} className="text-amethyst-glow" aria-hidden="true" />
               </div>
 
               <div className="flex items-center justify-center gap-1.5 mb-2">
-                <Sparkles size={12} className="text-amber-400" />
+                <Sparkles size={12} className="text-amber-400" aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-[0.3em] text-amber-400/80 font-semibold">
                   Expedition Planner
                 </span>
               </div>
 
-              <h2 className="text-white font-bold text-lg leading-snug mb-3">
+              <h2 id="expedition-teaser-title" className="text-white font-bold text-lg leading-snug mb-3">
                 Sign up free to plan a multi-stop expedition
               </h2>
 
@@ -103,14 +106,14 @@ export default function ExpeditionTeaserModal({ open, onClose, minerals = [], ho
               {/* CTA */}
               <Link
                 to="/register"
-                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-white font-bold text-sm transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-white font-bold text-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
                 style={{
                   background: 'linear-gradient(135deg, hsla(265,70%,45%,0.9), hsla(280,80%,55%,0.9))',
                   border: '1px solid hsla(280,80%,65%,0.4)',
                   boxShadow: '0 0 24px hsla(280,80%,50%,0.3)',
                 }}
               >
-                Create Free Account <ChevronRight size={16} />
+                Create Free Account <ChevronRight size={16} aria-hidden="true" />
               </Link>
 
               <button
