@@ -1,16 +1,15 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeAll } from 'vitest';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 let buildObservationsPayload;
+let ObservationForm;
 
 beforeAll(async () => {
-  if (typeof window === 'undefined') {
-    globalThis.window = {
-      self: 1,
-      top: 2,
-    };
-  }
   const mod = await import('./ObservationForm');
   buildObservationsPayload = mod.buildObservationsPayload;
+  ObservationForm = mod.default;
 });
 
 describe('buildObservationsPayload', () => {
@@ -65,5 +64,23 @@ describe('buildObservationsPayload', () => {
     const values = { weight: '   ', streak: '' };
     const payload = buildObservationsPayload(values, '   ');
     expect(payload).toEqual([]);
+  });
+});
+
+describe('ObservationForm JSX Accessibility', () => {
+  it('renders form elements with proper htmlFor, focus-visible classes, and choice ARIA attributes when open', () => {
+    const html = renderToStaticMarkup(
+      <ObservationForm open={true} onClose={() => {}} onSubmit={() => {}} />
+    );
+
+    // Verify for attributes exist on labels in rendered HTML
+    expect(html).toContain('for="');
+
+    // Verify inputs have focus-visible styling
+    expect(html).toContain('focus-visible:ring-amber-400');
+
+    // Verify choice buttons have type="button" and aria-pressed / aria-label
+    expect(html).toContain('aria-pressed="false"');
+    expect(html).toContain('aria-label="Magnetism: Strong"');
   });
 });

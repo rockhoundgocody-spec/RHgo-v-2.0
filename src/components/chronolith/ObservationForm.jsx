@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FlaskConical, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ export function buildObservationsPayload(values, freeText, presetFields = PRESET
   return observations;
 }
 
-function FieldInput({ field, value, onChange }) {
+function FieldInput({ id, field, value, onChange }) {
   if (field.type === 'choice') {
     return (
       <div className="flex gap-1">
@@ -47,7 +47,9 @@ function FieldInput({ field, value, onChange }) {
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition"
+            aria-pressed={value === opt}
+            aria-label={`${field.label}: ${opt}`}
+            className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
             style={
               value === opt
                 ? { background: 'hsla(270,60%,40%,0.5)', color: 'hsl(280,80%,90%)', border: '1px solid hsla(270,80%,60%,0.4)' }
@@ -63,11 +65,12 @@ function FieldInput({ field, value, onChange }) {
 
   return (
     <input
+      id={id}
       type="text"
       placeholder={field.placeholder}
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full h-9 px-2.5 rounded-lg text-xs text-white/80 bg-white/5 border border-white/10 outline-none focus:border-amber-500/40"
+      className="w-full h-9 px-2.5 rounded-lg text-xs text-white/80 bg-white/5 border border-white/10 outline-none focus:border-amber-500/40 focus-visible:ring-2 focus-visible:ring-amber-400/50"
     />
   );
 }
@@ -118,6 +121,8 @@ function ObservationSubmitButton({ onSubmit, loading }) {
 export default function ObservationForm({ open, onClose, onSubmit, loading, suggestedTest }) {
   const [values, setValues] = useState({});
   const [freeText, setFreeText] = useState('');
+  const baseId = useId();
+  const freeTextId = `${baseId}-freeText`;
 
   const handleFieldChange = (key, val) => {
     setValues((v) => ({ ...v, [key]: val }));
@@ -170,27 +175,32 @@ export default function ObservationForm({ open, onClose, onSubmit, loading, sugg
             {/* Fields */}
             <div className="px-5 py-4 overflow-y-auto" style={{ maxHeight: '50vh' }}>
               <div className="grid grid-cols-2 gap-3">
-                {PRESET_FIELDS.map((field) => (
-                  <div key={field.key} className="space-y-1">
-                    <label className="text-[9px] uppercase tracking-widest text-white/40">{field.label}</label>
-                    <FieldInput
-                      field={field}
-                      value={values[field.key]}
-                      onChange={(val) => handleFieldChange(field.key, val)}
-                    />
-                  </div>
-                ))}
+                {PRESET_FIELDS.map((field) => {
+                  const fieldId = `${baseId}-${field.key}`;
+                  return (
+                    <div key={field.key} className="space-y-1">
+                      <label htmlFor={field.type === 'choice' ? undefined : fieldId} className="text-[9px] uppercase tracking-widest text-white/40">{field.label}</label>
+                      <FieldInput
+                        id={fieldId}
+                        field={field}
+                        value={values[field.key]}
+                        onChange={(val) => handleFieldChange(field.key, val)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Free text */}
               <div className="mt-3 space-y-1">
-                <label className="text-[9px] uppercase tracking-widest text-white/40">Additional Observation</label>
+                <label htmlFor={freeTextId} className="text-[9px] uppercase tracking-widest text-white/40">Additional Observation</label>
                 <textarea
+                  id={freeTextId}
                   rows={2}
                   placeholder="Describe any other visible features, test results, or context…"
                   value={freeText}
                   onChange={(e) => setFreeText(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-xs text-white/80 bg-white/5 border border-white/10 outline-none focus:border-amber-500/40 resize-none"
+                  className="w-full px-3 py-2 rounded-lg text-xs text-white/80 bg-white/5 border border-white/10 outline-none focus:border-amber-500/40 focus-visible:ring-2 focus-visible:ring-amber-400/50 resize-none"
                 />
               </div>
             </div>
