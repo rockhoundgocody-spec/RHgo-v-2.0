@@ -68,6 +68,54 @@ export function playOrbChime(frequency = 528, duration = 1.6) {
 }
 
 /**
+ * Plays a soft breath acknowledgment — a low-amplitude filtered noise swell
+ * that sounds like Clover turning toward you and taking a breath, not a bell.
+ * Used on the Hub orb tap instead of the crystal chime.
+ */
+export function playOrbBreath(duration = 0.5) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    // Pink-ish noise: filtered random
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.02 * white) / 1.02;
+      data[i] = lastOut * 3.5;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Low-pass filter — warm, breathy
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + duration);
+    filter.Q.value = 0.7;
+
+    // Gentle swell envelope
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.06, now + duration * 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + duration);
+  } catch {
+    // Graceful failure on un-interacted browsers
+  }
+}
+
+/**
  * Triggers device haptic feedback pulse patterns.
  */
 export function triggerOrbHaptic(pattern = 'tap') {

@@ -1,284 +1,296 @@
 /**
- * GoogleHotspotMap — Google Maps JS API version of the Explore map.
+ * GoogleHotspotMap — hotspot map on the Google Maps JavaScript API
+ * (Advanced Markers, v=weekly). Features:
+ * - Marker clustering for 378+ hotspots (groups at low zoom, splits at high zoom)
+ * - Custom SVG pins per land type + rarity
+ * - Layer filtering (all, rare, gaps, public, expedition)
+ * - Badge-glow pulse on hotspots linked to earned badges
+ * - Expedition route polyline, geology overlay, heat map
  *
- * Drop-in replacement for HotspotMap: same props, but renders on a real
- * Google Maps basemap (dark-styled) instead of Leaflet/CARTO tiles. The API
- * key is fetched at runtime from the auth-gated getMapsKey backend function
- * and the Maps JS script is injected once, globally.
+ * Falls back to the Leaflet HotspotMap when the Maps API key is unavailable.
  */
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
+import { loadGoogleMaps } from '@/lib/googleMapsLoader';
+import LeafletHotspotMap from '@/components/explore/HotspotMap.jsx';
+import {
+  LAND_COLORS, hotspotPinEl, specimenPinEl, userPinEl, clubPinEl, clusterPinEl,
+} from '@/components/explore/googleMapIcons.js';
+import { escapeHtml } from '@/lib/geo';
 
-export const LAND_COLORS = {
-  public:         '#34d399',
-  blm:            '#fbbf24',
-  forest_service: '#a3e635',
-  state_park:     '#38bdf8',
-  private:        '#fb7185',
-  unknown:        '#94a3b8',
-};
+const RARE_MINERALS = ['tourmaline', 'topaz', 'sapphire', 'emerald', 'ruby', 'alexandrite', 'tanzanite'];
 
-const RARITY_COLOR = {
-  common:    '#c084fc',
-  uncommon:  '#34d399',
-  rare:      '#a78bfa',
-  legendary: '#f59e0b',
-};
+export default function GoogleHotspotMap(props) {
+  const {
+    hotspots = [], specimens = [], clubs = [], height = 480,
+    activeId = null, onMarkerClick, userLocation = null,
+    activeLayer = 'all', collectionGapIds = new Set(),
+    expeditionRoute = [], showGeology = false, hudMode = false,
+    selectedMineralFilter = new Set(), showHeatMap = false,
+  } = props;
 
-// Dark basemap style matching the app's amethyst/cyan HUD aesthetic.
-const DARK_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#0d1326' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1326' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#7b86a8' }] },
-  { featureType: 'water', stylers: [{ color: '#0a1428' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a2238' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6b7898' }] },
-  { featureType: 'poi', stylers: [{ color: '#101830' }] },
-  { featureType: 'poi.park', stylers: [{ color: '#102a1c' }] },
-  { featureType: 'transit', stylers: [{ color: '#101830' }] },
-  { featureType: 'landscape', stylers: [{ color: '#0d1326' }] },
-  { featureType: 'administrative', elementType: 'labels.text.fill', stylers: [{ color: '#7b86a8' }] },
-  { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#9aa6c8' }] },
-];
-
-// ── One-time Google Maps JS API loader (shared across all instances) ─────────
-let apiLoader = null;
-function loadMapsApi() {
-  if (apiLoader) return apiLoader;
-  apiLoader = (async () => {
-    const res = await base44.functions.invoke('getMapsKey', {});
-    const key = res?.data?.key;
-    if (!key) throw new Error('Google Maps key unavailable');
-    if (window.google?.maps) return;
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly`;
-      s.async = true;
-      s.defer = true;
-      s.onload = resolve;
-      s.onerror = () => reject(new Error('Failed to load Google Maps'));
-      document.head.appendChild(s);
-    });
-  })();
-  return apiLoader;
-}
-
-export default function GoogleHotspotMap({
-  hotspots      = [],
-  specimens     = [],
-  clubs         = [],
-  height        = 480,
-  activeId      = null,
-  onMarkerClick,
-  userLocation  = null,
-  activeLayer   = 'all',
-  collectionGapIds = new Set(),
-  expeditionRoute  = [],
-  showGeology      = false,
-  hudMode          = false,
-  selectedMineralFilter = new Set(),
-  showHeatMap       = false,
-}) {
   const containerRef = useRef(null);
   const mapRef       = useRef(null);
-  const markersRef   = useRef([]);
-  const userMarkerRef = useRef(null);
-  const polylineRef  = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(null);
+  const markerLibRef = useRef(null);
+  const infoRef      = useRef(null);
+  const overlaysRef  = useRef([]);
+  const clustererRef = useRef(null);
+  const flewRef      = useRef(false);
+  const [status, setStatus] = useState('loading');
 
-  // ── Init map ──
+  const isFullHeight = height === '100%';
+  const highContrast = showGeology || hudMode;
+
+  // ── Init map once ──
   useEffect(() => {
     let cancelled = false;
-    loadMapsApi().then(() => {
-      if (cancelled || !containerRef.current) return;
-      mapRef.current = new window.google.maps.Map(containerRef.current, {
-        center: { lat: 39.5, lng: -98.35 },
-        zoom: 4,
-        styles: DARK_STYLE,
-        disableDefaultUI: true,
-        zoomControl: true,
-        gestureHandling: 'greedy',
-        backgroundColor: '#080d1c',
-      });
-      setReady(true);
-    }).catch((e) => { if (!cancelled) setError(e.message || 'Map error'); });
+    (async () => {
+      try {
+        const gmaps = await loadGoogleMaps();
+        if (cancelled || !containerRef.current) return;
+        const { Map, InfoWindow } = await gmaps.importLibrary('maps');
+        markerLibRef.current = await gmaps.importLibrary('marker');
+        if (cancelled || !containerRef.current) return;
+        mapRef.current = new Map(containerRef.current, {
+          center: { lat: 39.5, lng: -98.35 },
+          zoom: 4,
+          mapId: 'DEMO_MAP_ID',
+          colorScheme: 'DARK',
+          disableDefaultUI: true,
+          gestureHandling: 'greedy',
+          backgroundColor: '#080d1c',
+        });
+        infoRef.current = new InfoWindow();
+        setStatus('ready');
+      } catch {
+        if (!cancelled) setStatus('fallback');
+      }
+    })();
     return () => { cancelled = true; };
   }, []);
 
-  // ── Geology → Google terrain view ──
-  useEffect(() => {
-    if (!ready) return;
-    mapRef.current.setMapTypeId(showGeology ? 'terrain' : 'roadmap');
-    mapRef.current.setOptions({ styles: showGeology ? null : DARK_STYLE });
-  }, [ready, showGeology]);
-
-  // ── Filtered hotspot points (same logic as the Leaflet version) ──
-  const points = useMemo(
-    () => hotspots.filter(h => typeof h.lat === 'number' && typeof h.lng === 'number'),
-    [hotspots]
-  );
+  // ── Layer + mineral filtering ──
   const visiblePoints = useMemo(() => {
-    let list;
-    switch (activeLayer) {
-      case 'rare':
-        list = points.filter(h => (h.minerals || []).some(m =>
-          /quartz|garnet|tourmaline|topaz|sapphire/i.test(m)));
-        break;
-      case 'gaps':
-        list = points.filter(h => collectionGapIds.has(h.id));
-        break;
-      case 'public':
-        list = points.filter(h => ['public','blm','forest_service','state_park'].includes(h.land_type));
-        break;
-      default:
-        list = points;
+    let list = hotspots.filter(h => typeof h.lat === 'number' && typeof h.lng === 'number');
+    if (activeLayer === 'rare') {
+      list = list.filter(h => h.minerals?.some(m => RARE_MINERALS.some(r => m.toLowerCase().includes(r))));
+    } else if (activeLayer === 'gaps') {
+      list = list.filter(h => collectionGapIds.has(h.id));
+    } else if (activeLayer === 'public') {
+      list = list.filter(h => ['public', 'blm', 'forest_service', 'state_park'].includes(h.land_type));
     }
     if (selectedMineralFilter.size > 0) {
       list = list.filter(h => (h.minerals || []).some(m => selectedMineralFilter.has(m.toLowerCase())));
     }
     return list;
-  }, [points, activeLayer, collectionGapIds, selectedMineralFilter]);
+  }, [hotspots, activeLayer, collectionGapIds, selectedMineralFilter]);
 
-  // ── Markers (hotspots + specimens + clubs) ──
+  const geoSpecimens = useMemo(
+    () => specimens.filter(s => typeof s.lat === 'number' && typeof s.lng === 'number'),
+    [specimens]
+  );
+
+  // ── Rebuild markers + overlays whenever data changes ──
   useEffect(() => {
-    if (!ready) return;
-    const google = window.google;
+    if (status !== 'ready' || !mapRef.current || !markerLibRef.current) return;
     const map = mapRef.current;
+    const { AdvancedMarkerElement } = markerLibRef.current;
+    const g = window.google.maps;
 
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
+    // Clear previous non-clustered overlays
+    overlaysRef.current.forEach(o => { o.map = null; if (o.setMap) o.setMap(null); });
+    overlaysRef.current = [];
+    const add = (o) => { overlaysRef.current.push(o); return o; };
 
-    const circleIcon = (color, scale, stroke, strokeWeight) => ({
-      path: google.maps.SymbolPath.CIRCLE,
-      scale, fillColor: color, fillOpacity: 0.95,
-      strokeColor: stroke, strokeWeight,
-    });
+    // Clear previous clusterer
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+      clustererRef.current.setMap(null);
+      clustererRef.current = null;
+    }
 
-    // Hotspot markers
-    visiblePoints.forEach(h => {
+    // ── Hotspot pins — clustered ──
+    const hotspotMarkers = visiblePoints.map(h => {
       const color    = LAND_COLORS[h.land_type] || LAND_COLORS.unknown;
       const isActive = h.id === activeId;
       const hasGap   = collectionGapIds.has(h.id);
-      const marker = new google.maps.Marker({
+      const isGlowing = isActive || hasGap ||
+        (h.minerals || []).some(m => ['tourmaline', 'topaz', 'sapphire'].some(r => m.toLowerCase().includes(r)));
+      const marker = new AdvancedMarkerElement({
         position: { lat: h.lat, lng: h.lng },
-        map,
-        icon: circleIcon(
-          hasGap ? '#c084fc' : color,
-          isActive ? 8 : 6,
-          isActive ? '#ffffff' : hasGap ? '#c084fc' : 'rgba(255,255,255,0.7)',
-          isActive ? 3 : 1.5
-        ),
+        content: hotspotPinEl({ color, isActive, isGlowing, hasGap, difficulty: h.difficulty, highContrast }),
         zIndex: isActive ? 1000 : hasGap ? 500 : 1,
+        title: h.name,
       });
-      marker.addListener('click', () => onMarkerClick?.(h));
-      markersRef.current.push(marker);
+      marker.addListener('click', () => onMarkerClick && onMarkerClick(h));
+      return marker;
     });
 
-    // Specimen finds (personal) — shown on all + gaps layers
+    // Create clusterer — groups pins at low zoom, splits at zoom 8+
+    clustererRef.current = new MarkerClusterer({
+      map,
+      markers: hotspotMarkers,
+      algorithm: new SuperClusterAlgorithm({ radius: 72, maxZoom: 9 }),
+      renderer: {
+        render: ({ count, position }) => new AdvancedMarkerElement({
+          position,
+          content: clusterPinEl(count),
+          zIndex: 999,
+        }),
+      },
+    });
+
+    // ── Personal specimen finds (not clustered) ──
     if (activeLayer === 'all' || activeLayer === 'gaps') {
-      specimens
-        .filter(s => typeof s.lat === 'number' && typeof s.lng === 'number')
-        .forEach(s => {
-          const color = RARITY_COLOR[s.rarity] || RARITY_COLOR.common;
-          const marker = new google.maps.Marker({
-            position: { lat: s.lat, lng: s.lng },
-            map,
-            icon: {
-              path: 'M 0,-7 L 7,0 L 0,7 L -7,0 Z',
-              scale: 1,
-              fillColor: color, fillOpacity: 0.9,
-              strokeColor: 'rgba(255,255,255,0.6)', strokeWeight: 1,
-            },
-            zIndex: 1,
-          });
-          const iw = new google.maps.InfoWindow({
-            content: `<div style="font-family:system-ui;font-size:12px;min-width:120px">` +
-              `<b>🪨 ${s.mineral_name || ''}</b>` +
-              (s.found_date ? `<div style="color:#64748b;margin-top:2px">Found: ${s.found_date}</div>` : '') +
-              (s.rarity ? `<div style="color:#a78bfa;font-weight:500;margin-top:2px">${s.rarity}</div>` : '') +
-              `</div>`,
-          });
-          marker.addListener('click', () => iw.open({ anchor: marker, map }));
-          markersRef.current.push(marker);
+      geoSpecimens.forEach(s => {
+        const marker = add(new AdvancedMarkerElement({
+          map,
+          position: { lat: s.lat, lng: s.lng },
+          content: specimenPinEl(s.rarity, highContrast),
+          title: s.mineral_name,
+        }));
+        marker.addListener('click', () => {
+          infoRef.current?.setContent(
+            `<div style="font-family:system-ui;font-size:12px;min-width:120px;color:#1e293b">
+              <div style="font-weight:600">🪨 ${escapeHtml(s.mineral_name || '')}</div>
+              ${s.found_date ? `<div style="color:#64748b;margin-top:2px">Found: ${escapeHtml(s.found_date)}</div>` : ''}
+              ${s.rarity ? `<div style="color:#a78bfa;font-weight:500;margin-top:2px">${escapeHtml(s.rarity)}</div>` : ''}
+            </div>`
+          );
+          infoRef.current?.open({ map, anchor: marker });
         });
+      });
     }
 
-    // Club chapter pins
+    // ── Club chapter pins (not clustered) ──
     clubs.filter(c => c.lat != null && c.lng != null).forEach(c => {
-      const marker = new google.maps.Marker({
-        position: { lat: c.lat, lng: c.lng },
+      const marker = add(new AdvancedMarkerElement({
         map,
-        icon: circleIcon('#14b8a6', 7, '#ffffff', 2),
+        position: { lat: c.lat, lng: c.lng },
+        content: clubPinEl(),
         zIndex: 200,
+        title: c.name,
+      }));
+      marker.addListener('click', () => {
+        infoRef.current?.setContent(
+          `<div style="font-family:system-ui;font-size:12px;min-width:140px;color:#1e293b">
+            <div style="font-weight:700;color:#0f766e">🏛️ ${escapeHtml(c.name || '')}</div>
+            ${c.location_label ? `<div style="color:#64748b;margin-top:3px">${escapeHtml(c.location_label)}</div>` : ''}
+            ${c.meeting_schedule ? `<div style="color:#94a3b8;margin-top:2px;font-size:11px">${escapeHtml(c.meeting_schedule)}</div>` : ''}
+            <a href="/clubs" style="color:#7c3aed;margin-top:4px;display:inline-block;font-size:11px">View chapter →</a>
+          </div>`
+        );
+        infoRef.current?.open({ map, anchor: marker });
       });
-      const iw = new google.maps.InfoWindow({
-        content: `<div style="font-family:system-ui;font-size:12px;min-width:140px">` +
-          `<b style="color:#14b8a6">🏛️ ${c.name || ''}</b>` +
-          (c.location_label ? `<div style="color:#64748b;margin-top:3px">${c.location_label}</div>` : '') +
-          (c.meeting_schedule ? `<div style="color:#94a3b8;margin-top:2px;font-size:11px">${c.meeting_schedule}</div>` : '') +
-          (c.member_count > 0 ? `<div style="color:#a78bfa;margin-top:2px;font-size:11px">${c.member_count} members</div>` : '') +
-          `</div>`,
-      });
-      marker.addListener('click', () => iw.open({ anchor: marker, map }));
-      markersRef.current.push(marker);
     });
-  }, [ready, visiblePoints, activeId, activeLayer, specimens, clubs, collectionGapIds, onMarkerClick]);
 
-  // ── Active hotspot pan ──
+    // ── User location (not clustered) ──
+    if (userLocation) {
+      add(new AdvancedMarkerElement({
+        map,
+        position: { lat: userLocation.lat, lng: userLocation.lng },
+        content: userPinEl(highContrast),
+        zIndex: 2000,
+        title: 'You are here',
+      }));
+    }
+
+    // ── Expedition route polyline ──
+    if (expeditionRoute.length >= 2) {
+      add(new g.Polyline({
+        map,
+        path: expeditionRoute.map(p => ({ lat: p.lat, lng: p.lng })),
+        strokeOpacity: 0,
+        icons: [{
+          icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.8, strokeColor: '#c084fc', strokeWeight: 3, scale: 2.5 },
+          offset: '0',
+          repeat: '14px',
+        }],
+      }));
+    }
+
+    // ── Community activity heat ──
+    if (showHeatMap) {
+      geoSpecimens.forEach(s => {
+        add(new g.Circle({
+          map,
+          center: { lat: s.lat, lng: s.lng },
+          radius: 30000,
+          fillColor: '#ef4444',
+          fillOpacity: 0.12,
+          strokeOpacity: 0,
+        }));
+      });
+    }
+  }, [status, visiblePoints, geoSpecimens, clubs, userLocation, activeId, activeLayer,
+      collectionGapIds, expeditionRoute, showHeatMap, highContrast, onMarkerClick]);
+
+  // ── Cleanup clusterer on unmount ──
   useEffect(() => {
-    if (!ready || !activeId) return;
+    return () => {
+      if (clustererRef.current) {
+        clustererRef.current.clearMarkers();
+        clustererRef.current.setMap(null);
+        clustererRef.current = null;
+      }
+    };
+  }, []);
+
+  // ── Macrostrat bedrock geology overlay ──
+  useEffect(() => {
+    if (status !== 'ready' || !mapRef.current) return;
+    const map = mapRef.current;
+    const g = window.google.maps;
+    if (showGeology) {
+      const layer = new g.ImageMapType({
+        getTileUrl: (coord, zoom) => `https://tiles.macrostrat.org/carto/${zoom}/${coord.x}/${coord.y}.png`,
+        tileSize: new g.Size(256, 256),
+        opacity: 0.7,
+        name: 'macrostrat',
+      });
+      map.overlayMapTypes.push(layer);
+      return () => {
+        const idx = map.overlayMapTypes.getArray().indexOf(layer);
+        if (idx >= 0) map.overlayMapTypes.removeAt(idx);
+      };
+    }
+  }, [status, showGeology]);
+
+  // ── Pan to active hotspot ──
+  useEffect(() => {
+    if (status !== 'ready' || !mapRef.current || !activeId) return;
     const h = hotspots.find(x => x.id === activeId);
-    if (h?.lat && h?.lng) mapRef.current.panTo({ lat: h.lat, lng: h.lng });
-  }, [ready, activeId, hotspots]);
+    if (h?.lat && h?.lng) {
+      mapRef.current.panTo({ lat: h.lat, lng: h.lng });
+      mapRef.current.setZoom(10);
+    }
+  }, [status, activeId, hotspots]);
 
-  // ── User location marker + initial pan ──
+  // ── Fly to user on first fix ──
   useEffect(() => {
-    if (!ready) return;
-    const google = window.google;
-    if (userMarkerRef.current) { userMarkerRef.current.setMap(null); userMarkerRef.current = null; }
-    if (!userLocation) return;
-    userMarkerRef.current = new google.maps.Marker({
-      position: { lat: userLocation.lat, lng: userLocation.lng },
-      map: mapRef.current,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8, fillColor: '#22d3ee', fillOpacity: 0.95,
-        strokeColor: '#ffffff', strokeWeight: 2.5,
-      },
-      zIndex: 9999,
-    });
+    if (status !== 'ready' || !mapRef.current || !userLocation || flewRef.current) return;
+    flewRef.current = true;
     mapRef.current.panTo({ lat: userLocation.lat, lng: userLocation.lng });
-    if (mapRef.current.getZoom() < 8) mapRef.current.setZoom(9);
-  }, [ready, userLocation]);
+    mapRef.current.setZoom(11);
+  }, [status, userLocation]);
 
-  // ── Expedition route polyline ──
-  useEffect(() => {
-    if (!ready) return;
-    const google = window.google;
-    if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null; }
-    if (expeditionRoute.length < 2) return;
-    polylineRef.current = new google.maps.Polyline({
-      path: expeditionRoute.map(p => ({ lat: p.lat, lng: p.lng })),
-      map: mapRef.current,
-      geodesic: true,
-      strokeColor: '#c084fc', strokeOpacity: 0.8, strokeWeight: 3,
-      icons: [{ icon: { path: 'M 0,-1 L 2,0 L 0,1 Z', scale: 2, strokeColor: '#c084fc' }, repeat: '16px' }],
-    });
-  }, [ready, expeditionRoute]);
-
-  if (error) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-center px-6"
-        style={{ background: '#080d1c' }}>
-        <p className="text-white/60 text-sm font-semibold">Map unavailable</p>
-        <p className="text-white/35 text-xs">{error}</p>
-      </div>
-    );
-  }
+  if (status === 'fallback') return <LeafletHotspotMap {...props} />;
 
   return (
-    <div ref={containerRef} className="w-full"
-      style={height === '100%' ? { height: '100%' } : { height, borderRadius: '1rem' }} />
+    <div
+      className="relative w-full overflow-hidden"
+      style={isFullHeight
+        ? { height: '100%' }
+        : { height, borderRadius: '1rem', border: '1px solid hsla(195,100%,60%,0.2)' }
+      }
+    >
+      <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#080d1c' }} />
+      {status === 'loading' && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ background: '#080d1c' }}>
+          <div className="w-10 h-10 rounded-full border-2 border-amethyst/20 border-t-amethyst-glow animate-spin" />
+        </div>
+      )}
+    </div>
   );
 }

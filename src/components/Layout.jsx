@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
-import OracleOverlay from '@/components/oracle/OracleOverlay.jsx';
-import OracleLiveOverlay from '@/components/oracle/OracleLiveOverlay.jsx';
+import { lazyPart } from '@/lib/lazyPart';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
 import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
@@ -15,9 +14,22 @@ import CrystalNav from '@/components/nav/CrystalNav.jsx';
 import { BadgeAwarderProvider } from '@/lib/BadgeAwarderContext';
 import BadgeUnlockWatcher from '@/components/badges/BadgeUnlockWatcher';
 import FloatingCloverCompanion from '@/components/nav/FloatingCloverCompanion.jsx';
+import WakeWordListener from '@/components/oracle/WakeWordListener.jsx';
 import { useAuth } from '@/lib/AuthContext';
+import useReducedMotion from '@/lib/useReducedMotion';
+
+const OracleOverlay = lazyPart(() => import('@/components/oracle/OracleOverlay.jsx'));
+const OracleLiveOverlay = lazyPart(() => import('@/components/oracle/OracleLiveOverlay.jsx'));
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
+
+// Layout routes a logged-out visitor may view. Everything else under the
+// Layout is protected and redirects to /signin.
+const PUBLIC_LAYOUT_ROUTES = ['/explore', '/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
+export function isPublicLayoutRoute(pathname) {
+  if (pathname === '/') return true;
+  return PUBLIC_LAYOUT_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 const secondaryRoutes = [
   { to: '/admin', label: 'Admin', icon: Shield },
@@ -41,7 +53,15 @@ export function getActiveTab(pathname) {
   return '/';
 }
 
-function AdminHeader({ pathname }) {
+/**
+ * Renders admin and documentation navigation with the profile drawer.
+ * @param {Object} props - Header properties.
+ * @param {string} props.pathname - Current route path used for the section label.
+ * @param {boolean} props.isAdmin - Whether to show the admin navigation link.
+ * @returns {React.ReactElement} The navigation header.
+ */
+function AdminHeader({ pathname, isAdmin }) {
+  const links = isAdmin ? secondaryRoutes : secondaryRoutes.filter((r) => r.to !== '/admin');
   return (
     <header className="sticky top-0 z-40 hud-panel border-b border-hud-cyan/20 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -55,7 +75,7 @@ function AdminHeader({ pathname }) {
       </div>
       <div className="flex items-center gap-3">
         <nav className="flex gap-2">
-          {secondaryRoutes.map(({ to, label, icon: Icon }) => (
+          {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -98,10 +118,12 @@ function SubrouteBackButton({ onBack }) {
   );
 }
 
-function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
+function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion }) {
   return (
     <main
-      className={cn('relative', isAdminOrDocs ? 'pb-8' : '')}
+      id="main-content"
+      tabIndex={-1}
+      className={cn('relative outline-none', isAdminOrDocs ? 'pb-8' : '')}
       style={
         isAdminOrDocs || isFullscreenMap
           ? undefined
@@ -117,10 +139,10 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={pathname}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            variants={reduceMotion ? undefined : pageVariants}
+            initial={reduceMotion ? false : 'initial'}
+            animate={reduceMotion ? undefined : 'animate'}
+            exit={reduceMotion ? undefined : 'exit'}
             transition={pageTransition}
           >
             <Outlet />
@@ -131,12 +153,23 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, pathname }) {
   );
 }
 
+/**
+ * Renders nested routes with shared navigation and authenticated user overlays.
+ * Sets route indexing rules and redirects signed-out visitors from protected
+ * routes to login, preserving the requested path and query string.
+ * @returns {React.ReactElement} The application shell or a login redirect.
+ */
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  // Every authenticated app route is private — keep it out of search results.
-  useSeoRobots(false);
+  const { user, isAuthenticated, authChecked } = useAuth();
+  const reduceMotion = useReducedMotion();
+  // Most Layout routes are private. A few marketing/field pages stay indexable.
+  // /explore stays noindex until a real guest map ships (server noindex + sitemap omit).
+  const indexableUnderLayout = [
+    '/clubs', '/find-of-the-week', '/agate-guide', '/live', '/about', '/contact', '/scan', '/docs',
+  ].some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
+  useSeoRobots(indexableUnderLayout);
 
   // Reset the module-level tab back-stacks when the authenticated user
   // changes so a new user never inherits the previous user's navigation history.
@@ -149,6 +182,7 @@ export default function Layout() {
   );
   const isRoot = PRIMARY_ROOTS.includes(location.pathname);
   const isFullscreenMap = location.pathname.startsWith('/explore');
+  const isFullscreenCamera = location.pathname.startsWith('/scan');
   const activeTab = getActiveTab(location.pathname);
 
   useEffect(() => {
@@ -167,28 +201,37 @@ export default function Layout() {
     }
   };
 
+  // Logged-out visitor on a protected route → straight to login (no spinner).
+  if (authChecked && !isAuthenticated && !isPublicLayoutRoute(location.pathname)) {
+    const from = `${location.pathname}${location.search}`;
+    const q = encodeURIComponent(from);
+    return <Navigate to={`/signin?from_url=${q}&next=${q}`} replace />;
+  }
+
   return (
     <OracleProvider>
       <BadgeAwarderProvider>
       <div className="w-full min-h-screen text-foreground flex flex-col overflow-x-hidden">
-        {isAdminOrDocs && <AdminHeader pathname={location.pathname} />}
+        {isAdminOrDocs && <AdminHeader pathname={location.pathname} isAdmin={user?.role === 'admin'} />}
         {!isAdminOrDocs && !isRoot && <SubrouteBackButton onBack={() => navigate(-1)} />}
 
         <MainContent
           isAdminOrDocs={isAdminOrDocs}
           isFullscreenMap={isFullscreenMap}
           pathname={location.pathname}
+          reduceMotion={reduceMotion}
         />
 
-        {!isAdminOrDocs && (
+        {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        <HotspotProximityWatcher />
-        <StreakReminderBanner />
-        <OracleOverlays />
-        <BadgeUnlockWatcher />
-        <FloatingCloverCompanion />
+        {!isFullscreenCamera && isAuthenticated && <HotspotProximityWatcher />}
+        {!isFullscreenCamera && isAuthenticated && <StreakReminderBanner />}
+        {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
+        {isAuthenticated && <BadgeUnlockWatcher />}
+        {!isFullscreenCamera && isAuthenticated && <FloatingCloverCompanion />}
+        {!isFullscreenCamera && isAuthenticated && <WakeWordListener />}
       </div>
       </BadgeAwarderProvider>
     </OracleProvider>

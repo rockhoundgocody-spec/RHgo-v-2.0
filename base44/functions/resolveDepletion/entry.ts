@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Temporal-Depletion Engine — resolveDepletion
@@ -46,11 +47,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth — allow both user calls and automation (service-role) calls
-    try {
-      await base44.auth.me();
-    } catch {
-      // Automation call — service role is pre-injected
+    // Auth: require admin for write operations (apply:true), allow any
+    // authenticated user for read-only queries. Entity-automation calls from
+    // the workflow system resolve to an admin-level caller via auth.me().
+    const caller = await base44.auth.me().catch(() => null);
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -65,9 +67,21 @@ Deno.serve(async (req) => {
     const apply: boolean = isAutomation ? true : body.apply === true;
     const hintRarity: string | undefined = body.rarity || body.data?.rarity;
 
-    if (!mineralName || lat == null || lng == null) {
+    // Write operations (depletion) require admin — stops anonymous rarity manipulation
+    if (apply && caller.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required to modify depletion records' }, { status: 403 });
+    }
+
+    const coords = parseCoordinates(lat, lng);
+
+    // Automation apply with no GPS: soft-skip (never invent coordinates)
+    if (apply && !coords) {
+      return Response.json({ skipped: true, reason: 'no coordinates' }, { status: 200 });
+    }
+
+    if (!mineralName || !coords) {
       return Response.json({
-        error: 'mineral_name, lat, lng required',
+        error: 'mineral_name, lat, lng required and lat/lng must be valid coordinates',
         received: { mineralName, lat, lng },
       }, { status: 400 });
     }
@@ -78,7 +92,7 @@ Deno.serve(async (req) => {
     let state = 'Unknown';
     try {
       const geoRes = await fetch(
-        `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&format=json`
+        `https://macrostrat.org/api/v2/geologic_units/map?lat=${coords.lat}&lng=${coords.lng}&format=json`
       );
       if (geoRes.ok) {
         const geoJson = await geoRes.json();

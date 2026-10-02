@@ -10,9 +10,9 @@ import { useSpeechRecognition } from './useSpeech';
  * Same interface as useSpeechRecognition: { start, stop, listening, supported }.
  */
 
-const SILENCE_STOP_MS = 1600;  // stop after this much quiet following speech
-const MAX_RECORD_MS   = 12000; // hard cap per recording
-const VOICE_RMS       = 0.045; // speech detection threshold
+const SILENCE_STOP_MS = 1800;  // stop after this much quiet following speech
+const MAX_RECORD_MS   = 16000; // hard cap per recording
+const VOICE_RMS       = 0.028; // speech detection threshold
 
 function useRecorderTranscription({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
@@ -61,7 +61,10 @@ function useRecorderTranscription({ onResult, onInterim } = {}) {
 
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: false,
+      });
     } catch {
       runningRef.current = false;
       return;

@@ -28,21 +28,26 @@ export default function GeologyInfoCard({ lat, lng, onClose }) {
       }}
     >
       <div className="flex items-center gap-2 mb-2">
-        <Mountain size={13} className="text-emerald-400" />
+        <Mountain size={13} className="text-emerald-400" aria-hidden="true" />
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
           Geology Beneath You
         </span>
         <span className="ml-auto text-[8px] text-white/25 uppercase tracking-wider">Macrostrat</span>
         {onClose && (
-          <button onClick={onClose} aria-label="Close" className="ml-2 text-white/30 hover:text-white/70 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50 rounded-sm">
-            <X size={14} />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close geology panel"
+            className="ml-2 text-white/30 hover:text-white/70 transition focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50 rounded-sm"
+          >
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
 
       {units === null && (
-        <div className="flex items-center gap-2 text-white/40 text-[11px] py-1">
-          <Loader2 size={12} className="animate-spin" /> Reading the bedrock…
+        <div role="status" className="flex items-center gap-2 text-white/40 text-[11px] py-1">
+          <Loader2 size={12} className="animate-spin" aria-hidden="true" /> Reading the bedrock…
         </div>
       )}
 

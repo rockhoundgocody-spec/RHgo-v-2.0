@@ -2,8 +2,15 @@ import React from 'react';
 import { Mail, Globe, MessageCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 export default function Contact() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'Contact RockHound-GO',
+    'Questions, feature ideas, or bug reports — reach the RockHound-GO team at hello@rhgo.me.',
+  );
   return (
     <div className="px-4 lg:px-8 pt-6 pb-24 max-w-2xl mx-auto">
       <GlassPanel variant="amethyst">

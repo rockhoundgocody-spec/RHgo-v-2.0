@@ -23,7 +23,9 @@
         "active",
         "cancelled",
         "past_due",
-        "trialing"
+        "trialing",
+        "incomplete",
+        "paused"
       ],
       "default": "active"
     },
@@ -52,6 +54,10 @@
       "type": "string",
       "maxLength": 1000,
       "description": "Optional free-form description of this subscription record (up to 1000 characters)"
+    },
+    "plan": {
+      "type": "string",
+      "description": "Pricing-page plan purchased (season, hound, steward, club, field_pro, family)"
     }
   },
   "required": [
@@ -60,16 +66,9 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "read": {
       "$or": [

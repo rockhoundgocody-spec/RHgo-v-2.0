@@ -54,9 +54,10 @@
       "type": "string",
       "enum": [
         "collected",
-        "left_in_place"
+        "left_in_place",
+        "observed"
       ],
-      "description": "Chattel (collected) vs affixed/legacy (marked in place) path"
+      "description": "Chattel (collected) vs affixed/legacy (marked in place) vs observed (noted only)"
     },
     "collected": {
       "type": "boolean",
@@ -95,6 +96,15 @@
     "xp_awarded": {
       "type": "integer",
       "default": 0
+    },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "nature",
+        "store_bought"
+      ],
+      "default": "nature",
+      "description": "Where the specimen came from \u2014 nature (field, gravel, driveway, landscaping) vs store-bought/gift. Store-bought earns reduced XP."
     },
     "chain_ids": {
       "type": "array",
@@ -138,6 +148,22 @@
           "type": "number"
         }
       }
+    },
+    "field_habit": {
+      "type": "string",
+      "description": "User-editable field report: crystal habit / form observed"
+    },
+    "field_luster": {
+      "type": "string",
+      "description": "User-editable field report: luster type observed"
+    },
+    "field_matrix": {
+      "type": "string",
+      "description": "User-editable field report: matrix / host rock observed"
+    },
+    "field_next_test": {
+      "type": "string",
+      "description": "User-editable field report: next test to try (e.g. streak, hardness, magnetism)"
     }
   },
   "required": [
@@ -147,48 +173,48 @@
     "create": {
       "$or": [
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "created_by": "{{user.email}}"
         }
       ]
     },
     "read": {
       "$or": [
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "created_by": "{{user.email}}"
         }
       ]
     },
     "update": {
       "$or": [
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "created_by": "{{user.email}}"
         }
       ]
     },
     "delete": {
       "$or": [
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "created_by": "{{user.email}}"
         }
       ]
     }

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import BlackOpalShader from './BlackOpalShader.jsx';
-import WebGPUOpalShader from './WebGPUOpalShader.jsx';
-import WebGPUFluidOverlay from './WebGPUFluidOverlay.jsx';
+import { lazyPart } from '@/lib/lazyPart';
 import SphereVolume from './SphereVolume.jsx';
 import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
@@ -14,6 +12,29 @@ import usePageVisible from '@/lib/usePageVisible';
  *   Layer 1 (main): Black opal core with iridescent liquid-gas fire
  *   Layer 2 (overlay): Low-opacity amethyst gas shell for depth + brand tint
  */
+// CSS black-opal stand-in: shown while the WebGL/WebGPU shader chunk loads,
+// and permanently if it can't (offline, no GPU). Keeps Three.js (~0.5 MB)
+// out of the app's first download.
+function OpalFallback() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background:
+          'radial-gradient(circle at 32% 30%, hsla(190,100%,62%,0.55) 0%, transparent 38%),' +
+          'radial-gradient(circle at 70% 62%, hsla(330,90%,62%,0.45) 0%, transparent 42%),' +
+          'radial-gradient(circle at 44% 76%, hsla(45,100%,62%,0.32) 0%, transparent 36%),' +
+          'radial-gradient(circle at 62% 28%, hsla(160,90%,55%,0.35) 0%, transparent 30%),' +
+          'radial-gradient(circle at 50% 50%, hsl(265 55% 11%) 0%, hsl(250 50% 4%) 100%)',
+      }}
+    />
+  );
+}
+const BlackOpalShader = lazyPart(() => import('./BlackOpalShader.jsx'), OpalFallback);
+const WebGPUOpalShader = lazyPart(() => import('./WebGPUOpalShader.jsx'), OpalFallback);
+const WebGPUFluidOverlay = lazyPart(() => import('./WebGPUFluidOverlay.jsx'));
+
 // orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
 const STATE_CONFIG = {
   idle:      { haloBase: 'hsla(190,100%,62%,0.42)',  auraBase: 'hsla(175,90%,52%,0.42)',   innerBase: 'hsla(330,90%,60%,0.5)',   boxShadow: '0 0 80px hsla(190,100%,55%,0.35), 0 0 30px hsla(330,90%,60%,0.22), 0 0 20px hsla(45,100%,60%,0.15), inset 0 0 50px hsla(265,90%,8%,0.55)',  idlePulseScale: 1.0, idleAuraScale: 1.0 },
@@ -41,12 +62,19 @@ export default function AmethystOrb({
   sublabel,
   orbState = 'idle',
   speaking = false,        // kept for backwards compat — derived from orbState if not set
+  listening = false,
+  thinking = false,
   level = 1,               // companion level — drives visual evolution
   getAmplitude,
   getSpectrum,
   getInteraction,          // liquid-metal response to screen interaction
 }) {
-  const effectiveState = orbState !== 'idle' ? orbState : (speaking ? 'speaking' : 'idle');
+  const effectiveState = orbState !== 'idle'
+    ? orbState
+    : thinking ? 'thinking'
+    : listening ? 'listening'
+    : speaking ? 'speaking'
+    : 'idle';
   const tier = growthTier(level);
   // Drive CSS variables from amplitude + spectrum on each frame — physical pulse,
   // no React re-renders. Spectrum drives the hovering afterglow aura intensity.
@@ -349,6 +377,33 @@ export default function AmethystOrb({
 
         {/* Volumetric sphere shading — pure CSS, no WebGL context */}
         <SphereVolume />
+
+        {/* PHOTON-SPHERE RING — luminous annulus with dark center.
+            Keeps existing shader colors visible in the ring band and the
+            outer rim; the center is masked to the page background so the orb
+            reads as light orbiting a dark core. Drift/breathing motion is
+            untouched — these are pure pointer-events-none overlays. */}
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, #0a0a14 0%, #0a0a14 30%, rgba(10,10,20,0.55) 38%, transparent 47%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background: `radial-gradient(circle, transparent 40%, ${cfg.haloBase} 46%, ${cfg.auraBase} 52%, transparent 60%)`,
+            mixBlendMode: 'screen',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none rounded-full opacity-50"
+          style={{
+            background: `conic-gradient(from 0deg, transparent 0deg, ${cfg.haloBase} 30deg, transparent 60deg, ${cfg.auraBase} 120deg, transparent 150deg, ${cfg.haloBase} 240deg, transparent 270deg, ${cfg.auraBase} 330deg, transparent 360deg)`,
+            mixBlendMode: 'screen',
+          }}
+        />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">

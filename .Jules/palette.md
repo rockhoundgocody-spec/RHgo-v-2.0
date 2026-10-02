@@ -45,3 +45,26 @@
 ## 2024-08-30 - Accordion Accessibility Patterns in Framer Motion components
 **Learning:** Collapsible accordion-style components using `<motion.div>` for animation require `useId` for robust aria-controls linking between the toggle button and the expandable body, while decorative chevron icons toggled by the state should be marked with `aria-hidden="true"`.
 **Action:** When auditing custom UI elements with collapsible/expandable sections, systematically verify the presence of `aria-expanded` and `aria-controls` on the trigger, and `id` on the target container, ensuring a seamless screen reader experience.
+## 2024-11-21 - Accessible Dynamic Lists
+**Learning:** Found that dynamically generated list elements (like suggested routes mapped over arrays) often use plain buttons for navigation, but lack `aria-label`s to clearly communicate their purpose (e.g. what pressing the button will actually do) to screen reader users when the inner text is heavily styled or truncated.
+**Action:** Always add explicit `aria-label` attributes to dynamically generated navigation buttons mapped from lists to ensure screen readers provide useful, actionable context.
+
+## 2024-05-18 - Native File Upload Accessibility
+**Learning:** Using JavaScript `useRef` to proxy clicks from an inaccessible `<button>` to a hidden `<input type="file" className="hidden">` fundamentally breaks keyboard accessibility, as the hidden input cannot receive focus and the button lacks native file picker semantics.
+**Action:** When implementing custom file upload buttons in this codebase, wrap the `<input type="file">` inside a `<label>`. Use `className="sr-only"` on the input to keep it visually hidden but focusable, and apply `cursor-pointer focus-within:ring-2 focus-within:outline-none` directly to the `<label>` to leverage native HTML semantics and provide visual focus indication.
+## 2026-10-31 - Map Search Bar Accessibility Focus Styles
+**Learning:** Found that custom search inputs and list elements often lack proper `aria-label`s and focus indicators (`focus-visible:ring-2`), making them inaccessible for keyboard navigation and screen readers. When a button triggers an action like clearing the search, without `aria-label` screen readers only announce 'button'.
+**Action:** When working on interactive map search components, explicitly add `aria-label` to inputs and icon-only buttons, and use `focus-visible:outline-none focus-visible:ring-2` combined with complementary theme colors (e.g. `amethyst-glow/50`) to restore keyboard usability and screen reader support.
+## 2024-10-24 - Accessibility states on dynamic mappings
+**Learning:** When using `.map()` to render dynamic filter chips that act as toggles, `aria-pressed` is required to announce the selected state to screen readers.
+**Action:** Always add `aria-pressed={state === id}` to dynamically mapped toggle buttons.
+## 2026-10-31 - Map Search Bar and Filter Sheet Focus Accessibility
+**Learning:** Found that the `MapSearchBar` text input and `MapFilterSheet` interactive elements (buttons, inputs, toggle rows) lacked `focus-visible` styling, making them difficult to navigate via keyboard. For themed glassmorphic UI elements, the default browser outline is often stripped.
+**Action:** When working on interactive map search and filter components, ensure inputs and buttons include `focus-visible:outline-none focus-visible:ring-2` combined with complementary theme colors (e.g. `amethyst-glow/50` for general map components or `#9FE8D0/60` for the specific mint-accented Filter Sheet) to restore keyboard usability without breaking the visual aesthetic.
+## 2024-11-21 - Onboarding Skip Button Focus Accessibility
+**Learning:** Found that custom plain text "Skip" buttons floating over complex backgrounds (like the Age Gate/Onboarding screens) often completely omit focus rings. Keyboard users and screen reader users navigating sequentially cannot see their focus position when they reach the skip action.
+**Action:** Always ensure that floating skip buttons (or any standalone text-only buttons in modals/tours) include `focus-visible:outline-none focus-visible:ring-2` with an appropriate semi-transparent white or themed ring (`focus-visible:ring-white/50`) and a subtle border radius (`rounded-md px-2 py-1`) to create a neat focus box around the text.
+
+## 2026-10-31 - External Permit Link Accessibility
+**Learning:** Inline links within detail cards (such as "Get permit →" in `LandAccessPanel`) often lack contextual `aria-label` attributes and focus ring indicators. For screen reader users navigating by links alone, "Get permit →" provides no context as to which site or hotspot the permit belongs to.
+**Action:** Always complement external action links with descriptive `aria-label` attributes (e.g. `aria-label={`Get permit for ${siteName} (opens in new tab)`}`) and theme-matched focus ring styles (`focus-visible:ring-2 focus-visible:ring-hud-cyan/60 rounded-sm`).

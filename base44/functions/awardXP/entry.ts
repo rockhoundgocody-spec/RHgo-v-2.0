@@ -15,12 +15,22 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Admin-only — prevents direct client calls from self-awarding XP.
+    // Client-facing flows use awardVerifiedXP which validates events server-side.
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden — server use only' }, { status: 403 });
+    }
 
     const body = await req.json();
     const amount = body.amount ?? body.xp; // accept both param names
     const { reason, idempotency_key } = body;
     if (amount == null || Number.isNaN(Number(amount))) {
       return Response.json({ error: 'Missing amount' }, { status: 400 });
+    }
+    // Idempotency key is mandatory — prevents unlimited self-XP farming by
+    // repeated direct calls. Every award must reference a unique event.
+    if (!idempotency_key) {
+      return Response.json({ error: 'idempotency_key required' }, { status: 400 });
     }
     // Server-side bounds — a client can call this endpoint directly, so never
     // trust the requested amount: positive integers only, capped per award.

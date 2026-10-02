@@ -1,0 +1,107 @@
+{
+  "name": "SyncPhoto",
+  "type": "object",
+  "description": "Server replica of a find photo pointer. Deduplicated by sha256 within a find (photo union merge). remote_url is set by PHOTO_UPLOAD_POINTER after the device uploads the file.",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "find_client_id": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "original",
+        "preview",
+        "thumb",
+        "ai_upload"
+      ],
+      "default": "original"
+    },
+    "width": {
+      "type": "integer"
+    },
+    "height": {
+      "type": "integer"
+    },
+    "bytes": {
+      "type": "integer"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "remote_url": {
+      "type": "string"
+    },
+    "sync_state": {
+      "type": "string",
+      "enum": [
+        "local_only",
+        "synced"
+      ],
+      "default": "local_only"
+    },
+    "deleted_at": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "client_id",
+    "find_client_id",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

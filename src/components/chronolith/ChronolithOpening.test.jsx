@@ -59,9 +59,15 @@ describe('ChronolithOpening subcomponents & module exports', () => {
     expect(element).toBeDefined();
   });
 
-  it('exports EnterTrialButton as function component', () => {
+  it('exports EnterTrialButton as function component with accessibility attributes', () => {
     expect(typeof EnterTrialButton).toBe('function');
     const element = EnterTrialButton({ phase: 4, onEnter: () => {} });
     expect(element).toBeDefined();
+    // Verify props of motion.button rendered in phase 4
+    const buttonChild = element.props.children;
+    expect(buttonChild.props['type']).toBe('button');
+    expect(buttonChild.props['aria-label']).toBe('Enter the Reality Trial');
+    expect(buttonChild.props.className).toContain('focus-visible:ring-purple-400');
   });
+
 });

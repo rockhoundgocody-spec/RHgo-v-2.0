@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 /**
  * autoClassifySpecimen — entity-automation handler that fires on every new
@@ -18,10 +19,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth model: entity automations run without a user token.
-    // Direct callers must be admin. Automation callers (no user) are allowed.
+    // Auth: require admin for direct calls. Entity-automation calls from the
+    // platform workflow system carry a service-role token that auth.me() resolves
+    // to an admin-level caller; anonymous HTTP calls resolve to null and are rejected.
     const caller = await base44.auth.me().catch(() => null);
-    if (caller && caller.role !== 'admin') {
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (caller.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
@@ -38,9 +43,12 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: 'specimen not found' });
     }
 
-    // Need an image to classify
+    // Need an image to classify, and it must originate from an authorized domain to prevent SSRF
     if (!specimen.image_url) {
       return Response.json({ skipped: true, reason: 'no image_url' });
+    }
+    if (!isValidImageUrl(specimen.image_url)) {
+      return Response.json({ skipped: true, reason: 'untrusted image_url host' });
     }
 
     // Skip if user already provided an explicit mineral_name and it isn't a placeholder

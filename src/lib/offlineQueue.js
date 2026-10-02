@@ -315,7 +315,9 @@ export function installOfflineQueue() {
   if (installed || typeof window === "undefined") return;
   installed = true;
 
-  loadQueue().catch(() => {});
+  loadQueue().catch((err) => {
+    console.warn("offlineQueue: failed to load initial queue", err);
+  });
 
   window.addEventListener("online", () => {
     setTimeout(() => { flushWhenStable(); }, 1500);

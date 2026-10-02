@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHRONOLITH — investigateCase
@@ -31,13 +33,24 @@ Deno.serve(async (req) => {
       case_id,
     } = body;
 
+    // SSRF guard: validate that user-provided image URLs originate from trusted storage domains
+    if (Array.isArray(image_urls)) {
+      if (!image_urls.every((url: string) => isValidImageUrl(url))) {
+        return Response.json({ error: 'image_urls must be from trusted storage domains' }, { status: 400 });
+      }
+    } else if (image_urls != null) {
+      return Response.json({ error: 'image_urls must be an array' }, { status: 400 });
+    }
+
     // ── Cartographer: fetch bedrock geology from Macrostrat ──
     let geologicUnit = '';
     let geologyContext = '';
-    if (lat != null && lng != null) {
+    // Parameter security: strictly validate lat/lng to prevent parameter injection and out-of-bounds API requests
+    const validCoords = parseCoordinates(lat, lng);
+    if (validCoords) {
       try {
         const resp = await fetch(
-          `https://macrostrat.org/api/v2/geologic-unit?lat=${lat}&lng=${lng}&format=json`
+          `https://macrostrat.org/api/v2/geologic-unit?lat=${validCoords.lat}&lng=${validCoords.lng}&format=json`
         );
         if (resp.ok) {
           const data = await resp.json();
@@ -187,7 +200,7 @@ Produce the structured output.`;
       owner_email: user.email,
       image_urls,
       specimen_label: specimen_label || '',
-      ...(lat != null ? { lat, lng } : {}),
+      ...(validCoords ? { lat: validCoords.lat, lng: validCoords.lng } : {}),
       field_observations,
       geologic_unit: geologicUnit,
       opening_statement: result.opening_statement || '',

@@ -13,3 +13,19 @@
 **Learning:** Using string `endsWith` for hostname domain checking without an exact match or leading dot (`.`) allows domain suffix spoofing bypasses.
 
 **Prevention:** Ensure URL hostname validation checks exact domain equality (`host === domain`) or subdomains with a leading dot (`host.endsWith('.' + domain)`), and strictly enforce HTTP/HTTPS protocols.
+
+## 2026-08-26 - Geographic Coordinate Parameter Injection in External API Calls
+
+**Vulnerability:** External API query parameters (`lat` and `lng`) passed to Macrostrat geology endpoints were interpolated directly into request URLs without strict type or range validation.
+
+**Learning:** Unsanitized string inputs containing URL query parameters or control characters (e.g. `lat = "45.5&admin=1"`) could alter outgoing request URL structures or trigger malformed external API calls.
+
+**Prevention:** Parse coordinates to numbers, verify `Number.isFinite(...)`, and enforce valid geographic ranges (`[-90, 90]` for latitude, `[-180, 180]` for longitude) before embedding coordinates into external API URLs.
+
+## 2026-08-27 - Hardcoded Fallback Credentials in Client Initializers
+
+**Vulnerability:** `src/api/standaloneClient.js` contained a hardcoded Supabase anonymous API key fallback string (`sb_publishable_--znZ5PXuzO3fcxOh-sDhA_xcueq3uH`) and URL fallback.
+
+**Learning:** Including default/fallback credentials directly in source code risks exposing key material in compiled frontend bundles and source repositories, even if intended as temporary or public key fallbacks.
+
+**Prevention:** Never include hardcoded credential strings in source files. Rely strictly on environment variables (e.g. `import.meta.env.VITE_SUPABASE_ANON_KEY`) or leave fallbacks empty/falsy so missing configuration is safely detected at runtime without leaking credentials.

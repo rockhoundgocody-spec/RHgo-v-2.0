@@ -1,293 +1,270 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { flushWhenStable } from '@/lib/offlineQueue.js';
-import HeroOrb from '@/components/hub/HeroOrb.jsx';
-import useCompanion from '@/lib/useCompanion.js';
-import CompanionMilestoneToast from '@/components/hub/CompanionMilestoneToast.jsx';
-import QuestEngine from '@/components/hub/QuestEngine.jsx';
-import LiveStatStrip from '@/components/hub/LiveStatStrip.jsx';
-import DailyStreakCard from '@/components/hub/DailyStreakCard.jsx';
-import RockStarLeaderboard from '@/components/hub/RockStarLeaderboard.jsx';
-import StormWindowBanner from '@/components/hub/StormWindowBanner.jsx';
-import PlayerLegend from '@/components/hub/PlayerLegend.jsx';
-import MoreSheet from '@/components/hub/MoreSheet.jsx';
-import CloverSuggests from '@/components/hub/CloverSuggests.jsx';
+import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
-import { Compass, ScanLine, Gem, Sword, Trophy, Lock, Users, Atom, Building2, Grid3x3 } from 'lucide-react';
-import { useEntityList } from '@/lib/useEntityQuery.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ScanLine, MapPin, Compass, Flame } from 'lucide-react';
+import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
+import DailyCheckIn from '@/components/hub/DailyCheckIn.jsx';
+import CloverSuggests from '@/components/hub/CloverSuggests.jsx';
+import SeasonBanner from '@/components/hub/SeasonBanner.jsx';
+import DailyRoulette from '@/components/hub/DailyRoulette.jsx';
 import NewUserTour from '@/components/hub/NewUserTour.jsx';
-import AddToHomeScreenPrompt from '@/components/hub/AddToHomeScreenPrompt.jsx';
-import IntroCinematic from '@/components/hub/IntroCinematic.jsx';
-import OpeningBuffer from '@/components/hub/OpeningBuffer.jsx';
-import DeferredSection from '@/components/DeferredSection.jsx';
-import { onboardingStore } from '@/lib/onboardingStore';
+import StreakAtRiskCard from '@/components/hub/StreakAtRiskCard.jsx';
+import WeeklyDigestCard from '@/components/hub/WeeklyDigestCard.jsx';
+import IntentionRoulette from '@/components/hub/IntentionRoulette.jsx';
+import { getLevel, getTitle, xpProgress, xpToNext } from '@/lib/leveling';
+import { toast } from '@/components/ui/use-toast';
+import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
+import { formatDistance, rankHotspots, watchGps } from '@/lib/geo';
+
+const LAND_LABEL = {
+  public: 'public', blm: 'public', forest_service: 'public',
+  state_park: 'fee', private: 'private', unknown: 'public',
+};
 
 export default function Hub() {
-  const [milestone, setMilestone] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [bufferDone, setBufferDone] = useState(() => sessionStorage.getItem('rhgo_buffer_seen') === '1');
-  const [showCinematic, setShowCinematic] = useState(() => !localStorage.getItem('rhgo_intro_seen'));
-  const handleMilestone = useCallback((m) => setMilestone(m), []);
-  const { companion, todaysSpecimenCount } = useCompanion({ onMilestone: handleMilestone });
-  const companionLevel = companion?.level || 1;
-  const chronolithUnlocked = companionLevel >= 2;
-  const { data: specimens = [] } = useEntityList('Specimen', '-found_date');
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [hotspots, setHotspots] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [companion, setCompanion] = useState(null);
+  const [gps, setGps] = useState(null);
+  const [collected, setCollected] = useState(new Set());
+
+  useEffect(() => watchGps(setGps), []);
 
   useEffect(() => {
-    flushWhenStable();
-    base44.auth.me()
-      .then((u) => { if (u?.email) setUserEmail(u.email); })
+    let cancelled = false;
+    (async () => {
+      try {
+        const u = await base44.auth.me();
+        if (cancelled) return;
+        setUser(u);
+        if (u?.email) {
+          const [profiles, specimens] = await Promise.all([
+            base44.entities.PlayerProfile.filter({ owner_email: u.email }).catch(() => []),
+            base44.entities.Specimen.list('-found_date', 80).catch(() => []),
+          ]);
+          if (cancelled) return;
+          setProfile(profiles?.[0] || null);
+          setCollected(new Set(
+            (specimens || []).map((s) => (s.mineral_name || '').toLowerCase().trim()).filter(Boolean),
+          ));
+        }
+      } catch {
+        /* unauthenticated hub is handled by HomeGate */
+      }
+    })();
+
+    base44.entities.Hotspot.list('-trust_score', 80)
+      .then((h) => { if (!cancelled) setHotspots(h || []); })
       .catch(() => {});
+
+    base44.functions.invoke('getCompanionState', {})
+      .then((res) => { if (!cancelled) setCompanion(res?.data?.companion || null); })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    onboardingStore.set(!bufferDone || showCinematic);
-  }, [bufferDone, showCinematic]);
+    if (!user?.email) return;
+    try {
+      if (sessionStorage.getItem('rhgo_guest_reclaim_done') === '1') return;
+    } catch {
+      /* private mode */
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const out = await reclaimGuestReport();
+        if (cancelled || !out?.synced) return;
+        try {
+          sessionStorage.setItem('rhgo_guest_reclaim_done', '1');
+        } catch {
+          /* private mode */
+        }
+        toast({
+          title: 'Synced your guest find.',
+          description: out.mineralName || undefined,
+        });
+        if (out.specimenId) navigate(`/specimen/${out.specimenId}`);
+        else navigate('/collection');
+      } catch {
+        /* stash preserved on hard failure */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email, navigate]);
 
-  if (!bufferDone) {
-    return <OpeningBuffer onDone={() => { sessionStorage.setItem('rhgo_buffer_seen', '1'); setBufferDone(true); }} />;
-  }
+  const ranked = useMemo(() => {
+    const seen = new Set();
+    return rankHotspots(hotspots, { userLocation: gps, collectedMinerals: collected })
+      .filter((h) => {
+        const key = (h.name || '').toLowerCase().trim();
+        if (!key || seen.has(key)) return !key;
+        seen.add(key);
+        return true;
+      });
+  }, [hotspots, gps, collected]);
+  const nearby = ranked.filter((h) => h.distanceMi == null || h.distanceMi <= 80).slice(0, 3);
+  const picks = nearby.length ? nearby : ranked.slice(0, 3);
 
-  if (showCinematic) {
-    return <IntroCinematic onDone={() => { localStorage.setItem('rhgo_intro_seen', '1'); setShowCinematic(false); }} />;
-  }
+  const totalXp = profile?.total_xp || 0;
+  const level = getLevel(totalXp);
+  const title = getTitle(level);
+  const progress = xpProgress(totalXp);
+  const remaining = xpToNext(totalXp);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center pb-28 scrollbar-none">
-
+    <div className="relative min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
+      <HubAtmosphere />
       <NewUserTour />
-      <AddToHomeScreenPrompt />
-      {/* Storm window alert — weather-based, near Great Lakes beaches */}
-      <StormWindowBanner />
-
-      {/* Ambient purple backdrop */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 h-[520px] -z-10"
-        style={{
-          background:
-            'radial-gradient(60% 50% at 50% 0%, hsla(280,90%,50%,0.2) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* ── HERO CENTERPIECE ── */}
-      <section className="flex flex-col items-center text-center px-5 pt-4 w-full max-w-md overflow-hidden">
-        <HeroOrb companion={companion} todaysSpecimens={todaysSpecimenCount} size={141} />
-
-        <div className="mt-3 select-none">
-          <span
-            className="text-[56px] sm:text-[80px] font-black leading-none text-amethyst-glow glow-amethyst block"
-            style={{
-              letterSpacing: '-0.02em',
-              textShadow:
-                '0 0 60px hsla(280,100%,75%,0.7), 0 0 120px hsla(265,80%,50%,0.4)',
-            }}
-          >
-            GO
-          </span>
-          <p className="mt-1 text-white/55 text-[11px] font-light tracking-[0.18em] uppercase">
-            Discover · Identify · Collect
-          </p>
+      <header className="relative z-10 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">
+        <div>
+          <div className="text-[9px] uppercase tracking-[0.28em] text-white/35 font-semibold">Field OS</div>
+          <span className="text-white font-bold text-base tracking-tight">RockHound-GO</span>
         </div>
-
-        {/* Quick action buttons */}
-        {/* Quick action buttons — 4 primary + More */}
-        <div className="mt-6 grid grid-cols-4 gap-2 w-full">
-          <QuickAction to="/scan" icon={ScanLine} label="Scan" color="amethyst" />
-          <QuickAction to="/explore" icon={Compass} label="Map" color="cyan" />
-          <QuickAction to="/collection" icon={Gem} label="GeoDex" color="purple" />
-          <QuickAction to="/quests" icon={Sword} label="Quests" color="gold" />
-        </div>
-        <button
-          onClick={() => setMoreOpen(true)}
-          className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl transition active:scale-[0.98]"
-          style={{
-            background: 'linear-gradient(180deg, hsla(255,30%,16%,0.45) 0%, hsla(250,28%,10%,0.6) 100%)',
-            border: '1px solid hsla(280,70%,65%,0.15)',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <Grid3x3 size={15} className="text-white/50" />
-          <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/50">More</span>
-        </button>
-        <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
-
-        {/* Family Nature Adventure Spotlight */}
         <Link
-          to="/explore?focus=family"
-          className="mt-3.5 w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all active:scale-[0.98] group"
-          style={{
-            background: 'linear-gradient(135deg, hsla(180,60%,14%,0.85) 0%, hsla(245,25%,10%,0.95) 100%)',
-            borderColor: 'hsla(185,90%,60%,0.35)',
-            boxShadow: '0 8px 24px -4px hsla(185,90%,30%,0.25)',
-          }}
+          to="/profile"
+          aria-label="Profile"
+          className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95"
+          style={{ border: '1px solid hsla(0,0%,100%,0.15)', background: 'hsla(0,0%,100%,0.03)' }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'hsla(185,80%,35%,0.3)', border: '1px solid hsla(185,90%,60%,0.4)' }}
-            >
-              <Compass size={20} className="text-cyan-300" />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-bold text-white tracking-wide flex items-center gap-1.5">
-                Weekend Family Adventure 🌲
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                  HOTSPOTS READY
-                </span>
-              </div>
-              <div className="text-[10px] text-white/60 mt-0.5">
-                Tap to explore kid-friendly agate beaches & geode beds near you!
-              </div>
-            </div>
-          </div>
-          <span className="text-cyan-300 text-xs font-semibold group-hover:translate-x-1 transition-transform">
-            →
+          <span className="text-white/60 text-xs font-bold uppercase">
+            {(user?.full_name || user?.email || 'You')[0]}
           </span>
         </Link>
+      </header>
 
-        {/* CHRONOLITH — the deep investigation portal (gated behind companion level 2+) */}
-        {chronolithUnlocked ? (
-          <Link to="/chronolith" className="mt-4 w-full flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-[0.98] group"
-            style={{
-              background: 'linear-gradient(135deg, hsla(270,60%,25%,0.4) 0%, hsla(220,40%,8%,0.7) 100%)',
-              border: '1px solid hsla(270,80%,60%,0.3)',
-              boxShadow: '0 0 30px -8px hsla(280,80%,50%,0.3), inset 0 1px 0 hsla(270,80%,90%,0.08)',
-              backdropFilter: 'blur(12px)',
-            }}>
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'hsla(270,70%,40%,0.3)', border: '1px solid hsla(270,80%,60%,0.3)' }}>
-              <Atom size={20} className="text-amethyst-glow" style={{ filter: 'drop-shadow(0 0 6px hsla(280,100%,65%,0.5))' }} />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm font-black text-white tracking-tight">CHRONOLITH</div>
-              <div className="text-[10px] text-white/45 italic">The planet that remembers — reconstruct how matter became itself</div>
-            </div>
-            <span className="text-[8px] font-mono uppercase tracking-widest px-2 py-1 rounded-full"
-              style={{ background: 'hsla(280,80%,30%,0.3)', color: 'hsl(280,85%,85%)', border: '1px solid hsla(280,80%,50%,0.3)' }}>
-              Deep
-            </span>
-          </Link>
-        ) : (
-          <div className="mt-4 w-full flex items-center gap-3 p-4 rounded-2xl opacity-60"
-            style={{
-              background: 'linear-gradient(135deg, hsla(240,30%,12%,0.5) 0%, hsla(220,40%,8%,0.6) 100%)',
-              border: '1px solid hsla(255,30%,30%,0.2)',
-            }}>
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'hsla(240,30%,20%,0.5)', border: '1px solid hsla(255,30%,30%,0.2)' }}>
-              <Lock size={18} className="text-white/30" />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm font-black text-white/50 tracking-tight">CHRONOLITH</div>
-              <div className="text-[10px] text-white/30">Reach companion level 2 to unlock deep investigation</div>
-            </div>
-          </div>
-        )}
-
-        {/* Find of the Week CTA */}
-        <Link to="/find-of-the-week" className="mt-3 w-full flex items-center gap-3 p-3.5 rounded-2xl transition-all active:scale-[0.98] group"
-          style={{
-            background: 'linear-gradient(135deg, hsla(45,60%,14%,0.5) 0%, hsla(245,25%,10%,0.7) 100%)',
-            border: '1px solid hsla(45,80%,55%,0.25)',
-            boxShadow: '0 0 24px -8px hsla(45,80%,50%,0.2)',
-          }}>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'hsla(45,70%,30%,0.3)', border: '1px solid hsla(45,80%,55%,0.3)' }}>
-            <Trophy size={18} className="text-amber-300" style={{ filter: 'drop-shadow(0 0 5px hsla(45,100%,60%,0.4))' }} />
-          </div>
-          <div className="flex-1 text-left">
-            <div className="text-xs font-bold text-white tracking-tight">Find of the Week</div>
-            <div className="text-[10px] text-white/45">Vote for the best community find — new ballot every week</div>
-          </div>
-          <span className="text-amethyst-glow text-xs font-semibold group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
-      </section>
-
-      {/* ── DASHBOARD FEED ── trimmed to the core engagement loop */}
-      <div className="w-full max-w-md mt-6 px-4 space-y-4 scrollbar-none">
-
-        {/* Player Legend — persistent XP, level, avatar */}
-        {userEmail && (
-          <DeferredSection minHeight={70}>
-            <PlayerLegend userEmail={userEmail} />
-          </DeferredSection>
-        )}
-
-        {/* Live stats wired to real data */}
-        <DeferredSection minHeight={60}>
-          <LiveStatStrip />
-        </DeferredSection>
-
-        {/* Quests */}
-        {userEmail && (
-          <DeferredSection minHeight={120}>
-            <QuestEngine userEmail={userEmail} />
-          </DeferredSection>
-        )}
-
-        {/* Clover suggests — personalized hunt-next recommendations */}
-        <DeferredSection minHeight={100}>
-          <CloverSuggests />
-        </DeferredSection>
-
-        {/* Mystery mineral of the day */}
-        <DeferredSection minHeight={120}>
-          <DailyStreakCard companion={companion} />
-        </DeferredSection>
-
-        {/* Rock Star leaderboard */}
-        <DeferredSection minHeight={160}>
-          <RockStarLeaderboard
-            userFinds={specimens.length}
-            userEmail={userEmail || ''}
-          />
-        </DeferredSection>
-
+      <div className="relative z-10 flex justify-center mt-3">
+        <div className="relative">
+          <div className="absolute inset-0 -m-6 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, hsla(280,100%,60%,0.18), transparent 70%)', filter: 'blur(8px)' }} />
+          <HeroOrb companion={companion || profile} size={168} />
+        </div>
       </div>
 
-      <CompanionMilestoneToast notification={milestone} onDismiss={() => setMilestone(null)} />
-
-      {/* ── LEGAL FOOTER ── */}
-      <footer className="w-full max-w-md px-6 mt-6 pb-4 flex flex-col items-center gap-1.5">
-        <div className="flex items-center gap-4 text-white/35 text-[11px]">
-          <Link to="/privacy-policy" className="hover:text-white/70 transition">Privacy Policy</Link>
-          <span className="text-white/20">·</span>
-          <Link to="/terms" className="hover:text-white/70 transition">Terms of Service</Link>
+      <section className="relative z-10 px-5 mt-4">
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="text-white font-bold text-[13px] tracking-tight">{title}</span>
+          <span className="text-white/40 text-[11px] tabular-nums">
+            {remaining > 0 ? `${remaining} XP to next` : 'Max level'}
+          </span>
         </div>
-        <p className="text-white/25 text-[10px]">© 2026 RockHound-GO</p>
-      </footer>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'hsla(0,0%,100%,0.06)' }}>
+          <motion.div
+            className="h-full rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              background: 'linear-gradient(90deg, hsla(275,80%,60%,0.8), hsla(280,100%,75%,0.95))',
+              boxShadow: '0 0 12px hsla(280,100%,70%,0.4)',
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-white/30 text-[10px] uppercase tracking-[0.18em]">Level {level}</span>
+          <span className="text-white/30 text-[10px] tabular-nums">{totalXp.toLocaleString()} XP</span>
+        </div>
+      </section>
+
+      <div className="relative z-10 flex justify-center mt-6">
+        <Link
+          to="/scan"
+          className="flex items-center gap-2.5 px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-[0.18em] transition-all active:scale-95 mint-cta"
+          style={{ animation: 'orb-ring 2.8s ease-in-out infinite' }}
+        >
+          <ScanLine size={18} strokeWidth={2.5} />
+          Scan
+        </Link>
+      </div>
+
+      <section className="relative z-10 px-5 mt-7 space-y-3">
+        <StreakAtRiskCard companion={companion} />
+        <DailyCheckIn companion={companion} onCheckedIn={(updated) => setCompanion((prev) => ({ ...prev, ...updated, last_check_in_date: new Date().toISOString().slice(0, 10) }))} />
+        <SeasonBanner />
+      </section>
+
+      <section className="relative z-10 px-5 mt-4">
+        <CloverSuggests gps={gps} />
+      </section>
+
+      <section className="relative z-10 px-5 mt-4 space-y-3">
+        <DailyRoulette />
+        <IntentionRoulette />
+      </section>
+
+      <section className="relative z-10 px-5 mt-4">
+        <WeeklyDigestCard />
+      </section>
+
+      <section className="relative z-10 px-5 mt-5 pb-10">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-white/35 text-[10px] font-medium uppercase tracking-[0.22em]">
+            {gps ? 'Hunts near you' : 'Today'}
+          </h2>
+          <Link to="/explore" className="text-[11px] text-[#9FE8D0]/80 flex items-center gap-1">
+            <Compass size={11} /> Map
+          </Link>
+        </div>
+
+        {picks.length === 0 ? (
+          <div className="page-card px-4 py-3 text-white/35 text-[12px]">Looking for a hunt nearby…</div>
+        ) : (
+          <div className="space-y-2">
+            {picks.map((spot, i) => (
+              <Link
+                key={spot.id || spot.name}
+                to={`/explore?spot=${encodeURIComponent(spot.id || spot.name)}`}
+                className="page-card block px-4 py-3 transition active:scale-[0.98]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold text-[14px] leading-tight truncate">{spot.name}</div>
+                    <div className="text-white/45 text-[11px] mt-0.5 capitalize truncate">
+                      {spot.state || 'US'} · {LAND_LABEL[spot.land_type] || 'public'}
+                      {spot.gapCount > 0 ? ` · ${spot.gapCount} new minerals` : ''}
+                    </div>
+                    {spot.minerals?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {spot.minerals.slice(0, 3).map((m) => (
+                          <span key={m} className="text-[9px] px-1.5 py-0.5 rounded-full text-[#c084fc]"
+                            style={{ background: 'hsla(265,40%,20%,.55)', border: '1px solid hsla(265,60%,50%,.2)' }}>
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {spot.distanceMi != null && (
+                      <div className="text-[#9FE8D0] text-[11px] font-bold tabular-nums flex items-center gap-1">
+                        <MapPin size={10} /> {formatDistance(spot.distanceMi)}
+                      </div>
+                    )}
+                    {i === 0 && (
+                      <div className="text-[9px] uppercase tracking-wider text-amber-300/80 mt-1 flex items-center justify-end gap-1">
+                        <Flame size={9} /> Best pick
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 mt-4">
+          <Link to="/quests" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Quests</Link>
+          <Link to="/find-of-the-week" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Vote</Link>
+          <Link to="/companion" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Clover</Link>
+          <Link to="/collections" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Albums</Link>
+          <Link to="/badges" className="text-[11px] uppercase tracking-[0.16em] text-amethyst-glow/80">Badges</Link>
+        </div>
+      </section>
     </div>
-  );
-}
-
-const QUICK_ACCENTS = {
-  cyan:     { icon: 'hsl(195,100%,78%)', glow: 'hsla(195,100%,60%,0.45)', border: 'hsla(195,90%,60%,0.22)' },
-  amethyst: { icon: 'hsl(280,85%,82%)',  glow: 'hsla(280,100%,65%,0.4)',  border: 'hsla(280,70%,65%,0.22)' },
-};
-
-function QuickAction({ to, icon: Icon, label, color }) {
-  const a = ['cyan', 'amber'].includes(color) ? QUICK_ACCENTS.cyan : QUICK_ACCENTS.amethyst;
-  return (
-    <Link
-      to={to}
-      className="group flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-[0.96]"
-      style={{
-        background: 'linear-gradient(180deg, hsla(255,30%,16%,0.55) 0%, hsla(250,28%,10%,0.7) 100%)',
-        border: `1px solid ${a.border}`,
-        boxShadow: 'inset 0 1px 0 hsla(270,60%,90%,0.07), 0 4px 16px -8px hsla(260,60%,10%,0.6)',
-        backdropFilter: 'blur(12px)',
-      }}
-    >
-      <Icon
-        size={19}
-        strokeWidth={1.5}
-        style={{ color: a.icon, filter: `drop-shadow(0 0 5px ${a.glow})` }}
-      />
-      <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/55 transition-colors group-hover:text-white/85">
-        {label}
-      </span>
-    </Link>
   );
 }

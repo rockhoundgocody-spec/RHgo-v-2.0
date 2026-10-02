@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'RockHound-GO — Field Companion for Rockhounds';
+const DEFAULT_TITLE = 'RockHound-GO — AI Rock & Mineral ID for Rockhounds';
 const DEFAULT_DESCRIPTION =
-  'RockHound-GO — AI-powered field companion for rockhounds. Identify minerals instantly with AR scan, discover hotspots, and build your Geo-DEX collection.';
+  'Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds.';
 
 function setMetaTag(selector, attr, key, value) {
   let tag = document.head.querySelector(selector);
@@ -25,7 +25,12 @@ function setMetaTag(selector, attr, key, value) {
 export function useSeoMeta(title, description) {
   useEffect(() => {
     const prevTitle = document.title;
-    if (title) document.title = title;
+    const prevOgTitle = document.head.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+    if (title) {
+      document.title = title;
+      setMetaTag('meta[property="og:title"]', 'property', 'og:title', title);
+      setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', title);
+    }
     if (description) {
       setMetaTag('meta[name="description"]', 'name', 'description', description);
       setMetaTag('meta[property="og:description"]', 'property', 'og:description', description);
@@ -33,6 +38,8 @@ export function useSeoMeta(title, description) {
     }
     return () => {
       document.title = prevTitle;
+      setMetaTag('meta[property="og:title"]', 'property', 'og:title', prevOgTitle || DEFAULT_TITLE);
+      setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', prevOgTitle || DEFAULT_TITLE);
       if (description) {
         setMetaTag('meta[name="description"]', 'name', 'description', DEFAULT_DESCRIPTION);
         setMetaTag('meta[property="og:description"]', 'property', 'og:description', DEFAULT_DESCRIPTION);

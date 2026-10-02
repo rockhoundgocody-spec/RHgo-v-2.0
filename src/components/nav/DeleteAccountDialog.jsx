@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 export function deleteUserData(client, email) {
   return Promise.all([
@@ -18,40 +19,7 @@ export default function DeleteAccountDialog({ onClose }) {
   const [error, setError] = useState('');
   const dialogRef = useRef(null);
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    const dialog = dialogRef.current;
-    const getControls = () => Array.from(dialog?.querySelectorAll(
-      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    ) || []);
-    (getControls()[0] || dialog)?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const controls = getControls();
-      if (controls.length === 0) return;
-      const first = controls[0];
-      const last = controls[controls.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus?.();
-    };
-  }, [onClose]);
+  useFocusTrap(dialogRef, { onClose });
 
   const handleDelete = async () => {
     setConfirming(true);
@@ -98,67 +66,53 @@ export default function DeleteAccountDialog({ onClose }) {
             </button>
           </div>
 
-          {step === 1 && (
-            <>
-              <div className="rounded-xl bg-rose-500/10 border border-rose-500/25 p-4 mb-5">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-rose-400 shrink-0 mt-0.5" />
-                  <div className="text-sm text-rose-200/80 space-y-1.5">
-                    <p className="font-semibold">The following will be permanently deleted:</p>
-                    <ul className="list-disc list-inside text-rose-200/60 space-y-0.5 text-xs">
-                      <li>All your specimen finds and photos</li>
-                      <li>Your companion and XP progress</li>
-                      <li>All scan drafts and identification history</li>
-                      <li>Your badges and achievements</li>
-                      <li>Your account profile and settings</li>
-                    </ul>
-                  </div>
-                </div>
+          {step === 1 ? (
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-start gap-2.5">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <span>Deleting your account permanently removes your profile, scanned specimens, companion history, and unlocked achievements.</span>
               </div>
-              <div className="flex gap-3">
+              <p className="text-xs text-white/60 leading-relaxed">
+                If you proceed, all your personal data stored on RockHound-GO will be permanently deleted from our servers.
+              </p>
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 font-medium text-xs transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-lg shadow-rose-500/20"
                 >
                   Continue
                 </button>
               </div>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <p className="text-sm text-white/60 mb-3">
-                Type <span className="text-white font-mono font-bold">DELETE</span> to confirm.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-white/70">
+                To confirm deletion, type <span className="font-mono text-rose-400 font-bold">DELETE</span> below:
               </p>
-              <label htmlFor="delete-account-confirmation" className="sr-only">Type DELETE to confirm account deletion</label>
               <input
-                id="delete-account-confirmation"
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/30 focus:outline-none focus:border-rose-500/60 focus-visible:ring-2 focus-visible:ring-rose-400 mb-4 text-sm"
-                autoFocus
+                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-rose-500/50"
               />
               {error && (
-                <p role="alert" className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-                  {error}
-                </p>
+                <p className="text-xs text-rose-400">{error}</p>
               )}
-              <div className="flex gap-3">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setStep(1); setError(''); }}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white/70 font-semibold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                  onClick={() => setStep(1)}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 font-medium text-xs transition"
+                  disabled={confirming}
                 >
                   Back
                 </button>
@@ -166,13 +120,12 @@ export default function DeleteAccountDialog({ onClose }) {
                   type="button"
                   onClick={handleDelete}
                   disabled={confirmText !== 'DELETE' || confirming}
-                  aria-busy={confirming}
-                  className="flex-1 py-3 rounded-xl bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-40 text-white font-bold text-xs transition shadow-lg shadow-rose-500/20"
                 >
-                  {confirming ? 'Deleting…' : 'Delete My Account'}
+                  {confirming ? 'Deleting...' : 'Permanently Delete'}
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

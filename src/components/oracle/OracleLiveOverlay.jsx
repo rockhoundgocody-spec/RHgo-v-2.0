@@ -115,10 +115,12 @@ export default function OracleLiveOverlay() {
     }
 
     setThinking(true);
+    const { getOrCreateGuestId } = await import('@/lib/guestDevice');
     const res = await base44.functions.invoke('cloverChat', {
       history: historyRef.current.slice(-8),
       companion: null,
       todays_finds: 0,
+      guest_device_id: getOrCreateGuestId(),
     });
     const replyText = res?.data?.reply || "I'm here with you.";
     setThinking(false);

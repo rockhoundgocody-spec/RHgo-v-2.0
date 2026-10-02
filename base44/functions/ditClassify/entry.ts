@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 /**
  * DIT.ai vision-based mineral classification using Gemini 3 Pro.
@@ -23,6 +24,11 @@ Deno.serve(async (req) => {
     const { image_url, hint } = await req.json();
     if (!image_url) {
       return Response.json({ error: 'image_url required' }, { status: 400 });
+    }
+
+    // SSRF guard: only fetch images from trusted storage domains
+    if (!isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
     }
 
     // Fetch the image and convert to inline base64 for Gemini

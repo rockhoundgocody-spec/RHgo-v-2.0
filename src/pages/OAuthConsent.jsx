@@ -4,6 +4,34 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
+/**
+ * Validates target OAuth redirect URLs before navigating.
+ * Blocks dangerous schemes (javascript:, data:, vbscript:, file:, about:) to prevent XSS.
+ * Allows valid HTTP/HTTPS URLs and custom AI client URI schemes (e.g., cursor://).
+ */
+export function validateAndGetSafeConsentRedirect(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== "string") {
+    throw new Error("Invalid redirect response");
+  }
+
+  const trimmed = rawUrl.trim();
+  const FORBIDDEN_PROTOCOLS = ["javascript:", "data:", "vbscript:", "file:", "about:"];
+
+  let parsed;
+  try {
+    const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://app.invalid";
+    parsed = new URL(trimmed, origin);
+  } catch (_) {
+    throw new Error("Invalid redirect URL format");
+  }
+
+  if (FORBIDDEN_PROTOCOLS.includes(parsed.protocol.toLowerCase())) {
+    throw new Error("Insecure redirect protocol rejected");
+  }
+
+  return trimmed;
+}
+
 // App-side OAuth consent page for the app's MCP server. The platform redirects
 // AI clients here (see base44/mcp/config.json `consent_path`) with an opaque
 // `ctx` handle — the authorization request itself lives on the server. This page
@@ -67,7 +95,7 @@ export default function OAuthConsent() {
           const encoded = encodeURIComponent(returnTo);
           redirecting = true; // keep the spinner while the browser navigates
           window.location.href =
-            (data.login_path || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            (data.login_path || "/signin") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         setInfo(data);
@@ -103,7 +131,7 @@ export default function OAuthConsent() {
           const returnTo = window.location.pathname + "?ctx=" + encodeURIComponent(ctx);
           const encoded = encodeURIComponent(returnTo);
           window.location.href =
-            ((info && info.login_path) || "/login") + "?returnTo=" + encoded + "&from_url=" + encoded;
+            ((info && info.login_path) || "/signin") + "?returnTo=" + encoded + "&from_url=" + encoded;
           return;
         }
         // These all come AFTER the single-use handle is atomically consumed
@@ -120,8 +148,9 @@ export default function OAuthConsent() {
         throw new Error("Could not complete authorization. Please try again.");
       }
       const data = await res.json();
-      window.location.href = data.redirect_url;
-      if (!/^https?:/i.test(data.redirect_url)) {
+      const safeRedirect = validateAndGetSafeConsentRedirect(data?.redirect_url);
+      window.location.href = safeRedirect;
+      if (!/^https?:/i.test(safeRedirect)) {
         // Custom-scheme redirect (native AI clients, e.g. cursor://): browsers
         // may block or not visibly navigate, so show a terminal state instead
         // of an eternal spinner.

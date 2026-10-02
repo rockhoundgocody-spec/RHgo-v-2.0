@@ -179,17 +179,19 @@ export function EnterTrialButton({ phase, onEnter }) {
     <AnimatePresence>
       {phase >= 4 && (
         <motion.button
+          type="button"
+          aria-label="Enter the Reality Trial"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           onClick={onEnter}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 z-20"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black z-20"
           style={{
             background: 'linear-gradient(135deg, hsl(265,70%,52%), hsl(280,90%,62%))',
             boxShadow: '0 4px 24px -4px hsla(270,80%,60%,0.55)',
           }}
         >
-          <Sparkles size={15} /> Enter the Reality Trial <ArrowRight size={15} />
+          <Sparkles size={15} aria-hidden="true" /> Enter the Reality Trial <ArrowRight size={15} aria-hidden="true" />
         </motion.button>
       )}
     </AnimatePresence>
@@ -225,7 +227,12 @@ export default function ChronolithOpening({ caseData, imageUrl, onEnter, onSkip 
       style={{ background: phase === 0 ? '#000' : 'radial-gradient(ellipse at center, hsl(250,30%,8%) 0%, #000 70%)' }}>
 
       {/* Skip button */}
-      <button onClick={onSkip} className="absolute top-4 right-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/50 transition z-10">
+      <button
+        type="button"
+        aria-label="Skip introduction"
+        onClick={onSkip}
+        className="absolute top-4 right-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded px-1.5 py-0.5 z-10"
+      >
         Skip →
       </button>
 

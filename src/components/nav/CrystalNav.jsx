@@ -35,13 +35,13 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
         bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         transform: 'translateX(-50%) translateZ(0)',
         willChange: 'transform',
-        background: 'linear-gradient(180deg, hsla(250,20%,9%,0.92) 0%, hsla(245,22%,5%,0.97) 100%)',
-        backdropFilter: 'blur(28px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(140%)',
-        border: '1px solid hsla(260,20%,40%,0.25)',
+        background: 'linear-gradient(180deg, hsla(250,22%,10%,0.94) 0%, hsla(245,24%,5%,0.98) 100%)',
+        backdropFilter: 'blur(28px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(160%)',
+        border: '1px solid hsla(280,40%,55%,0.22)',
         borderRadius: 9999,
         boxShadow:
-          'inset 0 1px 0 hsla(260,40%,80%,0.08), 0 8px 40px hsla(250,60%,4%,0.7)',
+          'inset 0 1px 0 hsla(280,60%,85%,0.1), 0 8px 40px hsla(250,60%,4%,0.75), 0 0 28px -10px hsla(280,90%,50%,0.35)',
         padding: '8px 10px',
         gap: 4,
       }}

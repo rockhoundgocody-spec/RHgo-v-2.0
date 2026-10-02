@@ -36,7 +36,6 @@ export default function HypothesisCard({ hypothesis, isLeading, rank }) {
   const h = hypothesis;
   const cat = CATEGORY_CFG[h.category] || CATEGORY_CFG.unknown;
   const prob = h.probability ?? 0;
-  const isStrong = prob > 0.5;
 
   return (
     <motion.div

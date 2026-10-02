@@ -1,27 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
 import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
+import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
+import { setCloverBusy, emit } from '@/lib/cloverWake';
 
-/**
- * useCloverConversation — the open, hands-free conversation loop.
- *
- * Tap once to start. From then on it runs itself:
- *   speaking → (she finishes, or you talk over her) → listening → thinking → speaking …
- *
- * Nothing to press, nothing to type. Talking over her stops her mid-sentence
- * and she listens instead.
- */
-
-// After this many silent turns, stop reopening the mic and just wait quietly.
 const MAX_QUIET_TURNS = 3;
 
 export default function useCloverConversation({ companion, todaysSpecimens = 0, onFindLogged } = {}) {
-  const [phase, setPhase] = useState('idle');     // idle | thinking | speaking | listening | resting
+  const [phase, setPhase] = useState('idle');
   const [messages, setMessages] = useState([]);
   const [interim, setInterim] = useState('');
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const activeRef = useRef(false);
   const historyRef = useRef([]);
@@ -30,7 +25,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   const quietTurnsRef = useRef(0);
   const gotResultRef = useRef(false);
 
-  const { speak, stop: stopSpeech, speaking, getAmplitude, getSpectrum } = useSpeechSynthesis();
+  const { speak, stop: stopSpeech, speaking, getAmplitude, getSpectrum, unlock } = useSpeechSynthesis();
 
   const sendRef = useRef(null);
   const voice = useVoiceInput({
@@ -50,7 +45,6 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     voice.start();
   }, [voice]);
 
-  // Interrupting her: cut the audio, go straight to listening.
   const { start: startBargeIn, stop: stopBargeIn } = useBargeIn(() => {
     if (!activeRef.current) return;
     stopSpeech();
@@ -59,7 +53,6 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
   const say = useCallback((text) => {
     sawSpeakingRef.current = false;
-    // Rough spoken length, used as a watchdog below.
     const words = String(text).trim().split(/\s+/).length;
     spokenMsRef.current = Math.min(30000, Math.max(6000, words * 450));
     setPhase('speaking');
@@ -74,17 +67,51 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     historyRef.current = [...historyRef.current, { role: 'user', content: text }].slice(-8);
     setPhase('thinking');
 
+    const local = applyCloverUtterance(text, { pathname: location.pathname });
+    if (local.navigateTo && local.navigateTo !== location.pathname) {
+      try { navigate(local.navigateTo); } catch {}
+    }
+
+    if (local.handled) {
+      if (!activeRef.current) return;
+      historyRef.current = [...historyRef.current, { role: 'assistant', content: local.reply }].slice(-8);
+      setMessages((prev) => [...prev, { role: 'assistant', content: local.reply }]);
+      say(local.reply);
+      if (local.endSession) {
+        setTimeout(() => {
+          activeRef.current = false;
+          stopSpeech();
+          voice.stop();
+          stopBargeIn();
+          setPhase('idle');
+        }, 1200);
+      }
+      return;
+    }
+
     let reply = "Sorry, I missed that — one more time?";
+    let sources = [];
     try {
       const cognitiveContext = getCognitiveMemoryContext();
+      let gps = null;
+      try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
+      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
         todays_finds: todaysSpecimens,
         cognitive_context: cognitiveContext,
+        brain: getCloverBrain(),
+        research_query: local.researchQuery || null,
+        location: gps,
+        user_utterance: text,
+        guest_device_id: getOrCreateGuestId(),
       });
       const data = res?.data;
       reply = data?.reply || reply;
+      sources = Array.isArray(data?.sources) ? data.sources : [];
+      // An open Vault Galaxy flies to the record Clover answered from.
+      if (data?.focus?.id) emit('vault:focus', data.focus);
 
       if (data?.log_find && data?.find_details) {
         try {
@@ -94,27 +121,26 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
           onFindLogged?.(data.find_details.split(' ').slice(0, 3).join(' '));
         } catch {}
       }
-    } catch {
-      reply = "I lost you for a second there. Still with me?";
+    } catch (err) {
+      const msg = String(err?.message || err?.data?.error || '');
+      reply = /429|rate limit|Guest rate/i.test(msg)
+        ? "That's my free chatter for now — sign in and I'll keep the conversation going."
+        : "I lost you for a second there. Still with me?";
     }
 
     if (!activeRef.current) return;
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-8);
-    setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+    setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
-  }, [companion, todaysSpecimens, onFindLogged, say]);
+  }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voice, stopBargeIn]);
   sendRef.current = send;
 
-  // She finished talking → open the mic. Watching `speaking` go true-then-false
-  // is what tells us the audio actually ended.
   useEffect(() => {
     if (phase !== 'speaking') return;
 
     if (speaking) {
       sawSpeakingRef.current = true;
       startBargeIn();
-      // Watchdog: if the audio never reports finishing (suspended audio context,
-      // a device that won't play), still hand the turn back to the user.
       const w = setTimeout(() => {
         if (!activeRef.current) return;
         stopSpeech();
@@ -130,14 +156,12 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       beginListening();
       return;
     }
-    // Audio never started (muted, TTS failed) — don't strand the conversation.
     const t = setTimeout(() => {
       if (activeRef.current && !sawSpeakingRef.current) beginListening();
     }, 1200);
     return () => clearTimeout(t);
   }, [phase, speaking, beginListening, startBargeIn, stopBargeIn, stopSpeech]);
 
-  // Mic closed without hearing anything → reopen it a few times, then rest.
   useEffect(() => {
     if (phase !== 'listening' || voice.listening) return;
     if (gotResultRef.current) return;
@@ -155,13 +179,15 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [phase, voice.listening, beginListening]);
 
   const start = useCallback((openingLine) => {
+    unlock();
     activeRef.current = true;
     quietTurnsRef.current = 0;
     historyRef.current = [];
     setMessages([{ role: 'assistant', content: openingLine }]);
     historyRef.current = [{ role: 'assistant', content: openingLine }];
+    import('@/lib/analytics').then(({ trackEvent }) => trackEvent('clover_session_start')).catch(() => {});
     say(openingLine);
-  }, [say]);
+  }, [say, unlock]);
 
   const end = useCallback(() => {
     activeRef.current = false;
@@ -172,7 +198,6 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     setInterim('');
   }, [stopSpeech, voice, stopBargeIn]);
 
-  // Tap while she's talking = interrupt. Tap while resting = wake the mic.
   const nudge = useCallback(() => {
     if (!activeRef.current) return;
     if (phase === 'speaking') { stopSpeech(); stopBargeIn(); }
@@ -180,11 +205,19 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     beginListening();
   }, [phase, stopSpeech, stopBargeIn, beginListening]);
 
-  useEffect(() => () => { activeRef.current = false; }, []);
+  const busyIdRef = useRef(Math.random().toString(36).slice(2));
+  useEffect(() => {
+    setCloverBusy(busyIdRef.current, phase !== 'idle' && phase !== 'resting');
+  }, [phase]);
+
+  useEffect(() => () => {
+    activeRef.current = false;
+    setCloverBusy(busyIdRef.current, false);
+  }, []);
 
   return {
-    phase, messages, interim, start, end, nudge, send,
-    active: activeRef.current,
+    phase, messages, interim, start, end, stop: end, nudge, send, unlock,
+    active: phase !== 'idle',
     voiceSupported: voice.supported,
     getAmplitude, getSpectrum,
   };

@@ -1,8 +1,19 @@
 import React from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
+/**
+ * Renders the public product overview and sets its search metadata.
+ * @returns {React.ReactElement} The About page.
+ */
 export default function About() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'About RockHound-GO — Field companion for rockhounds',
+    'RockHound-GO helps collectors identify minerals, find legal dig sites, and build a Geo-DEX collection with Clover as your field companion.',
+  );
   return (
     <div className="px-4 lg:px-8 pt-6 pb-24 max-w-3xl mx-auto">
       <GlassPanel variant="amethyst">
@@ -19,15 +30,16 @@ export default function About() {
               RockHound-GO is a field-first companion app for rockhounds, amateur
               geologists, and curious explorers who love the thrill of finding
               something extraordinary in the dirt. The app helps you discover
-              public mineral hotspots near you, identify specimens with on-device
-              AI, and build a beautifully organized personal collection that
-              grows with every trip.
+              public mineral hotspots near you, identify specimens with AI, and
+              build a beautifully organized personal collection that grows with
+              every trip.
             </p>
             <p>
               We believe identification shouldn't require a lab. Point your
-              phone at a rock, and the app will suggest likely minerals using a
-              quantized neural network that runs locally — no signal required.
-              When you're back in range, your finds sync to your collection,
+              phone at a rock and our cloud identification service (powered by
+              Google Gemini) suggests likely minerals with a confidence score,
+              lookalikes and field tests — so it needs a signal. Finds you log
+              offline sync to your collection when you're back in range,
               earn badges, and feed into your companion Amethyst, a gentle
               progress guide that learns alongside you.
             </p>

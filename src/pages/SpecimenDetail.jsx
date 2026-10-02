@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
+import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
+import { exportToCsv } from '@/lib/specimenExport';
 
 const RARITY_CONFIG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.35)',  gradient: 'from-slate-900 to-slate-800',   border: 'border-white/10' },
@@ -62,12 +64,12 @@ export default function SpecimenDetail() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('story');
   const [verifying, setVerifying] = useState(false);
+  const [busyAction, setBusyAction] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: specimen, isLoading } = useQuery({
     queryKey: ['specimen', id],
-    queryFn: () => base44.entities.Specimen.filter({ id }),
-    select: (rows) => rows?.[0],
+    queryFn: () => base44.entities.Specimen.get(id),
     enabled: !!id,
   });
 
@@ -85,6 +87,26 @@ export default function SpecimenDetail() {
     }
   };
 
+  const handlePatch = async (key, patch) => {
+    if (busyAction) return;
+    setBusyAction(key);
+    try {
+      await base44.entities.Specimen.update(id, patch);
+      queryClient.setQueryData(['specimen', id], (prev) => (prev ? { ...prev, ...patch } : prev));
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleJournalExport = () => {
+    exportToCsv([{
+      ...specimen,
+      location_label: specimen.geo_privacy === 'private' ? '' : specimen.found_at,
+      lat: specimen.geo_privacy === 'private' ? '' : specimen.lat,
+      lng: specimen.geo_privacy === 'private' ? '' : specimen.lng,
+    }], `field-journal-${(specimen.mineral_name || 'specimen').toLowerCase().replace(/\s+/g, '-')}.csv`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,7 +120,7 @@ export default function SpecimenDetail() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-white/40 px-6 text-center">
         <Gem size={40} className="opacity-30" />
         <p>Specimen not found.</p>
-        <button onClick={() => navigate(-1)} className="text-amethyst-glow text-sm">← Go back</button>
+        <button type="button" onClick={() => navigate(-1)} className="text-amethyst-glow text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 rounded px-2 py-1">← Go back</button>
       </div>
     );
   }
@@ -136,7 +158,7 @@ export default function SpecimenDetail() {
       {/* Back nav */}
       <div className="absolute top-0 inset-x-0 z-10 px-4 pt-4 flex items-center gap-3 pointer-events-none">
         <button onClick={() => navigate(-1)}
-          className="pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90"
+          className="pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
           style={{ background: 'hsla(220,40%,5%,0.75)', border: '1px solid hsla(0,0%,100%,0.12)', backdropFilter: 'blur(16px)' }}
           aria-label="Go back">
           <ChevronLeft size={16} className="text-white/70" />
@@ -204,6 +226,14 @@ export default function SpecimenDetail() {
           </div>
         </div>
 
+        <FoundLocationPicker
+          persistId={specimen.id}
+          value={{ found_at: specimen.found_at, lat: specimen.lat, lng: specimen.lng }}
+          onChange={(next) => {
+            queryClient.setQueryData(['specimen', id], (prev) => prev ? { ...prev, ...next } : prev);
+          }}
+        />
+
         {/* Honest AI confidence banner */}
         {conf != null && (
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
@@ -246,28 +276,43 @@ export default function SpecimenDetail() {
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: '➕', label: 'Add to Collection', color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)' },
-            { icon: '🛡️', label: 'Mark Private', color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)' },
-          ].map(({ icon, label, color, bg, border }) => (
-            <button key={label}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
+            {
+              key: 'collect', icon: '➕', done: specimen.collected,
+              label: specimen.collected ? 'In Collection ✓' : 'Add to Collection',
+              patch: { collected: true, disposition: 'collected' },
+              color: '#34d399', bg: 'hsla(160,50%,12%,0.6)', border: 'hsla(160,70%,45%,0.3)',
+            },
+            {
+              key: 'private', icon: '🛡️', done: specimen.geo_privacy === 'private',
+              label: specimen.geo_privacy === 'private' ? 'Private ✓' : 'Mark Private',
+              patch: { geo_privacy: 'private' },
+              color: '#c084fc', bg: 'hsla(265,50%,12%,0.6)', border: 'hsla(280,60%,50%,0.3)',
+            },
+          ].map(({ key, icon, label, done, patch, color, bg, border }) => (
+            <button key={key}
+              type="button"
+              onClick={() => handlePatch(key, patch)}
+              disabled={done || busyAction === key}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
               style={{ background: bg, border: `1px solid ${border}`, color }}>
-              <span>{icon}</span>
+              {busyAction === key ? <Loader2 size={14} className="animate-spin" /> : <span>{icon}</span>}
               <span className="leading-tight text-left">{label}</span>
             </button>
           ))}
           <button
+            type="button"
             onClick={handleVerify}
             disabled={verifying || specimen?.verified}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
             style={{ background: 'hsla(150,60%,12%,0.6)', border: '1px solid hsla(150,80%,45%,0.35)', color: '#34d399' }}
           >
             {verifying ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
             <span className="leading-tight text-left">{specimen?.verified ? 'Verified ✓' : 'Request Verification'}</span>
           </button>
           <button
+            type="button"
             onClick={() => navigate('/scan')}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px]"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition active:scale-95 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
             style={{ background: 'hsla(205,60%,12%,0.6)', border: '1px solid hsla(195,80%,50%,0.3)', color: '#38bdf8' }}
           >
             <span>🧪</span>
@@ -335,12 +380,15 @@ export default function SpecimenDetail() {
         {/* Tab content */}
         <GlassPanel className="overflow-hidden">
           {/* Tab bar */}
-          <div className="flex border-b border-white/8">
+          <div className="flex border-b border-white/8" role="tablist" aria-label="Specimen detail tabs">
             {tabs.map((t) => (
               <button
                 key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === t.key}
                 onClick={() => setActiveTab(t.key)}
-                className={`flex-1 py-2.5 text-[10px] uppercase tracking-[0.25em] font-semibold transition-all ${
+                className={`flex-1 py-2.5 text-[10px] uppercase tracking-[0.25em] font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:ring-inset ${
                   activeTab === t.key
                     ? 'text-white border-b-2'
                     : 'text-white/30 hover:text-white/60'
@@ -438,15 +486,16 @@ export default function SpecimenDetail() {
         </div>
 
         {/* Field journal export CTA */}
-        <div className="mt-4 rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+        <button type="button" onClick={handleJournalExport}
+          className="w-full text-left mt-4 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
           style={{ background: 'hsla(270,40%,15%,0.4)', border: '1px solid hsla(280,50%,55%,0.18)' }}>
           <BookOpen size={16} className="text-amethyst-glow flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-white/80 text-sm font-semibold">Add to Field Journal</div>
-            <div className="text-white/35 text-xs mt-0.5">Export this specimen's full record as a field note — coming soon.</div>
+            <div className="text-white/80 text-sm font-semibold">Export to Field Journal</div>
+            <div className="text-white/35 text-xs mt-0.5">Download this specimen's record as a spreadsheet (CSV).</div>
           </div>
           <ChevronLeft size={14} className="text-white/25 rotate-180" />
-        </div>
+        </button>
       </div>
     </div>
   );

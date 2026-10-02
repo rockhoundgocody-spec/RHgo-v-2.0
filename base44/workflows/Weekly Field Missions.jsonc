@@ -1,0 +1,44 @@
+{
+  "description": "Every Sunday: for each user, uses hotspot_manager logic to find nearby unvisited zones, generates 3 tailored Quests via generateFieldMissions logic, and pushes a notification to their device",
+  "name": "Weekly Field Missions",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "weekly_field_missions",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "generate_missions": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "weeklyFieldMissions"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate weekly missions",
+            "description": "Per user: find unvisited zones, create 3 quests, push notification"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * 0",
+      "one_time_date": null,
+      "timezone": "America/Chicago",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

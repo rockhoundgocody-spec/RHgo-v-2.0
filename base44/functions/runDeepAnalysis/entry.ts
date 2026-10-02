@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -8,12 +10,17 @@ Deno.serve(async (req) => {
 
     const { image_url, quick_result, lat, lng } = await req.json();
 
+    if (image_url && !isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
+    }
+
     // Fetch local bedrock geology for locality plausibility
     let geologyContext = '';
-    if (lat && lng) {
+    const coords = parseCoordinates(lat, lng);
+    if (coords) {
       try {
         const geoResp = await fetch(
-          `https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&format=json`
+          `https://macrostrat.org/api/v2/geologic_units/map?lat=${coords.lat}&lng=${coords.lng}&format=json`
         );
         const geoData = await geoResp.json();
         if (geoData?.success?.data?.length > 0) {

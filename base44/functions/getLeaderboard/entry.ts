@@ -7,6 +7,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Auth: leaderboard is for authenticated users only — never expose to anonymous callers
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const [specimens, weights, users, profiles] = await Promise.all([
       base44.asServiceRole.entities.Specimen.list('-created_date', 5000),
       base44.asServiceRole.entities.CollectionWeight.list('-created_date', 5000),
@@ -50,7 +56,6 @@ Deno.serve(async (req) => {
       return {
         user_id: uid,
         name: u.name,
-        email: u.email,
         avatar_url: prof?.avatar_url || null,
         unique_minerals: st.minerals.size,
         specimen_count: st.count,

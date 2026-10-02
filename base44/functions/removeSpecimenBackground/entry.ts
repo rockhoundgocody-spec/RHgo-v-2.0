@@ -5,7 +5,7 @@
  * Best-effort: on any failure the caller keeps the original photo.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { isValidImageUrl } from './imageUrlValidation.ts';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 Deno.serve(async (req) => {
   try {

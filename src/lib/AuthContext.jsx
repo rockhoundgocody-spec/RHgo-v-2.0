@@ -1,6 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+// (toast import removed — auth-persistence fix no longer toasts on timeout)
+
+// If the session check hasn't settled by then, stop blocking the app and
+// continue as logged-out. A late result still applies when it arrives.
+const AUTH_CHECK_TIMEOUT_MS = 20000;
 
 const AuthContext = createContext();
 
@@ -23,25 +28,25 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       try {
-        // Check auth by attempting to get the current user
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
+        // Public settings don't depend on the session check — never let a slow
+        // or hung auth call keep this flag (and the boot spinner) stuck.
         setAppPublicSettings({ id: appParams.appId });
         setIsLoadingPublicSettings(false);
+        // Always try me() — the SDK's internal token (set by loginViaEmailPassword)
+        // may be valid even if appParams.token hasn't picked it up from storage yet.
+        // If there's no token at all, me() throws and we handle it gracefully.
+        await checkUserAuth();
       } catch (appError) {
-        console.error('App state check failed:', appError);
+        /* public app: failed bootstrap is handled via authError */
         const reason = appError?.data?.extra_data?.reason;
-        if (reason === 'auth_required' || appError?.status === 401) {
-          setAuthError({ type: 'auth_required', message: 'Authentication required' });
-        } else if (reason === 'user_not_registered') {
+        if (reason === 'user_not_registered') {
           setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
+        } else if (reason === 'auth_required') {
+          // Only hard-gate when the platform explicitly requires auth for the app.
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
         } else {
-          setAuthError({ type: reason || 'unknown', message: appError?.message || 'Failed to load app' });
+          // Network / unknown: still allow public routes (login must stay reachable).
+          setAuthError(null);
         }
         setIsLoadingPublicSettings(false);
         setIsLoadingAuth(false);
@@ -58,22 +63,57 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    setIsLoadingAuth(true);
+    let settled = false;
+    // Safety net only: if the session check truly never settles (hung network,
+    // unreachable auth server), log a warning after the timeout — but do NOT
+    // declare the user logged out. Declaring logged out here was the root cause
+    // of the Login → Profile → Login bounce: a slow me() flipped the app to
+    // logged-out, Layout redirected to /signin, then me() resolved and sent the
+    // user back — repeating on every reload. Keep the loading state so
+    // protected routes never flash-redirect before the real session resolves.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      console.warn('[auth] Session check is taking longer than expected — still waiting, not bouncing.');
+    }, AUTH_CHECK_TIMEOUT_MS);
+
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
+      // ── BOOT-TIME TOKEN RESTORATION ──────────────────────────────────────
+      // The SDK client (base44Legacy.js) is created at module-eval time with
+      // `token` captured from appParams at that instant. If the axios client
+      // doesn't have the Authorization header wired in when me() fires on boot
+      // (stale service-worker chunk, prior-build storage-key mismatch, or the
+      // token sitting under the alternate "token" key the SDK also writes),
+      // me() rejects and the Layout guard bounces to /signin — even though the
+      // token is in localStorage. Restore it here so the header is always set
+      // before we consult the platform session.
+      try {
+        const storedToken =
+          window.localStorage?.getItem('base44_access_token') ||
+          window.localStorage?.getItem('token');
+        if (storedToken && typeof base44.auth.setToken === 'function') {
+          base44.auth.setToken(storedToken, true);
+        }
+      } catch { /* localStorage may be blocked by privacy settings */ }
+
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
+      setAuthError((prev) => (prev?.type === 'user_not_registered' ? null : prev));
     } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
+      /* visitor is simply logged out */
+      setUser(null);
       setIsAuthenticated(false);
+      // A signed-in account that isn't registered for this app is the one
+      // auth failure the user must see (UserNotRegisteredError screen).
+      if (error?.data?.extra_data?.reason === 'user_not_registered') {
+        setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
+      }
+    } finally {
+      settled = true;
+      clearTimeout(timer);
       setAuthChecked(true);
-      // Public app: a failed auth check just means the visitor isn't logged in.
-      // Don't block them from entering — let the main app routes render, and
-      // individual pages can prompt login only when a protected action is taken.
+      setIsLoadingAuth(false);
     }
   };
 
@@ -91,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    window.location.href = '/login';
+    window.location.href = '/signin';
   };
 
   return (

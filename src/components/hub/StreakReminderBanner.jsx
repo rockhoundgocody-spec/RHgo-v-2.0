@@ -27,6 +27,26 @@ const MESSAGES = [
   { text: 'A quick check-in keeps Clover happy and your streak burning 🔥', cta: 'Check In', to: '/companion' },
 ];
 
+function pickMessage(streakDays) {
+  if (streakDays >= 7) {
+    return {
+      text: `${streakDays}-day streak on the line — one check-in saves the run.`,
+      cta: 'Save streak',
+      to: '/companion',
+      urgent: true,
+    };
+  }
+  if (streakDays >= 3) {
+    return {
+      text: `${streakDays} days strong. Don't drop it tonight.`,
+      cta: 'Check In',
+      to: '/companion',
+      urgent: true,
+    };
+  }
+  return MESSAGES[new Date().getDay() % MESSAGES.length];
+}
+
 export default function StreakReminderBanner() {
   const [visible, setVisible] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -72,13 +92,14 @@ export default function StreakReminderBanner() {
       .invoke('getCompanionState', {})
       .then((res) => {
         if (cancelled) return;
-        const checkedInToday = res?.data?.companion?.last_check_in_date === getTodayStr();
+        const companion = res?.data?.companion;
+        const checkedInToday = companion?.last_check_in_date === getTodayStr();
         if (checkedInToday) return;
-        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
+        schedule(pickMessage(Number(companion?.streak_days) || 0));
       })
       .catch(() => {
         if (cancelled) return;
-        schedule(MESSAGES[new Date().getDay() % MESSAGES.length]);
+        schedule(pickMessage(0));
       });
 
     return () => {
@@ -131,7 +152,7 @@ export default function StreakReminderBanner() {
         >
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'hsla(30,100%,50%,0.2)', border: '1px solid hsla(30,100%,60%,0.35)' }}>
-            <Flame size={18} style={{ color: 'hsl(30,100%,65%)' }} />
+            <Flame size={18} style={{ color: 'hsl(30,100%,65%)' }} aria-hidden="true" />
           </div>
 
           <p className="flex-1 text-white/85 text-[12px] leading-snug">{msg.text}</p>
@@ -139,19 +160,24 @@ export default function StreakReminderBanner() {
           <Link
             to={msg.to}
             onClick={handleCta}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold shrink-0 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold shrink-0 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
             style={{
               background: 'hsla(30,100%,55%,0.25)',
               border: '1px solid hsla(30,100%,60%,0.5)',
               color: 'hsl(30,100%,72%)',
             }}
           >
-            <Zap size={11} />
+            <Zap size={11} aria-hidden="true" />
             {msg.cta}
           </Link>
 
-          <button onClick={dismiss} className="shrink-0 text-white/30 hover:text-white/60 transition ml-1">
-            <X size={15} />
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Dismiss streak reminder"
+            className="shrink-0 text-white/30 hover:text-white/60 transition ml-1 p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
+          >
+            <X size={15} aria-hidden="true" />
           </button>
         </motion.div>
       )}

@@ -138,46 +138,6 @@ const RARITY_CFG = {
   mythic:    { rings: 3, particles: 28, glowBlur: 46 },
 };
 
-// Material texture patterns (CSS gradients)
-const matPattern = (mat, scheme, isLight) => ({
-  liquid_glass: `
-    radial-gradient(ellipse at 32% 22%, ${isLight ? 'hsla(0,0%,100%,0.5)' : 'hsla(0,0%,100%,0.26)'} 0%, transparent 50%),
-    radial-gradient(ellipse at 72% 78%, ${scheme.primary.replace(')', ',0.18)')} 0%, transparent 42%),
-    radial-gradient(ellipse at 55% 50%, ${scheme.crystal} 0%, transparent 60%)
-  `,
-  natural_stone: `
-    repeating-linear-gradient(47deg, transparent 0px, transparent 3px, ${isLight ? 'hsla(0,0%,0%,0.05)' : 'hsla(0,0%,100%,0.04)'} 3px, ${isLight ? 'hsla(0,0%,0%,0.05)' : 'hsla(0,0%,100%,0.04)'} 4px),
-    repeating-linear-gradient(133deg, transparent 0px, transparent 6px, hsla(0,0%,0%,0.06) 6px, hsla(0,0%,0%,0.06) 7px)
-  `,
-  metallic_inlay: `
-    repeating-linear-gradient(90deg, transparent 0px, transparent 5px, ${isLight ? 'hsla(45,100%,40%,0.12)' : 'hsla(0,0%,100%,0.07)'} 5px, ${isLight ? 'hsla(45,100%,40%,0.12)' : 'hsla(0,0%,100%,0.07)'} 6px),
-    repeating-linear-gradient(0deg, transparent 0px, transparent 5px, hsla(0,0%,0%,0.04) 5px, hsla(0,0%,0%,0.04) 6px)
-  `,
-  crystal_core: `
-    repeating-conic-gradient(from 15deg, ${isLight ? 'hsla(280,100%,50%,0.12)' : 'hsla(0,0%,100%,0.07)'} 0deg, transparent 30deg, ${isLight ? 'hsla(0,0%,100%,0.25)' : 'hsla(0,0%,100%,0.12)'} 60deg, transparent 90deg),
-    radial-gradient(ellipse at 50% 40%, hsla(0,0%,100%,0.18) 0%, transparent 55%)
-  `,
-  geo_topo: `
-    repeating-radial-gradient(circle at 50% 50%, transparent 0px, transparent 8px, ${isLight ? 'hsla(200,100%,40%,0.12)' : 'hsla(200,100%,80%,0.07)'} 8px, ${isLight ? 'hsla(200,100%,40%,0.12)' : 'hsla(200,100%,80%,0.07)'} 9px),
-    repeating-linear-gradient(25deg, transparent 0px, transparent 12px, ${scheme.secondary.replace(')', ',0.08)')} 12px, ${scheme.secondary.replace(')', ',0.08)')} 13px)
-  `,
-})[mat] || '';
-
-// Stone crack SVG overlay
-const CrackOverlay = ({ size, isLight }) => (
-  <svg
-    className="absolute inset-0 pointer-events-none"
-    width={size} height={size}
-    viewBox="0 0 100 100"
-    style={{ opacity: isLight ? 0.12 : 0.06, mixBlendMode: isLight ? 'multiply' : 'overlay' }}
-  >
-    <polyline points="18,45 25,38 34,52 42,44 55,60" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-    <polyline points="65,20 72,30 68,42 78,38" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-    <polyline points="30,68 38,72 42,80 50,75 58,82" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
-    <polyline points="75,60 80,68 72,74" stroke={isLight ? '#1e293b' : 'white'} strokeWidth="0.35" fill="none" strokeLinecap="round" />
-  </svg>
-);
-
 // Metallic filigree SVG with Gold Plating
 const FiligreeOverlay = ({ size, color, isLight }) => (
   <svg
@@ -212,33 +172,30 @@ const OCT = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 
 // ── Badge Body (all visual layers) ────────────────────────────────────────────
 function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, reduceMotion }) {
   const isLight = variant === 'light';
-  const matPat  = matPattern(mat, scheme, isLight);
 
   return (
     <div
       className="relative overflow-hidden flex-shrink-0 transition-all duration-300"
       style={{ width: size, height: size, clipPath: OCT }}
     >
-      {/* L1: Deep stone base */}
-      <div className="absolute inset-0" style={{
-        background: isLight
-          ? 'radial-gradient(ellipse at 38% 32%, hsl(210,30%,96%) 0%, hsl(220,20%,84%) 80%)'
-          : `radial-gradient(ellipse at 38% 32%, ${scheme.mid} 0%, ${scheme.dark} 80%)`,
-      }} />
+      {/* Liquid Glass Medal base — premium glass for all badges */}
+      <img
+        src="https://media.base44.com/images/public/69f35dd14650b54681c835ec/5f84cc464_generated_d23e9b3d.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover"
+        draggable={false}
+      />
 
-      {/* L2: Mineral veins */}
+      {/* L2: Mineral veins — subtle color tint over glass */}
       <div className="absolute inset-0" style={{
         background: `
           radial-gradient(ellipse at 20% 80%, ${scheme.vein} 0%, transparent 40%),
           radial-gradient(ellipse at 80% 20%, ${scheme.vein} 0%, transparent 40%),
           radial-gradient(ellipse at 60% 60%, ${scheme.vein} 0%, transparent 30%)
         `,
+        opacity: 0.4,
       }} />
-
-      {/* L3: Material texture */}
-      {matPat && (
-        <div className="absolute inset-0" style={{ background: matPat, opacity: isLight ? 0.38 : 0.28 }} />
-      )}
 
       {/* L4: Liquid subsurface flow */}
       <div className="absolute inset-0" style={{
@@ -262,11 +219,14 @@ function BadgeBody({ scheme, mat, size, IconComp, iconSize, variant, arGlow, red
         }}
       />
 
-      {/* L6: Stone micro-cracks */}
-      <CrackOverlay size={size} isLight={isLight} />
-
       {/* L7: Metallic filigree */}
       <FiligreeOverlay size={size} color={scheme.secondary} isLight={isLight} />
+
+      {/* L7.5: Light refraction sheen */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(135deg, hsla(0,0%,100%,0.16) 0%, transparent 28%, transparent 72%, hsla(280,80%,90%,0.10) 100%)',
+        mixBlendMode: 'screen',
+      }} />
 
       {/* L8: Top specular highlight */}
       <div className="absolute" style={{

@@ -13,6 +13,7 @@
  * Provenance: every confidence change is traced to the specific rule that fired.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 const REVIEWERS = ['mineral_id', 'lookalike_risk', 'field_test', 'locality', 'safety', 'value'];
 
@@ -80,6 +81,11 @@ Deno.serve(async (req) => {
     // ── INIT ──────────────────────────────────────────────────────────────────
     if (action === 'init') {
       if (!image_urls.length) return Response.json({ error: 'image_urls required' }, { status: 400 });
+
+      // SSRF guard: validate all provided image URLs against trusted storage domains
+      if (!image_urls.every((url: string) => isValidImageUrl(url))) {
+        return Response.json({ error: 'image_urls must be from trusted storage domains' }, { status: 400 });
+      }
 
       const localityHint = (lat && lng) ? ` Locality: ${lat.toFixed(3)}, ${lng.toFixed(3)}.` : '';
 

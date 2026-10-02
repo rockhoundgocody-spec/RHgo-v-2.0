@@ -23,6 +23,7 @@ function loadVoice() {
 }
 
 function VoiceSlider({ id, label, hint, min, max, step, value, onChange }) {
+  const hintId = `${id}-hint`;
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -36,10 +37,11 @@ function VoiceSlider({ id, label, hint, min, max, step, value, onChange }) {
         max={max}
         step={step}
         value={value}
+        aria-describedby={hintId}
         onChange={(event) => onChange(Number.parseFloat(event.target.value))}
         className="w-full h-1.5 rounded-full appearance-none bg-white/10 accent-amethyst cursor-pointer focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
       />
-      <p className="text-[11px] text-white/35">{hint}</p>
+      <p id={hintId} className="text-[11px] text-white/35">{hint}</p>
     </div>
   );
 }

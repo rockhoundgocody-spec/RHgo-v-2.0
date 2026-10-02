@@ -66,7 +66,7 @@ describe('getSafeRedirectUrl', () => {
 
 	it('blocks protocol-relative open redirect vectors (//evil.com)', () => {
 		expect(getSafeRedirectUrl('//evil.com')).toBe('/');
-		expect(getSafeRedirectUrl('//attacker.com/login')).toBe('/');
+		expect(getSafeRedirectUrl('//attacker.com/signin')).toBe('/');
 		expect(getSafeRedirectUrl('///evil.com')).toBe('/');
 	});
 
@@ -95,12 +95,12 @@ describe('getSafeRedirectUrl', () => {
 });
 
 describe('app parameter storage', () => {
-	it('stores access tokens only in sessionStorage', () => {
+	it('persists access tokens in localStorage so sessions survive tab close', () => {
 		window.location.search = '?access_token=short-lived-secret';
 
 		expect(getAppParamValue('access_token')).toBe('short-lived-secret');
-		expect(sessionStorage.getItem('base44_access_token')).toBe('short-lived-secret');
-		expect(localStorage.getItem('base44_access_token')).toBeNull();
+		expect(localStorage.getItem('base44_access_token')).toBe('short-lived-secret');
+		expect(getStorageBackend('access_token')).toBe(localStorage);
 	});
 
 	it('keeps non-sensitive application parameters in localStorage', () => {

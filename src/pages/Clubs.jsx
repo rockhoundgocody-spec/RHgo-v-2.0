@@ -4,9 +4,12 @@
  * Links testimonials and pre-signups into an institutional event management hub.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 const EVENT_TYPE_CONFIG = {
   field_trip: { label: 'Field Trip', icon: Mountain, color: '#34d399' },
@@ -18,6 +21,11 @@ const EVENT_TYPE_CONFIG = {
 };
 
 export default function Clubs() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'Gem & mineral clubs near you — RockHound-GO',
+    'Discover local gem and mineral club chapters, field trips, shows, and workshops on RockHound-GO.',
+  );
   const [chapters, setChapters] = useState(null);
   const [events, setEvents] = useState(null);
   const [me, setMe] = useState(null);
@@ -53,7 +61,7 @@ export default function Clubs() {
   useEffect(() => { load(); }, [load]);
 
   const handleRsvp = async (event) => {
-    if (!me?.email) { base44.auth.redirectToLogin(); return; }
+    if (!me?.email) { window.location.href = '/signin'; return; }
     const isRsvped = rsvpMap[event.id];
     const newEmails = isRsvped
       ? (event.rsvp_emails || []).filter(e => e !== me.email)
@@ -102,7 +110,11 @@ export default function Clubs() {
         <div className="rounded-2xl px-5 py-10 text-center" style={{ background: 'hsla(220,40%,6%,0.6)', border: '1px solid hsla(270,30%,25%,0.3)' }}>
           <Users size={30} className="mx-auto text-white/20 mb-3" />
           <p className="text-white/70 text-sm font-semibold">No chapters yet</p>
-          <p className="text-white/40 text-xs mt-1.5">Start the first gem & mineral club chapter in your area.</p>
+          <p className="text-white/55 text-xs mt-1.5">Start the first gem & mineral club chapter in your area.</p>
+          <div className="flex items-center justify-center gap-2 mt-5">
+            <a href="mailto:hello@rhgo.me?subject=Register%20our%20club" className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: '#9FE8D0', color: '#0a0a14' }}>Register your club</a>
+            <Link to="/pricing" className="px-4 py-2 rounded-xl text-xs font-semibold text-white/75" style={{ border: '1px solid hsla(0,0%,100%,0.14)' }}>Club plan</Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

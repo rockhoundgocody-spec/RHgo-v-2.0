@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, ChevronRight, X } from 'lucide-react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 function DrawerHeader({ onClose }) {
   return (
@@ -45,21 +46,21 @@ function UserInfoSection({ user }) {
 
 function MenuList({ menuItems }) {
   return (
-    <div className="p-4 space-y-2">
+    <div className="p-4 border-b border-white/10 space-y-1">
       {menuItems.map((item) => {
         const Icon = item.icon;
         return (
           <button
-            type="button"
             key={item.label}
+            type="button"
             onClick={item.action}
-            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition text-white group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
+            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition text-white/80 hover:text-white group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
           >
             <div className="flex items-center gap-3">
-              <Icon size={18} className="text-amethyst/60 group-hover:text-amethyst" />
-              <span className="text-sm font-medium">{item.label}</span>
+              <Icon size={18} className="text-amethyst-glow" />
+              <span className="font-medium text-sm">{item.label}</span>
             </div>
-            <ChevronRight size={16} className="text-white/30 group-hover:text-white/60" />
+            <ChevronRight size={16} className="text-white/40 group-hover:text-white/80 transition" />
           </button>
         );
       })}
@@ -69,28 +70,32 @@ function MenuList({ menuItems }) {
 
 function LogoutButton({ onLogout }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+    <div className="p-4">
       <button
         type="button"
         onClick={onLogout}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 transition font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
+        className="w-full flex items-center gap-3 p-3 rounded-lg text-rose-400 hover:bg-rose-500/10 transition font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
       >
-        <LogOut size={16} /> Logout
+        <LogOut size={18} />
+        <span>Logout</span>
       </button>
     </div>
   );
 }
 
 export default function ProfileDrawer() {
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const drawerRef = useRef(null);
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     let active = true;
-    base44.auth.me()
-      .then((account) => {
-        if (active) setUser(account);
+    base44.auth
+      .me()
+      .then((data) => {
+        if (active) setUser(data);
       })
       .catch(() => {
         if (active) setUser(null);
@@ -100,40 +105,13 @@ export default function ProfileDrawer() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return undefined;
-
-    const trigger = document.getElementById('profile-drawer-trigger');
-    const drawer = document.getElementById('profile-drawer');
-    const focusable = drawer?.querySelectorAll(
-      'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    const first = focusable?.[0];
-    const last = focusable?.[focusable.length - 1];
-    first?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab' || !first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      trigger?.focus();
-    };
-  }, [isOpen]);
+  useFocusTrap(drawerRef, {
+    active: isOpen,
+    onClose: () => setIsOpen(false),
+    onDeactivate: () => {
+      triggerRef.current?.focus?.() || document.getElementById('profile-drawer-trigger')?.focus?.();
+    },
+  });
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -163,6 +141,7 @@ export default function ProfileDrawer() {
     <>
       {/* Drawer trigger button */}
       <button
+        ref={triggerRef}
         id="profile-drawer-trigger"
         type="button"
         onClick={() => setIsOpen(true)}
@@ -185,6 +164,7 @@ export default function ProfileDrawer() {
             aria-hidden="true"
           />
           <div
+            ref={drawerRef}
             id="profile-drawer"
             role="dialog"
             aria-modal="true"

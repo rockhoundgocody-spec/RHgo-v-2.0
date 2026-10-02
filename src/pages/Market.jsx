@@ -29,8 +29,6 @@ export default function Market() {
       .finally(() => setLoading(false));
   }, [createOpen]);
 
-  const activeFilterCfg = FILTERS.find(f => f.key === activeFilter) || FILTERS[0];
-
   const filtered = listings.filter(l => {
     if (l.status !== 'active') return false;
     if (activeFilter === 'rare+' && !['rare', 'legendary'].includes(l.rarity)) return false;
@@ -81,6 +79,7 @@ export default function Market() {
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {FILTERS.map(f => (
             <button key={f.key} onClick={() => setActiveFilter(f.key)}
+              aria-pressed={activeFilter === f.key}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
               style={{
                 background: activeFilter === f.key ? 'hsla(270,60%,30%,0.5)' : 'hsla(245,25%,12%,0.6)',

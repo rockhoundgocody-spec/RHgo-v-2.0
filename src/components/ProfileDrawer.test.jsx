@@ -31,6 +31,7 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    useRef: (initial) => ({ current: initial }),
     useState: (initial) => {
       const id = stateStore.currentId++;
       if (!(id in stateStore.values)) {
@@ -140,9 +141,9 @@ describe('ProfileDrawer', () => {
     tree = renderComponent();
 
     const drawerPanel = tree.props.children[1].props.children[1];
-    const logoutBtn = drawerPanel.props.children[3]; // LogoutButton component
+    const logoutBtnComponent = drawerPanel.props.children[3]; // LogoutButton component
 
-    await logoutBtn.props.onLogout();
+    await logoutBtnComponent.props.onLogout();
     expect(mockLogout).toHaveBeenCalledWith('/');
   });
 });

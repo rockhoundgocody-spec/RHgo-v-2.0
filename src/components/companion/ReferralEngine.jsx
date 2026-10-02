@@ -64,7 +64,7 @@ export default function ReferralEngine({ companion }) {
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-xl flex items-center justify-center"
           style={{ background: 'hsla(280,80%,50%,0.2)', border: '1px solid hsla(280,80%,60%,0.3)' }}>
-          <Gift size={15} className="text-amethyst-glow" />
+          <Gift size={15} className="text-amethyst-glow" aria-hidden="true" />
         </div>
         <div>
           <h3 className="text-white font-bold text-sm">Invite to Evolve</h3>
@@ -77,7 +77,7 @@ export default function ReferralEngine({ companion }) {
         style={{ background: 'hsla(265,40%,15%,0.5)', border: '1px solid hsla(270,40%,40%,0.2)' }}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <Heart size={11} className="text-rose-400" />
+            <Heart size={11} className="text-rose-400" aria-hidden="true" />
             <span className="text-white/60 text-[10px] font-semibold">
               {companion?.name || 'Clover'} · Level {companionLevel}
             </span>
@@ -86,7 +86,15 @@ export default function ReferralEngine({ companion }) {
             {stats.completed}/{nextMilestone} to evolve
           </span>
         </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'hsla(255,30%,20%,0.6)' }}>
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(progressToNext)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${companion?.name || 'Companion'} evolution progress`}
+          className="h-1.5 rounded-full overflow-hidden"
+          style={{ background: 'hsla(255,30%,20%,0.6)' }}
+        >
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressToNext}%` }}
@@ -111,13 +119,15 @@ export default function ReferralEngine({ companion }) {
             style={{ background: 'hsla(255,20%,16%,0.6)', border: '1px solid hsla(255,20%,30%,0.3)' }}>
             <span className="text-amethyst-glow font-mono text-xs font-bold flex-1 truncate">{referralCode}</span>
             <button
+              type="button"
               onClick={copyLink}
-              aria-label="Copy referral link"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition active:scale-95"
+              aria-label={copied ? 'Copied referral link' : 'Copy referral link'}
+              aria-live="polite"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{ background: copied ? 'hsla(150,70%,40%,0.3)' : 'hsla(280,70%,50%,0.25)', color: copied ? '#34d399' : '#e0b0ff' }}
             >
-              {copied ? <Check size={11} /> : <Copy size={11} />}
-              {copied ? 'Copied' : 'Copy'}
+              {copied ? <Check size={11} aria-hidden="true" /> : <Copy size={11} aria-hidden="true" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
           <p className="text-white/35 text-[10px] text-center leading-relaxed">
@@ -126,9 +136,10 @@ export default function ReferralEngine({ companion }) {
         </div>
       ) : (
         <button
+          type="button"
           onClick={createReferral}
           disabled={creating || loading}
-          className="w-full py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 disabled:opacity-50"
+          className="w-full py-3 rounded-xl text-sm font-bold text-white transition active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
           style={{ background: 'linear-gradient(135deg, hsl(280,70%,50%), hsl(265,75%,45%))', boxShadow: '0 4px 16px hsla(280,80%,50%,0.25)' }}
         >
           {creating ? 'Generating…' : 'Generate Invite Link'}
@@ -142,7 +153,7 @@ function StatBox({ value, label, icon: Icon, color }) {
   return (
     <div className="flex flex-col items-center py-2 rounded-xl"
       style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
-      <Icon size={12} style={{ color }} />
+      <Icon size={12} style={{ color }} aria-hidden="true" />
       <span className="text-base font-black mt-0.5" style={{ color }}>{value}</span>
       <span className="text-[8px] uppercase tracking-wider opacity-60" style={{ color }}>{label}</span>
     </div>

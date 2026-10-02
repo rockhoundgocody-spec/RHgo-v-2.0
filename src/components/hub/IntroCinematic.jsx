@@ -85,10 +85,10 @@ function useStars(count) {
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
-export default function IntroCinematic({ onDone }) {
-  const [step, setStep] = useState(0); // 0=splash, 1-4=scenes, 5=name, 6=role, 7=choice, 8=tutorial
-  const [name, setName] = useState('');
-  const [nameInput, setNameInput] = useState('');
+export default function IntroCinematic({ onDone, initialName = '' }) {
+  const [step, setStep] = useState(0); // 0=splash, 1-4=scenes, 5=name, 6=email, 7=role, 8=choice, 9=tutorial
+  const [name, setName] = useState(initialName || '');
+  const [nameInput, setNameInput] = useState(initialName || '');
   const [emailInput, setEmailInput] = useState('');
   const [tutorialStep, setTutorialStep] = useState(0);
   const [orbPulse, setOrbPulse] = useState(0);
@@ -114,12 +114,17 @@ export default function IntroCinematic({ onDone }) {
     if (step >= 1 && step <= 4) {
       audio.playClick();
       setOrbPulse((p) => p + 1);
-      setStep((s) => s + 1);
+      // If we already have a name from the gate, skip the name input step
+      if (step === 4 && initialName) {
+        setStep(6); // → email step
+      } else {
+        setStep((s) => s + 1);
+      }
     } else if (step === 7) {
       audio.playClick();
       setStep(8);
     }
-  }, [step, audio]);
+  }, [step, audio, initialName]);
 
   const handleNameSubmit = useCallback(() => {
     const trimmed = nameInput.trim().slice(0, 30);

@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GitCompare, RotateCcw, Sparkles, ChevronLeft } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 
 const RARITY_CFG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.4)' },

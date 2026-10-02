@@ -31,7 +31,6 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function CompanionProgressDashboard({ companion }) {
   const { data: logsRaw = [], isLoading: logsLoading } = useEntityList('CompanionLog', '-log_date', 30);
-  const { data: specimens = [], isLoading: specLoading } = useEntityList('Specimen', '-created_date', 200);
 
   const last30 = useMemo(() => logsRaw.slice(0, 30).reverse(), [logsRaw]);
 

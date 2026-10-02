@@ -1,0 +1,138 @@
+/**
+ * googleMapIcons — SVG pin builders for the Google Maps hotspot map.
+ * Each returns an HTML element usable as AdvancedMarkerElement content.
+ * Includes cluster pin for MarkerClusterer.
+ */
+export const LAND_COLORS = {
+  public:         '#34d399',
+  blm:            '#fbbf24',
+  forest_service: '#a3e635',
+  state_park:     '#38bdf8',
+  private:        '#fb7185',
+  unknown:        '#94a3b8',
+};
+
+const DIFF_BADGE = { easy: '●', moderate: '◆', hard: '▲', expert: '★' };
+
+function sanitizeSvgNode(node) {
+  if (!node || node.nodeType !== 1) return;
+  const tag = node.localName ? node.localName.toLowerCase() : node.nodeName.toLowerCase();
+  const FORBIDDEN_TAGS = ['script', 'foreignobject', 'iframe', 'object', 'embed', 'style'];
+  if (FORBIDDEN_TAGS.includes(tag)) {
+    node.remove();
+    return;
+  }
+  if (node.attributes) {
+    const attrs = Array.from(node.attributes);
+    for (const attr of attrs) {
+      const name = attr.name.toLowerCase();
+      const val = attr.value.trim().toLowerCase();
+      if (name.startsWith('on')) {
+        node.removeAttribute(attr.name);
+      } else if ((name === 'href' || name === 'xlink:href' || name === 'src') && (val.startsWith('javascript:') || val.startsWith('data:'))) {
+        node.removeAttribute(attr.name);
+      }
+    }
+  }
+  const children = Array.from(node.children);
+  for (const child of children) {
+    sanitizeSvgNode(child);
+  }
+}
+
+function toEl(svg) {
+  const div = document.createElement('div');
+  div.style.transform = 'translateY(50%)';
+  if (typeof DOMParser === 'undefined') return div;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg.trim(), 'image/svg+xml');
+    if (doc.querySelector('parsererror')) return div;
+    const svgEl = doc.querySelector('svg') || (doc.documentElement && doc.documentElement.localName === 'svg' ? doc.documentElement : null);
+    if (svgEl) {
+      sanitizeSvgNode(svgEl);
+      div.appendChild(document.importNode(svgEl, true));
+    }
+  } catch {
+    // If parsing fails, return empty container div safely
+  }
+
+  return div;
+}
+
+export function hotspotPinEl({ color, isActive, isGlowing, hasGap, difficulty, highContrast }) {
+  const size  = highContrast ? (isActive ? 42 : 34) : (isActive ? 36 : 28);
+  const badge = DIFF_BADGE[difficulty] || '●';
+  const ring  = hasGap ? `<circle cx="22" cy="22" r="18" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.8"/>` : '';
+  const pulse = isGlowing ? `
+    <circle cx="22" cy="22" r="17" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.4">
+      <animate attributeName="r" values="14;20;14" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
+    </circle>` : '';
+  const coreR = isActive ? 14 : highContrast ? 12 : 10;
+  const halo  = highContrast ? `<circle cx="22" cy="22" r="${coreR + 4}" fill="#0a0f1e" opacity="0.85"/>` : '';
+  const highlight = !highContrast ? `<circle cx="18" cy="18" r="${coreR * 0.35}" fill="white" opacity="0.25"/>` : '';
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 44 44">
+      ${pulse}${ring}${halo}
+      <circle cx="22" cy="22" r="${coreR}" fill="${color}" opacity="${highContrast ? 1 : 0.92}"
+        style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${highContrast ? '#0a0f1e' : color})"/>
+      <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.6)'}" stroke-width="${highContrast ? 3 : isActive ? 2 : 1.5}"/>
+      ${highlight}
+      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold"${highContrast ? ' stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
+    </svg>`);
+}
+
+export function specimenPinEl(rarity, highContrast) {
+  const color = rarity === 'legendary' ? '#f59e0b' : rarity === 'rare' ? '#a78bfa' : '#c084fc';
+  const s = highContrast ? 24 : 18;
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 18 18">
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="${color}" opacity="0.9"
+        style="filter:drop-shadow(0 0 3px ${color})"/>
+      <polygon points="9,2 16,7 13,15 5,15 2,7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    </svg>`);
+}
+
+export function userPinEl(highContrast) {
+  const s = highContrast ? 44 : 36;
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="14" fill="#22d3ee" opacity="0.18">
+        <animate attributeName="r" values="10;16;10" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.35;0;0.35" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="18" cy="18" r="11" fill="none" stroke="#9FE8D0" stroke-width="1.4" opacity="0.7">
+        <animate attributeName="r" values="8;13;8" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.8;0.15;0.8" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="18" cy="18" r="7" fill="#22d3ee" opacity="0.98" style="filter:drop-shadow(0 0 8px #22d3ee)"/>
+      <circle cx="18" cy="18" r="7" fill="none" stroke="white" stroke-width="2"/>
+      <circle cx="18" cy="18" r="2.6" fill="white"/>
+    </svg>`);
+}
+
+export function clubPinEl() {
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+      <rect x="8" y="10" width="16" height="14" rx="2" fill="#14b8a6" opacity="0.95"
+        style="filter:drop-shadow(0 0 5px #14b8a6)"/>
+      <rect x="8" y="10" width="16" height="14" rx="2" fill="none" stroke="white" stroke-width="1.5"/>
+      <rect x="12" y="6" width="8" height="5" rx="1" fill="#14b8a6" opacity="0.9"/>
+      <circle cx="16" cy="17" r="2.5" fill="white" opacity="0.8"/>
+    </svg>`);
+}
+
+export function clusterPinEl(count) {
+  const size = count > 99 ? 52 : count > 9 ? 46 : 40;
+  const fontSize = count > 99 ? 13 : 15;
+  return toEl(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 52 52">
+      <circle cx="26" cy="26" r="24" fill="hsla(270,60%,25%,0.9)" stroke="hsla(280,80%,70%,0.6)" stroke-width="2"
+        style="filter:drop-shadow(0 0 10px hsla(280,80%,50%,0.5))"/>
+      <circle cx="26" cy="26" r="20" fill="hsla(265,50%,15%,0.95)" stroke="hsla(280,70%,65%,0.3)" stroke-width="1"/>
+      <circle cx="21" cy="21" r="7" fill="white" opacity="0.08"/>
+      <text x="26" y="31" text-anchor="middle" font-size="${fontSize}" fill="hsl(280,85%,82%)" font-weight="bold">${count}</text>
+    </svg>`);
+}

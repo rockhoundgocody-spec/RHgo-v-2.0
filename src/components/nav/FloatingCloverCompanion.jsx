@@ -1,111 +1,77 @@
 /**
- * FloatingCloverCompanion.jsx — Persistent floating Clover orb throughout the entire app.
- *
- * Provides users with Clover companionship everywhere (Explore map, Scanner, GeoDex, Quests, Market):
- * - Hides automatically on the Hub where the full HeroOrb is displayed
- * - Shows an interactive glowing mini-orb on all other pages
- * - 1-tap expansion into hands-free voice dialogue with Irish-American female persona
- * - Shows proactive field alerts and mineral tips right where the explorer is
+ * FloatingCloverCompanion — persistent Clover on every page except Hub HeroOrb.
+ * Visual of HeroOrb / AmethystOrb is unchanged.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { on } from '@/lib/cloverWake';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import CloverVoicePanel from '@/components/hub/CloverVoicePanel.jsx';
 import useCloverConversation from '@/components/hub/useCloverConversation.js';
 import { playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
-import { evaluateProactiveFieldSituation } from '@/lib/proactiveFieldCopilot';
 
 export default function FloatingCloverCompanion() {
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
-  const [fieldAlert, setFieldAlert] = useState(null);
-  const alertDismissedRef = useRef(false);
 
-  // Hide on Hub ('/') where HeroOrb is already the centerpiece, and admin/docs
   const isHub = location.pathname === '/';
-  const isAdminOrDocs = ['/admin', '/docs', '/dev', '/login', '/register', '/onboarding'].some((p) =>
+  const isAdminOrDocs = ['/admin', '/docs', '/dev', '/signin', '/login', '/register', '/onboarding'].some((p) =>
     location.pathname.startsWith(p)
   );
 
-  const clover = useCloverConversation({
-    onFindLogged: (name) => {
-      // Find logged notification
-    },
-  });
+  const clover = useCloverConversation();
+  const [wakePulse, setWakePulse] = useState(false);
+  const hiddenRef = useRef(false);
+  hiddenRef.current = isHub || isAdminOrDocs;
+  const startRef = useRef(clover.start);
+  startRef.current = clover.start;
+  const sendRef = useRef(clover.send);
+  sendRef.current = clover.send;
 
-  // Evaluate proactive field alerts once GPS is available
-  useEffect(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation || isHub) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const alerts = await evaluateProactiveFieldSituation(pos.coords.latitude, pos.coords.longitude);
-        if (alerts && alerts.length > 0 && !alertDismissedRef.current) {
-          setFieldAlert(alerts[0]);
-        }
-      },
-      () => {},
-      { timeout: 8000 }
-    );
-  }, [location.pathname, isHub]);
+  useEffect(() => on('wake', () => {
+    if (hiddenRef.current) return; // HeroOrb handles the Hub
+    setWakePulse(true);
+    setTimeout(() => setWakePulse(false), 900);
+    triggerOrbHaptic('pulse');
+    setExpanded(true);
+    startRef.current("I'm here. What do you need?");
+  }), []);
+
+  // "Ask Clover" from anywhere in the app (e.g. a star in the Vault Galaxy).
+  useEffect(() => on('clover:ask', (question) => {
+    if (hiddenRef.current || !question) return;
+    setExpanded(true);
+    startRef.current('Pulling it up.');
+    setTimeout(() => sendRef.current?.(String(question)), 60);
+  }), []);
 
   if (isHub || isAdminOrDocs) return null;
 
   const handleOrbClick = () => {
     playOrbChime(528, 1.2);
     triggerOrbHaptic('tap');
-    if (!expanded) {
+    clover.unlock?.();
+    if (!expanded || clover.phase === 'idle' || clover.phase === 'resting') {
       setExpanded(true);
-      if (clover.phase === 'idle') {
+      if (clover.phase === 'idle' || clover.phase === 'resting') {
         const openers = [
-          "Hey there! What are we checking out?",
-          "I'm right here with you — find anything good?",
-          "Need a quick mineral check or field tip?",
+          "Here, hound. What are we checking?",
+          "Clover's up. Find or site?",
+          "Talk. I'll pull the vault or open scan.",
         ];
         clover.start(openers[Math.floor(Math.random() * openers.length)]);
+      } else {
+        clover.nudge();
       }
     } else {
-      setExpanded(false);
-      clover.stop();
+      clover.nudge();
     }
   };
 
   return (
     <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end pointer-events-none select-none">
-      {/* Proactive Field Alert Banner */}
-      <AnimatePresence>
-        {fieldAlert && !expanded && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="pointer-events-auto mb-2 mr-1 p-2.5 max-w-[220px] rounded-xl text-xs backdrop-blur-md shadow-lg border border-amber-400/40"
-            style={{ background: 'hsla(260,30%,12%,0.92)' }}
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold text-amber-300 mb-1">
-              <span className="flex items-center gap-1">
-                <Sparkles size={11} /> {fieldAlert.badge}
-              </span>
-              <button
-                onClick={() => {
-                  setFieldAlert(null);
-                  alertDismissedRef.current = true;
-                }}
-                className="text-white/40 hover:text-white"
-              >
-                <X size={12} />
-              </button>
-            </div>
-            <p className="text-[11px] text-white/90 line-clamp-2 leading-tight">
-              {fieldAlert.description}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Expanded Voice Conversation Drawer */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -120,32 +86,39 @@ export default function FloatingCloverCompanion() {
               interim={clover.interim}
               onClose={() => {
                 setExpanded(false);
-                clover.stop();
+                clover.end();
               }}
               onHunt={() => {}}
               huntLoading={false}
-              voiceSupported={true}
+              voiceSupported={clover.voiceSupported}
               onSend={clover.send}
+              onListen={clover.nudge}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Persistent Mini Orb Button */}
       <motion.button
         type="button"
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={handleOrbClick}
-        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus:outline-none"
+        aria-expanded={expanded}
+        aria-controls="clover-voice-panel"
+        aria-label={expanded ? 'Close Clover Voice' : 'Talk to Clover'}
+        className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         style={{
           boxShadow: '0 0 24px hsla(270,90%,60%,0.45), 0 0 10px hsla(190,100%,50%,0.3)',
         }}
-        aria-label="Talk to Clover"
       >
+        {wakePulse && (
+          <span className="absolute inset-0 rounded-full pointer-events-none animate-ping"
+            style={{ border: '2px solid #9FE8D0' }} />
+        )}
         <div className="w-full h-full rounded-full overflow-hidden">
           <AmethystOrb
             size={56}
+            orbState={clover.phase === 'resting' || clover.phase === 'idle' ? 'idle' : clover.phase}
             speaking={clover.phase === 'speaking'}
             listening={clover.phase === 'listening'}
             thinking={clover.phase === 'thinking'}
@@ -153,11 +126,6 @@ export default function FloatingCloverCompanion() {
             getSpectrum={clover.getSpectrum}
           />
         </div>
-
-        {/* Proactive alert ping dot */}
-        {fieldAlert && !expanded && (
-          <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse" />
-        )}
       </motion.button>
     </div>
   );

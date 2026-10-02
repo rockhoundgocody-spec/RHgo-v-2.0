@@ -3,6 +3,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { FileCode2, Database, Network, Cpu, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSeoRobots } from '@/lib/useSeoRobots';
 import {
   Accordion,
   AccordionItem,
@@ -20,7 +21,7 @@ ROUTING ................... expo-router (file-based)
 STATE ..................... Zustand + React Query
 DB (LOCAL) ................ expo-sqlite (offline-first)
 DB (CLOUD) ................ Base44 entities
-AI INFERENCE .............. on-device CoreML/TFLite + cloud fallback
+AI INFERENCE .............. cloud vision (Google Gemini via Base44 functions); on-device model planned
 MAPS ...................... react-native-maps + MBTiles offline tiles
 CAMERA .................... expo-camera
 LOCATION .................. expo-location (background-capable)
@@ -121,6 +122,7 @@ const Body = ({ body }) => (
 );
 
 export default function Docs() {
+  useSeoRobots(true);
   const [active, setActive] = useState('stack');
   const current = sections.find((s) => s.id === active);
 

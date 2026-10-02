@@ -5,3 +5,7 @@
 ## 2026-08-24 - Entity Bulk Deletion via deleteMany Prevents O(N+1) HTTP Network Bottlenecks
 **Learning:** Fetching all entity records via `.list()` and using `Promise.all(all.map(h => delete(h.id)))` fires N+1 HTTP requests, overwhelming network connections and backend servers.
 **Action:** Use `.deleteMany({})` on `@base44/sdk` entity handlers to execute entity bulk deletion in a single O(1) HTTP network request.
+
+## 2026-09-19 - Carrying Forward Parsed Timestamps in Sequential Date Streak Calculations
+**Learning:** Re-parsing date strings or formatted template strings (`Date.parse("${sortedDays[i - 1]}T00:00:00Z")`) inside sequential comparisons recreates expensive string formatting and parsing overhead on every loop iteration (redundant Date.parse calls).
+**Action:** Store the parsed timestamp of the current iteration (`previous = current`) to carry it forward into the next iteration, reducing `Date.parse` calls per comparison step from 2 to 1.

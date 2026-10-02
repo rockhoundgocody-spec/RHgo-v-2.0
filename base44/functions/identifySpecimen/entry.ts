@@ -6,15 +6,19 @@
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
 import { computeEssence } from '../../shared/essence.ts';
+import { awardXPServerSide } from '../../shared/awardXP.ts';
 import {
   buildLocationSubmission,
   getStoredLocation,
   hasValidPrivateLocation,
   type PrivateSpecimenLocation,
 } from '../../shared/locationSubmission.ts';
+import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
+import { checkMemberScanQuota, recordScanReceipt, findTrustedReceipt } from '../../shared/scanQuota.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -148,8 +152,7 @@ async function submitLocationForReview(
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user?.email) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json();
     const {
@@ -160,12 +163,32 @@ Deno.serve(async (req) => {
       beach_name = null,
       post_storm = false,
       season = null,
+      disposition = null,
+      guest_device_id = null,
     } = body;
+
+    const isGuest = !user?.email;
+    if (isGuest) {
+      if (save || share_to_map) {
+        return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
+      }
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
+      if (!gate.ok) {
+        return Response.json(
+          { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
+          { status: gate.status || 429 },
+        );
+      }
+    } else if (!user?.email) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const storedLocation = getStoredLocation(lat, lng, geo_privacy);
 
     // A share request can only submit the caller's existing owner-scoped
     // specimen for moderation. No coordinates are copied into the queue.
     if (share_to_map && !save) {
+      if (isGuest) return Response.json({ error: 'Unauthorized' }, { status: 401 });
       if (!specimen_id) {
         return Response.json({ error: 'specimen_id is required for location review' }, { status: 400 });
       }
@@ -188,12 +211,19 @@ Deno.serve(async (req) => {
 
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
+    if (!isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
+    }
+
     // ── LOCAL GEOLOGY CONTEXT (Macrostrat) ────────────────────────────────────
     let geologyContext = '';
     let localGeology = null;
-    if (lat != null && lng != null) {
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+    const hasValidCoords = lat != null && lng != null && typeof lat !== 'boolean' && typeof lng !== 'boolean' && Number.isFinite(numLat) && Number.isFinite(numLng) && numLat >= -90 && numLat <= 90 && numLng >= -180 && numLng <= 180;
+    if (hasValidCoords) {
       try {
-        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}`);
+        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`);
         if (geoRes.ok) {
           const geoJson = await geoRes.json();
           const units = geoJson?.success?.data || [];
@@ -211,13 +241,21 @@ Deno.serve(async (req) => {
 
     // ── GREAT LAKES CONTEXT ───────────────────────────────────────────────────
     // Auto-detect if we're in the Great Lakes region (~lat 41-48, lng -76 to -92)
-    const isGreatLakes = lat != null && lng != null
-      ? (lat >= 41 && lat <= 48 && lng >= -92 && lng <= -76)
-      : true; // default to GL mode if no GPS
+    const isGreatLakes = hasValidCoords
+      ? (numLat >= 41 && numLat <= 48 && numLng >= -92 && numLng <= -76)
+      : false; // never force Great Lakes IDs when GPS is missing
 
     const glContext = isGreatLakes
       ? buildGreatLakesContext({ beachName: beach_name, wetDry: wet_dry, postStorm: post_storm, season })
-      : '';
+      : [
+          'WORLDWIDE FIELD SPECIALIST MODE.',
+          'Do not restrict identification to a regional list.',
+          'Use GPS and local geology as Bayesian priors, not a hard filter — glacial erratics, road gravel, fill, and shop specimens appear out of bedrock context.',
+          'If the visual ID conflicts with local bedrock, lower geological_plausibility and say so.',
+          'Prefer common field stones over exotic gems unless diagnostics are strong.',
+          'Always return lookalikes and a single cheapest field test.',
+          'Calibrate confidence downward for dark, cropped, wet-glare, or single-angle photos.',
+        ].join(' ');
 
     // ── SELF-IMPROVEMENT LOOP ─────────────────────────────────────────────────
     // Feed verified community corrections back into the model as priors, so the
@@ -236,19 +274,41 @@ Deno.serve(async (req) => {
       }
     } catch { /* learning context is best-effort */ }
 
+    // ── FREE-TIER METERING (members) ─────────────────────────────────────────
+    // Only a fresh identification costs a scan; re-sending a result to save it
+    // (prefilled_result) does not.
+    let quota = null;
+    if (!isGuest && !prefilled_result) {
+      quota = await checkMemberScanQuota(base44 as never, { email: user.email, role: user.role });
+      if (!quota.ok) {
+        return Response.json(
+          { error: 'You have used your free scans for this month', code: 'scan_quota', quota },
+          { status: 402 },
+        );
+      }
+    }
+
+    const conditionNote = isGreatLakes ? '' : wet_dry === 'wet'
+      ? ' CONDITION: specimen is WET — banding, coral patterns and translucency read stronger; waxy lusters are enhanced.'
+      : wet_dry === 'dry'
+      ? ' CONDITION: specimen is DRY — patterns and luster may be muted; lower confidence slightly for pattern-dependent IDs.'
+      : '';
+
     // ── VISION IDENTIFICATION ─────────────────────────────────────────────────
     let identification = prefilled_result;
+    const ranIdentification = !identification;
     if (!identification) {
       identification = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
           'Study every visual detail: crystal habit, luster, transparency, color zoning, cleavage, fracture, surface texture, matrix, weathering. ' +
-          'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates. ' +
+          'Provide: top_match, scientific_name, hardness_mohs, crystal_system, chemical_formula, formation, where_to_find, value_estimate, rarity, confidence, description, reasoning, fun_fact, collection_value, image_quality_score, observed_features, lookalikes, verification_tests, candidates, field_habit (crystal habit/form you observe), field_luster (luster type), field_matrix (host rock matrix), field_next_test (single most useful next test to try). ' +
           'Never refuse — always give best attempt with calibrated confidence. ' +
+          'GPS is a prior, not a whitelist. Return geological_plausibility 0-1. ' +
           AGATE_PROMPT_BLOCK + ' ' +
           handbookPromptBlock() +
-          glContext + geologyContext + learnedContext,
+          glContext + conditionNote + geologyContext + learnedContext,
         file_urls: [image_url],
         response_json_schema: {
           type: 'object',
@@ -268,6 +328,7 @@ Deno.serve(async (req) => {
             fun_fact:            { type: 'string' },
             collection_value:    { type: 'string' },
             image_quality_score: { type: 'number' },
+            geological_plausibility: { type: 'number' },
             field_clue:          { type: 'string' },
             wet_dry_note:        { type: 'string' },
             observed_features: {
@@ -282,6 +343,10 @@ Deno.serve(async (req) => {
               type: 'array',
               items: { type: 'object', properties: { test: { type: 'string' }, expected: { type: 'string' } } },
             },
+            field_habit:           { type: 'string' },
+            field_luster:          { type: 'string' },
+            field_matrix:          { type: 'string' },
+            field_next_test:       { type: 'string' },
             candidates: {
               type: 'array',
               items: {
@@ -298,6 +363,11 @@ Deno.serve(async (req) => {
     }
 
     if (!identification) return Response.json({ error: 'Identification failed' }, { status: 500 });
+
+    if (ranIdentification && !isGuest) {
+      await recordScanReceipt(base44 as never, user.email, identification, image_url);
+      if (quota && typeof quota.used === 'number') quota = { ...quota, used: quota.used + 1 };
+    }
 
     // ── CONTEXT INTEGRITY + OPERATING HANDBOOK ENFORCEMENT ────────────────────
     const contextIntegrity = computeContextIntegrity({
@@ -328,6 +398,9 @@ Deno.serve(async (req) => {
     // ── OPTIONAL SAVE ─────────────────────────────────────────────────────────
     let savedSpecimen = null;
     if (save) {
+      if (!user?.email) {
+        return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
+      }
       const richNotes = [
         identification.description,
         identification.scientific_name && `Scientific name: ${identification.scientific_name}`,
@@ -354,16 +427,38 @@ Deno.serve(async (req) => {
         found_at:      beach_name || null,
         verified:      false,
         geo_privacy:   storedLocation.geoPrivacy,
+        ...(disposition ? {
+          disposition,
+          collected: disposition === 'collected',
+          left_in_place: disposition === 'left_in_place',
+        } : {}),
         ...(storedLocation.lat != null ? { lat: storedLocation.lat, lng: storedLocation.lng } : {}),
       });
 
+      // Award rarity XP server-side (idempotent, keyed to specimen). The
+      // rarity must come from an identification THIS server ran — a result
+      // the client sends back (prefilled_result) is never trusted for XP.
       const xpMap = { common: 10, uncommon: 25, rare: 60, legendary: 150 };
-      // Idempotent: keyed to the specimen — retries can never double-award
-      base44.functions.invoke('awardXP', {
-        amount: xpMap[identification.rarity] || 10,
-        reason: `Logged ${identification.top_match}`,
-        idempotency_key: `specimen:${savedSpecimen.id}`,
-      }).catch(() => {});
+      const trusted = ranIdentification
+        ? { top_match: identification.top_match, rarity: identification.rarity }
+        : await findTrustedReceipt(base44 as never, user.email, image_url, identification.top_match);
+      awardXPServerSide(
+        base44, user.email,
+        xpMap[trusted?.rarity] || xpMap.common,
+        `Logged ${trusted?.top_match || identification.top_match}`,
+        `specimen:${savedSpecimen.id}`,
+      ).catch(() => {});
+
+      // Award disposition XP server-side (idempotent, keyed to specimen+disposition)
+      if (disposition) {
+        const dispXpMap: Record<string, number> = { collected: 25, left_in_place: 40, observed: 15 };
+        awardXPServerSide(
+          base44, user.email,
+          dispXpMap[disposition] || 0,
+          `scan_${disposition}`,
+          `scan:${savedSpecimen.id}:${disposition}`,
+        ).catch(() => {});
+      }
 
       // Queue for community verification when the handbook requires review
       if (enforcement.expert_review_required) {
@@ -405,7 +500,8 @@ Deno.serve(async (req) => {
       essence,
       local_geology: localGeology,
       great_lakes_mode: isGreatLakes,
-      meta: { model: 'gemini_3_flash', user_email: user.email, timestamp: new Date().toISOString() },
+      quota,
+      meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

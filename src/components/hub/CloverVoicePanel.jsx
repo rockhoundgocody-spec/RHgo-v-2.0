@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
@@ -18,9 +19,9 @@ const PHASE_TEXT = {
  */
 export default function CloverVoicePanel({
   phase, messages, interim, onClose, onHunt, huntLoading,
-  suggestions, onDismissSuggestions, voiceSupported, onSend,
+  suggestions, onDismissSuggestions, voiceSupported, onSend, onListen,
 }) {
-  const bottomRef = useRef(null);
+  const transcriptRef = useRef(null);
   const [draft, setDraft] = useState('');
   const [expandedIntel, setExpandedIntel] = useState(false);
   const isKid = useKidMode();
@@ -29,12 +30,19 @@ export default function CloverVoicePanel({
   const detectedMineral = useMemo(() => lookupMineralIntelligence(lastMsg), [lastMsg]);
   const kidMineral = useMemo(() => detectedMineral ? getKidFriendlyMineral(detectedMineral.name) : null, [detectedMineral]);
 
+  // Scroll only the panel's internal transcript — never the page.
+  // This keeps the orb in place while Clover talks.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    }
   }, [messages, interim, suggestions, detectedMineral, expandedIntel]);
 
   return (
     <div
+      id="clover-voice-panel"
+      role="region"
+      aria-label="Clover Voice Companion"
       className="mt-4 w-full max-w-[300px] rounded-2xl overflow-hidden flex flex-col"
       style={{
         background: 'hsla(255,30%,14%,0.97)',
@@ -57,20 +65,20 @@ export default function CloverVoicePanel({
           <button
             onClick={onHunt}
             disabled={huntLoading}
-            className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition"
+            className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             aria-label="Get hunt suggestions"
           >
             {huntLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
             <span>Hunt</span>
           </button>
-          <button onClick={onClose} aria-label="End conversation" className="text-white/25 hover:text-white/60 transition">
+          <button onClick={onClose} aria-label="End conversation" className="text-white/25 hover:text-white/60 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50">
             <X size={14} />
           </button>
         </div>
       </div>
 
       {/* Transcript */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ minHeight: 90 }}>
+      <div ref={transcriptRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ minHeight: 90 }}>
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -80,6 +88,7 @@ export default function CloverVoicePanel({
                 : { background: 'hsla(255,25%,20%,0.6)', border: '1px solid hsla(255,20%,40%,0.2)', color: 'rgba(255,255,255,0.78)' }}
             >
               {m.content}
+              {m.role !== 'user' && m.sources?.length > 0 && <SourceChips sources={m.sources} />}
             </div>
           </div>
         ))}
@@ -94,8 +103,18 @@ export default function CloverVoicePanel({
             }}
           >
             <div
-              className="flex items-center justify-between cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-expanded={expandedIntel}
+              aria-controls="mindat-intel-details"
+              className="flex items-center justify-between cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               onClick={() => setExpandedIntel(!expandedIntel)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setExpandedIntel(!expandedIntel);
+                }
+              }}
             >
               <div className="flex items-center gap-1.5 font-bold text-amethyst-glow">
                 <Gem size={12} />
@@ -114,7 +133,7 @@ export default function CloverVoicePanel({
             )}
 
             {expandedIntel && (
-              <div className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
+              <div id="mindat-intel-details" className="pt-1.5 space-y-1 text-[10px] text-white/70 border-t border-white/10">
                 <div><span className="text-white/40">Formula:</span> <span className="font-mono text-cyan-300 font-semibold">{detectedMineral.formula}</span></div>
                 <div><span className="text-white/40">System:</span> {detectedMineral.crystal_system}</div>
                 <div><span className="text-white/40">Cleavage:</span> {detectedMineral.cleavage}</div>
@@ -136,35 +155,6 @@ export default function CloverVoicePanel({
             >
               {interim}
             </div>
-          </div>
-        )}
-
-        {/* Quick prompt chips for fast 1-tap inquiries */}
-        {messages.length <= 2 && !interim && phase !== 'thinking' && (
-          <div className="pt-1.5 pb-1 flex flex-wrap gap-1.5 justify-start">
-            {(isKid ? [
-              'Did dinosaurs see this rock? 🦖',
-              'Tell me about volcano rocks! 🌋',
-              'Which rocks glow in the dark? ✨',
-              'Tell me a secret treasure clue! 🕵️',
-            ] : [
-              'Where can I hunt nearby?',
-              'How to spot agates?',
-              'Field hardness test tips',
-              'Tell me a rock secret',
-            ]).map((chip) => (
-              <button
-                key={chip}
-                onClick={() => onSend?.(chip)}
-                className="text-[10px] font-medium px-2 py-1 rounded-lg transition-all active:scale-95 text-white/70 hover:text-white"
-                style={{
-                  background: 'hsla(270,50%,25%,0.4)',
-                  border: '1px solid hsla(270,60%,50%,0.25)',
-                }}
-              >
-                {chip}
-              </button>
-            ))}
           </div>
         )}
 
@@ -203,37 +193,68 @@ export default function CloverVoicePanel({
                   <p className="text-[9px] text-white/40 italic leading-relaxed">{s.why}</p>
                 </div>
               ))}
-              <button onClick={onDismissSuggestions} className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1">
+              <button onClick={onDismissSuggestions} className="w-full text-[9px] text-white/35 hover:text-white/60 transition py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50">
                 Dismiss
               </button>
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
-      {/* Status line — replaces the old text box */}
-      <div className="px-3 py-2 border-t border-white/8">
-        {voiceSupported ? (
-          <div className="flex items-center justify-center gap-1.5 text-[10px] text-white/35">
-            <VoiceDots active={phase === 'listening'} />
-            <span>{PHASE_TEXT[phase] || ''}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Keyboard size={12} className="text-white/25 shrink-0" />
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }
-              }}
-              placeholder="Voice isn't available here — type instead"
-              className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none"
-            />
-          </div>
-        )}
+      <div className="px-3 py-2 border-t border-white/8 space-y-2">
+        <button
+          type="button"
+          onClick={() => onListen?.()}
+          className="w-full flex items-center justify-center gap-1.5 text-[10px] text-white/45 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+        >
+          <VoiceDots active={phase === 'listening'} />
+          <span>{PHASE_TEXT[phase] || 'tap to talk'}</span>
+        </button>
+        <div className="flex items-center gap-2">
+          <Keyboard size={12} className="text-white/25 shrink-0" />
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }
+            }}
+            aria-label="Type message to Clover"
+            placeholder={voiceSupported ? 'Or type if it is noisy out' : "Voice isn't available — type"}
+            className="flex-1 bg-transparent text-[11px] text-white/75 placeholder-white/25 outline-none rounded px-1.5 py-0.5 focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+          />
+        </div>
       </div>
+    </div>
+  );
+}
+
+const SOURCE_ICONS = { specimen: Gem, site: MapPin, log: NotebookPen, expedition: Route, web: Globe };
+
+/** Where Clover's answer came from — each chip opens the record. */
+function SourceChips({ sources }) {
+  const vaultFocus = sources.find((s) => s.type === 'specimen' || s.type === 'log' || s.type === 'site');
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Sources">
+      {sources.map((s) => {
+        const Icon = SOURCE_ICONS[s.type] || Gem;
+        const chip = (
+          <span className="inline-flex items-center gap-1 max-w-[180px] px-1.5 py-0.5 rounded-md text-[9px] font-semibold"
+            style={{ background: 'hsla(185,70%,40%,0.16)', border: '1px solid hsla(185,80%,60%,0.28)', color: 'hsl(185,80%,82%)' }}>
+            <Icon size={9} className="shrink-0" />
+            <span className="truncate">{s.label}{s.place ? ` · ${s.place}` : ''}</span>
+          </span>
+        );
+        return s.route
+          ? <Link key={s.key} to={s.route} className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60">{chip}</Link>
+          : <span key={s.key}>{chip}</span>;
+      })}
+      {vaultFocus && (
+        <Link to={`/vault?focus=${encodeURIComponent(vaultFocus.id)}`}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold text-amethyst-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+          style={{ background: 'hsla(275,60%,40%,0.18)', border: '1px solid hsla(280,70%,65%,0.3)' }}>
+          <Orbit size={9} /> In the galaxy
+        </Link>
+      )}
     </div>
   );
 }

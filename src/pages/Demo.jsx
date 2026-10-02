@@ -98,6 +98,8 @@ export default function Demo() {
         <p className="text-amber-300/80 text-[11px]">Demo mode — data is simulated. <Link to="/register" className="underline font-semibold">Sign up free</Link> to save real finds.</p>
       </div>
 
+      <h1 className="sr-only">RockHound-GO guest demo: GeoDex collection, AI scanner and hotspot map</h1>
+
       {/* Tab bar */}
       <div className="flex mx-4 mt-4 gap-2">
         {[

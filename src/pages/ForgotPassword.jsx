@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { withNext } from "@/lib/authRedirect";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -16,9 +14,9 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      await base44.auth.resetPasswordRequest(email);
+      await base44.auth.resetPasswordRequest(email.trim());
     } catch {
-      // Always show success regardless
+      /* always show the same line */
     } finally {
       setLoading(false);
       setSent(true);
@@ -27,48 +25,46 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
-      icon={Mail}
-      title="Reset password"
-      subtitle="We'll send you a link to reset it"
+      title="Reset the lock."
+      subtitle="We email a Base44 reset link. Same trail, new key."
       footer={
-        <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />Back to log in
+        <Link to={withNext("/signin")} className="text-[#2EE6A6] font-semibold">
+          Back to sign in
         </Link>
       }
     >
       {sent ? (
-        <p className="text-sm text-foreground text-center">
-          If an account exists with that email, you'll receive a password reset link shortly.
+        <p className="text-sm text-[#E8EEF2]">
+          If that email has an account, a reset link is on the way. Check spam if the field is quiet.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 h-12"
-                required
-              />
-            </div>
-          </div>
-          <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <label className="block text-[12px] uppercase tracking-[0.12em] text-[#5C6B74]">
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              autoFocus
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 w-full h-12 rounded-xl px-3 bg-white/5 border border-[rgba(232,238,242,0.14)] text-[#E8EEF2] outline-none focus:border-[#2EE6A6]"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={loading || !email}
+            className="w-full min-h-12 rounded-full font-bold text-[#04140e] disabled:opacity-38"
+            style={{ background: "linear-gradient(180deg,#2EE6A6,#1DBF7A)" }}
+          >
             {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
-              </>
+              <span className="inline-flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Sending
+              </span>
             ) : (
-              "Send reset link"
+              "Send reset mail"
             )}
-          </Button>
+          </button>
         </form>
       )}
     </AuthLayout>

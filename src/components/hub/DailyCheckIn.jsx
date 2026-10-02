@@ -39,8 +39,6 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
     }
   };
 
-  const name = companion?.name || 'Clover 🍀 Cole';
-
   return (
     <GlassPanel className="mb-10 p-5">
       <div className="flex items-center gap-3 mb-3">

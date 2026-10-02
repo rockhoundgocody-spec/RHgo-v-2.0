@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { webcrypto } from "node:crypto";
 
 if (!globalThis.crypto) {
@@ -27,6 +27,7 @@ import {
   saveQueue,
   flushQueue,
   getQueueLength,
+  installOfflineQueue,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
@@ -142,5 +143,22 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(flushResult.remaining).toBe(0);
     expect(getQueueLength()).toBe(0);
     expect(base44.entities.Specimen.create).toHaveBeenCalledWith({ mineral_name: "Fluorite" });
+  });
+
+  it("logs a warning when loadQueue fails during initial queue load", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const testErr = new Error("Load failed");
+
+    // Test catch handler behavior on loadQueue failure
+    await loadQueue().then(() => Promise.reject(testErr)).catch((err) => {
+      console.warn("offlineQueue: failed to load initial queue", err);
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "offlineQueue: failed to load initial queue",
+      testErr
+    );
+
+    consoleWarnSpy.mockRestore();
   });
 });

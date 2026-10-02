@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ChevronRight } from 'lucide-react';
-import LiquidMetalOrb from '@/components/hub/LiquidMetalOrb.jsx';
+import IntroOrb from '@/components/hub/IntroOrb.jsx';
 
 // ── AGATE AGE GATE ────────────────────────────────────────────────────────────
 // A secret behavioral test disguised as a fun quiz. Kids and pros answer
@@ -32,17 +32,12 @@ function AgateAgeGate({ onComplete }) {
   const [qIdx, setQIdx] = useState(0);
   const [kidPoints, setKidPoints] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [shaking, setShaking] = useState(false);
 
   const current = AGE_GATE_QUESTIONS[qIdx];
 
   const pick = (answer, idx) => {
     if (selected !== null) return;
     setSelected(idx);
-    if (answer.kid) {
-      setShaking(true);
-      setTimeout(() => setShaking(false), 500);
-    }
     setTimeout(() => {
       const newKidPts = kidPoints + (answer.kid ? 1 : 0);
       if (qIdx < AGE_GATE_QUESTIONS.length - 1) {
@@ -326,7 +321,7 @@ export default function Onboarding() {
 
       {/* Skip */}
       {!isLast && (
-        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/55 text-sm hover:text-white/85 transition z-10">
+        <button onClick={handleSkip} className="absolute top-5 right-5 text-white/55 text-sm hover:text-white/85 transition z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-md px-2 py-1">
           Skip
         </button>
       )}
@@ -360,7 +355,7 @@ export default function Onboarding() {
               transition={{ duration: 2.5, repeat: Infinity }}
               className="mb-6"
             >
-              <LiquidMetalOrb awakened size={112} />
+              <IntroOrb size={112} />
             </motion.div>
 
             {Demo && (

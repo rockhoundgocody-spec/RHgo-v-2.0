@@ -1,8 +1,15 @@
 import React from 'react';
 import WeeklyBallot from '@/components/live/WeeklyBallot.jsx';
 import { Trophy } from 'lucide-react';
+import { useSeoRobots } from '@/lib/useSeoRobots';
+import { useSeoMeta } from '@/lib/useSeoMeta';
 
 export default function FindOfTheWeek() {
+  useSeoRobots(true);
+  useSeoMeta(
+    'Find of the Week — vote on rare rockhound finds',
+    'Vote for the rarest confirmed finds of the week and see what collectors are pulling from the field.',
+  );
   return (
     <div className="w-full max-w-md mx-auto px-3 pb-28 pt-3">
       <div className="mb-4">

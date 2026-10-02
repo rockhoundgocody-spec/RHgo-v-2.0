@@ -36,7 +36,7 @@ export default function HolographicVaultView({ specimens = [] }) {
       <div className="w-full flex items-center justify-between px-2 mb-3">
         <button
           onClick={handlePrev}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Previous specimen"
         >
           <ChevronLeft size={20} />
@@ -48,7 +48,7 @@ export default function HolographicVaultView({ specimens = [] }) {
 
         <button
           onClick={handleNext}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Next specimen"
         >
           <ChevronRight size={20} />
@@ -126,7 +126,7 @@ export default function HolographicVaultView({ specimens = [] }) {
             </div>
             <div>
               <span className="text-[8px] uppercase tracking-wider text-white/40 block">Appraisal</span>
-              <span className="text-xs font-black text-emerald-400">{current.value_estimate || '$15–$35'}</span>
+              <span className="text-xs font-black text-emerald-400">{current.value_estimate || 'Value not estimated'}</span>
             </div>
           </div>
 

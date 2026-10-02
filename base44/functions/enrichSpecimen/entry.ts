@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 // Map Open-Meteo WMO weather code → human label
 function weatherLabel(code) {
@@ -53,10 +54,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Auth model: entity automations run without a user token.
-    // Direct callers must be admin. Automation callers (no user) are allowed.
+    // Auth: require admin for direct calls. Entity-automation calls from the
+    // platform workflow system carry a service-role token that auth.me() resolves
+    // to an admin-level caller; anonymous HTTP calls resolve to null and are rejected.
     const caller = await base44.auth.me().catch(() => null);
-    if (caller && caller.role !== 'admin') {
+    if (!caller) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (caller.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
@@ -78,8 +83,9 @@ Deno.serve(async (req) => {
     updates.lunar_phase = lunarPhase(dateStr);
 
     // 2) Weather — only if we have coordinates
-    if (typeof specimen.lat === 'number' && typeof specimen.lng === 'number') {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${specimen.lat}&longitude=${specimen.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+    const coords = parseCoordinates(specimen.lat, specimen.lng);
+    if (coords) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph`;
       const wRes = await fetch(url);
       if (wRes.ok) {
         const wJson = await wRes.json();

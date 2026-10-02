@@ -1,0 +1,151 @@
+{
+  "name": "SyncIdResult",
+  "type": "object",
+  "description": "Append-only identification history for a find. Never overwritten \u2014 an online deep-tier result is appended and older rows are flagged is_superseded. Provenance: model name + version + input quality are always recorded.",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "find_client_id": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "offline_fast",
+        "online_deep"
+      ],
+      "default": "offline_fast"
+    },
+    "model_name": {
+      "type": "string"
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "input_quality": {
+      "type": "number"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "primary_label": {
+      "type": "string"
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "object"
+    },
+    "explanation_short": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "explanation_nerd": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "next_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "expected_outcome": {
+            "type": "string"
+          },
+          "safety": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "collecting_tips": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "safety_notes": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "formation": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "raw_json": {
+      "type": "object"
+    },
+    "is_superseded": {
+      "type": "boolean",
+      "default": false
+    },
+    "client_created_at": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "client_id",
+    "find_client_id",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

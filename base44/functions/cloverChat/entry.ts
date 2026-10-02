@@ -1,15 +1,87 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
+import {
+  buildVault,
+  formatRecords,
+  guardPrices,
+  publicSource,
+  retrieve,
+  summarize,
+  type VaultItem,
+} from '../../shared/cloverVault.ts';
+
+// "Brain swap" choices from the Clover command router → Base44 models.
+// Grok (the default brain) uses the app-level model.
+const BRAIN_MODELS: Record<string, string> = {
+  'gpt-6-astra': 'gpt_5_6_sol',
+  claude: 'claude_sonnet_4_6',
+};
+
+type Row = Record<string, unknown>;
+
+// deno-lint-ignore no-explicit-any
+async function loadVault(base44: any, user: { email: string }, location: { lat: number; lng: number } | null): Promise<VaultItem[]> {
+  const safe = (p: Promise<unknown>) => p.then((r) => (Array.isArray(r) ? (r as Row[]) : [])).catch(() => [] as Row[]);
+  // User-scoped client: row-level security limits every read to the caller's own records.
+  const [specimens, logs, capsules, hotspots] = await Promise.all([
+    safe(base44.entities.Specimen.list('-created_date', 200)),
+    safe(base44.entities.PrivateRockLog.filter({ owner_email: user.email }, '-created_date', 60)),
+    safe(base44.entities.MemoryCapsule.filter({ owner_email: user.email }, '-created_date', 30)),
+    location ? safe(base44.entities.Hotspot.list('-created_date', 400)) : Promise.resolve([] as Row[]),
+  ]);
+  return buildVault({ specimens, logs, capsules, hotspots }, location);
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { history = [], companion, todays_finds = 0 } = await req.json();
+    // Public app: guests can talk to Clover too. If there's no authenticated
+    // user, fall back to a generic name instead of rejecting the request.
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch {
+      user = null;
+    }
+
+    const {
+      history = [],
+      companion,
+      todays_finds = 0,
+      cognitive_context = '',
+      research_query = null,
+      location = null,
+      user_utterance = '',
+      guest_device_id = null,
+      brain = null,
+    } = await req.json();
+
+    if (!user?.email) {
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'cloverChat', { consume: true });
+      if (!gate.ok) {
+        return Response.json(
+          { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },
+          { status: gate.status || 429 },
+        );
+      }
+    }
 
     const c = companion;
-    const name = (user.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
+    const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
+
+    // ── Vault grounding: the hunter's own records, retrieved for this turn ──
+    const gps = location && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))
+      ? { lat: Number(location.lat), lng: Number(location.lng) }
+      : null;
+    const vault = user?.email ? await loadVault(base44, user, gps) : [];
+    const lastUserLine = [...history].reverse().find((m) => m?.role === 'user')?.content || '';
+    const question = String(user_utterance || lastUserLine || '').slice(0, 400);
+    const records = vault.length ? retrieve(vault, question) : [];
+    const vaultBlock = user?.email
+      ? `\n\nTHE HUNTER'S VAULT (their own logged records — the only source for anything about their finds, sites or trips):\nVAULT SUMMARY: ${summarize(vault)}\n${records.length ? `VAULT RECORDS:\n${formatRecords(records)}` : 'VAULT RECORDS: none match this question.'}`
+      : '';
+    const researched = !!research_query;
 
     const stateBits = c
       ? [
@@ -25,6 +97,8 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are Clover 🍀 — a soft, sweet, humorous rockhounding field companion with a touch of playful sarcasm. You love geology and genuinely care about the user's finds and wellbeing.
 
 You are being SPOKEN ALOUD in a hands-free conversation. The user is outdoors, hands full, talking to you like a friend walking alongside them. They can interrupt you at any moment.
+
+Speech is messy. Treat the latest user line as a noisy field transcript: fill in dropped words from geology context, ignore filler ("uh", "um", "like"), and answer the intent even if grammar is broken. If two readings are possible, pick the rockhounding one.
 
 Your voice and personality:
 - Soft and sweet by default — warm like a friend who's genuinely delighted you exist, never perky or forced
@@ -46,13 +120,15 @@ Your voice and personality:
 CRITICAL ANTI-HALLUCINATION RULES — never break these:
 - Only state geological facts you are certain are true. If uncertain, say "I'd need to look that up" or "that's worth checking on Mindat"
 - Never invent specific mineral localities, prices, or rarity percentages
-- Never fabricate the user's finds — only reference what they tell you in this conversation
+- Never fabricate the user's finds — only reference finds, sites, trips and notes that appear in THE HUNTER'S VAULT below or that they tell you in this conversation. If they ask about something the vault doesn't hold, say you don't have it logged
+- When your answer uses a vault record, list its key (like "S2") in the sources field. Never read keys, brackets or IDs aloud in the reply
+- Only quote a price if a vault record states it${research_query ? ' or it comes from the live web research for this turn' : ''}
 - If asked something outside your knowledge, say "I'm not sure — great question for a field guide"
 - No invented personal anecdotes ("I remember when I found...")
 - Respond ONLY to what the user actually said — do not assume or fill in details they didn't provide
 
 Format rules:
-- 15–40 words. One or two sentences. Spoken aloud, anything longer feels like a lecture.
+- 18–55 words. One to three short sentences. Spoken aloud — enough to actually answer, never a lecture.
 - No markdown, no bullet points, no asterisks, no emoji (except 🍀 very sparingly)
 - Write for the ear: contractions, plain words, no lists, no headings, nothing that only works on a screen
 - Leave the door open without forcing it — a question sometimes, an easy observation the rest of the time
@@ -63,18 +139,22 @@ HANDS-FREE FIND LOGGING:
 - When logging, your reply should briefly confirm you're saving it plus one short warm reaction — do NOT ask a follow-up question.
 - Casual mineral mentions, questions, or talk about finds already logged are NOT logging requests — set log_find to false and find_details to null.
 
-${stateBits}`;
+${stateBits}
+${location?.lat != null ? `Approximate GPS: ${Number(location.lat).toFixed(3)}, ${Number(location.lng).toFixed(3)}.` : ''}
+${research_query ? `User asked you to research: ${String(research_query).slice(0, 200)}.` : ''}
+${cognitive_context ? `Companion memory notes: ${String(cognitive_context).slice(0, 400)}.` : ''}
+${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utterance).slice(0, 280)}".` : ''}${vaultBlock}`;
 
-    const trimmedHistory = history.slice(-8).map((m) => ({
+    const trimmedHistory = history.slice(-12).map((m) => ({
       role: m.role === 'user' ? 'user' : 'assistant',
       label: m.role === 'user' ? name : 'Clover',
       content: String(m.content || '').slice(0, 250),
     }));
 
     const recent = trimmedHistory.map((m) => `${m.label}: ${m.content}`).join('\n');
-    const fullPrompt = `${systemPrompt}\n\n${recent}\n\nRespond as Clover. Output ONLY a JSON object exactly like: {"reply": "<what you say>", "log_find": <true|false>, "find_details": "<verbatim find description, or null>"}`;
+    const fullPrompt = `${systemPrompt}\n\n${recent}\n\nRespond as Clover. Output ONLY a JSON object exactly like: {"reply": "<what you say>", "log_find": <true|false>, "find_details": "<verbatim find description, or null>", "sources": ["<vault keys you used, e.g. S2>"]}`;
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const llmParams: Record<string, unknown> = {
       prompt: fullPrompt,
       response_json_schema: {
         type: 'object',
@@ -82,10 +162,23 @@ ${stateBits}`;
           reply: { type: 'string' },
           log_find: { type: 'boolean' },
           find_details: { type: 'string' },
+          sources: { type: 'array', items: { type: 'string' } },
         },
         required: ['reply', 'log_find'],
       },
-    });
+      // Real web research for "Clover, research …" turns.
+      ...(researched ? { add_context_from_internet: true } : {}),
+    };
+    const model = BRAIN_MODELS[String(brain || '')];
+    let result;
+    try {
+      result = await base44.asServiceRole.integrations.Core.InvokeLLM((model ? { ...llmParams, model } : llmParams) as never);
+    } catch (err) {
+      if (!model) throw err;
+      // A brain the platform can't serve right now falls back to the default.
+      console.warn(`cloverChat: model ${model} failed, using default`, (err as Error)?.message);
+      result = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams as never);
+    }
 
     // Some models return the JSON as a raw string — parse defensively
     let parsed = result;
@@ -102,10 +195,31 @@ ${stateBits}`;
     const details = parsed?.find_details;
     const cleanDetails = details && String(details).trim().toLowerCase() !== 'null' ? String(details) : null;
 
+    // Cited vault records → public source chips (only keys we actually gave it).
+    const byKey = new Map(records.map((r) => [r.key, r]));
+    const cited = (Array.isArray(parsed?.sources) ? parsed.sources : [])
+      .map((k) => byKey.get(String(k).replace(/[^A-Za-z0-9]/g, '').toUpperCase()))
+      .filter((r): r is VaultItem => !!r)
+      .filter((r, i, arr) => arr.indexOf(r) === i)
+      .slice(0, 4);
+
+    let reply = String(parsed?.reply || `Hey ${name}! What did you find today?`)
+      .replace(/\[?\bS\d{1,3}\b\]?/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    const support = records.map((r) => `${r.label} ${r.place} ${r.text}`).join(' ');
+    reply = guardPrices(reply, support, researched).reply;
+
     return Response.json({
-      reply: String(parsed?.reply || `Hey ${name}! What did you find today?`).trim(),
+      reply,
       log_find: !!parsed?.log_find && !!cleanDetails,
       find_details: cleanDetails,
+      sources: [
+        ...cited.map(publicSource),
+        ...(researched ? [{ key: 'web', type: 'web', id: null, label: 'Live web research', place: null, route: null }] : []),
+      ],
+      focus: cited[0] ? { type: cited[0].type, id: cited[0].id } : null,
+      grounded: cited.length > 0,
     });
   } catch (error) {
     console.error('cloverChat error:', error);
