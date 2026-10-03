@@ -9,17 +9,17 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
-import HomeGate from '@/components/HomeGate.jsx';
+const HomeGate = lazy(() => import('@/components/HomeGate.jsx'));
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
 import { RouteSeo, SIGNED_IN_PATHS } from '@/lib/routeSeo';
 const Landing = lazy(() => import('@/pages/Landing'));
 
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 
