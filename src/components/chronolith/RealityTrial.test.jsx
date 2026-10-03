@@ -55,6 +55,15 @@ describe('RealityTrial Sub-components', () => {
     const element = CaseHeader({ hypothesesCount: 3, contradictionsCount: 1, onReset });
 
     expect(element.props.className).toContain('flex items-center');
+
+    const children = React.Children.toArray(element.props.children);
+    const iconContainer = children[0];
+    const button = children[2];
+
+    expect(iconContainer.props['aria-hidden']).toBe('true');
+    expect(button.props.type).toBe('button');
+    expect(button.props['aria-label']).toBe('Start a new reality trial case');
+    expect(button.props.className).toContain('focus-visible:ring-2');
   });
 
   it('UncertaintyStatement returns null when statement is empty', () => {
