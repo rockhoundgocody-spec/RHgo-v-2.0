@@ -12,6 +12,7 @@ export default function CaseHeader({ hypothesesCount, contradictionsCount, onRes
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: 'hsla(270,60%,30%,0.3)', border: '1px solid hsla(270,80%,60%,0.3)' }}
+        aria-hidden="true"
       >
         <Scale size={16} className="text-amethyst-glow" />
       </div>
@@ -22,8 +23,10 @@ export default function CaseHeader({ hypothesesCount, contradictionsCount, onRes
         </p>
       </div>
       <button
+        type="button"
         onClick={onReset}
-        className="text-[9px] uppercase tracking-widest text-white/30 hover:text-white/60 transition px-2 py-1 rounded-lg border border-white/10"
+        aria-label="Start a new reality trial case"
+        className="text-[9px] uppercase tracking-widest text-white/30 hover:text-white/60 transition px-2 py-1 rounded-lg border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
       >
         New Case
       </button>
