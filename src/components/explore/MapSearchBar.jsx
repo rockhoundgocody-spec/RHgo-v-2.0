@@ -66,7 +66,7 @@ export default function MapSearchBar({ hotspots, onSelect }) {
         )}
       </div>
 
-      {query.trim() && results.length > 0 && (
+      {query.trim() && (
         <div
           className="absolute top-full mt-1.5 left-0 right-0 rounded-2xl overflow-hidden z-[1001]"
           style={{
@@ -76,21 +76,27 @@ export default function MapSearchBar({ hotspots, onSelect }) {
             boxShadow: '0 12px 40px hsla(240,50%,5%,.6)',
           }}
         >
-          {results.map(h => (
-            <button
-              key={h.id}
-              onClick={() => handleSelect(h)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
-            >
-              <MapPin size={13} className="text-amethyst-glow shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
-                <div className="text-[10px] text-white/40 truncate">
-                  {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+          {results.length > 0 ? (
+            results.map(h => (
+              <button
+                key={h.id}
+                onClick={() => handleSelect(h)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
+              >
+                <MapPin size={13} className="text-amethyst-glow shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
+                  <div className="text-[10px] text-white/40 truncate">
+                    {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-4 text-center text-[12px] text-white/50">
+              No results found for "{query}"
+            </div>
+          )}
         </div>
       )}
     </div>
