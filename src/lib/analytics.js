@@ -119,9 +119,3 @@ export function trackEvent(eventName, params = {}) {
     window.gtag('event', eventName, safe);
   }
 }
-
-export const analyticsConfig = {
-  gtmId: GTM_ID || null,
-  ga4Id: GA4_ID || null,
-  gscConfigured: Boolean(GSC_VERIFICATION),
-};

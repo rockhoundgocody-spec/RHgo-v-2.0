@@ -47,10 +47,6 @@ export function scoreToBand(score) {
   return 'low';
 }
 
-export function bandLabel(band) {
-  return { high: 'High confidence', medium: 'Moderate confidence', low: 'Low confidence' }[band];
-}
-
 // ─── High-Level Planner ───────────────────────────────────────────────────────
 
 /**

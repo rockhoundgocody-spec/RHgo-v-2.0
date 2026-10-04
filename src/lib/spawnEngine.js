@@ -84,5 +84,4 @@ export function generateSpawns(lat, lng, { count = 6, collectedMinerals = new Se
   });
 }
 
-export const RARITY_COLORS_MAP = RARITY_COLORS;
 export const RARITY_XP_MAP = RARITY_XP;

@@ -22,22 +22,3 @@ export function sortBadgesForDisplay(badges, earnedCodes, rarityFilter, rarityOr
   // rarity (default) — highest rarity first within earned/locked groups
   return [...filtered].sort((a, b) => earnedFirst(a, b) || (rarityRank[b.rarity] ?? -1) - (rarityRank[a.rarity] ?? -1));
 }
-
-const TOP_BADGE_RARITY_RANK = Object.freeze({
-  mythic: -1,
-  legendary: 0,
-  epic: 1,
-  rare: 2,
-  uncommon: 3,
-  common: 4,
-});
-
-export function selectTopBadges(badges, earnedCodes, limit = 3) {
-  return badges
-    .filter((badge) => earnedCodes.has(badge.code))
-    .sort((first, second) => (
-      (TOP_BADGE_RARITY_RANK[first.rarity] ?? Number.MAX_SAFE_INTEGER)
-      - (TOP_BADGE_RARITY_RANK[second.rarity] ?? Number.MAX_SAFE_INTEGER)
-    ))
-    .slice(0, limit);
-}

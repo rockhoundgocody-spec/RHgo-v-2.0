@@ -119,15 +119,6 @@ export const COLOR_SCHEMES = {
   },
 };
 
-// ── Material overlays ─────────────────────────────────────────────────────────
-export const MATERIAL_DEFS = {
-  liquid_glass:   { label: 'Liquid Glass',    desc: 'Refractive subsurface flow with internal caustics and micro-bubble refraction.' },
-  natural_stone:  { label: 'Natural Stone',   desc: 'Layered mineral strata with micro-grain texture and natural crack patterns.' },
-  metallic_inlay: { label: 'Metallic Inlay',  desc: 'Hammered metal filigree with gold plating and mirror-polished bevels.' },
-  crystal_core:   { label: 'Crystal Core',    desc: 'Faceted inner gem with optical birefringence and colour dispersion.' },
-  geo_topo:       { label: 'Geo Topo Lines',  desc: 'Topographic contour mapping precision-etched into the badge surface.' },
-};
-
 // ── Rarity config ─────────────────────────────────────────────────────────────
 const RARITY_CFG = {
   common:    { rings: 0, particles: 3,  glowBlur: 8  },

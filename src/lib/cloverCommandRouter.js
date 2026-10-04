@@ -4,8 +4,6 @@
  * Pure. No DOM.
  */
 
-export const BRAINS = Object.freeze(["grok", "gpt-6-astra", "claude"]);
-
 export const INTENTS = Object.freeze({
   WAKE: "wake",
   BRAIN_SWAP: "brain_swap",
@@ -127,34 +125,6 @@ export function pullFromVault(target, vault = []) {
     const hay = `${n.label || ""} ${n.group || ""} ${n.excerpt || ""}`.toLowerCase();
     return t.split(/\s+/).every((w) => hay.includes(w));
   });
-}
-
-export function answerFromVault(question, vault = []) {
-  const words = String(question || "").toLowerCase().split(/\W+/).filter((w) => w.length > 2);
-  if (!words.length || !vault.length) {
-    return { answer: "Not in the vault. Don't invent a locality or a price.", sources: [] };
-  }
-  const scored = vault.map((n) => {
-    const hay = `${n.label || ""} ${n.excerpt || ""}`.toLowerCase();
-    const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
-    return { n, score };
-  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
-  if (!scored.length) {
-    return { answer: "Vault is quiet on that. Field-check hardness, streak, UV.", sources: [] };
-  }
-  const top = scored.slice(0, 3).map((x) => x.n);
-  return {
-    answer: top[0].excerpt ? top[0].excerpt.slice(0, 220) : `Best hit: ${top[0].label}.`,
-    sources: top.map((n) => n.label),
-  };
-}
-
-export function tickDigLock(lock, { hidden, now }) {
-  if (!lock || !lock.on) return lock;
-  const elapsed = (now - (lock.startedAt || 0)) / 60000;
-  if (elapsed >= (lock.minutes || 30)) return { ...lock, on: false, expired: true };
-  if (hidden) return { ...lock, drifts: (lock.drifts || 0) + 1 };
-  return lock;
 }
 
 function pack(intent, woke, rest, extra) {
