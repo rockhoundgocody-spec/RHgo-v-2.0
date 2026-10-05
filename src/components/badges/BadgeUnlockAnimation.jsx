@@ -197,15 +197,21 @@ function ShareRow({ badge }) {
   const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
     <div className="flex gap-2">
-      <button onClick={share}
-        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95"
+      <button
+        type="button"
+        onClick={share}
+        aria-label={`Share achievement for ${badge.title}`}
+        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
         style={{ background: 'hsla(195,80%,14%,0.7)', border: '1px solid hsla(195,80%,55%,0.35)', color: 'hsl(195,100%,82%)' }}>
-        <Share2 size={12} /> Share
+        <Share2 size={12} aria-hidden="true" /> Share
       </button>
-      <button onClick={copy}
-        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95"
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={`Copy achievement text for ${badge.title}`}
+        className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
         style={{ background: 'hsla(265,60%,14%,0.7)', border: '1px solid hsla(280,60%,55%,0.35)', color: 'hsl(280,100%,88%)' }}>
-        {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+        {copied ? <><Check size={12} aria-hidden="true" /> Copied!</> : <><Copy size={12} aria-hidden="true" /> Copy</>}
       </button>
     </div>
   );
@@ -270,11 +276,14 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         <StarField seed={badge.code || badge.title} />
 
         {/* Phase selector scrubber bar */}
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md" role="region" aria-label="Animation phase controls">
           {PHASES.map((p) => (
             <button
               key={p}
+              type="button"
               onClick={() => jumpToPhase(p)}
+              aria-label={`Jump to phase ${PHASE_LABELS[p]}`}
+              aria-current={phase === p ? 'step' : undefined}
               className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none ${
                 phase === p
                   ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/40'
@@ -287,13 +296,15 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
         </div>
 
         {/* Close button */}
-        <motion.button onClick={onClose}
+        <motion.button
+          type="button"
+          onClick={onClose}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
           className="fixed top-5 right-5 p-2 rounded-full text-white/40 hover:text-white/80 transition z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 motion-reduce:transition-none"
           style={{ background: 'hsla(0,0%,100%,0.06)', border: '1px solid hsla(0,0%,100%,0.12)' }}
           aria-label="Close unlock animation"
         >
-          <X size={18} />
+          <X size={18} aria-hidden="true" />
         </motion.button>
 
         {/* Scrollable content — centers when it fits, scrolls when it overflows.
@@ -404,14 +415,20 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
           >
             <ShareRow badge={badge} />
 
-            <button onClick={() => setShowMaterials(v => !v)}
-              className="text-[10px] uppercase tracking-wider text-white/28 hover:text-white/60 transition">
+            <button
+              type="button"
+              onClick={() => setShowMaterials(v => !v)}
+              aria-expanded={showMaterials}
+              aria-controls="badge-material-panel"
+              className="text-[10px] uppercase tracking-wider text-white/28 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 rounded-sm px-1 py-0.5"
+            >
               {showMaterials ? '▲ Hide' : '▼ View'} Material Breakdown
             </button>
 
             <AnimatePresence>
               {showMaterials && (
                 <motion.div
+                  id="badge-material-panel"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -422,8 +439,11 @@ export default function BadgeUnlockAnimation({ badge, onClose }) {
               )}
             </AnimatePresence>
 
-            <button onClick={onClose}
-              className="mt-1 px-12 py-3.5 rounded-full text-sm font-black tracking-widest transition active:scale-95"
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Continue and close badge unlock modal"
+              className="mt-1 px-12 py-3.5 rounded-full text-sm font-black tracking-widest transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
               style={{
                 background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`,
                 color: 'hsl(255,60%,10%)',
