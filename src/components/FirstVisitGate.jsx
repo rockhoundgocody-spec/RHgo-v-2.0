@@ -5,6 +5,7 @@ import IntroOrb from '@/components/hub/IntroOrb.jsx';
 import { base44 } from '@/api/base44Client';
 import GoogleIcon from '@/components/GoogleIcon';
 import HomeFeatures from '@/components/HomeFeatures.jsx';
+import GrokBotBadge from '@/components/GrokBotBadge.jsx';
 import { isNativeApp } from '@/lib/isNativeApp';
 
 /**
@@ -168,6 +169,10 @@ export default function FirstVisitGate({ onChoice }) {
       </div>
 
       {showFeatures && <HomeFeatures />}
+
+      <footer className="relative z-10 w-full px-6 pb-8 pt-2 flex items-center justify-center">
+        <GrokBotBadge />
+      </footer>
     </div>
   );
 }

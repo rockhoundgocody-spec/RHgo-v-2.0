@@ -5,7 +5,7 @@
     <!-- CSP as a meta tag (Base44 hosting can't send response headers): HTTPS-only sources,
          no plugins/<object>, no <base> hijacking, forms post only to HTTPS.
          frame-ancestors/HSTS need real headers from the host (see Caddyfile for self-hosting). -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss: data: blob: ws://localhost:*; media-src 'self' data: blob: https:; worker-src 'self' blob:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self' https:" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.base44.app https://*.base44.com https://media.base44.com https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com https://macrostrat.org https://tiles.macrostrat.org wss:; media-src 'self' data: blob: https:; worker-src 'self' blob:; frame-src 'self' https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self' https:" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />

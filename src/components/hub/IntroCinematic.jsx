@@ -263,7 +263,15 @@ export default function IntroCinematic({ onDone, initialName = '' }) {
 
       {/* ── Tap layer (story + role scenes) ── */}
       {(isStory || isRole) && (
-        <div data-testid="intro-tap-layer" className="absolute inset-0 cursor-pointer" onClick={handleSceneTap} />
+        <div
+          data-testid="intro-tap-layer"
+          role="button"
+          tabIndex={0}
+          aria-label="Advance story"
+          className="absolute inset-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-inset"
+          onClick={handleSceneTap}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSceneTap(); } }}
+        />
       )}
 
       {/* ── Scene text ── */}
@@ -290,8 +298,12 @@ export default function IntroCinematic({ onDone, initialName = '' }) {
       {/* ── Splash ── */}
       {isSplash && (
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer"
+          role="button"
+          tabIndex={0}
+          aria-label="Begin intro"
+          className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 focus-visible:ring-inset"
           onClick={handleSplash}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSplash(); } }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
