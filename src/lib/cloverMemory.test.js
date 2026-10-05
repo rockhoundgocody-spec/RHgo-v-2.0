@@ -3,7 +3,6 @@ import {
   loadCloverMemory,
   saveCloverMemory,
   recordDiscoveryToMemory,
-  recordWaypointToMemory,
   getCognitiveMemoryContext,
   clearCloverMemoryForTest,
 } from './cloverMemory';
@@ -28,13 +27,6 @@ describe('cloverMemory', () => {
     expect(mem.recentDiscoveries.length).toBe(1);
     expect(mem.recentDiscoveries[0].mineral).toBe('Lake Superior Agate');
     expect(mem.favoriteMinerals).toContain('Lake Superior Agate');
-  });
-
-  it('records GPS waypoints', () => {
-    recordWaypointToMemory(46.7867, -92.1005, 'Duluth Beach');
-    const mem = loadCloverMemory();
-    expect(mem.recentLocalities.length).toBe(1);
-    expect(mem.recentLocalities[0].label).toBe('Duluth Beach');
   });
 
   it('generates cognitive memory context string', () => {

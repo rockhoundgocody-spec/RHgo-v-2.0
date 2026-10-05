@@ -263,11 +263,6 @@ export function takePendingGuestReport() {
   return pending;
 }
 
-export function guestLoginUrl(returnPath = '/scan') {
-  const path = returnPath.startsWith('/') ? returnPath : `/${returnPath}`;
-  return `/signin?from_url=${encodeURIComponent(path)}`;
-}
-
 export async function persistGuestStorage() {
   const id = getOrCreateGuestId();
 

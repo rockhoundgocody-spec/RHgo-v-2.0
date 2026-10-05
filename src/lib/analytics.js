@@ -7,7 +7,12 @@
  *   VITE_GSC_VERIFICATION=google-site-verification-token
  *
  * GTM is preferred for tags; GA4 can also receive direct events when set.
+ *
+ * Consent gate: GA/GTM scripts do not load until the user accepts the cookie
+ * banner (see cookieConsent.js + CookieConsentBanner.jsx). Until then, zero
+ * GA/GTM network calls happen — only the non-tracking Search Console meta.
  */
+import { isConsentGranted } from '@/lib/cookieConsent';
 
 const GTM_ID = (import.meta.env.VITE_GTM_ID || '').trim();
 const GA4_ID = (import.meta.env.VITE_GA4_MEASUREMENT_ID || '').trim();
@@ -82,8 +87,22 @@ export function installGa4() {
   gaReady = true;
 }
 
+/**
+ * Install non-tracking metadata only. Safe to call on every boot regardless
+ * of consent — Search Console verification is just a <meta> tag, no network.
+ */
 export function initAnalytics() {
   installSearchConsoleVerification();
+}
+
+/**
+ * Install GA/GTM scripts ONLY when the user has granted consent.
+ * Idempotent — safe to call on boot (no-op if consent not yet granted or
+ * already installed) and again from the consent banner's accept handler.
+ * Until consent is granted, zero GA/GTM network calls happen.
+ */
+export function enableAnalytics() {
+  if (!isConsentGranted()) return;
   installGtm();
   installGa4();
 }
@@ -119,9 +138,3 @@ export function trackEvent(eventName, params = {}) {
     window.gtag('event', eventName, safe);
   }
 }
-
-export const analyticsConfig = {
-  gtmId: GTM_ID || null,
-  ga4Id: GA4_ID || null,
-  gscConfigured: Boolean(GSC_VERIFICATION),
-};

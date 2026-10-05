@@ -3,12 +3,15 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 import { installOfflineQueue } from '@/lib/offlineQueue'
-import { initAnalytics } from '@/lib/analytics'
+import { initAnalytics, enableAnalytics } from '@/lib/analytics'
 
 // Install offline write-replay before first render so any queued field
 // writes flush as soon as the network returns.
 installOfflineQueue()
+// Search Console verification meta is non-tracking — safe on every boot.
+// GA/GTM scripts only load if the user already granted consent (see banner).
 initAnalytics()
+enableAnalytics()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <App />

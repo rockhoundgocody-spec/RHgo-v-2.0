@@ -9,7 +9,6 @@ import {
   consumeGuestScan,
   getGuestQuota,
   getOrCreateGuestId,
-  guestLoginUrl,
   hydrateGuestStorage,
   peekPendingGuestReport,
   persistGuestStorage,
@@ -83,10 +82,6 @@ describe('guestDevice', () => {
     expect(taken.report.top_match).toBe('Quartz');
     expect(peekPendingGuestReport()).toBeNull();
     expect(localStorage.getItem(GUEST_PENDING_KEY)).toBeNull();
-  });
-
-  it('builds a login return URL that keeps /scan', () => {
-    expect(guestLoginUrl('/scan')).toBe('/signin?from_url=%2Fscan');
   });
 
   it('ignores a corrupt quota blob', () => {

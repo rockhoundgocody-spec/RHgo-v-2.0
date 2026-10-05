@@ -15,66 +15,6 @@ export const RARITY_COLORS = {
   legendary: { color: '#c084fc', label: 'Legendary' },
 };
 
-export function computeRarityData(specimens) {
-  const counts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
-  specimens.forEach((s) => { if (counts[s.rarity] !== undefined) counts[s.rarity]++; });
-  return Object.entries(counts)
-    .filter(([, v]) => v > 0)
-    .map(([k, v]) => ({ name: RARITY_COLORS[k].label, value: v, color: RARITY_COLORS[k].color, key: k }));
-}
-
-export function computeTopMinerals(specimens) {
-  const map = {};
-  specimens.forEach((s) => {
-    if (!s.mineral_name) return;
-    map[s.mineral_name] = (map[s.mineral_name] || 0) + 1;
-  });
-  return Object.entries(map)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([name, count]) => ({ name: name.length > 10 ? name.slice(0, 9) + '…' : name, count }));
-}
-
-export function computeWeeklyFinds(specimens) {
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (7 - i) * 7);
-    return { label: `W${i + 1}`, count: 0, start: new Date(d) };
-  });
-  specimens.forEach((s) => {
-    if (!s.found_date) return;
-    const d = new Date(s.found_date);
-    for (let i = weeks.length - 1; i >= 0; i--) {
-      if (d >= weeks[i].start) { weeks[i].count++; break; }
-    }
-  });
-  return weeks.map(({ label, count }) => ({ label, count }));
-}
-
-export function computeGeoStates(specimens) {
-  const map = {};
-  specimens.forEach((s) => {
-    const loc = s.found_at?.split(',')[0]?.trim() || 'Unknown';
-    map[loc] = (map[loc] || 0) + 1;
-  });
-  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
-}
-
-export function computeRarestFinds(specimens) {
-  return specimens
-    .filter((s) => s.rarity === 'legendary' || s.rarity === 'rare')
-    .slice(0, 3);
-}
-
-export function computeSummaryStats(specimens) {
-  const verified = specimens.filter((s) => s.verified).length;
-  const uniqueNames = new Set(specimens.map((s) => s.mineral_name)).size;
-  const rarePlus = specimens.filter((s) => s.rarity === 'rare' || s.rarity === 'legendary').length;
-  const avgConf = specimens.filter((s) => s.ai_confidence)
-    .reduce((a, s, _, arr) => a + s.ai_confidence / arr.length, 0);
-  return { verified, uniqueNames, rarePlus, avgConf };
-}
-
 export function computeCollectionStats(specimens, now = new Date()) {
   const rarityCounts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
   const mineralCounts = new Map();

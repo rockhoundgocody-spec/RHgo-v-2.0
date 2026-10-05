@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from '@base44/sdk';
 
 /**
  * DIT.ai chat completion gateway.
@@ -12,15 +12,29 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
  * }
  * Returns: { content: string, model: string, usage: {...} }
  */
-Deno.serve(async (req) => {
+export async function handleDitChatRequest(
+  req: Request,
+  opts?: {
+    createClientFromRequest?: typeof createClientFromRequest;
+    envGet?: (key: string) => string | undefined;
+    fetchImpl?: typeof fetch;
+  }
+): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const clientFactory = opts?.createClientFromRequest || createClientFromRequest;
+    const base44 = clientFactory(req);
+    const user = await base44.auth.me().catch(() => null);
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const apiKey = Deno.env.get('All_in_1_KEY');
+    const getEnv =
+      opts?.envGet ||
+      ((key: string) =>
+        typeof Deno !== 'undefined'
+          ? Deno.env.get(key)
+          : (globalThis.process?.env?.[key] as string | undefined));
+    const apiKey = getEnv('All_in_1_KEY');
     if (!apiKey) {
       return Response.json({ error: 'Service configuration error' }, { status: 500 });
     }
@@ -36,7 +50,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'messages array required' }, { status: 400 });
     }
 
-    const res = await fetch('https://api.dit.ai/v1/chat/completions', {
+    const fetchFn = opts?.fetchImpl || fetch;
+    const res = await fetchFn('https://api.dit.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,8 +62,10 @@ Deno.serve(async (req) => {
 
     const data = await res.json();
     if (!res.ok) {
+      // Log third-party payload details server-side; do not pass raw details to client
+      console.error('DIT Chat request failed:', res.status, data);
       return Response.json(
-        { error: data?.error?.message || 'DIT request failed', details: data },
+        { error: 'DIT request failed' },
         { status: res.status }
       );
     }
@@ -59,6 +76,12 @@ Deno.serve(async (req) => {
       usage: data?.usage || null,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Log exception details server-side; sanitize error message returned to caller
+    console.error('ditChat error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
+
+if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+  Deno.serve((req) => handleDitChatRequest(req));
+}

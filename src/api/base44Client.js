@@ -1,1 +1,1 @@
-export { base44 } from './standaloneClient';
+export { base44 } from './base44Legacy';
