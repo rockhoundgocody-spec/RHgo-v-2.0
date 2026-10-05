@@ -54,7 +54,8 @@ Be direct, precise, and opinionated. Prefer simplicity over cleverness.`;
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`xAI API error ${res.status}: ${err}`);
+      console.error('xAI API error:', res.status, err);
+      return Response.json({ error: 'xAI API request failed' }, { status: res.status });
     }
 
     const data = await res.json();
@@ -64,6 +65,6 @@ Be direct, precise, and opinionated. Prefer simplicity over cleverness.`;
     return Response.json({ suggestion, model: 'grok-3', usage });
   } catch (error) {
     console.error('grokCodeAssist error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

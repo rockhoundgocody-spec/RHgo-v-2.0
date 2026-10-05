@@ -79,6 +79,6 @@ ${stateBits}`;
     return Response.json({ reply, model: 'grok-3-mini' });
   } catch (error) {
     console.error('grokChat error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
