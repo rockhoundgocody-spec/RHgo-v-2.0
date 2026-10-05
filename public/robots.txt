@@ -1,3 +1,7 @@
+# RockHound-GO robots.txt — public routes allowed, operator/admin/billing blocked.
+# Private app screens are marked noindex by the app (src/lib/routeSeo.js); this
+# file keeps crawlers out of operator surfaces that should never be indexed.
+
 User-agent: *
 Allow: /
 Allow: /scan
@@ -13,6 +17,37 @@ Allow: /privacy-policy
 Allow: /terms
 Allow: /docs
 
-# Sign-in and app screens stay crawlable on purpose: the app marks them
-# "noindex, nofollow" (src/lib/routeSeo.js), and crawlers must load them to see that.
+Disallow: /admin
+Disallow: /dev/
+Disallow: /settings
+Disallow: /profile
+Disallow: /paywall
+Disallow: /billing
+Disallow: /checkout
+Disallow: /collection
+Disallow: /collections
+Disallow: /community
+Disallow: /market
+Disallow: /expeditions
+Disallow: /expedition/
+Disallow: /specimen/
+Disallow: /compare
+Disallow: /chronolith
+Disallow: /quests
+Disallow: /leaderboard
+Disallow: /badges
+Disallow: /companion
+Disallow: /private-log
+Disallow: /vault
+Disallow: /onboarding
+Disallow: /signin
+Disallow: /login
+Disallow: /register
+Disallow: /auth
+Disallow: /forgot-password
+Disallow: /new-password
+Disallow: /reset-password
+Disallow: /oauth/
+Disallow: /connect
+
 Sitemap: https://rhgo.me/sitemap.xml
