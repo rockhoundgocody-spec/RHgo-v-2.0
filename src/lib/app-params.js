@@ -15,8 +15,6 @@ const getBrowserStorage = (storageName) => {
 	}
 };
 
-export const isTokenKey = (paramName) => AUTH_PARAM_NAMES.has(String(paramName).toLowerCase());
-
 // Auth tokens persist in localStorage so the platform session survives tab
 // close and return visits (stay-signed-in). sessionStorage is tab-scoped and
 // would log users out the moment they closed the tab.

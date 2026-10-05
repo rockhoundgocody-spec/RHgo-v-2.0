@@ -84,27 +84,6 @@ export function recordDiscoveryToMemory(specimen) {
 }
 
 /**
- * Record a GPS waypoint into memory.
- */
-export function recordWaypointToMemory(lat, lng, label = null) {
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-  const memory = loadCloverMemory();
-  const waypoint = {
-    lat: Number(lat.toFixed(4)),
-    lng: Number(lng.toFixed(4)),
-    label,
-    timestamp: Date.now(),
-  };
-
-  memory.recentLocalities = [
-    waypoint,
-    ...memory.recentLocalities.filter(l => Math.abs(l.lat - lat) > 0.01 || Math.abs(l.lng - lng) > 0.01)
-  ].slice(0, 10);
-
-  saveCloverMemory(memory);
-}
-
-/**
  * Generates an executive memory summary prompt inject for Clover's reasoning.
  */
 export function getCognitiveMemoryContext() {

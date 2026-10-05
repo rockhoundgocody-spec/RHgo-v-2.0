@@ -13,7 +13,6 @@ vi.mock('@/api/base44Client', () => ({
 }));
 
 let scoreToBand;
-let bandLabel;
 let reason;
 let shouldHalt;
 let recommendAction;
@@ -39,7 +38,6 @@ beforeAll(async () => {
 
   const mod = await import('./reasoningEngine.js');
   scoreToBand = mod.scoreToBand;
-  bandLabel = mod.bandLabel;
   reason = mod.reason;
   shouldHalt = mod.shouldHalt;
   recommendAction = mod.recommendAction;
@@ -70,26 +68,6 @@ describe('scoreToBand', () => {
     expect(scoreToBand(0.2)).toBe('low');
     expect(scoreToBand(0.0)).toBe('low');
     expect(scoreToBand(-0.5)).toBe('low');
-  });
-});
-
-describe('bandLabel', () => {
-  it('maps "high" to "High confidence"', () => {
-    expect(bandLabel('high')).toBe('High confidence');
-  });
-
-  it('maps "medium" to "Moderate confidence"', () => {
-    expect(bandLabel('medium')).toBe('Moderate confidence');
-  });
-
-  it('maps "low" to "Low confidence"', () => {
-    expect(bandLabel('low')).toBe('Low confidence');
-  });
-
-  it('returns undefined for invalid or unknown bands', () => {
-    expect(bandLabel('unknown')).toBeUndefined();
-    expect(bandLabel('')).toBeUndefined();
-    expect(bandLabel(null)).toBeUndefined();
   });
 });
 

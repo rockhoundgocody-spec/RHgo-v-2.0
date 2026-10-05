@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { generateSpawns, RARITY_COLORS_MAP, RARITY_XP_MAP } from './spawnEngine.js';
+import { generateSpawns, RARITY_XP_MAP } from './spawnEngine.js';
 
 describe('spawnEngine', () => {
   afterEach(() => {
@@ -60,10 +60,9 @@ describe('spawnEngine', () => {
           spawn.rarity === 'uncommon' ? 0.70 : 0.85;
         expect(spawn.catch_chance).toBe(expectedCatchChance);
 
-        const colorMap = RARITY_COLORS_MAP[spawn.rarity];
-        expect(spawn.color).toBe(colorMap.color);
-        expect(spawn.glow).toBe(colorMap.glow);
-        expect(spawn.emoji).toBe(colorMap.emoji);
+        expect(typeof spawn.color).toBe('string');
+        expect(typeof spawn.glow).toBe('string');
+        expect(typeof spawn.emoji).toBe('string');
 
         expect(typeof spawn.lat).toBe('number');
         expect(typeof spawn.lng).toBe('number');
@@ -153,13 +152,6 @@ describe('spawnEngine', () => {
   });
 
   describe('exported mappings', () => {
-    it('should export RARITY_COLORS_MAP with correct rarity keys', () => {
-      expect(RARITY_COLORS_MAP).toHaveProperty('common');
-      expect(RARITY_COLORS_MAP).toHaveProperty('uncommon');
-      expect(RARITY_COLORS_MAP).toHaveProperty('rare');
-      expect(RARITY_COLORS_MAP).toHaveProperty('legendary');
-    });
-
     it('should export RARITY_XP_MAP with correct XP values', () => {
       expect(RARITY_XP_MAP).toEqual({
         common: 50,

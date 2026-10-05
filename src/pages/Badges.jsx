@@ -47,7 +47,15 @@ function ProgressBar({ current, target, scheme }) {
         <span className="text-[9px] text-white/28 uppercase tracking-wider">Progress</span>
         <span className="text-[9px] font-mono text-white/32">{current}/{target}</span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'hsla(265,40%,16%,0.6)' }}>
+      <div
+        role="progressbar"
+        aria-valuenow={current}
+        aria-valuemin={0}
+        aria-valuemax={target}
+        aria-label={`Progress: ${current} of ${target}`}
+        className="h-1.5 rounded-full overflow-hidden"
+        style={{ background: 'hsla(265,40%,16%,0.6)' }}
+      >
         <div className="h-full rounded-full transition-all duration-700 lmb-liquid-bar"
           style={{
             width: `${pct}%`,
@@ -80,6 +88,9 @@ function BadgeDetailModal({ badge, earned, progress, variant, earnedAt, onClose,
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="badge-modal-title"
       className="fixed inset-0 z-50 flex items-end justify-center px-4"
       style={{
         paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
@@ -98,15 +109,19 @@ function BadgeDetailModal({ badge, earned, progress, variant, earnedAt, onClose,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose}
-          className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition z-10">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close badge details"
+          className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded-full p-1"
+        >
           <X size={18} />
         </button>
 
         <div className="flex flex-col items-center text-center">
           <LiquidMineralBadge badge={badge} size={136} locked={!earned} variant={variant} arGlow={true} />
 
-          <div className="mt-4 text-white font-bold text-[18px] leading-tight">{badge.title}</div>
+          <div id="badge-modal-title" className="mt-4 text-white font-bold text-[18px] leading-tight">{badge.title}</div>
           <div className={`text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border mt-2 ${RARITY_PILL[badge.rarity]}`}>
             {badge.rarity}
           </div>
@@ -125,15 +140,21 @@ function BadgeDetailModal({ badge, earned, progress, variant, earnedAt, onClose,
           )}
 
           <div className="flex gap-2 w-full mt-4 max-w-[260px]">
-            <button onClick={handleShare}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60"
               style={{ background: 'hsla(195,80%,14%,0.55)', border: `1px solid ${scheme.rim}`, color: scheme.secondary }}>
               {copied === 'error' ? '⚠ Failed' : copied ? '✓ Copied!' : '🔗 Share'}
             </button>
           </div>
 
-          <button onClick={() => setShowMat(v => !v)}
-            className="mt-3 text-[10px] uppercase tracking-wider text-white/28 hover:text-white/60 transition">
+          <button
+            type="button"
+            onClick={() => setShowMat(v => !v)}
+            aria-expanded={showMat}
+            className="mt-3 text-[10px] uppercase tracking-wider text-white/28 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded"
+          >
             {showMat ? '▲ Hide' : '▼'} Material Breakdown
           </button>
 
@@ -144,8 +165,10 @@ function BadgeDetailModal({ badge, earned, progress, variant, earnedAt, onClose,
           )}
 
           {earned && (
-            <button onClick={() => { onReplay(); onClose(); }}
-              className="mt-4 w-full max-w-[260px] py-3 rounded-xl text-sm font-bold transition active:scale-95"
+            <button
+              type="button"
+              onClick={() => { onReplay(); onClose(); }}
+              className="mt-4 w-full max-w-[260px] py-3 rounded-xl text-sm font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60"
               style={{
                 background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`,
                 color: 'hsl(255,60%,10%)',
@@ -266,24 +289,30 @@ https://rhgo.base44.app`,
       {/* ── Mode selector: Dark / Light / AR View ── */}
       <div className="flex justify-center gap-2 mb-5">
         <button
+          type="button"
           onClick={() => setMode('dark')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+          aria-pressed={mode === 'dark'}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 ${
             mode === 'dark' ? 'bg-purple-900/60 text-purple-200 border border-purple-400/40 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
           }`}
         >
           <Moon size={13} /> Dark
         </button>
         <button
+          type="button"
           onClick={() => setMode('light')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+          aria-pressed={mode === 'light'}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 ${
             mode === 'light' ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
           }`}
         >
           <Sun size={13} /> Light
         </button>
         <button
+          type="button"
           onClick={() => setMode('ar')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+          aria-pressed={mode === 'ar'}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 ${
             mode === 'ar' ? 'bg-cyan-900/60 text-cyan-200 border border-cyan-400/40 shadow-lg' : 'bg-white/5 text-white/40 border border-white/10'
           }`}
         >
@@ -313,11 +342,19 @@ https://rhgo.base44.app`,
 
         {/* Overall liquid-metal progress bar */}
         <div className="px-5 pb-4">
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'hsla(265,40%,16%,0.6)' }}>
+          <div
+            role="progressbar"
+            aria-valuenow={earnedCount}
+            aria-valuemin={0}
+            aria-valuemax={allBadges.length || 1}
+            aria-label={`Collection Progress: ${earnedCount} of ${allBadges.length} earned`}
+            className="h-2 rounded-full overflow-hidden"
+            style={{ background: 'hsla(265,40%,16%,0.6)' }}
+          >
             <div
               className="h-full rounded-full transition-all duration-700 lmb-liquid-bar"
               style={{
-                width: `${(earnedCount / allBadges.length) * 100}%`,
+                width: `${allBadges.length ? (earnedCount / allBadges.length) * 100 : 0}%`,
                 background: 'linear-gradient(90deg, hsl(265,70%,55%), hsl(280,100%,72%), hsl(48,100%,62%), hsl(280,100%,72%))',
                 backgroundSize: '200% 100%',
                 boxShadow: '0 0 8px hsla(280,100%,70%,0.5)',
@@ -327,7 +364,7 @@ https://rhgo.base44.app`,
           <div className="flex justify-between mt-1">
             <span className="text-[9px] text-white/25">Collection Progress</span>
             <span className="text-[9px] font-mono text-white/30">
-              {Math.round((earnedCount / allBadges.length) * 100)}%
+              {allBadges.length ? Math.round((earnedCount / allBadges.length) * 100) : 0}%
             </span>
           </div>
         </div>
@@ -335,8 +372,9 @@ https://rhgo.base44.app`,
         {/* Share progress button */}
         <div className="px-5 pb-4">
           <button
+            type="button"
             onClick={handleShareProgress}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60"
             style={{
               background: 'hsla(265,60%,14%,0.55)',
               border: '1px solid hsla(280,60%,55%,0.3)',
@@ -355,14 +393,19 @@ https://rhgo.base44.app`,
         {FILTER_TABS.map((r) => {
           const active = rarityFilter === r;
           return (
-            <button key={r} onClick={() => setRarityFilter(r)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-all ${
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRarityFilter(r)}
+              aria-pressed={active}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 ${
                 active
                   ? r === 'all'
                     ? 'bg-purple-600 text-white border-purple-400'
                     : RARITY_PILL[r]
                   : 'bg-white/4 text-white/32 border-white/8 hover:bg-white/10'
-              }`}>
+              }`}
+            >
               {r === 'all' ? `All (${allBadges.length})` : r}
             </button>
           );
@@ -372,12 +415,17 @@ https://rhgo.base44.app`,
       {/* ── Sort controls ── */}
       <div className="flex gap-1.5 mb-5">
         {SORT_MODES.map((s) => (
-          <button key={s} onClick={() => setSortMode(s)}
-            className={`flex-1 px-2 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition ${
+          <button
+            key={s}
+            type="button"
+            onClick={() => setSortMode(s)}
+            aria-pressed={sortMode === s}
+            className={`flex-1 px-2 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 ${
               sortMode === s
                 ? 'bg-amethyst/25 text-amethyst-glow border-amethyst/50'
                 : 'bg-white/4 text-white/32 border-white/8 hover:bg-white/10'
-            }`}>
+            }`}
+          >
             {SORT_LABELS[s]}
           </button>
         ))}

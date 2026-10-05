@@ -15,17 +15,6 @@ export function clearGateChoice() {
   }
 }
 
-export function resetGateFlow() {
-  try {
-    localStorage.removeItem(GATE_CHOICE_KEY);
-    localStorage.removeItem(GATE_INTRO_KEY);
-    localStorage.removeItem(GATE_BUFFER_KEY);
-    sessionStorage.removeItem(GATE_SESSION_REDIRECT_KEY);
-  } catch {
-    /* private mode */
-  }
-}
-
 export function readGateChoice() {
   try {
     return localStorage.getItem(GATE_CHOICE_KEY);

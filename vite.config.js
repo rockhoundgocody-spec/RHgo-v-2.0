@@ -22,6 +22,17 @@ export default defineConfig({
     }),
     react(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'radix-vendor': ['@radix-ui/react-accordion', '@radix-ui/react-slot'],
+          'motion-vendor': ['framer-motion'],
+        },
+      },
+    },
+  },
   test: {
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'],

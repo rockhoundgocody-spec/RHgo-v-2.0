@@ -47,15 +47,6 @@ const STAR_FRAG = /* glsl */ `
 
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-export function webglAvailable() {
-  try {
-    const c = document.createElement('canvas');
-    return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
-  } catch {
-    return false;
-  }
-}
-
 export class GalaxyScene {
   constructor(container, { onSelect, onHover, onError, reducedMotion = false } = {}) {
     this.container = container;

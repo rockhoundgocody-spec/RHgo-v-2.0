@@ -6,6 +6,7 @@ import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import SeoJsonLd from '@/components/SeoJsonLd.jsx';
 import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
+import GrokBotBadge from '@/components/GrokBotBadge.jsx';
 
 const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/e29b0b8c6_generated_image.png';
 
@@ -104,8 +105,9 @@ export default function Landing() {
       </div>
 
       {/* ── TINY FOOTER ── */}
-      <footer className="w-full px-6 pb-8 pt-4 flex items-center justify-center text-white/60 text-[11px] relative z-10">
+      <footer className="w-full px-6 pb-8 pt-4 flex flex-col items-center justify-center gap-3 text-white/60 text-[11px] relative z-10">
         <Link to="/pricing" className="hover:text-white/60 transition">Pricing</Link>
+        <GrokBotBadge />
       </footer>
     </div>
   );

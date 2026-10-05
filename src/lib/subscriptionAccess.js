@@ -6,8 +6,6 @@
 export const PAID_TIERS = new Set(['field_pro', 'family']);
 export const PAID_STATUSES = new Set(['active', 'trialing', 'past_due']);
 export const RENEWAL_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-export const FREE_MONTHLY_SCANS = 5;
-
 export function isPaidSubscription(sub, now = Date.now()) {
   if (!sub) return false;
   if (!PAID_TIERS.has(String(sub.tier))) return false;

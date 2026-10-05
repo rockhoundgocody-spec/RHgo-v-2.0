@@ -9,10 +9,6 @@ import { clearGateChoice } from "@/lib/gateStorage";
 import { getPostAuthPath, persistBase44Session, readIntendedPath, withNext } from "@/lib/authRedirect";
 import { useSeoRobots } from "@/lib/useSeoRobots";
 
-export function getLoginRedirectUrl(rawFromUrl) {
-  return getPostAuthPath(rawFromUrl);
-}
-
 export default function Login() {
   useSeoRobots(false);
   const [email, setEmail] = useState("");

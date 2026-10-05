@@ -300,34 +300,3 @@ export const AGATE_VARIETIES = [
     image_url: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Elimia_fossils_Wyoming.jpg',
   },
 ];
-
-// ── AI Prompt Enrichment Block ─────────────────────────────────────────────
-// Concise subtypology the LLM uses to identify specific agate varieties
-// rather than just returning "agate". Folded into the scan identification prompt.
-export const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
-- Lake Superior Agate: razor-sharp fortification banding, brick-red/orange/carnelian, water-worn, Great Lakes region.
-- Fairburn Agate: needle-point "holly leaf" fortification, extreme color contrast (crimson/pink/yellow/cream), chert rind, Black Hills SD.
-- Montana Moss Agate: clear/translucent chalcedony, black MnO₂ + reddish Fe-oxide dendrites forming landscape/foliage motifs, Yellowstone River MT.
-- Ellensburg Blue: sky-blue to royal-blue, Rayleigh scattering, high hardness (7.5), Central Washington. Very rare.
-- Coyamito Agate: ultra-fine fortification in magenta/pink/yellow/purple, pseudomorphs of aragonite/calcite sprays, Chihuahua Mexico.
-- Fire Agate: botryoidal habit, iridescent thin-film goethite/limonite layers, Schiller effect, SW USA/Mexico.
-- Iris Agate: ultra-fine periodic banding that diffracts light into rainbow spectrum when backlit.
-- Plume Agate: 3D feather/cloud/shrub inclusions of iron/manganese oxides or marcasite.
-- Sagenite Agate: radiating needle sprays (goethite, rutile, aragonite) in translucent chalcedony.
-- Dendritic/Moss Agate: branching moss-like or tree-like inclusions (chlorite, celadonite, pyrolusite).
-- Enhydro Agate: trapped liquid + mobile air bubbles in sealed cavities.
-- Pseudomorphic Agate: silica preserving external crystal geometry of replaced aragonite, anhydrite, or calcite.
-- Polyhedroid Agate: flat-faced geometric multi-sided nodules constrained by volcanic crystal faces.
-- Shadow/Parallax Agate: alternating transparent and opaque bands creating 3D chatoyant shadow effect.
-- Blue Lace Agate: pale blue and white delicate lace-like swirling banding, Namibia.
-- Botswana Agate: small nodules, fine tightly packed purple/pink/black/grey/white bands, Botswana.
-- Crazy Lace Agate: chaotic twisting lace patterns in white/red/yellow/grey, Mexico.
-- Brazilian Agate: large nodules, pale yellow/gray/colorless fine concentric banding (often dyed commercially), Brazil.
-- Condor Agate: bright red and yellow fortification banding, sometimes mossy/sagenitic inclusions, Argentina.
-- Dugway Geode: light grey/blue thunder eggs with hollow drusy quartz cavities, Utah USA.
-- Priday Blue Bed Thunder Egg: blue and white level-banded agate in dark brown shell, Oregon USA.
-- Laguna Agate: ultra-tight vivid fortification banding (50+ bands/cm) in scarlet/orange/yellow/pink/purple, Chihuahua Mexico.
-- Turritella Agate: dark chert packed with silicified freshwater gastropod fossils (Elimia tenera), Wyoming USA.
-- Dendritic Agate: fern/tree-like manganese or iron oxide dendrites on or between bands, worldwide.
-- Sagenitic Agate: radiating needle sprays (goethite, rutile, aragonite, anhydrite) in translucent chalcedony.
-Use the banding pattern, inclusion type, color spectrum, and locality to determine the variety.`;

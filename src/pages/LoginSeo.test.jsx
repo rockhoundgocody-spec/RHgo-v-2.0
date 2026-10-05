@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createMemoryRouter, Outlet, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import Auth from './Auth';
 import Login from './Login';
 import { RouteSeo } from '@/lib/routeSeo';
+
+// Inline replacement for the deleted legacy Auth.jsx — same redirect behavior.
+function Auth() {
+  const { search, hash } = useLocation();
+  return <Navigate to={`/signin${search}${hash}`} replace />;
+}
 
 vi.mock('@/api/base44Client', () => ({ base44: { auth: {} } }));
 vi.mock('@/lib/AuthContext', () => ({
