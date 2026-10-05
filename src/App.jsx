@@ -14,6 +14,7 @@ import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
 import { RouteSeo, SIGNED_IN_PATHS } from '@/lib/routeSeo';
+import CaseRedirect from '@/components/CaseRedirect.jsx';
 const Landing = lazy(() => import('@/pages/Landing'));
 
 const Login = lazy(() => import('@/pages/Login'));
@@ -239,6 +240,7 @@ function App() {
           <AnalyticsRouteListener />
           <a href="#main-content" className="skip-link">Skip to content</a>
           <AuthProvider>
+            <CaseRedirect />
             <AuthenticatedApp />
           </AuthProvider>
           <RouteSeo />
