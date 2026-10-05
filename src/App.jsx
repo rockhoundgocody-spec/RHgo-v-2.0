@@ -15,6 +15,7 @@ import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
 import { RouteSeo, SIGNED_IN_PATHS } from '@/lib/routeSeo';
 import CaseRedirect from '@/components/CaseRedirect.jsx';
+const CookieConsentBanner = lazy(() => import('@/components/CookieConsentBanner.jsx'));
 const Landing = lazy(() => import('@/pages/Landing'));
 
 const Login = lazy(() => import('@/pages/Login'));
@@ -244,6 +245,7 @@ function App() {
             <AuthenticatedApp />
           </AuthProvider>
           <RouteSeo />
+          <Suspense fallback={null}><CookieConsentBanner /></Suspense>
           <Toaster />
         </MobileOnlyGate>
       </BrowserRouter>
