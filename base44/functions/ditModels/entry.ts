@@ -7,6 +7,12 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // The model catalog is an operator/debug surface — exposing it to any
+    // signed-in user leaks the third-party provider's available models and
+    // protocols. Gate behind admin so only operators can introspect it.
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin only' }, { status: 403 });
+    }
 
     const apiKey = Deno.env.get('All_in_1_KEY');
     if (!apiKey) {
