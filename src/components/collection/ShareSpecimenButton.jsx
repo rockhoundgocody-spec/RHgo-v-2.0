@@ -51,11 +51,16 @@ export default function ShareSpecimenButton({ specimen, className = '' }) {
     ? (mineralName ? `Copied link for ${mineralName}` : 'Copied specimen link')
     : (mineralName ? `Share ${mineralName} specimen` : 'Share specimen');
 
+  const tooltipTitle = copied
+    ? 'Copied link to clipboard!'
+    : (mineralName ? `Share ${mineralName} details or copy link` : 'Share specimen details or copy link');
+
   return (
     <button
       type="button"
       onClick={handleShare}
       aria-label={ariaLabel}
+      title={tooltipTitle}
       className={`inline-flex items-center justify-center gap-1.5 min-h-[36px] min-w-[36px] px-2.5 rounded-lg border border-amethyst/30 bg-amethyst/10 hover:bg-amethyst/20 text-amethyst-glow text-[10px] uppercase tracking-wider transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ${className}`}
     >
       {copied ? <Check size={12} aria-hidden="true" /> : <Share2 size={12} aria-hidden="true" />}
