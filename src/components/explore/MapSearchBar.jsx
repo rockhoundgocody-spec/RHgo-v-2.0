@@ -3,13 +3,14 @@
  * Shows a dropdown of matching results; selecting one flies the map
  * to that hotspot and opens its detail sheet.
  */
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { Search, X, MapPin } from 'lucide-react';
 
 export default function MapSearchBar({ hotspots, onSelect }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const containerRef = useRef(null);
+  const listboxId = useId();
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -57,6 +58,10 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           onFocus={() => setFocused(true)}
           placeholder="Search hotspots, minerals, states…"
           aria-label="Search hotspots, minerals, states"
+          role="combobox"
+          aria-expanded={Boolean(query.trim() && results.length > 0)}
+          aria-autocomplete="list"
+          aria-controls={query.trim() && results.length > 0 ? listboxId : undefined}
           className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ml-2"
         />
         {query && (
@@ -68,6 +73,9 @@ export default function MapSearchBar({ hotspots, onSelect }) {
 
       {query.trim() && results.length > 0 && (
         <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Search results"
           className="absolute top-full mt-1.5 left-0 right-0 rounded-2xl overflow-hidden z-[1001]"
           style={{
             background: 'hsla(240,30%,8%,.97)',
@@ -79,10 +87,14 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           {results.map(h => (
             <button
               key={h.id}
+              type="button"
+              role="option"
+              aria-selected="false"
+              aria-label={`${h.name}, ${h.state || 'Unknown state'}`}
               onClick={() => handleSelect(h)}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
             >
-              <MapPin size={13} className="text-amethyst-glow shrink-0" />
+              <MapPin size={13} className="text-amethyst-glow shrink-0" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
                 <div className="text-[10px] text-white/40 truncate">
