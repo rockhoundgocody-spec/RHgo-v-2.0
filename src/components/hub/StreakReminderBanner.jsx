@@ -138,6 +138,8 @@ export default function StreakReminderBanner() {
     <AnimatePresence>
       {visible && (
         <motion.div
+          role="region"
+          aria-label="Streak check-in reminder"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -175,6 +177,7 @@ export default function StreakReminderBanner() {
             type="button"
             onClick={dismiss}
             aria-label="Dismiss streak reminder"
+            title="Dismiss streak reminder"
             className="shrink-0 text-white/30 hover:text-white/60 transition ml-1 p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
           >
             <X size={15} aria-hidden="true" />
