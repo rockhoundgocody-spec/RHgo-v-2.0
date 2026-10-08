@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
     const key = Deno.env.get('GOOGLE_MAPS_API_KEY') || Deno.env.get('google_maps') || null;
     return Response.json({ ok: !!key, key });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('getMapsKey error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
