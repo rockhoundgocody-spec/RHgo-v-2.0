@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import { lazyPart } from '@/lib/lazyPart';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
-import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import ProfileDrawer from '@/components/ProfileDrawer.jsx';
@@ -226,7 +225,6 @@ export default function Layout() {
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        {!isFullscreenCamera && isAuthenticated && <HotspotProximityWatcher />}
         {!isFullscreenCamera && isAuthenticated && <StreakReminderBanner />}
         {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
         {isAuthenticated && <BadgeUnlockWatcher />}

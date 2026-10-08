@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Cookie, X } from 'lucide-react';
 import { hasConsentChoice, setConsentGranted, setConsentDeclined, subscribe } from '@/lib/cookieConsent';
 import { enableAnalytics } from '@/lib/analytics';
@@ -28,11 +29,12 @@ export default function CookieConsentBanner() {
 
   if (!show) return null;
 
-  return (
+  // Escape #root's isolated stacking context, just like the bottom navigation.
+  return createPortal(
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-0 left-0 right-0 z-[9999] flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pointer-events-none"
+      className="fixed bottom-[calc(116px+env(safe-area-inset-bottom,0px))] min-[900px]:bottom-3 left-0 right-0 z-[9999] flex justify-center px-3 pointer-events-none"
     >
       <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-[rgba(159,232,208,0.22)] bg-[rgba(17,16,25,0.96)] backdrop-blur-xl shadow-2xl p-4">
         <div className="flex items-start gap-3">
@@ -70,6 +72,7 @@ export default function CookieConsentBanner() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

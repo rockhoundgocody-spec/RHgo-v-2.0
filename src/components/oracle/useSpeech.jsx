@@ -68,6 +68,7 @@ export function useSpeechSynthesis() {
     // Stop anything already playing
     try {
       if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; }
+      if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
       window.speechSynthesis?.cancel();
     } catch {}
     stopAmpLoop();
@@ -91,61 +92,60 @@ export function useSpeechSynthesis() {
       const audioUrl = res?.data?.audioUrl;
       if (!audioUrl) throw new Error('No audio URL returned');
 
-      // Use an <audio> element for reliable playback. The old fetch →
-      // decodeAudioData → BufferSource pipeline hung on mobile because the
-      // AudioContext gets suspended during the async backend call and
-      // ctx.resume() inside an async callback is ignored by iOS/Chrome.
-      // An <audio> element plays reliably after a user gesture — no
-      // gesture-locking, no decode step, no suspended-context deadlock.
-      const audio = new Audio(audioUrl);
-      audio.volume = voiceConfig.volume ?? 0.95;
-      audioElRef.current = audio;
-
-      // Try to route through Web Audio for the analyser (orb visual
-      // reactivity). Only do this if the context is actually running —
-      // createMediaElementSource reroutes output exclusively through the
-      // graph, so a suspended context would silence the audio entirely.
-      try {
-        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const ctx = audioCtxRef.current;
-        if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
-
-        if (ctx.state === 'running') {
-          const analyser = ctx.createAnalyser();
-          analyser.fftSize = 512;
-          analyser.smoothingTimeConstant = 0.55;
-          const mediaSource = ctx.createMediaElementSource(audio);
-          const gainNode = ctx.createGain();
-          gainNode.gain.value = 1.0;
-          mediaSource.connect(analyser);
-          analyser.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          sourceRef.current = mediaSource;
-          startAmpLoop(analyser);
-        }
-      } catch {
-        // Web Audio routing failed (CORS, context issue, etc.) — the audio
-        // element still plays through its default output. The orb just
-        // won't have audio-reactive visuals for this utterance.
+      // Use the Web Audio API (BufferSource), NOT an <audio> element.
+      // HTMLMediaElement.play() is blocked by autoplay policy when called
+      // after async calls — the user gesture has "expired". But an
+      // AudioContext unlocked in the user gesture (via unlock()) stays
+      // running, so source.start(0) works without another gesture.
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
+      const playCtx = audioCtxRef.current;
+      // Fire-and-forget resume — do NOT await. If the context was unlocked
+      // in unlock() (user gesture), it's already running. If it's suspended,
+      // await resume() here would hang forever (no gesture) and block the
+      // entire function. Just try to resume and move on.
+      if (playCtx.state === 'suspended') { try { playCtx.resume().catch(() => {}); } catch {} }
 
-      audio.onended = () => {
+      // Fetch + decode with a timeout so a hung decode can't freeze playback.
+      const audioRes = await fetch(audioUrl);
+      if (!audioRes.ok) throw new Error('Audio fetch failed: ' + audioRes.status);
+      const arrayBuf = await audioRes.arrayBuffer();
+
+      const decoded = await Promise.race([
+        playCtx.decodeAudioData(arrayBuf.slice(0)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('decode timeout')), 8000)),
+      ]);
+      if (!decoded || !decoded.duration) throw new Error('decode failed');
+
+      const analyser = playCtx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.55;
+
+      const src = playCtx.createBufferSource();
+      src.buffer = decoded;
+      src.playbackRate.value = 1.0;
+
+      const gainNode = playCtx.createGain();
+      gainNode.gain.value = voiceConfig.volume ?? 0.95;
+
+      src.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(playCtx.destination);
+      sourceRef.current = src;
+
+      startAmpLoop(analyser);
+
+      src.onended = () => {
         stopAmpLoop();
-        audioElRef.current = null;
         sourceRef.current = null;
         setSpeaking(false);
       };
 
-      audio.onerror = () => {
-        stopAmpLoop();
-        audioElRef.current = null;
-        sourceRef.current = null;
-        setSpeaking(false);
-      };
-
-      await audio.play();
+      // If the context is still suspended here, source.start(0) would
+      // schedule silently with no audio. Fall back to browser TTS instead.
+      if (playCtx.state !== 'running') throw new Error('AudioContext not running');
+      src.start(0);
     } catch (err) {
       console.warn('TTS backend failed, falling back to browser:', err);
       stopAmpLoop();
