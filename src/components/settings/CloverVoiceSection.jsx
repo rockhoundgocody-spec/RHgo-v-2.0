@@ -4,9 +4,9 @@ import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SectionHeader from './SectionHeader.jsx';
 
-const DEFAULT_VOICE = { voice: 'honey', rate: 0.96, pitch: 1.02, volume: 0.95 };
+const DEFAULT_VOICE = { voice: 'honey', rate: 1.0, pitch: 1.0, volume: 0.95 };
 const VOICE_PERSONAS = [
-  { id: 'honey', label: 'Clover', desc: 'Irish-American · warm & melodic' },
+  { id: 'honey', label: 'Clover', desc: 'American · warm & natural' },
   { id: 'river', label: 'River', desc: 'American · calm' },
   { id: 'sunny', label: 'Sunny', desc: 'American · bright' },
   { id: 'storm', label: 'Storm', desc: 'American · steady' },
@@ -50,13 +50,14 @@ export default function CloverVoiceSection() {
   const [voice, setVoice] = useState(loadVoice);
   const [voiceSaved, setVoiceSaved] = useState(false);
   const savedTimer = useRef(null);
-  const { speak: previewSpeak, speaking } = useSpeechSynthesis();
+  const { speak: previewSpeak, speaking, unlock } = useSpeechSynthesis();
 
   useEffect(() => () => {
     if (savedTimer.current) clearTimeout(savedTimer.current);
   }, []);
 
   const saveVoice = () => {
+    unlock();
     try {
       localStorage.setItem('clover_voice', JSON.stringify(voice));
     } catch {}
@@ -105,7 +106,7 @@ export default function CloverVoiceSection() {
           </div>
 
           <VoiceSlider id="clover-voice-rate" label="Speed" hint="0.5 = slow & deliberate · 1.0 = natural · 1.5 = quick" min={0.5} max={1.5} step={0.01} value={voice.rate} onChange={(value) => setVoice((previous) => ({ ...previous, rate: value }))} />
-          <VoiceSlider id="clover-voice-pitch" label="Pitch" hint="0.8 = deeper · 1.0 = neutral · 1.5 = higher / more expressive" min={0.8} max={1.5} step={0.01} value={voice.pitch} onChange={(value) => setVoice((previous) => ({ ...previous, pitch: value }))} />
+          <VoiceSlider id="clover-voice-pitch" label="Pitch" hint="Device fallback only: 0.8 = deeper · 1.0 = natural · 1.5 = higher" min={0.8} max={1.5} step={0.01} value={voice.pitch} onChange={(value) => setVoice((previous) => ({ ...previous, pitch: value }))} />
           <VoiceSlider id="clover-voice-volume" label="Volume" hint="0.5 = quiet · 1.0 = full" min={0.5} max={1} step={0.01} value={voice.volume} onChange={(value) => setVoice((previous) => ({ ...previous, volume: value }))} />
           <div className="flex gap-3 pt-1">
             <button

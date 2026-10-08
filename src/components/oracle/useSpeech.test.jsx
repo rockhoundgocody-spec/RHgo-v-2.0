@@ -59,6 +59,25 @@ afterEach(() => {
 });
 
 describe('Clover single-speaker playback', () => {
+  it('prefers an American device voice over British and Irish voices', async () => {
+    invoke.mockRejectedValue(new Error('offline'));
+    const american = { name: 'Samantha', lang: 'en-US' };
+    synth.getVoices.mockReturnValue([{ name: 'Moira', lang: 'en-IE' }, { name: 'British', lang: 'en-GB' }, american]);
+    const hook = renderHook(() => useSpeechSynthesis());
+    await act(async () => { await hook.result.current.speak('American fallback'); });
+    expect(synth.speak.mock.calls[0][0].voice).toBe(american);
+    expect(synth.speak.mock.calls[0][0].lang).toBe('en-US');
+  });
+
+  it('never substitutes a British-only device voice', async () => {
+    invoke.mockRejectedValue(new Error('offline'));
+    synth.getVoices.mockReturnValue([{ name: 'British', lang: 'en-GB' }]);
+    const hook = renderHook(() => useSpeechSynthesis());
+    await act(async () => { await hook.result.current.speak('No American voice'); });
+    expect(synth.speak).not.toHaveBeenCalled();
+    expect(hook.result.current.speaking).toBe(false);
+  });
+
   it('ignores a synthesis response that arrives after Stop', async () => {
     const job = deferred();
     invoke.mockReturnValue(job.promise);
@@ -128,7 +147,11 @@ describe('Clover single-speaker playback', () => {
     synth.getVoices.mockReturnValue([]);
     const hook = renderHook(() => useSpeechSynthesis());
     await act(async () => { await hook.result.current.speak('Fallback'); });
-    act(() => { vi.advanceTimersByTime(500); synth.dispatchEvent(new Event('voiceschanged')); });
+    act(() => {
+      synth.getVoices.mockReturnValue([{ name: 'Samantha', lang: 'en-US' }]);
+      vi.advanceTimersByTime(500);
+      synth.dispatchEvent(new Event('voiceschanged'));
+    });
     expect(synth.speak).toHaveBeenCalledTimes(1);
   });
 

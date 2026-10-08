@@ -97,7 +97,7 @@ export function useSpeechSynthesis() {
     const isCurrent = () => requestRef.current === request && activeSpeechStop === stop;
     setSpeaking(true);
 
-    let voiceConfig = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
+    let voiceConfig = { voice: 'honey', rate: 1.0, pitch: 1.0, volume: 0.95 };
     try {
       const stored = localStorage.getItem('clover_voice');
       if (stored) voiceConfig = { ...voiceConfig, ...JSON.parse(stored) };
@@ -109,6 +109,7 @@ export function useSpeechSynthesis() {
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
         voice: voiceConfig.voice || 'honey',
+        rate: voiceConfig.rate ?? 1,
         guest_device_id: getOrCreateGuestId(),
       });
 
@@ -226,18 +227,15 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
     cleanup();
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
-    utter.rate     = voiceConfig.rate || 0.96;
-    utter.pitch    = voiceConfig.pitch || 1.02;
+    utter.rate     = voiceConfig.rate || 1.0;
+    utter.pitch    = voiceConfig.pitch || 1.0;
     utter.volume   = voiceConfig.volume ?? 1.0;
     const voices   = window.speechSynthesis.getVoices();
-    // Prioritize Irish-American female voice (en-IE / Moira), smooth warm natural female voices, and avoid British (en-GB).
-    const isNotBritish = (v) => !/en[-_]GB|british|uk\s*english/i.test(v.lang + ' ' + v.name);
-    const best     = voices.find((v) => isNotBritish(v) && /en[-_]IE|irish|moira|orla|niamh/i.test(v.lang + ' ' + v.name))
-                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /samantha|karen|victoria|ava|zoe|allison|female/i.test(v.name))
-                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang))
-                  || voices.find((v) => isNotBritish(v))
-                  || voices[0];
-    if (best) utter.voice = best;
+    // Use only an explicitly American device voice; never substitute a UK/Irish voice.
+    const american = voices.filter((v) => /^en[-_]US$/i.test(v.lang) && !/british|irish|en[-_]GB|en[-_]IE/i.test(v.name));
+    const best = american.find((v) => /samantha|ava|zoe|allison|female/i.test(v.name)) || american[0];
+    if (!best) { setSpeaking(false); stopAmpLoop(); return; }
+    utter.voice = best;
     utter.onstart  = () => { if (isCurrent()) setSpeaking(true); };
     utter.onend    = () => { if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
     utter.onerror  = (e) => { if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
