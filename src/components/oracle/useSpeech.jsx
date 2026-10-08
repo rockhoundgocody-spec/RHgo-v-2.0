@@ -11,6 +11,7 @@ export function useSpeechSynthesis() {
 
   const audioCtxRef   = useRef(null);
   const sourceRef     = useRef(null);
+  const audioElRef    = useRef(null);
   const amplitudeRef  = useRef(0);
   const bassRef       = useRef(0);
   const midRef        = useRef(0);
@@ -80,14 +81,6 @@ export function useSpeechSynthesis() {
     } catch {}
 
     try {
-      // Create/resume the AudioContext FIRST — on mobile it may only be
-      // unlocked while the originating user gesture is still fresh.
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
-
       const { getOrCreateGuestId } = await import('@/lib/guestDevice');
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
@@ -98,40 +91,61 @@ export function useSpeechSynthesis() {
       const audioUrl = res?.data?.audioUrl;
       if (!audioUrl) throw new Error('No audio URL returned');
 
-      const audioRes = await fetch(audioUrl);
-      if (!audioRes.ok) throw new Error('Audio fetch failed');
-      const arrayBuf = await audioRes.arrayBuffer();
+      // Use an <audio> element for reliable playback. The old fetch →
+      // decodeAudioData → BufferSource pipeline hung on mobile because the
+      // AudioContext gets suspended during the async backend call and
+      // ctx.resume() inside an async callback is ignored by iOS/Chrome.
+      // An <audio> element plays reliably after a user gesture — no
+      // gesture-locking, no decode step, no suspended-context deadlock.
+      const audio = new Audio(audioUrl);
+      audio.volume = voiceConfig.volume ?? 0.95;
+      audioElRef.current = audio;
 
-      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
-      const audioBuffer = await ctx.decodeAudioData(arrayBuf);
+      // Try to route through Web Audio for the analyser (orb visual
+      // reactivity). Only do this if the context is actually running —
+      // createMediaElementSource reroutes output exclusively through the
+      // graph, so a suspended context would silence the audio entirely.
+      try {
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = audioCtxRef.current;
+        if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
 
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.55;
+        if (ctx.state === 'running') {
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 512;
+          analyser.smoothingTimeConstant = 0.55;
+          const mediaSource = ctx.createMediaElementSource(audio);
+          const gainNode = ctx.createGain();
+          gainNode.gain.value = 1.0;
+          mediaSource.connect(analyser);
+          analyser.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          sourceRef.current = mediaSource;
+          startAmpLoop(analyser);
+        }
+      } catch {
+        // Web Audio routing failed (CORS, context issue, etc.) — the audio
+        // element still plays through its default output. The orb just
+        // won't have audio-reactive visuals for this utterance.
+      }
 
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuffer;
-      // Play at the engine's natural pace — slowing playback pitch-shifts the
-      // voice down and makes it sound robotic/computerized.
-      source.playbackRate.value = 1.0;
-
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = voiceConfig.volume ?? 0.95;
-
-      source.connect(analyser);
-      analyser.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      sourceRef.current = source;
-
-      startAmpLoop(analyser);
-
-      source.onended = () => {
+      audio.onended = () => {
         stopAmpLoop();
+        audioElRef.current = null;
         sourceRef.current = null;
         setSpeaking(false);
       };
 
-      source.start(0);
+      audio.onerror = () => {
+        stopAmpLoop();
+        audioElRef.current = null;
+        sourceRef.current = null;
+        setSpeaking(false);
+      };
+
+      await audio.play();
     } catch (err) {
       console.warn('TTS backend failed, falling back to browser:', err);
       stopAmpLoop();
@@ -155,6 +169,7 @@ export function useSpeechSynthesis() {
 
   const stop = useCallback(() => {
     try { if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; } } catch {}
+    try { if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; } } catch {}
     window.speechSynthesis?.cancel();
     stopAmpLoop();
     setSpeaking(false);
@@ -165,6 +180,7 @@ export function useSpeechSynthesis() {
     const ctx = audioCtxRef.current;
     if (ctx && ctx.state !== 'closed') { try { ctx.close().catch(() => {}); } catch {} }
     audioCtxRef.current = null;
+    if (audioElRef.current) { try { audioElRef.current.pause(); } catch {} audioElRef.current = null; }
   }, [stop]);
 
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
