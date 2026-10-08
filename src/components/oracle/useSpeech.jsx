@@ -3,9 +3,11 @@ import { base44 } from '@/api/base44Client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
-// Google Cloud TTS via synthesizeSpeech backend → Web Audio analyser for
-// amplitude/spectrum. Falls back to browser TTS on backend failure.
+// Shared TTS playback: only one Clover voice may own the speaker at a time.
+// Falls back to browser TTS on backend failure.
 // ─────────────────────────────────────────────────────────────────────────────
+let activeSpeechStop = null;
+
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false);
 
@@ -18,6 +20,8 @@ export function useSpeechSynthesis() {
   const trebleRef     = useRef(0);
   const rafRef        = useRef(null);
   const analyserRef   = useRef(null);
+  const requestRef = useRef(0);
+  const fallbackCleanupRef = useRef(null);
 
   const startAmpLoop = useCallback((analyser) => {
     analyserRef.current = analyser;
@@ -62,17 +66,35 @@ export function useSpeechSynthesis() {
     []
   );
 
+  const stop = useCallback(() => {
+    // Invalidate pending synthesis/download/decode before stopping current audio.
+    requestRef.current += 1;
+    fallbackCleanupRef.current?.();
+    fallbackCleanupRef.current = null;
+    const source = sourceRef.current;
+    sourceRef.current = null;
+    if (source) {
+      source.onended = null;
+      try { source.stop(); } catch {}
+      source.disconnect();
+    }
+    if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
+    // An unmounting, inactive hook must not cancel another Clover surface.
+    if (activeSpeechStop === stop) {
+      activeSpeechStop = null;
+      window.speechSynthesis?.cancel();
+    }
+    stopAmpLoop();
+    setSpeaking(false);
+  }, [stopAmpLoop]);
+
   const speak = useCallback(async (text) => {
     if (!text) return;
-
-    // Stop anything already playing
-    try {
-      if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; }
-      if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
-      window.speechSynthesis?.cancel();
-    } catch {}
-    stopAmpLoop();
-
+    stop();
+    activeSpeechStop?.();
+    activeSpeechStop = stop;
+    const request = requestRef.current;
+    const isCurrent = () => requestRef.current === request && activeSpeechStop === stop;
     setSpeaking(true);
 
     let voiceConfig = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
@@ -83,12 +105,14 @@ export function useSpeechSynthesis() {
 
     try {
       const { getOrCreateGuestId } = await import('@/lib/guestDevice');
+      if (!isCurrent()) return;
       const res = await base44.functions.invoke('synthesizeSpeech', {
         text:  String(text).slice(0, 800),
         voice: voiceConfig.voice || 'honey',
         guest_device_id: getOrCreateGuestId(),
       });
 
+      if (!isCurrent()) return;
       const audioUrl = res?.data?.audioUrl;
       if (!audioUrl) throw new Error('No audio URL returned');
 
@@ -109,13 +133,16 @@ export function useSpeechSynthesis() {
 
       // Fetch + decode with a timeout so a hung decode can't freeze playback.
       const audioRes = await fetch(audioUrl);
+      if (!isCurrent()) return;
       if (!audioRes.ok) throw new Error('Audio fetch failed: ' + audioRes.status);
       const arrayBuf = await audioRes.arrayBuffer();
+      if (!isCurrent()) return;
 
       const decoded = await Promise.race([
         playCtx.decodeAudioData(arrayBuf.slice(0)),
         new Promise((_, reject) => setTimeout(() => reject(new Error('decode timeout')), 8000)),
       ]);
+      if (!isCurrent()) return;
       if (!decoded || !decoded.duration) throw new Error('decode failed');
 
       const analyser = playCtx.createAnalyser();
@@ -137,6 +164,8 @@ export function useSpeechSynthesis() {
       startAmpLoop(analyser);
 
       src.onended = () => {
+        if (!isCurrent() || sourceRef.current !== src) return;
+        src.disconnect();
         stopAmpLoop();
         sourceRef.current = null;
         setSpeaking(false);
@@ -147,11 +176,15 @@ export function useSpeechSynthesis() {
       if (playCtx.state !== 'running') throw new Error('AudioContext not running');
       src.start(0);
     } catch (err) {
+      if (!isCurrent()) return;
       console.warn('TTS backend failed, falling back to browser:', err);
+      const source = sourceRef.current;
+      sourceRef.current = null;
+      if (source) { source.onended = null; try { source.stop(); } catch {} source.disconnect(); }
       stopAmpLoop();
-      _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig);
+      fallbackCleanupRef.current = _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent);
     }
-  }, [startAmpLoop, stopAmpLoop]);
+  }, [startAmpLoop, stopAmpLoop, stop]);
 
   // Warm up the AudioContext from within a user gesture — mobile browsers
   // keep audio locked until a gesture creates/resumes the context. Call this
@@ -167,13 +200,6 @@ export function useSpeechSynthesis() {
     } catch {}
   }, []);
 
-  const stop = useCallback(() => {
-    try { if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; } } catch {}
-    try { if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; } } catch {}
-    window.speechSynthesis?.cancel();
-    stopAmpLoop();
-    setSpeaking(false);
-  }, [stopAmpLoop]);
 
   useEffect(() => () => {
     stop();
@@ -186,10 +212,18 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
 }
 
-function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig = {}) {
+function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
-
+  let started = false;
+  let timer;
+  const cleanup = () => {
+    clearTimeout(timer);
+    window.speechSynthesis.removeEventListener('voiceschanged', _speak);
+  };
   const _speak = () => {
+    if (started || !isCurrent()) return;
+    started = true;
+    cleanup();
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
     utter.rate     = voiceConfig.rate || 0.96;
@@ -204,9 +238,9 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
                   || voices.find((v) => isNotBritish(v))
                   || voices[0];
     if (best) utter.voice = best;
-    utter.onstart  = () => setSpeaking(true);
-    utter.onend    = () => { setSpeaking(false); stopAmpLoop(); };
-    utter.onerror  = (e) => { if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
+    utter.onstart  = () => { if (isCurrent()) setSpeaking(true); };
+    utter.onend    = () => { if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
+    utter.onerror  = (e) => { if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   };
@@ -215,14 +249,10 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
   if (voices.length > 0) {
     _speak();
   } else {
-    window.speechSynthesis.onvoiceschanged = () => {
-      window.speechSynthesis.onvoiceschanged = null;
-      _speak();
-    };
-    setTimeout(() => {
-      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) _speak();
-    }, 500);
+    window.speechSynthesis.addEventListener('voiceschanged', _speak);
+    timer = setTimeout(_speak, 500);
   }
+  return cleanup;
 }
 
 
