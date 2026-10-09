@@ -2,15 +2,35 @@
  * grokChat — Clover powered by xAI Grok
  * Drop-in companion chat using grok-3-mini via the OpenAI-compatible xAI API.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from '@base44/sdk';
 
-Deno.serve(async (req) => {
+export async function handleGrokChatRequest(
+  req: Request,
+  opts?: {
+    createClientFromRequest?: typeof createClientFromRequest;
+    envGet?: (key: string) => string | undefined;
+    fetchImpl?: typeof fetch;
+  }
+): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const clientFactory = opts?.createClientFromRequest || createClientFromRequest;
+    const base44 = clientFactory(req);
+    const user = await base44.auth.me().catch(() => null);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { history = [], companion, todays_finds = 0 } = await req.json();
+    const getEnv =
+      opts?.envGet ||
+      ((key: string) =>
+        typeof Deno !== 'undefined'
+          ? Deno.env.get(key)
+          : (globalThis.process?.env?.[key] as string | undefined));
+    const apiKey = getEnv('XAI_API_KEY');
+    if (!apiKey) {
+      console.error('XAI_API_KEY not configured');
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
+    }
+
+    const { history = [], companion, todays_finds = 0 } = await req.clone().json().catch(() => ({}));
 
     const name = user.full_name?.split(' ')[0] || 'explorer';
     const c = companion;
@@ -47,17 +67,18 @@ ${stateBits}`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...history.map((m) => ({
+      ...history.map((m: { role: string; content: string }) => ({
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
       })),
     ];
 
-    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    const fetchFn = opts?.fetchImpl || fetch;
+    const res = await fetchFn('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('XAI_API_KEY')}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'grok-3-mini',
@@ -69,16 +90,22 @@ ${stateBits}`;
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`xAI API error ${res.status}: ${err}`);
+      console.error('grokChat request failed:', res.status, err);
+      return Response.json({ error: 'Grok chat request failed' }, { status: res.status });
     }
 
     const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim()
-      || `Hey ${name}! What did you find today?`;
+    const reply =
+      data.choices?.[0]?.message?.content?.trim() ||
+      `Hey ${name}! What did you find today?`;
 
     return Response.json({ reply, model: 'grok-3-mini' });
   } catch (error) {
     console.error('grokChat error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
+
+if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+  Deno.serve((req) => handleGrokChatRequest(req));
+}
