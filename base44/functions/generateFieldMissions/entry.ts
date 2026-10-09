@@ -81,22 +81,26 @@ Return exactly 3 missions as JSON array.`;
       return d.toISOString();
     }
 
-    const created = await Promise.all(missions.map((m) =>
-      base44.entities.Quest.create({
-        owner_email: user.email,
-        title: m.title,
-        description: m.description,
-        quest_type: m.quest_type || 'daily',
-        target_count: m.target_count || 1,
-        xp_reward: m.xp_reward || 100,
-        target_rarity: m.target_rarity || null,
-        target_mineral: m.target_mineral || null,
-        clover_message: m.clover_message || '',
-        status: 'active',
-        progress: 0,
-        expires_at: getExpiry(m.quest_type || 'daily'),
-      })
-    ));
+    // Performance Optimization: Use bulkCreate to insert all generated quests in a single batch request
+    // rather than N separate HTTP calls via Promise.all.
+    const questPayloads = missions.map((m: Record<string, unknown>) => ({
+      owner_email: user.email,
+      title: m.title,
+      description: m.description,
+      quest_type: m.quest_type || 'daily',
+      target_count: m.target_count || 1,
+      xp_reward: m.xp_reward || 100,
+      target_rarity: m.target_rarity || null,
+      target_mineral: m.target_mineral || null,
+      clover_message: m.clover_message || '',
+      status: 'active',
+      progress: 0,
+      expires_at: getExpiry((m.quest_type as string) || 'daily'),
+    }));
+
+    const created = questPayloads.length > 0
+      ? await base44.entities.Quest.bulkCreate(questPayloads)
+      : [];
 
     return Response.json({ missions: created, count: created.length });
   } catch (error) {

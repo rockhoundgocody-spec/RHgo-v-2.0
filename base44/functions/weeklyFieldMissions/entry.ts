@@ -163,8 +163,10 @@ Return exactly 3 missions as JSON.`;
         const missions = result?.missions || [];
 
         // ── 5. Create Quest records ──
-        for (const m of missions) {
-          await base44.asServiceRole.entities.Quest.create({
+        // Performance Optimization: Use bulkCreate to insert all weekly quests in a single batch request per user
+        // rather than sequential Quest.create calls in a loop.
+        if (missions.length > 0) {
+          const questPayloads = missions.map((m: Record<string, unknown>) => ({
             owner_email: user.email,
             title: m.title,
             description: m.description,
@@ -176,8 +178,9 @@ Return exactly 3 missions as JSON.`;
             clover_message: m.clover_message || '',
             status: 'active',
             progress: 0,
-            expires_at: getExpiry(m.quest_type || 'daily'),
-          });
+            expires_at: getExpiry((m.quest_type as string) || 'daily'),
+          }));
+          await base44.asServiceRole.entities.Quest.bulkCreate(questPayloads);
         }
 
         // ── 6. Push notification to device ──
