@@ -65,15 +65,22 @@ export function passEnd(days: unknown, nowMs: number): number | null {
   return Math.floor(nowMs / 1000) + Math.round(d * 86400);
 }
 
-export function shouldIgnoreStripeEvent(event, appId) {
+export function shouldIgnoreStripeEvent(
+  event: { data?: { object?: StripeLike | null } | null } | null | undefined,
+  appId: string | null | undefined,
+): boolean {
   const metadata = event?.data?.object?.metadata;
+  const tier = metadata?.tier;
   return !appId || metadata?.base44_test_checkout === 'true' ||
     metadata?.base44_app_id !== appId || !metadata?.owner_email ||
-    !ENTITLEMENTS.has(metadata?.tier);
+    typeof tier !== 'string' || !ENTITLEMENTS.has(tier);
 }
 
-export function checkoutPassEnd(session) {
+export function checkoutPassEnd(
+  session: (StripeLike & { created?: number | null }) | null | undefined,
+): number | null {
   // Expiry is anchored to the original checkout, never webhook retry time.
-  if (session?.metadata?.plan !== 'season' || !Number.isFinite(session?.created)) return null;
-  return passEnd(30, session.created * 1000);
+  const created = session?.created;
+  if (session?.metadata?.plan !== 'season' || typeof created !== 'number' || !Number.isFinite(created)) return null;
+  return passEnd(30, created * 1000);
 }

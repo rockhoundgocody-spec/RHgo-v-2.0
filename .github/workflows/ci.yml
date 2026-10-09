@@ -1,0 +1,73 @@
+# Frontend CI. The Deno workflow (deno.yml) covers the Base44 backend functions;
+# this one covers the React app, which previously had no automated gate at all.
+
+# Actions are pinned to commit SHAs (the trailing comment names the release), so CI only
+# runs action code that was reviewed here. To update, move every pin to the same new release.
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+# A newer push to the same PR supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install (lockfile-exact)
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Tooling tests (type-error ratchet)
+        run: npm run test:scripts
+
+      - name: Production build
+        run: npm run build
+
+  typecheck:
+    # One-way ratchet: the existing type-error backlog is recorded in
+    # .github/typecheck-baseline.json and may only go down. See
+    # scripts/typecheck-ratchet.mjs.
+    name: Type-error ratchet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install (lockfile-exact)
+        run: npm ci --no-audit --no-fund
+
+      - name: Check type errors against baseline
+        run: npm run typecheck:ratchet
