@@ -10,6 +10,7 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json --noEmit",
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
