@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 // Public leaderboard aggregate — service role reads across all users.

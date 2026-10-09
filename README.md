@@ -47,6 +47,11 @@ query fragments. In a `catch`, return `safeError('functionName', error)` from
 `{ error, request_id }`, so a user can quote the reference and you can find the log line. Messages you
 chose on purpose (validation, 401/403/404/429) stay plain `Response.json({ error: '…' }, { status })`.
 `base44/errorLeakGuard_test.ts` fails CI if any source file in `base44/functions` or `base44/shared` reads an error's `.message` or `.stack` (comments included), or turns a caught error into text (`String(e)`, `` `${e}` ``, `'x' + e`, `e.toString()`). To log a failure, pass the error object: `console.error('what failed', error)`.
+Base44's own examples, and so the builder, return `error.message` from a `catch`: when it adds a function that way the Deno job goes red on `main` until the `catch` uses `safeError`.
+
+### Edge functions: the SDK version
+
+Every function imports the SDK as `npm:@base44/sdk@X.Y.Z`, the same version everywhere. `base44/sdkPinGuard_test.ts` fails if one differs, is a range, or is a bare `@base44/sdk` (Base44's documentation describes only `npm:` and `jsr:` specifiers and this repo has no import map, so the runtime may not resolve a bare name). The builder pins whatever version is current when it generates a function, so a new function can bring a newer one; the failure message prints the command that moves them all. A Vitest test that imports a function module reads the package through a test-only alias in `vite.config.js`: do not switch a function to a bare import to make a test pass.
 
 ## Configuration
 

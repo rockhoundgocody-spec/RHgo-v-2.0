@@ -5,7 +5,7 @@
  * Body: { image_url, lat?, lng?, save?, share_to_map?, prefilled_result?,
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';

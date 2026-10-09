@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { weekKey } from "../../shared/weekKey.ts";
 import { safeError } from "../../shared/httpErrors.ts";
 

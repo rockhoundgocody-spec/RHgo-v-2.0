@@ -5,7 +5,7 @@
  * When idempotency_key is provided, a repeated request with the same key
  * returns the original result instead of granting XP twice.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 const XP_PER_LEVEL = 1200;

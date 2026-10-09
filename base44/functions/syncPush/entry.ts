@@ -1,6 +1,6 @@
 // POST /sync/push — body: { events: OutboxEvent[], cursor?: string }
 // Returns: { acked: [{event_id, rev}], rejected: [{event_id, reason}], conflicts: [...], new_cursor }
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { applyEvents, MAX_BATCH } from '../../shared/applyEvents.ts';
 
 export default async function(req) {

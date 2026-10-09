@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
 import { safeError } from '../../shared/httpErrors.ts';

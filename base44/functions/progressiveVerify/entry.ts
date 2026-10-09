@@ -12,7 +12,7 @@
  *
  * Provenance: every confidence change is traced to the specific rule that fired.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { safeError } from '../../shared/httpErrors.ts';
 
