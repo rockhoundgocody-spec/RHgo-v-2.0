@@ -3,6 +3,8 @@
 
 # Actions are pinned to commit SHAs (the trailing comment names the release), so CI only
 # runs action code that was reviewed here. To update, move every pin to the same new release.
+# The runner image is pinned to ubuntu-24.04 instead of ubuntu-latest, which GitHub starts moving
+# to Ubuntu 26 on 2026-10-19. Move to ubuntu-26.04 on purpose, after a green run there.
 name: CI
 
 on:
@@ -22,14 +24,14 @@ concurrency:
 jobs:
   frontend:
     name: Lint, test, build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Check out
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -54,14 +56,14 @@ jobs:
     # .github/typecheck-baseline.json and may only go down. See
     # scripts/typecheck-ratchet.mjs.
     name: Type-error ratchet
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Check out
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: 22
           cache: npm

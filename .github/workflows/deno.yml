@@ -6,6 +6,9 @@
 # This workflow will install Deno then run `deno lint` and `deno test`.
 # For more information see: https://github.com/denoland/setup-deno
 
+# Actions are pinned to commit SHAs (the trailing comment names the release). The runner image is
+# pinned to ubuntu-24.04 instead of ubuntu-latest, which GitHub starts moving to Ubuntu 26 on
+# 2026-10-19; move to ubuntu-26.04 on purpose, after a green run there.
 name: Deno
 
 on:
@@ -19,15 +22,15 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Setup Deno
-        # uses: denoland/setup-deno@v1
-        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
+        # uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed  # v2.0.5
         with:
           deno-version: v2.x
 
