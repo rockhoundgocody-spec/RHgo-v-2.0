@@ -196,13 +196,13 @@ Return exactly 3 missions as JSON.`;
             notified++;
           } catch (pushErr) {
             // Push fails if user has no native device registered — log and continue
-            console.log(`Push failed for ${user.email}: ${pushErr.message}`);
+            console.log(`Push failed for ${user.email}:`, pushErr);
           }
         }
 
         processed++;
       } catch (userErr) {
-        console.log(`Failed for ${user.email}: ${userErr.message}`);
+        console.log(`Failed for ${user.email}:`, userErr);
         errored++;
       }
     }

@@ -177,7 +177,7 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
     } catch (err) {
       if (!model) throw err;
       // A brain the platform can't serve right now falls back to the default.
-      console.warn(`cloverChat: model ${model} failed, using default`, (err as Error)?.message);
+      console.warn(`cloverChat: model ${model} failed, using default`, err);
       result = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams as never);
     }
 
