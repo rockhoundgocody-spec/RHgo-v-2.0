@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, cutout_url });
   } catch (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    console.error('removeSpecimenBackground error:', error);
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     // Never return a stack trace to the client — it leaks internal paths and
     // module layout. Log it server-side instead.
     console.error('crawlMindat error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 
