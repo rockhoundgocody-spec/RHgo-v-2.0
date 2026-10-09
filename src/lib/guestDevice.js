@@ -1,7 +1,7 @@
 /**
  * Guest device key + scan quota.
  *
- * One completed ID per device per 30 days. Camera permission
+ * Seven completed IDs per device per UTC day. Camera permission
  * denies and failed identifies do not consume the scan.
  *
  * Persistence (same-origin only):
@@ -19,8 +19,8 @@ export const GUEST_PENDING_KEY = 'rhgo_guest_pending_report';
 export const GUEST_COOKIE = 'rhgo_gid';
 export const GUEST_DB = 'rhgo_guest';
 export const GUEST_STORE = 'kv';
-export const GUEST_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
-export const GUEST_SCAN_LIMIT = 1;
+export const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const GUEST_SCAN_LIMIT = 7;
 export const GUEST_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
 function hasWindow() {
@@ -196,40 +196,28 @@ export function getOrCreateGuestId() {
 }
 
 function readQuota() {
-  const raw = readLs(GUEST_QUOTA_KEY);
-  if (!raw) return { usedAt: null };
   try {
-    const parsed = JSON.parse(raw);
-    const usedAt = Number(parsed?.usedAt);
-    return { usedAt: Number.isFinite(usedAt) ? usedAt : null };
+    const parsed = JSON.parse(readLs(GUEST_QUOTA_KEY) || '{}');
+    const usedAt = Number(parsed.usedAt);
+    return { usedAt: Number.isFinite(usedAt) && usedAt > 0 ? usedAt : null, used: Math.max(0, Number(parsed.used) || (parsed.usedAt ? 1 : 0)) };
   } catch {
-    return { usedAt: null };
+    return { usedAt: null, used: 0 };
   }
-}
-
-function writeQuota(usedAt) {
-  const guestId = getOrCreateGuestId();
-  const quotaJson = JSON.stringify({ guestId, usedAt });
-  persistAll(guestId, quotaJson, null);
 }
 
 export function getGuestQuota(now = Date.now()) {
   const guestId = getOrCreateGuestId();
-  const { usedAt } = readQuota();
-  if (!usedAt) {
-    return { guestId, allowed: true, used: 0, limit: GUEST_SCAN_LIMIT, resetsAt: null };
-  }
-  const resetsAt = usedAt + GUEST_WINDOW_MS;
-  if (now >= resetsAt) {
-    return { guestId, allowed: true, used: 0, limit: GUEST_SCAN_LIMIT, resetsAt: null };
-  }
-  return { guestId, allowed: false, used: 1, limit: GUEST_SCAN_LIMIT, resetsAt };
+  const saved = readQuota();
+  const day = new Date(now).toISOString().slice(0, 10);
+  const used = saved.usedAt !== null && new Date(saved.usedAt).toISOString().slice(0, 10) === day ? saved.used : 0;
+  const resetsAt = Date.parse(`${day}T00:00:00.000Z`) + GUEST_WINDOW_MS;
+  return { guestId, allowed: used < GUEST_SCAN_LIMIT, used, limit: GUEST_SCAN_LIMIT, resetsAt };
 }
 
 export function consumeGuestScan(now = Date.now()) {
   const current = getGuestQuota(now);
   if (!current.allowed) return current;
-  writeQuota(now);
+  persistAll(current.guestId, JSON.stringify({ guestId: current.guestId, usedAt: now, used: current.used + 1 }), null);
   persistGuestStorage().catch(() => {});
   return getGuestQuota(now);
 }

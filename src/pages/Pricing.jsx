@@ -28,14 +28,14 @@ const TIERS = [
     name: 'Field',
     price: '$0',
     period: 'free',
-    tagline: 'First scan + public map teaser.',
+    tagline: '7 free scans daily + public map teaser.',
     color: '#64748b',
     bg: 'hsla(215,20%,14%,0.6)',
     border: 'hsla(215,20%,35%,0.2)',
     cta: 'Start Free',
     ctaStyle: { background: 'hsla(215,20%,25%,0.6)', border: '1px solid hsla(215,20%,45%,0.25)', color: '#94a3b8' },
     features: [
-      '5 AI scans / month',
+      '7 AI scans / day (resets at midnight UTC)',
       '1 full field report',
       'Public hotspots (blurred)',
       '15 GeoDex slots',
@@ -162,7 +162,7 @@ function PricingPage() {
   useSeoRobots(true);
   useSeoMeta(
     'RockHound-GO Pricing — Field, Season, Hound, Steward & Club',
-    'Free field kit with 5 scans/month. Hound annual $79/yr for unlimited scans, legal land overlay, and offline maps. Steward $149/yr for dealers. Club $199/yr for 8 seats.'
+    'Free field kit with 7 scans/day. Hound annual $79/yr for unlimited scans, legal land overlay, and offline maps. Steward $149/yr for dealers. Club $199/yr for 8 seats.'
   );
   const navigate = useNavigate();
   const { user } = useAuth();

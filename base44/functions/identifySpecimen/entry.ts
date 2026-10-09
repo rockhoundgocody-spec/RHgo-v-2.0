@@ -149,7 +149,7 @@ async function submitLocationForReview(
   return base44.asServiceRole.entities.LocationSubmission.create(data);
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch(() => null);
@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
       const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
       if (!gate.ok) {
         return Response.json(
-          { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
+          { error: gate.error || 'Daily free guest scan limit reached', resetAt: gate.resetAt },
           { status: gate.status || 429 },
         );
       }
@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
       quota = await checkMemberScanQuota(base44 as never, { email: user.email, role: user.role });
       if (!quota.ok) {
         return Response.json(
-          { error: 'You have used your free scans for this month', code: 'scan_quota', quota },
+          { error: 'You have used your 7 free scans today; resets at midnight UTC', code: 'scan_quota', quota },
           { status: 402 },
         );
       }
@@ -506,4 +506,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

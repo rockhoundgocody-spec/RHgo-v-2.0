@@ -17,7 +17,15 @@
 export const PAID_TIERS: ReadonlySet<string> = new Set(['field_pro', 'family']);
 export const PAID_STATUSES: ReadonlySet<string> = new Set(['active', 'trialing', 'past_due']);
 export const RENEWAL_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-export const FREE_MONTHLY_SCANS = 5;
+export const FREE_DAILY_SCANS = 7;
+
+export function dayStartIso(date: Date = new Date()): string {
+  return `${date.toISOString().slice(0, 10)}T00:00:00.000Z`;
+}
+
+export function nextDayStartIso(date: Date = new Date()): string {
+  return new Date(Date.parse(dayStartIso(date)) + 86400000).toISOString();
+}
 
 export type SubscriptionLike = {
   tier?: string | null;

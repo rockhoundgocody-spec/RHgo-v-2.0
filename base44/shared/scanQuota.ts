@@ -1,17 +1,18 @@
 /**
  * scanQuota — server-side metering for signed-in AI identifications.
  *
- * Free members get FREE_MONTHLY_SCANS identifications per UTC month; paid
+ * Free members get FREE_DAILY_SCANS identifications per UTC day; paid
  * subscribers and admins are unlimited. Every identification the server
  * runs leaves a ScanReceipt, which is both the meter and the trusted record
  * a later save is checked against (so XP never depends on a client-sent
  * rarity).
  */
 import {
-  FREE_MONTHLY_SCANS,
+  FREE_DAILY_SCANS,
   isPaidSubscription,
   monthKey,
-  nextMonthStartIso,
+  dayStartIso,
+  nextDayStartIso,
 } from './subscriptionAccess.ts';
 
 type Row = Record<string, unknown> & { id?: string; created_date?: string };
@@ -55,22 +56,22 @@ export async function checkMemberScanQuota(
       return { ok: true, paid: true, used: null, limit: null, resetAt: null };
     }
     const rows = await base44.asServiceRole.entities.ScanReceipt.filter(
-      { owner_email: user.email, month_key: monthKey(now) },
+      { owner_email: user.email, created_date: { $gte: dayStartIso(now), $lt: nextDayStartIso(now) } },
       '-created_date',
-      FREE_MONTHLY_SCANS + 1,
+      FREE_DAILY_SCANS + 1,
     );
     const used = rows?.length || 0;
     return {
-      ok: used < FREE_MONTHLY_SCANS,
+      ok: used < FREE_DAILY_SCANS,
       paid: false,
       used,
-      limit: FREE_MONTHLY_SCANS,
-      resetAt: nextMonthStartIso(now),
+      limit: FREE_DAILY_SCANS,
+      resetAt: nextDayStartIso(now),
     };
   } catch (err) {
     // Metering must never take the scanner down: fail open and log.
     console.error('[scanQuota] check failed, allowing scan:', (err as Error)?.message);
-    return { ok: true, paid: false, used: null, limit: FREE_MONTHLY_SCANS, resetAt: null };
+    return { ok: true, paid: false, used: null, limit: FREE_DAILY_SCANS, resetAt: null };
   }
 }
 

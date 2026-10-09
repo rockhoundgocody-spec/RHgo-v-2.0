@@ -3,10 +3,12 @@
  * In-memory (per isolate) plus durable CompanionLog markers when available.
  */
 
+import { FREE_DAILY_SCANS, dayStartIso, nextDayStartIso } from './subscriptionAccess.ts';
+
 export type GuestRateAction = 'identify' | 'cloverChat' | 'synthesizeSpeech';
 
 const LIMITS: Record<GuestRateAction, { limit: number; windowMs: number }> = {
-  identify: { limit: 1, windowMs: 30 * 24 * 60 * 60 * 1000 },
+  identify: { limit: FREE_DAILY_SCANS, windowMs: 24 * 60 * 60 * 1000 },
   cloverChat: { limit: 25, windowMs: 24 * 60 * 60 * 1000 },
   synthesizeSpeech: { limit: 40, windowMs: 24 * 60 * 60 * 1000 },
 };
@@ -35,7 +37,7 @@ function touchMemory(action: GuestRateAction, guestId: string, consume: boolean)
   const now = Date.now();
   let entry = memory.get(key);
   if (!entry || now >= entry.resetAt) {
-    entry = { count: 0, resetAt: now + cfg.windowMs };
+    entry = { count: 0, resetAt: action === 'identify' ? Date.parse(nextDayStartIso(new Date(now))) : now + cfg.windowMs };
     memory.set(key, entry);
   }
   if (entry.count >= cfg.limit) {
@@ -79,33 +81,27 @@ export async function enforceGuestRate(
   // Durable check for identify (must survive isolate restarts)
   if (action === 'identify' && base44?.asServiceRole?.entities?.CompanionLog) {
     try {
+      const now = new Date();
+      const resetAt = Date.parse(nextDayStartIso(now));
       const rows = await base44.asServiceRole.entities.CompanionLog.filter(
-        { owner_email: `guest:${guestId}`, log_type: 'guest_identify' },
+        { owner_email: `guest:${guestId}`, log_type: 'guest_identify', created_date: { $gte: dayStartIso(now), $lt: nextDayStartIso(now) } },
         '-created_date',
-        1,
+        FREE_DAILY_SCANS,
       );
-      const last = rows?.[0] as { created_date?: string } | undefined;
-      if (last?.created_date) {
-        const age = Date.now() - new Date(last.created_date).getTime();
-        if (Number.isFinite(age) && age < LIMITS.identify.windowMs) {
-          return {
-            ok: false as const,
-            error: 'Guest free scan already used',
-            status: 429,
-            resetAt: new Date(last.created_date).getTime() + LIMITS.identify.windowMs,
-            remaining: 0,
-            limit: 1,
-          };
-        }
+      const used = rows?.length || 0;
+      if (used >= FREE_DAILY_SCANS) {
+        return { ok: false as const, error: 'You have used your 7 free scans today', status: 429, resetAt, remaining: 0, limit: FREE_DAILY_SCANS };
       }
       if (consume) {
         await base44.asServiceRole.entities.CompanionLog.create({
           owner_email: `guest:${guestId}`,
           log_type: 'guest_identify',
-          summary: `guest identify ${dayKey()}`,
+          summary: `guest identify ${dayKey(now)}`,
           mood: 'neutral',
         });
       }
+      memory.set(memKey(action, guestId), { count: used + Number(consume), resetAt });
+      return { ok: true as const, guestId, remaining: FREE_DAILY_SCANS - used - Number(consume), limit: FREE_DAILY_SCANS, resetAt };
     } catch {
       /* fall through to memory */
     }

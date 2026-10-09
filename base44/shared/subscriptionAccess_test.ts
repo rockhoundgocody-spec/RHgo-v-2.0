@@ -35,18 +35,27 @@ Deno.test('month helpers', () => {
 function fakeClient(subs: Record<string, unknown>[], receipts: Record<string, unknown>[]) {
   const make = (rows: Record<string, unknown>[]) => ({
     filter: (q: Record<string, unknown>) =>
-      Promise.resolve(rows.filter((r) => Object.entries(q).every(([k, v]) => r[k] === v))),
+      Promise.resolve(rows.filter((r) => Object.entries(q).every(([k, v]) => {
+        if (k === 'created_date' && typeof v === 'object' && v) {
+          const range = v as { $gte: string; $lt: string };
+          return String(r[k]) >= range.$gte && String(r[k]) < range.$lt;
+        }
+        return r[k] === v;
+      }))),
     create: (d: Record<string, unknown>) => { rows.push(d); return Promise.resolve(d); },
   });
   return { asServiceRole: { entities: { Subscription: make(subs), ScanReceipt: make(receipts) } } };
 }
 
-Deno.test('free member is metered per month; paid and admin are not', async () => {
+Deno.test('free member is metered per UTC day; paid and admin are not', async () => {
   const now = new Date(NOW);
-  const receipts = Array.from({ length: 5 }, () => ({ owner_email: 'a@x.com', month_key: '2026-09' }));
+  const receipts = Array.from({ length: 7 }, () => ({ owner_email: 'a@x.com', created_date: '2026-09-26T10:00:00.000Z' }));
   const blocked = await checkMemberScanQuota(fakeClient([], receipts) as never, { email: 'a@x.com' }, now);
   assertEquals(blocked.ok, false);
-  assertEquals(blocked.used, 5);
+  assertEquals(blocked.used, 7);
+  const tomorrow = await checkMemberScanQuota(fakeClient([], receipts) as never, { email: 'a@x.com' }, new Date('2026-09-27T00:00:00Z'));
+  assertEquals(tomorrow.used, 0);
+  assertEquals(tomorrow.ok, true);
 
   const fresh = await checkMemberScanQuota(fakeClient([], []) as never, { email: 'a@x.com' }, now);
   assertEquals(fresh.ok, true);

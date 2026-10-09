@@ -57,22 +57,29 @@ describe('guestDevice', () => {
     const q = getGuestQuota(1_000);
     expect(q.allowed).toBe(true);
     expect(q.used).toBe(0);
-    expect(q.resetsAt).toBeNull();
+    expect(q.resetsAt).toBe(GUEST_WINDOW_MS);
   });
 
-  it('consumes only after a completed scan and blocks the next', () => {
-    const after = consumeGuestScan(1_000);
-    expect(after.allowed).toBe(false);
-    expect(after.used).toBe(1);
-    expect(after.resetsAt).toBe(1_000 + GUEST_WINDOW_MS);
-    expect(consumeGuestScan(1_001).allowed).toBe(false);
+  it('allows seven completed scans and blocks the eighth', () => {
+    for (let i = 1; i <= 7; i++) {
+      const after = consumeGuestScan(1000 + i);
+      expect(after.used).toBe(i);
+      expect(after.allowed).toBe(i < 7);
+      expect(after.resetsAt).toBe(GUEST_WINDOW_MS);
+    }
+    expect(consumeGuestScan(2000).used).toBe(7);
   });
 
-  it('resets after 30 days', () => {
-    consumeGuestScan(1_000);
-    const later = getGuestQuota(1_000 + GUEST_WINDOW_MS);
-    expect(later.allowed).toBe(true);
-    expect(later.used).toBe(0);
+  it('resets at midnight UTC, not 24 hours after the first scan', () => {
+    for (let i = 0; i < 7; i++) consumeGuestScan(GUEST_WINDOW_MS - 1000);
+    expect(getGuestQuota(GUEST_WINDOW_MS - 1).allowed).toBe(false);
+    expect(getGuestQuota(GUEST_WINDOW_MS)).toMatchObject({ allowed: true, used: 0, limit: 7 });
+  });
+
+  it('migrates a legacy single-scan record without a month-long block', () => {
+    localStorage.setItem(GUEST_QUOTA_KEY, JSON.stringify({ usedAt: 1000 }));
+    expect(getGuestQuota(2000)).toMatchObject({ allowed: true, used: 1, limit: 7 });
+    expect(getGuestQuota(GUEST_WINDOW_MS)).toMatchObject({ allowed: true, used: 0 });
   });
 
   it('stashes and hands the report to a later login', () => {

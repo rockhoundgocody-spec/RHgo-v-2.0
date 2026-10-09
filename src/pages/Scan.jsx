@@ -13,6 +13,7 @@ import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
 import BadgeUnlockOverlay from '@/components/badges/BadgeUnlockOverlay.jsx';
 import { useBadgeAwarder } from '@/lib/useBadgeAwarder';
 import { useSubscription } from '@/lib/useSubscription';
+import useDailyScanQuota from '@/hooks/useDailyScanQuota';
 import { stripExif } from '@/lib/stripExif';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
@@ -27,7 +28,7 @@ import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { progressQuestsForSpecimen } from '@/lib/questProgress';
 import {
   consumeGuestScan,
-  getGuestQuota,
+  GUEST_SCAN_LIMIT,
   getOrCreateGuestId,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
@@ -43,7 +44,7 @@ export default function Scan() {
   useSeoRobots(true);
   useSeoMeta(
     'Scan a rock free — AI mineral ID | RockHound-GO',
-    'Photograph a specimen and get a field report with confidence, lookalikes, and tests. One free guest scan — no account required.',
+    'Photograph a specimen and get a field report with confidence, lookalikes, and tests. 7 free scans per day, resetting at midnight UTC — no account required.',
   );
   const navigate = useNavigate();
   const [stage, setStage] = useState('camera');
@@ -76,17 +77,15 @@ export default function Scan() {
   const [me, setMe] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const { isPaid, loading: subLoading } = useSubscription(me);
-  const monthKey = `rhgo_scans_${new Date().toISOString().slice(0, 7)}`;
-  const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(monthKey) || 0));
-  const [guestQuota, setGuestQuota] = useState(() => getGuestQuota());
+  const { scansUsed, setScansUsed, guestQuota, setGuestQuota } = useDailyScanQuota(me);
   const isGuest = authReady && !me;
   const canScan = !authReady || subLoading
     ? false
-    : isPaid
+    : isPaid || me?.role === 'admin'
       ? true
       : isGuest
         ? guestQuota.allowed
-        : scansUsed < 5;
+        : scansUsed < GUEST_SCAN_LIMIT;
 
   useEffect(() => {
     base44.auth.me()
@@ -200,7 +199,6 @@ export default function Scan() {
         if (!isGuest && (status === 402 || code === 'scan_quota')) {
           const used = idErr?.data?.quota?.used;
           if (typeof used === 'number') {
-            localStorage.setItem(monthKey, String(used));
             setScansUsed(used);
           }
           setStage('freeLimit');
@@ -237,10 +235,9 @@ export default function Scan() {
         stashPendingGuestReport({ result: enriched, primaryUrl: finalUrl, gpsCoords, beachName });
       } else if (!isPaid) {
         if (typeof serverQuota?.used === 'number') {
-          localStorage.setItem(monthKey, String(serverQuota.used));
           setScansUsed(serverQuota.used);
         } else {
-          setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
+          setScansUsed(u => u + 1);
         }
       }
 
@@ -574,8 +571,8 @@ export default function Scan() {
 
       {stage === 'guestLimit' && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
-          <p className="text-white font-bold text-lg mb-2">That was your free scan</p>
-          <p className="text-white/50 text-sm text-center mb-6">Create a free account for 5 scans every month — no card needed.</p>
+          <p className="text-white font-bold text-lg mb-2">You've used today's 7 free scans</p>
+          <p className="text-white/50 text-sm text-center mb-6">Your 7 free scans reset at midnight UTC. Create an account to keep your collection synced.</p>
           <button onClick={() => navigate('/register')} className="px-6 py-3 rounded-xl font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
             Create free account
           </button>
@@ -585,8 +582,8 @@ export default function Scan() {
 
       {stage === 'freeLimit' && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center px-8" style={{ background: '#0a0a14' }}>
-          <p className="text-white font-bold text-lg mb-2">You've used this month's free scans</p>
-          <p className="text-white/50 text-sm text-center mb-6">Keep exploring the map — upgrade when you're ready for more scans.</p>
+          <p className="text-white font-bold text-lg mb-2">You've used today's 7 free scans</p>
+          <p className="text-white/50 text-sm text-center mb-6">Your 7 free scans reset at midnight UTC. Upgrade for unlimited scans.</p>
           <button onClick={resetToCamera} className="px-6 py-3 rounded-xl font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
             Keep exploring
           </button>

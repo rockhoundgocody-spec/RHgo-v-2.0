@@ -66,7 +66,7 @@ export default function Landing() {
               boxShadow: '0 4px 24px -6px rgba(159,232,208,0.4)',
             }}
           >
-            Scan one free
+            Get 7 free scans a day
           </Link>
           <button
             type="button"
