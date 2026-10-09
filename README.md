@@ -39,6 +39,15 @@ npm run dev
 
 CI (`.github/workflows/`) runs all of the above on every pull request.
 
+### Edge functions: returning errors
+
+Never put an exception's text in a response: `error.message` carries host names, entity names and
+query fragments. In a `catch`, return `safeError('functionName', error)` from
+`base44/shared/httpErrors.ts`. It logs the full error under a short reference and answers
+`{ error, request_id }`, so a user can quote the reference and you can find the log line. Messages you
+chose on purpose (validation, 401/403/404/429) stay plain `Response.json({ error: '…' }, { status })`.
+`base44/errorLeakGuard_test.ts` fails CI if a function puts `.message` or `.stack` anywhere but a log line.
+
 ## Configuration
 
 The app talks to a Base44 backend. Vite inlines `VITE_*` values into the bundle **at build time**, so they must be set when you run `npm run build`, not just on the server. See [`.env.example`](.env.example).
