@@ -19,6 +19,7 @@ Roadmap/demo layers can include Community, Market, Clover AI, Land Access, Learn
 
 - [`docs/RHGO_BUILD_DIRECTIVE.md`](docs/RHGO_BUILD_DIRECTIVE.md) — product scope, priorities and guardrails for the next implementation pass.
 - [`docs/DISCOVERY_PSYCHOLOGY_LAYER.md`](docs/DISCOVERY_PSYCHOLOGY_LAYER.md) — the post-scan Discovery Choice, XP categories and discovery chains.
+- [`docs/plan/`](docs/plan/README.md) — the master plan: how this repo, `RockHound-GO_HUB` and `Ai-i-want-for-game` fit together, and the work needed to make them shippable and maintainable.
 
 ## Development
 
