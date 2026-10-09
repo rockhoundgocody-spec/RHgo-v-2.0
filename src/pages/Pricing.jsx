@@ -1,5 +1,5 @@
 /**
- * Pricing.jsx — RockHound-GO Field Kit Tiers
+ * Pricing.jsx — RockHound GO Field Kit Tiers
  *
  * Field (free) · Season ($12.99/30 days) · Hound ($79/yr) · Steward ($149/yr) · Club ($199/yr)
  *
@@ -17,9 +17,12 @@ import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { isNativeApp } from '@/lib/isNativeApp';
 
+const returnOrigin = typeof window !== 'undefined'
+  ? (window.self !== window.top ? 'https://rhgo.me' : window.location.origin)
+  : '';
 const STRIPE_CONFIG = {
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  successUrl: `${returnOrigin}/settings?upgrade=success`,
+  cancelUrl: `${returnOrigin}/pricing`,
 };
 
 const TIERS = [
@@ -161,7 +164,7 @@ export default function Pricing() {
 function PricingPage() {
   useSeoRobots(true);
   useSeoMeta(
-    'RockHound-GO Pricing — Field, Season, Hound, Steward & Club',
+    'RockHound GO Pricing — Field, Season, Hound, Steward & Club',
     'Free field kit with 5 scans/month. Hound annual $79/yr for unlimited scans, legal land overlay, and offline maps. Steward $149/yr for dealers. Club $199/yr for 8 seats.'
   );
   const navigate = useNavigate();
@@ -176,11 +179,6 @@ function PricingPage() {
 
     base44.analytics.track({ eventName: 'pricing_upgrade_tapped', properties: { tier: tier.id } });
 
-    if (typeof window !== 'undefined' && window.self !== window.top) {
-      alert('Checkout only works from the published app — open it in a new tab to upgrade.');
-      return;
-    }
-
     // A subscription is credited to the signed-in account, so sign in first
     // and come straight back here.
     if (!user?.email) {
@@ -188,9 +186,15 @@ function PricingPage() {
       return;
     }
 
+    if (upgrading) return;
     setUpgrading(tier.id);
     setCheckoutError(null);
+    let checkoutTab = null;
     try {
+      const framed = window.self !== window.top;
+      checkoutTab = framed ? window.open('', '_blank') : null;
+      if (framed && !checkoutTab) throw new Error('Allow popups to continue to checkout.');
+      if (checkoutTab) checkoutTab.opener = null;
       const res = await base44.functions.invoke('createCheckoutSession', {
         successUrl: STRIPE_CONFIG.successUrl,
         cancelUrl: STRIPE_CONFIG.cancelUrl,
@@ -198,14 +202,18 @@ function PricingPage() {
       });
       const url = res?.data?.url;
       if (!url) throw new Error('No checkout URL returned');
-      window.location.href = url;
+      if (checkoutTab) checkoutTab.location.replace(url);
+      else window.location.assign(url);
     } catch (err) {
+      checkoutTab?.close();
       const code = err?.data?.code || err?.code || err?.response?.data?.code;
       const message = code === 'plan_unconfigured' || code === 'price_inactive'
         ? `${tier.name} isn't open for purchase yet. Try another plan, or check back soon.`
         : code === 'auth_required'
           ? 'Please sign in again to subscribe.'
-          : 'Unable to start checkout — please try again shortly.';
+          : err.message === 'Allow popups to continue to checkout.'
+            ? err.message
+            : 'Unable to start checkout — please try again shortly.';
       setCheckoutError({ tier: tier.id, message });
     } finally {
       setUpgrading(null);
@@ -290,7 +298,7 @@ function PricingPage() {
               ) : (
                 <>
                   <button onClick={() => handleUpgrade(tier)}
-                    disabled={upgrading === tier.id}
+                    disabled={upgrading !== null}
                     className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
                     style={tier.ctaStyle}>
                     {upgrading === tier.id ? 'Redirecting…' : tier.cta}

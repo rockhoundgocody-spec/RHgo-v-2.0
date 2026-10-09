@@ -35,6 +35,8 @@ vi.mock('@/api/base44Client', () => ({
   },
 }));
 
+vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ user: { id: 'owner-1', email: 'test@example.com' } }) }));
+
 vi.mock('@/lib/privateLocation', () => ({
   buildPrivatePinRecord: vi.fn(),
 }));

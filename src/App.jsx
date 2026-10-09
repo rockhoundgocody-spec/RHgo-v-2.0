@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes, Navigate, useLocation } from 'react-route
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import SessionRecovery from '@/components/SessionRecovery';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
@@ -103,6 +104,7 @@ function SignInFirst() {
  */
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const { pathname } = useLocation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -113,6 +115,7 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
+    if (authError.type === 'session_timeout' && pathname !== '/demo') return <SessionRecovery />;
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
