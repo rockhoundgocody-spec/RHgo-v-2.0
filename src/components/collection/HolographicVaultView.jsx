@@ -39,7 +39,7 @@ export default function HolographicVaultView({ specimens = [] }) {
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Previous specimen"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} aria-hidden="true" />
         </button>
 
         <span className="text-xs font-mono font-bold tracking-widest text-amethyst-glow uppercase">
@@ -51,7 +51,7 @@ export default function HolographicVaultView({ specimens = [] }) {
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           aria-label="Next specimen"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={20} aria-hidden="true" />
         </button>
       </div>
 
@@ -80,7 +80,7 @@ export default function HolographicVaultView({ specimens = [] }) {
               />
             ) : (
               <div className="w-full h-full bg-black/40 flex items-center justify-center">
-                <Gem size={48} className="text-amethyst-glow/50" />
+                <Gem size={48} className="text-amethyst-glow/50" aria-hidden="true" />
               </div>
             )}
             {/* Holographic scanner line */}
@@ -133,7 +133,7 @@ export default function HolographicVaultView({ specimens = [] }) {
           <div className="mt-4">
             <Link to={`/specimen/${current.id}`}>
               <Button className="w-full h-11 text-xs font-extrabold rounded-xl text-white bg-gradient-to-r from-amethyst to-purple-800 hover:from-amethyst-glow transition flex items-center justify-center gap-1.5">
-                Inspect Specimen Dossier <ArrowRight size={14} />
+                Inspect Specimen Dossier <ArrowRight size={14} aria-hidden="true" />
               </Button>
             </Link>
           </div>
