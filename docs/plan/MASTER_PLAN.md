@@ -105,7 +105,7 @@ See the table in §0. Verification: `npm run lint` · `npm test` · `npm run bui
 | ID | Task | Size | Who | Acceptance |
 | --- | --- | --- | --- | --- |
 | 1.1 | Execute the PR triage: merge the verified 15, close ~100 duplicates/obsolete with a standard comment, port the salvage list | M | C after ⚑ D4 | open PRs ≤ 30, then ≤ 10 |
-| 1.2 | Turn on required checks (`CI`, `Deno`), "automatically delete head branches", Dependabot/Renovate | S | ⚑ D11 | a red PR cannot merge |
+| 1.2 | Turn on required checks (`CI`, `Deno`), "automatically delete head branches", Dependabot/Renovate (its `github-actions` ecosystem keeps the SHA-pinned actions in `ci.yml` current) | S | ⚑ D11 | a red PR cannot merge |
 | 1.3 | **One systematic fix for error leakage**: `base44/shared/httpErrors.ts` (`safeError(ctx, err)` logs server-side, returns a generic message + request id), applied to all 42 functions, plus a Deno test that fails if any `entry.ts` puts `.message` in a `Response` | M | C | the test passes; the 4 open Sentinel PRs closed as superseded |
 | 1.4 | Unify `@base44/sdk` pins (7 versions today: 0.8.25 → 0.8.53) via one `deno.json` import map | S | C | one version across `base44/` |
 | 1.5 | Guest abuse controls: require sign-in for `identify`, or add IP-keyed limits + a bot challenge + a global daily budget breaker | M | C + ⚑ policy | unmetered guest calls = 0 |
@@ -188,7 +188,7 @@ Fixes: cap open PRs per agent (e.g. 3) · require green CI · auto-close PRs idl
 | D8 | Is the audience under 13? There is a merged `feat/kid-friendly-junior-explorer` branch, a deleted `JuniorExplorerCard`, HUB's `ParentalDashboard` and a `FamilyProfile` entity | COPPA / Play Families obligations; I am not giving legal advice |
 | D9 | Marketplace/escrow/disputes: stay roadmap-only (recommended) or invest, with legal review | |
 | D10 | `docs/firebase-play-store.md` contains a personal email address; keep it in a repo? | |
-| D11 | GitHub settings I cannot change: branch protection with required checks, auto-delete head branches, Dependabot | |
+| D11 | GitHub settings I cannot change: branch protection with required checks, auto-delete head branches, Dependabot (the actions in the new `ci.yml` files are already pinned to commit SHAs, verified against the upstream tags; Dependabot would only keep those pins current) | |
 
 ---
 
