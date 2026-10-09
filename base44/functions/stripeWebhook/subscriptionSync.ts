@@ -59,8 +59,21 @@ export function periodEndOf(sub: StripeLike | null | undefined): number | null {
 }
 
 /** Unix seconds when a one-time pass bought now runs out. */
-export function passEnd(days: unknown, nowMs: number = Date.now()): number | null {
+export function passEnd(days: unknown, nowMs: number): number | null {
   const d = Number(days);
   if (!Number.isFinite(d) || d <= 0 || d > 400) return null;
   return Math.floor(nowMs / 1000) + Math.round(d * 86400);
+}
+
+export function shouldIgnoreStripeEvent(event, appId) {
+  const metadata = event?.data?.object?.metadata;
+  return !appId || metadata?.base44_test_checkout === 'true' ||
+    metadata?.base44_app_id !== appId || !metadata?.owner_email ||
+    !ENTITLEMENTS.has(metadata?.tier);
+}
+
+export function checkoutPassEnd(session) {
+  // Expiry is anchored to the original checkout, never webhook retry time.
+  if (session?.metadata?.plan !== 'season' || !Number.isFinite(session?.created)) return null;
+  return passEnd(30, session.created * 1000);
 }

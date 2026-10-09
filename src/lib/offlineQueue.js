@@ -10,12 +10,20 @@
  * queue handles retry, ordering, and reconnect.
  */
 import { base44 } from "@/api/base44Client";
+import { withSessionTimeout } from '@/lib/sessionTimeout';
 
 const STORAGE_KEY = "rh-offline-queue-v1";
 const KEY_STORAGE_KEY = "rh-offline-queue-key-v1";
 
 let memoryKey = null;
+let memoryKeyRaw = null;
 let cachedQueue = null;
+let mutation = Promise.resolve();
+function serializeQueue(work) {
+  const result = mutation.then(work);
+  mutation = result.catch(() => {});
+  return result;
+}
 
 function getCrypto() {
   if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
@@ -46,7 +54,9 @@ function base64ToBuffer(base64) {
 }
 
 async function getOrCreateKey() {
-  if (memoryKey) return memoryKey;
+  const storedKey = localStorage.getItem(KEY_STORAGE_KEY);
+  if (memoryKey && storedKey === memoryKeyRaw) return memoryKey;
+  memoryKey = null;
   const cryptoObj = getCrypto();
   if (!cryptoObj) return null;
 
@@ -61,9 +71,13 @@ async function getOrCreateKey() {
         true,
         ["encrypt", "decrypt"]
       );
+      memoryKeyRaw = storedKeyRaw;
       return memoryKey;
     }
 
+    if (localStorage.getItem(STORAGE_KEY) && !Array.isArray(JSON.parse(localStorage.getItem(STORAGE_KEY)))) {
+      throw new Error('The offline encryption key is missing. Existing pending finds have been preserved.');
+    }
     memoryKey = await cryptoObj.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
       true,
@@ -74,11 +88,12 @@ async function getOrCreateKey() {
     const keyBase64 = bufferToBase64(exportedKey);
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(KEY_STORAGE_KEY, keyBase64);
+      memoryKeyRaw = keyBase64;
     }
     return memoryKey;
   } catch (err) {
-    console.error("offlineQueue: failed to initialize encryption key", err);
-    return null;
+    memoryKey = null;
+    throw new Error('Offline storage could not be secured. Your existing pending finds have not been removed.');
   }
 }
 
@@ -86,7 +101,7 @@ async function encryptPayload(data) {
   const cryptoObj = getCrypto();
   const key = await getOrCreateKey();
   if (!cryptoObj || !key) {
-    return JSON.stringify(data);
+    throw new Error('Encrypted offline storage is unavailable. This find has not been saved.');
   }
 
   const iv = cryptoObj.getRandomValues(new Uint8Array(12));
@@ -111,7 +126,7 @@ async function decryptPayload(raw) {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return [];
+    throw new Error('Pending finds could not be read. The stored queue has been preserved.');
   }
 
   if (Array.isArray(parsed)) {
@@ -122,8 +137,7 @@ async function decryptPayload(raw) {
     const cryptoObj = getCrypto();
     const key = await getOrCreateKey();
     if (!cryptoObj || !key) {
-      console.warn("offlineQueue: Web Crypto unavailable for decryption");
-      return [];
+      throw new Error('Pending finds cannot be unlocked on this device. The stored queue has been preserved.');
     }
     try {
       const iv = new Uint8Array(base64ToBuffer(parsed.iv));
@@ -136,113 +150,75 @@ async function decryptPayload(raw) {
       const decryptedText = new TextDecoder().decode(decryptedBuffer);
       return JSON.parse(decryptedText);
     } catch (err) {
-      console.error("offlineQueue: decryption failed", err);
-      return [];
+      throw new Error('Pending finds could not be decrypted. The stored queue has been preserved.');
     }
   }
 
-  return [];
+  throw new Error('Pending finds have an unknown storage format. The stored queue has been preserved.');
 }
 
 export async function loadQueue() {
-  try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!raw) {
-      cachedQueue = [];
-      return [];
-    }
-    const items = await decryptPayload(raw);
-    cachedQueue = Array.isArray(items) ? items : [];
-
-    let parsedRaw;
-    try { parsedRaw = JSON.parse(raw); } catch { /* ignore */ }
-    if (Array.isArray(parsedRaw)) {
-      await saveQueue(cachedQueue);
-    }
-
-    return cachedQueue;
-  } catch {
-    cachedQueue = [];
-    return [];
-  }
+  if (typeof localStorage === 'undefined') throw new Error('Offline storage is unavailable.');
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const items = raw ? await decryptPayload(raw) : [];
+  if (!Array.isArray(items)) throw new Error('Pending finds could not be read. The stored queue has been preserved.');
+  cachedQueue = structuredClone(items);
+  return structuredClone(items);
 }
 
 export async function saveQueue(items) {
-  cachedQueue = items;
-  let batch = items;
-  while (batch.length > 0) {
-    try {
-      const encrypted = await encryptPayload(batch);
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, encrypted);
-      }
-      cachedQueue = batch;
-      return;
-    } catch {
-      batch = batch.slice(Math.ceil(batch.length / 2));
-    }
-  }
+  if (typeof localStorage === 'undefined') throw new Error('Offline storage is unavailable. This find was not saved.');
+  const encrypted = await encryptPayload(items);
   try {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    cachedQueue = [];
-  } catch { /* nothing more we can do */ }
+    localStorage.setItem(STORAGE_KEY, encrypted);
+  } catch {
+    throw new Error('Device storage is full or blocked. This find was not saved; existing pending finds are intact.');
+  }
+  cachedQueue = structuredClone(items);
 }
-
-const MAX_ATTEMPTS = 5;
 
 let flushing = false;
 
-export async function flushQueue() {
-  const currentQueue = await loadQueue();
-  if (flushing) return { flushed: 0, remaining: currentQueue.length };
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return { flushed: 0, remaining: currentQueue.length };
-  }
-
-  flushing = true;
-  let flushed = 0;
-  try {
-    let queue = currentQueue;
-    while (queue.length > 0) {
-      const next = queue[0];
-      try {
-        const e = base44.entities[next.entity];
-        if (!e) { queue.shift(); continue; }
-        if (next.op === "create") {
-          await e.create(next.data);
-        } else if (next.op === "update") {
-          await e.update(next.id, next.data);
-        }
-        flushed += 1;
-        queue.shift();
-        await saveQueue(queue);
-      } catch (err) {
-        const status = err?.status ?? err?.response?.status;
-        const attempts = (next.attempts || 0) + 1;
-        if ((status && status >= 400 && status < 500) || attempts >= MAX_ATTEMPTS) {
-          console.warn("offlineQueue: dropping unsendable write", next.entity, next.op, status);
-          queue.shift();
+export function flushQueue() {
+  return serializeQueue(async () => {
+    const queue = await loadQueue();
+    if (flushing || (typeof navigator !== 'undefined' && navigator.onLine === false)) return { flushed: 0, remaining: queue.length };
+    flushing = true;
+    let flushed = 0;
+    try {
+      let user;
+      try { user = await withSessionTimeout(base44.auth.me()); } catch { return { flushed: 0, remaining: queue.length }; }
+      if (!user?.id) return { flushed: 0, remaining: queue.length };
+      // Legacy entries have no trustworthy owner. Retain them rather than replaying under a different account.
+      for (let index = 0; index < queue.length;) {
+        const next = queue[index];
+        if (next.ownerId !== user.id) { index += 1; continue; }
+        try {
+          const entity = base44.entities[next.entity];
+          if (!entity || !['create', 'update'].includes(next.op)) throw new Error('Unsupported queued write');
+          if (next.op === 'create') await entity.create(next.data);
+          else await entity.update(next.id, next.data);
+        } catch (error) {
+          const status = error?.status ?? error?.response?.status;
+          queue[index] = { ...next, attempts: (next.attempts || 0) + 1, lastError: status ? `Sync failed (${status})` : 'Sync did not finish' };
           await saveQueue(queue);
-          continue;
+          break;
         }
-        queue[0] = { ...next, attempts };
+        queue.splice(index, 1);
         await saveQueue(queue);
-        break;
+        flushed += 1;
       }
-    }
-    return { flushed, remaining: queue.length };
-  } finally {
-    flushing = false;
-  }
+      return { flushed, remaining: queue.length };
+    } finally { flushing = false; }
+  });
 }
 
 /**
  * queueWrite — try the network first; on failure, persist for later replay.
  * Returns { ok, offline, result? } so callers can show optimistic UI.
  */
-export async function queueWrite({ entity, op = "create", id, data }) {
+export async function queueWrite({ entity, op = "create", id, data, ownerId }) {
+  if (!ownerId) throw new Error('Sign in before saving a private offline find.');
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
 
   if (online) {
@@ -258,16 +234,18 @@ export async function queueWrite({ entity, op = "create", id, data }) {
     }
   }
 
-  const queue = await loadQueue();
-  queue.push({ entity, op, id, data, queuedAt: Date.now() });
-  await saveQueue(queue);
+  await serializeQueue(async () => {
+    const queue = await loadQueue();
+    queue.push({ entity, op, id, data, ownerId, queuedAt: Date.now() });
+    await saveQueue(queue);
+  });
   if (typeof window !== "undefined") schedulePeriodicRetry();
   return { ok: true, offline: true };
 }
 
-export function getQueueLength() {
+export function getQueueLength(ownerId) {
   if (cachedQueue !== null) {
-    return cachedQueue.length;
+    return ownerId ? cachedQueue.filter(item => item.ownerId === ownerId).length : cachedQueue.length;
   }
   return 0;
 }
@@ -300,13 +278,13 @@ let retryTimer = null;
 function schedulePeriodicRetry() {
   if (retryTimer) return;
   retryTimer = setInterval(async () => {
-    const queue = await loadQueue();
+    const queue = await loadQueue().catch(() => []);
     if (queue.length === 0) {
       clearInterval(retryTimer);
       retryTimer = null;
       return;
     }
-    await flushWhenStable();
+    await flushWhenStable().catch(() => {});
   }, PERIODIC_INTERVAL_MS);
 }
 
@@ -320,12 +298,12 @@ export function installOfflineQueue() {
   });
 
   window.addEventListener("online", () => {
-    setTimeout(() => { flushWhenStable(); }, 1500);
+    setTimeout(() => { flushWhenStable().catch(() => {}); }, 1500);
   });
 
   setTimeout(async () => {
-    await flushWhenStable();
-    const queue = await loadQueue();
+    await flushWhenStable().catch(() => {});
+    const queue = await loadQueue().catch(() => []);
     if (queue.length > 0) {
       schedulePeriodicRetry();
     }
@@ -333,7 +311,7 @@ export function installOfflineQueue() {
 
   window.addEventListener("storage", async (e) => {
     if (e.key === STORAGE_KEY) {
-      const queue = await loadQueue();
+      const queue = await loadQueue().catch(() => []);
       if (queue.length > 0) {
         schedulePeriodicRetry();
       }

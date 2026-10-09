@@ -1,5 +1,6 @@
 import Stripe from 'npm:stripe@14.25.0';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { secrets } from 'base44:runtime';
 import { isValidRedirectTarget } from './redirectValidation.ts';
 import { resolveCheckoutPrice } from './tierPricing.ts';
 
@@ -19,7 +20,7 @@ import { resolveCheckoutPrice } from './tierPricing.ts';
  * (tierPricing.ts). Recurring prices open a subscription; a one-time price
  * is sold as a fixed-length pass (plan.passDays).
  */
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const body = await req.json().catch(() => ({}));
     const { priceId: requestedPriceId, successUrl, cancelUrl, tier } = body || {};
@@ -27,7 +28,7 @@ Deno.serve(async (req) => {
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
 
     if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
-      return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target' }, { status: 400 });
+      return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target', code: 'invalid_redirect' }, { status: 400 });
     }
 
     const base44 = createClientFromRequest(req);
@@ -36,10 +37,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Sign in to subscribe', code: 'auth_required' }, { status: 401 });
     }
 
-    const pricing = resolveCheckoutPrice(tier, requestedPriceId, (name) => Deno.env.get(name));
+    const pricing = resolveCheckoutPrice(tier, requestedPriceId, (name) => secrets.get(name));
     if (!pricing.ok) return Response.json({ error: pricing.error, code: pricing.code }, { status: 400 });
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
+    const stripe = new Stripe(secrets.get('STRIPE_SECRET_KEY'));
     const price = await stripe.prices.retrieve(pricing.priceId);
     if (!price?.active) {
       return Response.json({ error: 'This plan is not available right now', code: 'price_inactive' }, { status: 400 });
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
     } catch { /* first purchase */ }
 
     const metadata: Record<string, string> = {
-      base44_app_id: Deno.env.get('BASE44_APP_ID') || '',
+      base44_app_id: secrets.get('BASE44_APP_ID') || '',
       tier: pricing.entitlement,
       plan: pricing.plan,
       owner_email: user.email,
@@ -82,11 +83,11 @@ Deno.serve(async (req) => {
         : { payment_intent_data: { metadata } }),
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
-    });
+    }, { idempotencyKey: crypto.randomUUID() });
 
     return Response.json({ url: session.url });
   } catch (error) {
     console.error('createCheckoutSession error:', error);
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
-});
+}

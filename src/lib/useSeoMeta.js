@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'RockHound-GO — AI Rock & Mineral ID for Rockhounds';
+const DEFAULT_TITLE = 'RockHound GO | Every find has a story';
 const DEFAULT_DESCRIPTION =
-  'Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds.';
+  'Explore possible mineral matches from a photo, check access guidance before collecting, and keep a personal collection with RockHound GO.';
 
 function setMetaTag(selector, attr, key, value) {
   let tag = document.head.querySelector(selector);

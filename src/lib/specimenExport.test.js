@@ -153,6 +153,17 @@ describe('specimenExport', () => {
     });
   });
 
+  it('neutralizes formulas and keeps zero-valued coordinates and weight', () => {
+    exportToCsv([{ mineral_name: '=HYPERLINK("https://example.invalid")', notes: '\t@SUM(1)', lat: 0, lng: 0, weight_lbs: 0 }]);
+    const csv = capturedBlobs[0].content;
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).toContain("'\t@SUM(1)");
+    expect(csv).toContain(',0,0,0,');
+    exportToKmz([{ mineral_name: 'Zero fixture', notes: ']]><script>bad</script>', lat: 0, lng: 0 }]);
+    expect(capturedBlobs[1].content).toContain('<coordinates>0,0,0</coordinates>');
+    expect(capturedBlobs[1].content).not.toContain('<script>');
+  });
+
   describe('exportToKmz', () => {
     it('exports KML with default filename and correct MIME type', () => {
       exportToKmz([]);
@@ -214,7 +225,7 @@ describe('specimenExport', () => {
 
       expect(text).toContain('<?xml version="1.0" encoding="UTF-8"?>');
       expect(text).toContain('<kml xmlns="http://www.opengis.net/kml/2.2">');
-      expect(text).toContain('<name>RockHound-GO Finds</name>');
+      expect(text).toContain('<name>RockHound GO Finds</name>');
       expect(text).toContain('<description>Private rock collection export</description>');
 
       expect(text).toContain('<Placemark>');

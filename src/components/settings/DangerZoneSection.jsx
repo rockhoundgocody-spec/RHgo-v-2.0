@@ -15,7 +15,7 @@ export default function DangerZoneSection() {
             icon={Trash2}
             iconColor="text-rose-400"
             title="Danger Zone"
-            subtitle="Permanently delete your account and all associated field data. This action cannot be undone."
+            subtitle="Delete specimens, companion records, scan drafts, and badges. Your account and other data remain."
           />
           <button
             type="button"
@@ -23,7 +23,7 @@ export default function DangerZoneSection() {
             className="ml-9 px-4 py-2.5 rounded-xl text-rose-400 text-sm font-semibold transition active:scale-95 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70 motion-reduce:transform-none"
             style={{ background: 'hsla(0,80%,50%,0.08)', border: '1px solid hsla(0,80%,50%,0.22)' }}
           >
-            Delete Account
+            Delete collection data
           </button>
         </GlassPanel>
       </div>

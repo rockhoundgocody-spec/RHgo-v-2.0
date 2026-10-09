@@ -33,6 +33,7 @@ vi.mock('react', async (importOriginal) => {
     useEffect: (cb) => {
       effectCallback = cb;
     },
+    useRef: (value) => ({ current: value }),
     useContext: vi.fn(),
   };
 });
@@ -291,6 +292,18 @@ describe('AuthContext', () => {
     });
 
     describe('checkUserAuth', () => {
+      it('finishes a hung check with a retry state, not a false sign-out', async () => {
+        vi.useFakeTimers();
+        base44.auth.me.mockImplementationOnce(() => new Promise(() => {}));
+        const { contextValue, stateMap } = renderProvider();
+        const check = contextValue.checkUserAuth();
+        await vi.advanceTimersByTimeAsync(6000);
+        await check;
+        expect(stateMap[4].value.type).toBe('session_timeout');
+        expect(stateMap[2].value).toBe(false);
+        expect(stateMap[1].setter).not.toHaveBeenCalledWith(false);
+        vi.useRealTimers();
+      });
       it('handles user auth failure gracefully without setting authError', async () => {
         base44.auth.me.mockRejectedValueOnce(new Error('Invalid token'));
 

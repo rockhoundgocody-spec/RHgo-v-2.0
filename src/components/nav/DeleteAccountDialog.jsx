@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useFocusTrap } from '@/lib/useFocusTrap';
@@ -30,14 +31,14 @@ export default function DeleteAccountDialog({ onClose }) {
       await deleteUserData(base44, user.email);
       await base44.auth.logout('/');
     } catch {
-      setError('We could not delete your account data. Nothing else was changed—please try again.');
+      setError('The deletion did not finish. Some records may already have been removed; this cannot be rolled back. Your account and uploaded files have not been deleted.');
     } finally {
       setConfirming(false);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[6000] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden />
       <div
         ref={dialogRef}
@@ -57,7 +58,7 @@ export default function DeleteAccountDialog({ onClose }) {
                 <Trash2 size={18} className="text-rose-400" />
               </div>
               <div>
-                <h2 id="delete-account-title" className="text-white font-bold text-lg">Delete Account</h2>
+                <h2 id="delete-account-title" className="text-white font-bold text-lg">Delete collection data</h2>
                 <p id="delete-account-description" className="text-white/40 text-xs">This cannot be undone</p>
               </div>
             </div>
@@ -70,10 +71,10 @@ export default function DeleteAccountDialog({ onClose }) {
             <div className="space-y-4">
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-start gap-2.5">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                <span>Deleting your account permanently removes your profile, scanned specimens, companion history, and unlocked achievements.</span>
+                <span>This deletes scanned specimens, companion records, scan drafts, and badges. These deletions cannot be undone.</span>
               </div>
               <p className="text-xs text-white/60 leading-relaxed">
-                If you proceed, all your personal data stored on RockHound-GO will be permanently deleted from our servers.
+                This is not account deletion. Your sign-in account, uploaded files, subscription, private logs, posts, trips, and other records remain. Contact support for a complete deletion request.
               </p>
               <div className="flex gap-2 pt-2">
                 <button
@@ -129,6 +130,7 @@ export default function DeleteAccountDialog({ onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

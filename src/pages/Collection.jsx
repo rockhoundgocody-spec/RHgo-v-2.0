@@ -26,7 +26,7 @@ export default function Collection() {
   const filtered = useMemo(() => {
     let list = specimens;
     if (rarityFilter !== 'all') list = list.filter(s => s.rarity === rarityFilter);
-    if (verifiedOnly) list = list.filter(s => s.verified || (s.ai_confidence && s.ai_confidence >= 0.8));
+    if (verifiedOnly) list = list.filter(s => s.verified === true);
     const q = query.trim().toLowerCase();
     if (q) {
       list = list.filter((s) =>

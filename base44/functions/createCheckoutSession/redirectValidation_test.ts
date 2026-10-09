@@ -24,6 +24,12 @@ Deno.test('isValidRedirectTarget: rejects non-http/https protocols', () => {
   assertEquals(isValidRedirectTarget('data:text/html,<script>alert(1)</script>'), false);
 });
 
+Deno.test('isValidRedirectTarget: permits the custom domain but rejects lookalikes and credentials', () => {
+  assertEquals(isValidRedirectTarget('https://rhgo.me/settings?upgrade=success'), true);
+  assertEquals(isValidRedirectTarget('https://www.rhgo.me/pricing'), true);
+  for (const url of ['http://rhgo.me/pricing', 'https://rhgo.me.attacker.example/', 'https://user@rhgo.me/', 'https://rhgo.me:444/']) assertEquals(isValidRedirectTarget(url), false);
+});
+
 Deno.test('isValidRedirectTarget: handles empty or non-string inputs safely', () => {
   assertEquals(isValidRedirectTarget(''), false);
   assertEquals(isValidRedirectTarget(null as unknown as string), false);
