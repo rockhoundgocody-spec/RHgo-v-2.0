@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * processReferral — handles the gamified referral lifecycle.
@@ -91,6 +92,6 @@ export default async function(req: Request): Promise<Response> {
       referrals: allReferrals,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('processReferral', error);
   }
 }

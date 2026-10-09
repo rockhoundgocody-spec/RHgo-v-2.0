@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // Map Open-Meteo WMO weather code → human label
 function weatherLabel(code) {
@@ -107,6 +108,6 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Specimen.update(event.entity_id, updates);
     return Response.json({ updated: true, updates });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('enrichSpecimen', error);
   }
 });

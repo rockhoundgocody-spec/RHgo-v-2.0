@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * Returns (and lazily creates) the user's Companion pet state.
@@ -96,6 +97,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ companion, todays_specimens: todaysSpecimens });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('getCompanionState', error);
   }
 });

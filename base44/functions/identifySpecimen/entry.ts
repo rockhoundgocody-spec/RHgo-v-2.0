@@ -19,6 +19,7 @@ import {
 } from '../../shared/locationSubmission.ts';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
 import { checkMemberScanQuota, recordScanReceipt, findTrustedReceipt } from '../../shared/scanQuota.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -504,6 +505,6 @@ Deno.serve(async (req) => {
       meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('identifySpecimen', error);
   }
 });

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // Generates a random coordinate within `radiusMiles` of a given lat/lng,
 // then finds the nearest hotspot to that random point.
@@ -50,6 +51,6 @@ Deno.serve(async (req) => {
       cloversMessage: message,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('intentionRoulette', error);
   }
 });

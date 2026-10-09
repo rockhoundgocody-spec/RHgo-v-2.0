@@ -12,7 +12,7 @@ Everything below was found by reading code or running commands in this session (
 
 | ID | Sev | Repo | Finding | Fix size |
 | --- | --- | --- | --- | --- |
-| [R-1](#r-1-raw-error-text-returned-by-42-of-51-edge-functions) | Medium | RHgo | 42 of 51 edge functions return raw `error.message` | M |
+| [R-1](#r-1-raw-error-text-returned-by-42-of-51-edge-functions) | ~~Medium~~ **fixed** (Phase 1.3) | RHgo | 42 of 51 edge functions returned raw `error.message`; now one helper plus a guard test | M |
 | [R-2](#r-2-guest-rate-limits-are-keyed-by-a-client-supplied-id) | **High** (cost) | RHgo | Guest limits keyed by a client-supplied id; unauthenticated paid-LLM calls | M |
 | [R-3](#r-3-image-url-allowlist-is-far-broader-than-its-intent) | Medium | RHgo | `isValidImageUrl` accepts any `*.amazonaws.com` and any `*.base44.app` host | S-M |
 | [R-4](#r-4-offline-queue-encryption-key-is-stored-next-to-the-ciphertext) | Medium | RHgo | AES key in `localStorage` beside the data it protects | M |
@@ -36,7 +36,7 @@ Everything below was found by reading code or running commands in this session (
 | H-3 | Info | HUB | Python backend skeleton imports 6 modules that are not in the repo, so it cannot run. **Do not deploy.** | n/a |
 | O-1 | **⚑** | all | PR #533's description says a **service API key was pasted into a chat** and "should be rotated". Confirm it was. | owner |
 
-**Exit criteria for the trunk:** no `.message` in any `Response` (enforced by a test); guest paid calls impossible without sign-in or a verified bot challenge; offline key non-extractable; CSP free of `unsafe-eval` and bare `https:` on both hosts with 0 violations in a Playwright run; one SDK version; `npm audit --omit=dev --audit-level=high` reviewed and either clean or each remaining item justified; a secret scanner in CI.
+**Exit criteria for the trunk:** no `.message` in any `Response` (enforced by `base44/errorLeakGuard_test.ts`, done); guest paid calls impossible without sign-in or a verified bot challenge; offline key non-extractable; CSP free of `unsafe-eval` and bare `https:` on both hosts with 0 violations in a Playwright run; one SDK version; `npm audit --omit=dev --audit-level=high` reviewed and either clean or each remaining item justified; a secret scanner in CI.
 
 ---
 
@@ -62,6 +62,14 @@ export function safeError(context: string, err: unknown, status = 500): Response
 Apply it in every `catch`. Keep intentional, caller-safe messages (validation errors, 401/403/429) as they are. Frontend code that displays `error` text should be checked (`grep -rn "\.error" src/lib src/pages`) so users still see useful copy.
 
 **Verify.** A Deno test that walks `base44/functions/**/*.ts` (excluding `_test`) and fails if a line containing `Response.json`/`new Response` also contains `.message`. Four open Sentinel PRs (#714, #717, #722, #725) are closed as superseded.
+
+**Status: done in Phase 1.3.** `base44/shared/httpErrors.ts` provides `safeError(context, err, { status?, extra? })` (log the full error under an 8-character reference, answer `{ error, request_id }`) and `logError(context, err)` (for per-item failures inside a larger response). All 42 final `catch` blocks use it, and the three admin functions that returned per-item error text in a success response (`crawlMindat`, `seedSpecimenImages`, `sendWeeklySummary`) now return only a reference such as `error (ref 3fa9c2d1)`. Where a function already logged the error just before returning, the duplicate `console.error` was dropped. `getLeaderboard` and `removeSpecimenBackground` keep the response shape their callers expect through `extra`.
+
+The guard, `base44/errorLeakGuard_test.ts`, is deliberately blunt and stricter than the sketch above: no file under `base44/functions` or `base44/shared` may read an error's text at all. It fails on `.message` or `.stack` (dot, `?.` or brackets), on `String(e)`, `${e}`, `'x' + e`, `e.toString()` (also `e?.toString()` and `(e as Error).toString()`) for a variable bound by a `catch` or a `.catch(...)` handler, with a space or line break allowed wherever JavaScript allows one, and on `const { message } = e` / `catch ({ message })`. The only exemption is the `message` of an LLM completion (`data.choices[0].message`). A log line is not exempt: log the error object (`console.error('what failed', error)`), which is also the more useful log. Nothing is parsed: the whole file is searched, comments and strings included, so a comment cannot hide code and a line break cannot split a match (a comment that has to mention it says "the error's text"). Earlier versions exempted console calls by matching brackets and skipped comment lines; review showed both could be fooled (comments, strings and regular expressions for the scanner; `/* note */ return …` and `e.` followed by a line break for the skip), so they were removed, not patched, and the ten remaining log lines in `liveEyes`, `scanQuota`, `cloverChat`, `quickClassifySpecimen`, `syncPull`, `syncPush` and `weeklyFieldMissions` now log the error object. The guard has its own self-test and refuses to pass if it scans fewer than 50 files; it failed on 49 lines before the conversion. It catches accidental leaks, for example in a bot-written fix, not deliberate obfuscation; review covers those.
+
+Follow-up, low severity: logs now carry whole error objects (as 13 functions already did). Errors thrown by an HTTP client can include the request configuration, headers included. If function logs are ever shipped to a third party, have `logError` log only the error's name, message, stack and status.
+
+Left as is, on purpose: `publishHotspotToInstagram` still returns Instagram's own response body in `detail` on a 502. That is the provider's reply, not an exception, and the function is admin-only (the guard does not look for it). Say so if you want it removed too. The four open Sentinel PRs (#714, #717, #722, #725) are superseded by this change; closing them needs the owner's approval (D4).
 
 ### R-2 Guest rate limits are keyed by a client-supplied id
 
@@ -153,6 +161,8 @@ With `'unsafe-eval'` and `'unsafe-inline'`, the CSP does little against injected
 
 Base44 platform behaviour (CORS, quotas, effective RLS), Stripe dashboard and price configuration, Firebase and Google Cloud console restrictions, DNS/TLS on the live domains, anything that needs a browser (CSP, service worker, sign-in), and the Firestore rules under test. Penetration testing was not performed.
 
-## Appendix: functions returning raw error text (R-1)
+## Appendix: functions that returned raw error text (R-1)
+
+_Historical list: all of these were fixed in Phase 1.3 (see R-1)._
 
 `autoClassifySpecimen` `awardVerifiedXP` `awardXP` `castFindVote` `cloverChat` `crawlMindat` `createCheckoutSession` `dailyCheckIn` `dedupeMineral` `ditModels` `enrichSpecimen` `generateFieldMissions` `getCompanionState` `getLatestModel` `getLeaderboard` `getMapsKey` `getPlayerProfile` `getWeeklyBallot` `grokChat` `grokCodeAssist` `guestScanGate` `identifySpecimen` `intentionRoulette` `interactPost` `investigateCase` `processReferral` `progressiveVerify` `promoteVerifiedSpecimen` `publishHotspotToInstagram` `recordDailyCompanionLog` `removeSpecimenBackground` `resolveDepletion` `runDeepAnalysis` `saveBattleResult` `seedSpecimenImages` `sendWeeklySummary` `stripeWebhook` `submitCorrection` `suggestNextFinds` `syncStatsToSheets` `synthesizeSpeech` `weeklyFieldMissions`

@@ -9,6 +9,7 @@ import {
   summarize,
   type VaultItem,
 } from '../../shared/cloverVault.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // "Brain swap" choices from the Clover command router → Base44 models.
 // Grok (the default brain) uses the app-level model.
@@ -176,7 +177,7 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
     } catch (err) {
       if (!model) throw err;
       // A brain the platform can't serve right now falls back to the default.
-      console.warn(`cloverChat: model ${model} failed, using default`, (err as Error)?.message);
+      console.warn(`cloverChat: model ${model} failed, using default`, err);
       result = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams as never);
     }
 
@@ -222,7 +223,6 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
       grounded: cited.length > 0,
     });
   } catch (error) {
-    console.error('cloverChat error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('cloverChat', error);
   }
 });

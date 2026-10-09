@@ -69,7 +69,7 @@ export async function checkMemberScanQuota(
     };
   } catch (err) {
     // Metering must never take the scanner down: fail open and log.
-    console.error('[scanQuota] check failed, allowing scan:', (err as Error)?.message);
+    console.error('[scanQuota] check failed, allowing scan:', err);
     return { ok: true, paid: false, used: null, limit: FREE_MONTHLY_SCANS, resetAt: null };
   }
 }
@@ -92,7 +92,7 @@ export async function recordScanReceipt(
       confidence: typeof identification?.confidence === 'number' ? identification.confidence : null,
     });
   } catch (err) {
-    console.error('[scanQuota] receipt write failed:', (err as Error)?.message);
+    console.error('[scanQuota] receipt write failed:', err);
   }
 }
 

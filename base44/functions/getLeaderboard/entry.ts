@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // Public leaderboard aggregate — service role reads across all users.
 // Ranks collectors by (a) unique mineral discoveries and (b) total specimen weight.
@@ -65,7 +66,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ rows, total_collectors: rows.length });
   } catch (error) {
-    console.error('getLeaderboard error', error);
-    return Response.json({ error: error.message, rows: [], total_collectors: 0 }, { status: 500 });
+    return safeError('getLeaderboard', error, { extra: { rows: [], total_collectors: 0 } });
   }
 });

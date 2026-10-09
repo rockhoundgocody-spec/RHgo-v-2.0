@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * promoteVerifiedSpecimen — entity automation handler.
@@ -133,6 +134,6 @@ Deno.serve(async (req) => {
       xp: { awarded: xpAward, new_total: xp, new_level: level, leveled_up: leveledUp, first_find: firstFind },
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('promoteVerifiedSpecimen', error);
   }
 });

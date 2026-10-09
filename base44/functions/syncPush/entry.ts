@@ -24,7 +24,7 @@ export default async function(req) {
     });
     return Response.json(result);
   } catch (error) {
-    console.error('syncPush failed:', error?.message);
+    console.error('syncPush failed:', error);
     return Response.json({ error: 'sync push failed' }, { status: 500 });
   }
 }
