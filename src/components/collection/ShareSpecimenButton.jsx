@@ -18,7 +18,8 @@ export default function ShareSpecimenButton({ specimen, className = '' }) {
     const rarityTag = specimen.rarity && specimen.rarity !== 'common'
       ? ` (${specimen.rarity.toUpperCase()})`
       : '';
-    const where = specimen.found_at ? ` near ${specimen.found_at}` : '';
+    // Sharing a photo is not permission to publish its stored location label.
+    const where = '';
     const date = specimen.found_date ? ` on ${specimen.found_date}` : '';
     const text = `Just found ${specimen.mineral_name}${rarityTag}${where}${date} 🪨 Logged with RockHound-GO — the AI mineral companion app! 💎`;
     const shareData = {

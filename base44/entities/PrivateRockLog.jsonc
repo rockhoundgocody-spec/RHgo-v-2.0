@@ -41,6 +41,10 @@
     },
     "weight_lbs": {
       "type": "number"
+    },
+    "offline_write_id": {
+      "type": "string",
+      "description": "Stable offline pin identifier for recovery after an interrupted sync"
     }
   },
   "required": [

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { queryClientInstance } from '@/lib/query-client';
 // (toast import removed — auth-persistence fix no longer toasts on timeout)
 
 // If the session check hasn't settled by then, stop blocking the app and
@@ -97,11 +98,13 @@ export const AuthProvider = ({ children }) => {
       } catch { /* localStorage may be blocked by privacy settings */ }
 
       const currentUser = await base44.auth.me();
+      if (currentUser.id !== user?.id) queryClientInstance.clear();
       setUser(currentUser);
       setIsAuthenticated(true);
       setAuthError((prev) => (prev?.type === 'user_not_registered' ? null : prev));
     } catch (error) {
       /* visitor is simply logged out */
+      queryClientInstance.clear();
       setUser(null);
       setIsAuthenticated(false);
       // A signed-in account that isn't registered for this app is the one
@@ -118,6 +121,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    queryClientInstance.clear();
     setUser(null);
     setIsAuthenticated(false);
     

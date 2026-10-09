@@ -7,7 +7,7 @@
  *   fetch    → network-first for navigations (HTML) + API calls,
  *              cache-first for hashed static assets (immutable by hash)
  */
-const SHELL_CACHE = 'rhgo-shell-v2';
+const SHELL_CACHE = 'rhgo-shell-v3';
 const SHELL_URLS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -37,19 +37,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Network-first for API / backend function calls — field data must stay fresh.
+  // Account responses must never survive sign-out in a shared browser cache.
   if (url.pathname.startsWith('/functions/') || url.pathname.includes('/api/')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(SHELL_CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
+    event.respondWith(fetch(req));
     return;
   }
 

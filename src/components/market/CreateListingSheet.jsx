@@ -48,7 +48,7 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
         description,
         asking_price: tradeOnly ? 0 : parseFloat(askingPrice) || 0,
         trade_only: tradeOnly,
-        location_label: selectedSpecimen.found_at || '',
+        location_label: '', // Never publish a private find location implicitly.
         verified: !!selectedSpecimen.verified,
         ai_confidence: selectedSpecimen.ai_confidence || 0,
         status: 'active',

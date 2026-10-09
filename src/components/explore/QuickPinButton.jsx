@@ -6,14 +6,18 @@
 import React, { useState } from 'react';
 import { MapPin, Check, Loader2, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { queueWrite, getQueueLength } from '@/lib/offlineQueue';
-import { base44 } from '@/api/base44Client';
+import { queueWrite } from '@/lib/offlineQueue';
+import { useAuth } from '@/lib/AuthContext';
+import useOfflineQueueStatus from '@/hooks/useOfflineQueueStatus';
 import { buildPrivatePinRecord } from '@/lib/privateLocation';
 
 export default function QuickPinButton({ userLocation }) {
   const reducedMotion = useReducedMotion();
   const [state, setState] = useState('idle'); // idle | saving | saved | error
   const [savedOffline, setSavedOffline] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { user } = useAuth();
+  const { items } = useOfflineQueueStatus();
 
   const handlePin = async () => {
     if (state === 'saving') return;
@@ -27,10 +31,10 @@ export default function QuickPinButton({ userLocation }) {
     setState('saving');
     let result;
     try {
-      const user = await base44.auth.me();
       const data = buildPrivatePinRecord(userLocation, user?.email);
-      result = await queueWrite({ entity: 'PrivateRockLog', op: 'create', data });
-    } catch {
+      result = await queueWrite({ entity: 'PrivateRockLog', op: 'create', data, ownerId: user?.id });
+    } catch (error) {
+      setErrorMessage(error.message || 'Could not save this find.');
       setState('error');
       setTimeout(() => setState('idle'), 2000);
       return;
@@ -48,7 +52,7 @@ export default function QuickPinButton({ userLocation }) {
     }
   };
 
-  const queueCount = getQueueLength();
+  const queueCount = items.length;
 
   const getAriaLabel = () => {
     if (state === 'saving') return 'Saving location to private rock log...';
@@ -126,7 +130,7 @@ export default function QuickPinButton({ userLocation }) {
           <motion.div
             role="status"
             initial={reducedMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
-            className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center gap-1"
+            className="absolute top-12 left-1/2 -translate-x-1/2 max-w-[calc(100vw-2rem)] w-max whitespace-normal text-center px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center gap-1"
             style={{
               background: 'hsla(245,30%,9%,.95)',
               border: '1px solid hsla(142,70%,55%,.35)',
@@ -136,14 +140,14 @@ export default function QuickPinButton({ userLocation }) {
             }}
           >
             {savedOffline && <WifiOff size={9} />}
-            {savedOffline ? 'Private pin queued — syncs on signal' : 'Saved to private log'}
+            {savedOffline ? 'Saved on device · sync status in Settings' : 'Saved to private log'}
           </motion.div>
         )}
         {state === 'error' && (
           <motion.div
             role="status"
             initial={reducedMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
-            className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl text-[10px] font-semibold text-rose-300"
+            className="absolute top-12 left-1/2 -translate-x-1/2 max-w-[calc(100vw-2rem)] w-max whitespace-normal text-center px-2.5 py-1 rounded-xl text-[10px] font-semibold text-rose-300"
             style={{
               background: 'hsla(245,30%,9%,.95)',
               border: '1px solid hsla(0,70%,55%,.3)',
@@ -151,7 +155,7 @@ export default function QuickPinButton({ userLocation }) {
               zIndex: 9999,
             }}
           >
-            {!userLocation ? 'Waiting for GPS…' : 'Could not pin'}
+            {!userLocation ? 'Waiting for GPS…' : errorMessage || 'Could not pin'}
           </motion.div>
         )}
       </AnimatePresence>

@@ -10,6 +10,7 @@ import SavedSitePacksSection from '@/components/settings/SavedSitePacksSection.j
 import StealthPrivacySection from '@/components/settings/StealthPrivacySection.jsx';
 import StorageSection from '@/components/settings/StorageSection.jsx';
 import WakeWordSection from '@/components/settings/WakeWordSection.jsx';
+import OfflineFindRecovery from '@/components/settings/OfflineFindRecovery.jsx';
 
 const DEFAULT_SETTINGS = {
   notifications: true,
@@ -110,6 +111,7 @@ export default function Settings() {
       <StealthPrivacySection privacyLevel={settings.privacyLevel} onChange={(value) => handleChange('privacyLevel', value)} />
       <NotificationsSection settings={settings} onToggle={handleToggle} />
       <FieldModeSection offlineMode={settings.offlineMode} onToggle={() => handleToggle('offlineMode')} />
+      <OfflineFindRecovery />
       <StorageSection />
       <SavedSitePacksSection />
       <CloverVoiceSection />

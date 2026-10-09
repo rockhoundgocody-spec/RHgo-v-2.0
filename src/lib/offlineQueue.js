@@ -1,342 +1,114 @@
-/**
- * offlineQueue — durable write buffer for the field.
- *
- * When the rockhound is in a canyon with no signal, entity writes (creating a
- * Specimen, logging a verification test, etc.) are encrypted using AES-GCM
- * and stored in localStorage, then flushed automatically when the network returns.
- *
- * This is intentionally tiny and stateless — every consumer just calls
- * `queueWrite(...)` instead of base44.entities.X.create(...) directly. The
- * queue handles retry, ordering, and reconnect.
- */
-import { base44 } from "@/api/base44Client";
+import { base44 } from '@/api/base44Client';
+import { belongsToUser, loadQueue, saveQueue } from '@/lib/offlineQueueStorage';
+export { belongsToUser, loadQueue, saveQueue, getQueueLength } from '@/lib/offlineQueueStorage';
 
-const STORAGE_KEY = "rh-offline-queue-v1";
-const KEY_STORAGE_KEY = "rh-offline-queue-key-v1";
-
-let memoryKey = null;
-let cachedQueue = null;
-
-function getCrypto() {
-  if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
-    return window.crypto;
-  }
-  if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.subtle) {
-    return globalThis.crypto;
-  }
-  return null;
+let chain = Promise.resolve();
+function locked(work) {
+  const run = () => globalThis.navigator?.locks?.request
+    ? navigator.locks.request('rhgo-offline-writes', work) : work();
+  const result = chain.then(run, run);
+  chain = result.catch(() => {});
+  return result;
 }
-
-function bufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function base64ToBuffer(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-async function getOrCreateKey() {
-  if (memoryKey) return memoryKey;
-  const cryptoObj = getCrypto();
-  if (!cryptoObj) return null;
-
+const online = () => globalThis.navigator?.onLine !== false;
+async function readSession() {
+  let timer;
   try {
-    const storedKeyRaw = typeof localStorage !== "undefined" ? localStorage.getItem(KEY_STORAGE_KEY) : null;
-    if (storedKeyRaw) {
-      const rawKeyBuffer = base64ToBuffer(storedKeyRaw);
-      memoryKey = await cryptoObj.subtle.importKey(
-        "raw",
-        rawKeyBuffer,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-      );
-      return memoryKey;
-    }
-
-    memoryKey = await cryptoObj.subtle.generateKey(
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["encrypt", "decrypt"]
-    );
-
-    const exportedKey = await cryptoObj.subtle.exportKey("raw", memoryKey);
-    const keyBase64 = bufferToBase64(exportedKey);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(KEY_STORAGE_KEY, keyBase64);
-    }
-    return memoryKey;
-  } catch (err) {
-    console.error("offlineQueue: failed to initialize encryption key", err);
-    return null;
-  }
+    return await Promise.race([base44.auth.me(), new Promise(resolve => { timer = setTimeout(() => resolve(null), 6000); })]);
+  } catch { return null; }
+  finally { clearTimeout(timer); }
 }
-
-async function encryptPayload(data) {
-  const cryptoObj = getCrypto();
-  const key = await getOrCreateKey();
-  if (!cryptoObj || !key) {
-    return JSON.stringify(data);
-  }
-
-  const iv = cryptoObj.getRandomValues(new Uint8Array(12));
-  const encodedData = new TextEncoder().encode(JSON.stringify(data));
-  const ciphertext = await cryptoObj.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encodedData
-  );
-
-  return JSON.stringify({
-    version: 1,
-    iv: bufferToBase64(iv),
-    data: bufferToBase64(ciphertext),
-  });
-}
-
-async function decryptPayload(raw) {
-  if (!raw) return [];
-
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return [];
-  }
-
-  if (Array.isArray(parsed)) {
-    return parsed;
-  }
-
-  if (parsed && parsed.version === 1 && parsed.iv && parsed.data) {
-    const cryptoObj = getCrypto();
-    const key = await getOrCreateKey();
-    if (!cryptoObj || !key) {
-      console.warn("offlineQueue: Web Crypto unavailable for decryption");
-      return [];
-    }
-    try {
-      const iv = new Uint8Array(base64ToBuffer(parsed.iv));
-      const ciphertext = base64ToBuffer(parsed.data);
-      const decryptedBuffer = await cryptoObj.subtle.decrypt(
-        { name: "AES-GCM", iv },
-        key,
-        ciphertext
-      );
-      const decryptedText = new TextDecoder().decode(decryptedBuffer);
-      return JSON.parse(decryptedText);
-    } catch (err) {
-      console.error("offlineQueue: decryption failed", err);
-      return [];
-    }
-  }
-
-  return [];
-}
-
-export async function loadQueue() {
-  try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!raw) {
-      cachedQueue = [];
-      return [];
-    }
-    const items = await decryptPayload(raw);
-    cachedQueue = Array.isArray(items) ? items : [];
-
-    let parsedRaw;
-    try { parsedRaw = JSON.parse(raw); } catch { /* ignore */ }
-    if (Array.isArray(parsedRaw)) {
-      await saveQueue(cachedQueue);
-    }
-
-    return cachedQueue;
-  } catch {
-    cachedQueue = [];
-    return [];
-  }
-}
-
-export async function saveQueue(items) {
-  cachedQueue = items;
-  let batch = items;
-  while (batch.length > 0) {
-    try {
-      const encrypted = await encryptPayload(batch);
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, encrypted);
-      }
-      cachedQueue = batch;
-      return;
-    } catch {
-      batch = batch.slice(Math.ceil(batch.length / 2));
-    }
-  }
-  try {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    cachedQueue = [];
-  } catch { /* nothing more we can do */ }
-}
-
-const MAX_ATTEMPTS = 5;
-
-let flushing = false;
-
-export async function flushQueue() {
-  const currentQueue = await loadQueue();
-  if (flushing) return { flushed: 0, remaining: currentQueue.length };
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return { flushed: 0, remaining: currentQueue.length };
-  }
-
-  flushing = true;
-  let flushed = 0;
-  try {
-    let queue = currentQueue;
-    while (queue.length > 0) {
-      const next = queue[0];
-      try {
-        const e = base44.entities[next.entity];
-        if (!e) { queue.shift(); continue; }
-        if (next.op === "create") {
-          await e.create(next.data);
-        } else if (next.op === "update") {
-          await e.update(next.id, next.data);
-        }
-        flushed += 1;
-        queue.shift();
-        await saveQueue(queue);
-      } catch (err) {
-        const status = err?.status ?? err?.response?.status;
-        const attempts = (next.attempts || 0) + 1;
-        if ((status && status >= 400 && status < 500) || attempts >= MAX_ATTEMPTS) {
-          console.warn("offlineQueue: dropping unsendable write", next.entity, next.op, status);
-          queue.shift();
-          await saveQueue(queue);
-          continue;
-        }
-        queue[0] = { ...next, attempts };
-        await saveQueue(queue);
-        break;
-      }
-    }
-    return { flushed, remaining: queue.length };
-  } finally {
-    flushing = false;
-  }
-}
-
-/**
- * queueWrite — try the network first; on failure, persist for later replay.
- * Returns { ok, offline, result? } so callers can show optimistic UI.
- */
-export async function queueWrite({ entity, op = "create", id, data }) {
-  const online = typeof navigator === "undefined" || navigator.onLine !== false;
-
-  if (online) {
-    try {
-      const e = base44.entities[entity];
-      const result = op === "create" ? await e.create(data) : await e.update(id, data);
-      return { ok: true, offline: false, result };
-    } catch (err) {
-      const status = err?.status ?? err?.response?.status;
-      if (status && status >= 400 && status < 500) {
-        throw err;
-      }
-    }
-  }
-
-  const queue = await loadQueue();
-  queue.push({ entity, op, id, data, queuedAt: Date.now() });
-  await saveQueue(queue);
-  if (typeof window !== "undefined") schedulePeriodicRetry();
-  return { ok: true, offline: true };
-}
-
-export function getQueueLength() {
-  if (cachedQueue !== null) {
-    return cachedQueue.length;
-  }
-  return 0;
-}
-
-async function isConnectionStable() {
-  if (typeof navigator !== "undefined" && navigator.onLine === false) return false;
-  try {
-    const res = await fetch("https://www.gstatic.com/generate_204", {
-      method: "HEAD",
-      cache: "no-store",
-      signal: AbortSignal.timeout(4000),
-    });
-    return res.ok || res.status === 204;
-  } catch {
-    return false;
-  }
-}
-
-export async function flushWhenStable() {
-  const queue = await loadQueue();
-  if (queue.length === 0) return { flushed: 0, remaining: 0 };
-  const stable = await isConnectionStable();
-  if (!stable) return { flushed: 0, remaining: queue.length };
-  return flushQueue();
-}
-
-const PERIODIC_INTERVAL_MS = 30_000;
 let retryTimer = null;
-
-function schedulePeriodicRetry() {
-  if (retryTimer) return;
-  retryTimer = setInterval(async () => {
-    const queue = await loadQueue();
-    if (queue.length === 0) {
-      clearInterval(retryTimer);
-      retryTimer = null;
-      return;
-    }
-    await flushWhenStable();
-  }, PERIODIC_INTERVAL_MS);
-}
-
 let installed = false;
-export function installOfflineQueue() {
-  if (installed || typeof window === "undefined") return;
-  installed = true;
 
-  loadQueue().catch((err) => {
-    console.warn("offlineQueue: failed to load initial queue", err);
+async function replay(queue, user, retryBlocked = false) {
+  let flushed = 0;
+  const results = {};
+  for (const item of [...queue]) {
+    if (!belongsToUser(item, user) || (item.blocked && !retryBlocked)) continue;
+    const session = await readSession();
+    if (!session || session.id !== user.id || session.email !== user.email) break;
+    const entity = base44.entities[item.entity];
+    try {
+      if (!entity || !['create', 'update'].includes(item.op)) throw new Error('This find needs manual recovery.');
+      let result;
+      if (item.op === 'create') {
+        if (item.entity === 'PrivateRockLog' && item.data.offline_write_id) {
+          const matches = await entity.filter({ owner_email: user.email, offline_write_id: item.data.offline_write_id }, '-created_date', 1);
+          result = matches[0];
+        }
+        result ||= await entity.create(item.data);
+      } else result = await entity.update(item.id, item.data);
+      const remaining = queue.filter(entry => entry !== item);
+      await saveQueue(remaining);
+      queue = remaining;
+      flushed++;
+      if (item.queueId) results[item.queueId] = result;
+    } catch (error) {
+      const status = error?.status ?? error?.response?.status;
+      const attempts = (item.attempts || 0) + 1;
+      const blocked = !entity || (status >= 400 && status < 500 && ![408, 429].includes(status)) || attempts >= 5;
+      const updated = { ...item, attempts, blocked, lastError: blocked ? 'Sync paused. Retry or export this find from Settings.' : 'Waiting for a connection. Your find is still saved on this device.' };
+      const next = queue.map(entry => entry === item ? updated : entry);
+      await saveQueue(next);
+      queue = next;
+      if (!blocked) break;
+    }
+  }
+  return { flushed, remaining: queue.length, blocked: queue.filter(item => belongsToUser(item, user) && item.blocked).length, results };
+}
+async function syncLocked(retryBlocked = false) {
+  const queue = await loadQueue();
+  if (!online() || !queue.length) return { flushed: 0, remaining: queue.length, blocked: 0, results: {} };
+  const user = await readSession();
+  if (!user) return { flushed: 0, remaining: queue.length, blocked: 0, results: {} };
+  return replay(queue, user, retryBlocked);
+}
+export function flushQueue({ retryBlocked = false } = {}) {
+  return locked(async () => {
+    const { results: _results, ...status } = await syncLocked(retryBlocked);
+    return status;
   });
-
-  window.addEventListener("online", () => {
-    setTimeout(() => { flushWhenStable(); }, 1500);
-  });
-
-  setTimeout(async () => {
-    await flushWhenStable();
+}
+export function queueWrite({ entity, op = 'create', id, data, ownerId }) {
+  return locked(async () => {
+    let user = !ownerId && online() ? await readSession() : null;
+    const userId = ownerId || user?.id;
+    if (!userId || !data?.owner_email) throw new Error('Sign in before saving a private offline find.');
+    if (user && (user.id !== userId || user.email !== data.owner_email)) throw new Error('This find belongs to a different account.');
+    const queueId = crypto.randomUUID();
+    const payload = entity === 'PrivateRockLog' && op === 'create' ? { ...data, offline_write_id: queueId } : data;
+    const item = { queueId, ownerId: userId, entity, op, id, data: payload, queuedAt: Date.now() };
     const queue = await loadQueue();
-    if (queue.length > 0) {
-      schedulePeriodicRetry();
+    await saveQueue([...queue, item]);
+    schedulePeriodicRetry();
+    if (online()) user = await readSession();
+    if (user && user.id === userId && user.email === data.owner_email) {
+      const status = await replay([...queue, item], user);
+      if (status.results[queueId]) return { ok: true, offline: false, result: status.results[queueId] };
     }
-  }, 2000);
-
-  window.addEventListener("storage", async (e) => {
-    if (e.key === STORAGE_KEY) {
-      const queue = await loadQueue();
-      if (queue.length > 0) {
-        schedulePeriodicRetry();
-      }
-    }
+    return { ok: true, offline: true };
   });
+}
+export function flushWhenStable() { return flushQueue(); }
+function notifyFailure(error) {
+  globalThis.window?.dispatchEvent?.(new CustomEvent('rhgo-offline-queue-error', { detail: error.message }));
+}
+function schedulePeriodicRetry() {
+  if (retryTimer || typeof window === 'undefined') return;
+  retryTimer = setInterval(async () => {
+    try {
+      const result = await flushQueue();
+      if (!result.remaining) { clearInterval(retryTimer); retryTimer = null; }
+    } catch (error) { notifyFailure(error); }
+  }, 30000);
+}
+export function installOfflineQueue() {
+  if (installed || typeof window === 'undefined') return;
+  installed = true;
+  const resume = () => { flushQueue().catch(notifyFailure); };
+  loadQueue().then(items => { if (items.length) schedulePeriodicRetry(); }).catch(notifyFailure);
+  window.addEventListener('online', resume);
+  window.addEventListener('storage', event => { if (event.key === 'rh-offline-queue-v1') resume(); });
+  setTimeout(resume, 2000);
 }
