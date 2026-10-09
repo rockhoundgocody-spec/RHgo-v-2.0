@@ -1,22 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
+vi.mock('@/lib/offlineQueue', () => ({ removeAccountQueue: vi.fn(), pauseAccountSync: vi.fn() }));
+vi.mock('@/lib/dumpCache', () => ({ dumpAllCaches: vi.fn() }));
+vi.mock('@/lib/guestDevice', () => ({ takePendingGuestReport: vi.fn() }));
 import { deleteUserData } from './DeleteAccountDialog';
-
-describe('deleteUserData', () => {
-  it('deletes each owned entity type with four parallel bulk operations', async () => {
-    const client = {
-      entities: {
-        Specimen: { deleteMany: vi.fn().mockResolvedValue({ deleted: 3 }) },
-        Companion: { deleteMany: vi.fn().mockResolvedValue({ deleted: 1 }) },
-        SpecimenDraft: { deleteMany: vi.fn().mockResolvedValue({ deleted: 2 }) },
-        Badge: { deleteMany: vi.fn().mockResolvedValue({ deleted: 4 }) },
-      },
-    };
-
-    await deleteUserData(client, 'collector@example.com');
-
-    expect(client.entities.Specimen.deleteMany).toHaveBeenCalledWith({ created_by: 'collector@example.com' });
-    expect(client.entities.Companion.deleteMany).toHaveBeenCalledWith({ owner_email: 'collector@example.com' });
-    expect(client.entities.SpecimenDraft.deleteMany).toHaveBeenCalledWith({ owner_email: 'collector@example.com' });
-    expect(client.entities.Badge.deleteMany).toHaveBeenCalledWith({ owner_email: 'collector@example.com' });
+describe('server-confirmed account deletion', () => {
+  it('continues bounded cleanup until account removal is confirmed', async () => {
+    const invoke = vi.fn().mockResolvedValueOnce({ data: { complete: false, removed: 150 } }).mockResolvedValueOnce({ data: { complete: true, account_deleted: true } });
+    await deleteUserData({ functions: { invoke } });
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenCalledWith('deleteAccount', { confirmation: 'DELETE', acknowledge_retained_uploads: true });
+  });
+  it('never accepts a vague response as successful account removal', async () => {
+    await expect(deleteUserData({ functions: { invoke: vi.fn().mockResolvedValue({ data: { complete: true, account_deleted: false } }) } })).rejects.toThrow('not yet confirmed');
+  });
+  it('propagates a partial-deletion failure so the user can retry', async () => {
+    const invoke = vi.fn().mockRejectedValue(new Error('Deletion paused'));
+    await expect(deleteUserData({ functions: { invoke } })).rejects.toThrow('Deletion paused');
   });
 });

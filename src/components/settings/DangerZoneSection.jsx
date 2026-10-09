@@ -15,7 +15,7 @@ export default function DangerZoneSection() {
             icon={Trash2}
             iconColor="text-rose-400"
             title="Danger Zone"
-            subtitle="Permanently delete your account and all associated field data. This action cannot be undone."
+            subtitle="Remove your app account and associated records. Uploaded files are not erased by this operation."
           />
           <button
             type="button"

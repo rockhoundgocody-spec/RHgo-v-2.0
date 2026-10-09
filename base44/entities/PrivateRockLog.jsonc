@@ -45,6 +45,10 @@
     "offline_write_id": {
       "type": "string",
       "description": "Stable offline pin identifier for recovery after an interrupted sync"
+    },
+    "image_uri": {
+      "type": "string",
+      "description": "Private photo storage reference; never a permanent public URL"
     }
   },
   "required": [

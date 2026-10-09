@@ -9,7 +9,7 @@ const SECTIONS = [
     icon: Users,
     title: 'Information We Collect',
     body: [
-      'Account information: your name, email address, and a profile avatar when you create a RockHound-GO account.',
+      'Account information: your name, email address, and a profile avatar when you create a RockHound GO account.',
       'Specimen data: photos you capture or upload, mineral identification results, GPS coordinates (when you choose to share them), field notes, rarity, and collection metadata.',
       'Usage data: which features you use, quest and badge progress, streaks, and analytics events that help us improve the app.',
     ],
@@ -28,15 +28,15 @@ const SECTIONS = [
     title: 'AI Mineral Identification',
     body: [
       'When you scan or photograph a specimen, the image is sent to our AI identification service (powered by Google Gemini) to produce a mineral match and confidence score.',
-      'Images are processed to generate identification results and are stored in your private collection unless you choose to share them to the community feed or market.',
-      'We strip EXIF and metadata from uploaded images before processing to protect your privacy.',
+      'New photos uploaded through Private Rock Log use private storage with temporary viewing links. Older photos and photos in other upload flows may have permanent public URLs; a private record does not make a public photo URL private.',
+      'New Private Rock Log uploads remove image metadata before upload and are refused if that removal fails. Other upload paths may behave differently.',
     ],
   },
   {
     icon: Smartphone,
     title: 'Permissions We Request',
     body: [
-      'Camera: To photograph specimens for AI mineral identification. Photos are processed to generate identification results and stored in your private collection unless you choose to share them.',
+      'Camera: To photograph specimens for identification. Private record visibility and uploaded-file visibility are separate; only the new Private Rock Log upload path described above guarantees private file storage.',
       'Microphone: For voice interaction with Clover, our AI field companion. Audio is used for speech recognition during your session and is not permanently stored unless you save a recording.',
       'Location: To tag finds with GPS coordinates, show nearby hotspots, and provide geological context for AI identification. Permission-based; revoke anytime in device settings.',
       'Notifications: For streak reminders, storm hunter alerts, and quest updates. Control each type in Settings.',
@@ -47,7 +47,7 @@ const SECTIONS = [
     icon: Baby,
     title: 'Child Accounts & COPPA',
     body: [
-      'RockHound-GO offers child-safe accounts managed through a Parental Dashboard. A parent or guardian must create and manage accounts for users under 13.',
+      'RockHound GO offers child-safe accounts managed through a Parental Dashboard. A parent or guardian must create and manage accounts for users under 13.',
       'We do not knowingly collect personal information from children under 13 without verified parental consent.',
       'Child accounts have restricted sharing and community features by default. Parents can review and delete their child\u2019s data at any time.',
     ],
@@ -77,7 +77,7 @@ const SECTIONS = [
     title: 'Data Retention & Deletion',
     body: [
       'Your specimens, collection, and account data are retained for as long as your account is active.',
-      'You can delete individual specimens, your entire collection, or your full account at any time from the app\u2019s Settings or by contacting us. Deletion is permanent and irreversible.',
+      'Settings account deletion removes your app membership, owned records, and personal references from shared records, and cancels associated recurring subscriptions. Uploaded files are not erased by that operation; older public links and downloaded copies may remain accessible. Contact support for uploaded-file removal.',
       'Some anonymized, aggregated data may be retained for analytics and model improvement after account deletion.',
     ],
   },
@@ -95,14 +95,14 @@ const SECTIONS = [
 export default function PrivacyPolicy() {
   useSeoRobots(true);
   useSeoMeta(
-    'RockHound-GO Privacy Policy — Stealth Mode, Location & Child Safety',
-    'How RockHound-GO handles your data: permission-based location, Stealth Mode for hiding exact GPS coordinates, AI image processing, COPPA-aware child accounts, and your deletion rights.'
+    'RockHound GO Privacy Policy — Stealth Mode, Location & Child Safety',
+    'How RockHound GO handles your data: permission-based location, Stealth Mode for hiding exact GPS coordinates, AI image processing, COPPA-aware child accounts, and your deletion rights.'
   );
   return (
     <div className="min-h-screen w-full text-foreground" style={{ background: 'radial-gradient(ellipse at top, hsl(265 45% 14%) 0%, hsl(250 30% 8%) 50%, hsl(245 25% 5%) 100%)' }}>
       <div className="max-w-2xl mx-auto px-5 py-10 pb-24">
         <Link to="/" className="text-amethyst-glow text-sm hover:text-white transition mb-6 inline-block">
-          ← Back to RockHound-GO
+          ← Back to RockHound GO
         </Link>
 
         <header className="mb-8">
@@ -116,7 +116,7 @@ export default function PrivacyPolicy() {
             </div>
           </div>
           <p className="text-white/60 text-sm leading-relaxed">
-            RockHound-GO is built by collectors, for collectors. Your privacy is a first-class feature — this policy explains what we collect, why, and how you stay in control.
+            RockHound GO is built by collectors, for collectors. Your privacy is a first-class feature — this policy explains what we collect, why, and how you stay in control.
           </p>
         </header>
 
@@ -141,7 +141,7 @@ export default function PrivacyPolicy() {
 
         <footer className="mt-8 pt-6 border-t border-white/10">
           <p className="text-white/40 text-xs leading-relaxed">
-            By using RockHound-GO, you consent to this Privacy Policy. We may update this policy from time to time; material changes will be announced in the app. See our <Link to="/terms" className="text-amethyst-glow underline">Terms of Service</Link>.
+            By using RockHound GO, you consent to this Privacy Policy. We may update this policy from time to time; material changes will be announced in the app. See our <Link to="/terms" className="text-amethyst-glow underline">Terms of Service</Link>.
           </p>
         </footer>
       </div>

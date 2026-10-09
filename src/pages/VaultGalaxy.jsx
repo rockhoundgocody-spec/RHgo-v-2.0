@@ -21,6 +21,7 @@ import { buildGalaxy, sampleGalaxy, searchGalaxy, MINERAL_GROUPS } from '@/lib/v
 import { lazyPart } from '@/lib/lazyPart';
 import { on, emit } from '@/lib/cloverWake';
 import useReducedMotion from '@/lib/useReducedMotion';
+import PrivateLogPhoto from '@/components/photos/PrivateLogPhoto.jsx';
 
 let webglChecked = null;
 function hasWebGL() {
@@ -268,8 +269,8 @@ function StarCard({ node, isSample, onClose, onAsk }) {
   return (
     <div className="max-w-md mx-auto rounded-2xl p-3.5 flex gap-3"
       style={{ background: 'hsla(252,35%,9%,0.94)', border: `1px solid ${node.color}55`, boxShadow: `0 10px 40px -10px ${node.color}66`, backdropFilter: 'blur(16px)' }}>
-      {node.image ? (
-        <img src={node.image} alt="" className="w-16 h-16 rounded-xl object-cover shrink-0" loading="lazy" />
+      {node.image || node.privatePhoto ? (
+        <PrivateLogPhoto logId={node.kind === 'log' ? node.refId : undefined} privatePhoto={node.privatePhoto} legacyUrl={node.image} alt={node.label} className="w-16 h-16 rounded-xl object-cover shrink-0" />
       ) : (
         <div className="w-16 h-16 rounded-xl shrink-0 flex items-center justify-center" style={{ background: `${node.color}22`, border: `1px solid ${node.color}44` }}>
           <Icon size={22} style={{ color: node.color }} />

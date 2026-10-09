@@ -7,7 +7,7 @@
  * Falls back to the original blob if decoding fails, so a scan can never be
  * blocked by this step.
  */
-export async function stripExif(blob, { maxDimension = 2048, quality = 0.92 } = {}) {
+export async function stripExif(blob, { maxDimension = 2048, quality = 0.92, strict = false } = {}) {
   try {
     const bitmap = await createImageBitmap(blob);
     const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
@@ -20,8 +20,10 @@ export async function stripExif(blob, { maxDimension = 2048, quality = 0.92 } = 
     const clean = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', quality)
     );
+    if (!clean && strict) throw new Error('Image could not be safely re-encoded.');
     return clean || blob;
-  } catch {
+  } catch (error) {
+    if (strict) throw new Error('Could not remove photo metadata. Try a JPEG or PNG image.');
     return blob;
   }
 }

@@ -8,6 +8,8 @@ import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import ExportBar from '@/components/collection/ExportBar.jsx';
+import privatePhotoUpload from '@/lib/privatePhotoUpload';
+import PrivateLogPhoto from '@/components/photos/PrivateLogPhoto.jsx';
 
 const RARITY_COLORS = {
   common:   'hsl(195,80%,70%)',
@@ -21,18 +23,21 @@ export default function PrivateRockLog() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    base44.auth.me().then(u => { if (u?.email) setUserEmail(u.email); }).catch(() => {});
     loadLogs();
   }, []);
 
   const loadLogs = async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const data = await base44.entities.PrivateRockLog.list('-created_date');
+      const user = await base44.auth.me();
+      setUserEmail(user.email);
+      const data = await base44.entities.PrivateRockLog.filter({ owner_email: user.email }, '-created_date', 200);
       setLogs(data || []);
-    } catch {}
+    } catch { setLoadError('Your private logs could not load. Please retry.'); }
     setLoading(false);
   };
 
@@ -49,7 +54,7 @@ export default function PrivateRockLog() {
           <div className="flex items-center gap-2">
             <Lock size={14} className="text-amethyst" />
             <h1 className="text-white font-bold text-lg">Private Rock Log</h1>
-            <HelpTip tip="Your personal stash — exact GPS, photos, and notes saved only for your eyes. No other user can see these finds." />
+            <HelpTip tip="Your log records are private. New photo uploads use private storage; older public photo links may still be opened by anyone holding the link." />
           </div>
           <p className="text-white/35 text-[11px] mt-0.5">Only visible to you · {logs.length} finds logged</p>
         </div>
@@ -77,6 +82,8 @@ export default function PrivateRockLog() {
         </div>
       )}
 
+      {logs.some(log => log.image_url && !log.image_uri) && <p className="text-sm text-muted-foreground mb-4">Older photos still have public links. New uploads are private; deleting a log does not erase an older uploaded file.</p>}
+      {loadError && <div role="alert" className="mb-4 text-destructive text-sm">{loadError} <button type="button" onClick={loadLogs} className="underline">Retry loading</button></div>}
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-16">
@@ -120,8 +127,8 @@ function LogCard({ log, onDelete }) {
         border: '1px solid hsla(270,30%,40%,0.2)',
       }}
     >
-      {log.image_url ? (
-        <img src={log.image_url} alt={log.mineral_name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+      {log.image_url || log.image_uri ? (
+        <PrivateLogPhoto logId={log.id} privatePhoto={!!log.image_uri} legacyUrl={log.image_url} alt={log.mineral_name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
       ) : (
         <div className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'hsla(255,20%,18%,0.6)' }}>
           <Image size={22} className="text-white/20" />
@@ -167,12 +174,16 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
     found_date: new Date().toISOString().split('T')[0],
     weight_lbs: '',
     image_url: '',
+    image_uri: '',
     lat: '',
     lng: '',
   });
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  useEffect(() => () => { if (photoPreview) URL.revokeObjectURL(photoPreview); }, [photoPreview]);
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -193,16 +204,20 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setFormError('');
     try {
-      const res = await base44.integrations.Core.UploadFile({ file });
-      set('image_url', res.file_url);
-    } catch {}
-    setUploading(false);
+      const photo = await privatePhotoUpload(file);
+      set('image_uri', photo.file_uri);
+      set('image_url', '');
+      setPhotoPreview(photo.previewUrl);
+    } catch (error) { setFormError(error.message || 'Photo upload failed. Please retry.'); }
+    finally { setUploading(false); }
   };
 
   const handleSave = async () => {
-    if (!form.mineral_name.trim()) return;
+    if (!form.mineral_name.trim() || uploading || saving || !userEmail) return;
     setSaving(true);
+    setFormError('');
     try {
       const payload = {
         owner_email: userEmail,
@@ -211,15 +226,16 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
         location_label: form.location_label,
         rarity: form.rarity,
         found_date: form.found_date,
-        image_url: form.image_url,
+        image_url: '',
+        image_uri: form.image_uri,
         lat: form.lat ? parseFloat(form.lat) : undefined,
         lng: form.lng ? parseFloat(form.lng) : undefined,
         weight_lbs: form.weight_lbs ? parseFloat(form.weight_lbs) : undefined,
       };
       const created = await base44.entities.PrivateRockLog.create(payload);
       onSaved(created);
-    } catch {}
-    setSaving(false);
+    } catch (error) { setFormError(error.message || 'Your log was not saved. Please retry.'); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -314,20 +330,22 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
               style={{ background: 'hsla(255,20%,18%,0.6)', border: '1px solid hsla(255,20%,30%,0.3)' }}
             >
               <Image size={14} />
-              {uploading ? 'Uploading…' : form.image_url ? '✓ Photo added' : 'Choose photo'}
+              {uploading ? 'Uploading…' : form.image_uri ? 'Photo added privately' : 'Choose photo'}
             </div>
             <input type="file" accept="image/*" onChange={handleImage} className="sr-only" />
           </label>
-          {form.image_url && <img src={form.image_url} alt="preview" className="mt-2 w-20 h-20 rounded-xl object-cover" />}
+          <p className="text-xs text-muted-foreground mt-2">New photos are private. Location metadata is removed before upload.</p>
+          {photoPreview && <img src={photoPreview} alt="Private photo preview" className="mt-2 w-20 h-20 rounded-xl object-cover" />}
         </Field>
 
+        {formError && <p role="alert" className="text-destructive text-sm">{formError}</p>}
         <div className="flex gap-3 mt-5">
           <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!form.mineral_name.trim() || saving}
+            disabled={!form.mineral_name.trim() || saving || uploading || !userEmail}
             className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
             style={{ background: 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))', boxShadow: '0 4px 20px hsla(280,80%,50%,0.3)' }}
           >

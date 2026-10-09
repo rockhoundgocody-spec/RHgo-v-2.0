@@ -41,6 +41,9 @@ async function upsertSubscription(base44, { email, tier, plan, status, customerI
     console.error('stripeWebhook: no owner email — cannot credit subscription', subscriptionId || '');
     return;
   }
+  // A late billing event must not recreate records for a deleted app account.
+  const members = await base44.asServiceRole.entities.User.filter({ email }, '-created_date', 1);
+  if (!members.length) return;
   const existing = await findSubscriptionRow(base44, email, subscriptionId);
   const patch = {
     tier,
@@ -57,7 +60,7 @@ async function upsertSubscription(base44, { email, tier, plan, status, customerI
   }
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
   const sig = req.headers.get('stripe-signature');
   const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
@@ -74,6 +77,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const data = event.data.object;
+    if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type) && data.metadata?.base44_test_checkout === 'true') return Response.json({ received: true, ignored: 'merchant_self_test' });
 
     if (event.type === 'checkout.session.completed') {
       const email = ownerEmailOf(data) || await getCustomerEmail(stripe, data.customer);
@@ -119,4 +123,4 @@ Deno.serve(async (req) => {
     console.error('stripe webhook handler error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

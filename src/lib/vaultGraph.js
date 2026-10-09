@@ -158,7 +158,7 @@ export function buildGalaxy({ specimens = [], logs = [], capsules = [] } = {}) {
       id: `log:${l.id}`, kind: 'log', refId: l.id, label: l.mineral_name || 'Field note',
       group, color: GROUP_BY_ID[group].color, rarity: l.rarity || 'common',
       place: l.location_label || '', date: String(l.found_date || l.created_date || '').slice(0, 10),
-      image: l.image_url || null, notes: l.notes || '', route: '/private-log',
+      image: l.image_uri ? null : l.image_url || null, privatePhoto: !!l.image_uri, notes: l.notes || '', route: '/private-log',
       parent: species?.id || site?.id || null,
     });
     if (species) { species.count += 1; link(node, species, 'species'); }

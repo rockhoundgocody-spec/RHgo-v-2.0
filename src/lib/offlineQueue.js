@@ -3,6 +3,17 @@ import { belongsToUser, loadQueue, saveQueue } from '@/lib/offlineQueueStorage';
 export { belongsToUser, loadQueue, saveQueue, getQueueLength } from '@/lib/offlineQueueStorage';
 
 let chain = Promise.resolve();
+const deletingAccounts = new Set();
+export function pauseAccountSync(userId, paused = true) {
+  if (paused) deletingAccounts.add(userId); else deletingAccounts.delete(userId);
+  return locked(async () => {}); // Wait for any in-flight local replay before account removal.
+}
+export function removeAccountQueue(user) {
+  return locked(async () => {
+    const queue = await loadQueue();
+    await saveQueue(queue.filter(item => !belongsToUser(item, user)));
+  });
+}
 function locked(work) {
   const run = () => globalThis.navigator?.locks?.request
     ? navigator.locks.request('rhgo-offline-writes', work) : work();
@@ -25,9 +36,9 @@ async function replay(queue, user, retryBlocked = false) {
   let flushed = 0;
   const results = {};
   for (const item of [...queue]) {
-    if (!belongsToUser(item, user) || (item.blocked && !retryBlocked)) continue;
+    if (deletingAccounts.has(user?.id) || !belongsToUser(item, user) || (item.blocked && !retryBlocked)) continue;
     const session = await readSession();
-    if (!session || session.id !== user.id || session.email !== user.email) break;
+    if (deletingAccounts.has(user.id) || !session || session.id !== user.id || session.email !== user.email) break;
     const entity = base44.entities[item.entity];
     try {
       if (!entity || !['create', 'update'].includes(item.op)) throw new Error('This find needs manual recovery.');
@@ -74,6 +85,7 @@ export function queueWrite({ entity, op = 'create', id, data, ownerId }) {
   return locked(async () => {
     let user = !ownerId && online() ? await readSession() : null;
     const userId = ownerId || user?.id;
+    if (deletingAccounts.has(userId)) throw new Error('Account deletion is in progress. New finds cannot be saved.');
     if (!userId || !data?.owner_email) throw new Error('Sign in before saving a private offline find.');
     if (user && (user.id !== userId || user.email !== data.owner_email)) throw new Error('This find belongs to a different account.');
     const queueId = crypto.randomUUID();
