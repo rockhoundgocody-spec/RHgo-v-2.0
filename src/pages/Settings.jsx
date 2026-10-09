@@ -10,6 +10,7 @@ import SavedSitePacksSection from '@/components/settings/SavedSitePacksSection.j
 import StealthPrivacySection from '@/components/settings/StealthPrivacySection.jsx';
 import StorageSection from '@/components/settings/StorageSection.jsx';
 import WakeWordSection from '@/components/settings/WakeWordSection.jsx';
+import HoundTrialCard from '@/components/payments/HoundTrialCard';
 
 const DEFAULT_SETTINGS = {
   notifications: true,
@@ -73,38 +74,13 @@ export default function Settings() {
           <Gem size={16} className="text-amethyst-glow" aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-black text-white">View Subscription Plans</div>
-            <div className="text-white/40 text-xs mt-0.5">Free · Field Pro · Family — see what&apos;s included</div>
+            <div className="text-white/40 text-xs mt-0.5">Field · Season · Hound · Steward · Club — see what&apos;s included</div>
           </div>
           <ChevronRight size={14} className="text-white/30 flex-shrink-0" aria-hidden="true" />
         </div>
       </a>
 
-      <div
-        className="mb-6 rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, hsla(270,60%,20%,0.55), hsla(280,80%,15%,0.65))',
-          border: '1px solid hsla(280,70%,60%,0.22)',
-          boxShadow: '0 4px 24px -8px hsla(270,80%,60%,0.3)',
-        }}
-      >
-        <div
-          className="absolute top-0 right-0 w-36 h-36 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, hsla(280,100%,65%,0.1) 0%, transparent 70%)', transform: 'translate(30%,-30%)' }}
-        />
-        <div className="flex items-center gap-3 mb-2">
-          <Gem size={16} className="text-amethyst-glow" aria-hidden="true" />
-          <div className="text-sm font-black text-white">Field Pro Companion</div>
-          <div
-            className="ml-auto text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full"
-            style={{ background: 'hsla(280,80%,55%,0.2)', color: 'hsl(280,100%,85%)', border: '1px solid hsla(280,70%,60%,0.3)' }}
-          >
-            Now Live
-          </div>
-        </div>
-        <p className="text-white/45 text-xs leading-relaxed ml-7">
-          Offline AI identification, advanced rarity heatmaps, unlimited private logs, and priority Clover voice sessions — all designed for serious field work.
-        </p>
-      </div>
+      <HoundTrialCard />
 
       <PermissionsPrompt />
       <StealthPrivacySection privacyLevel={settings.privacyLevel} onChange={(value) => handleChange('privacyLevel', value)} />

@@ -16,6 +16,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { isNativeApp } from '@/lib/isNativeApp';
+import HoundTrialCard from '@/components/payments/HoundTrialCard';
 
 const returnOrigin = typeof window !== 'undefined'
   ? (window.self !== window.top ? 'https://rhgo.me' : window.location.origin)
@@ -50,8 +51,8 @@ const TIERS = [
     id: 'season',
     name: 'Season',
     price: '$12.99',
-    period: '/ 30 days',
-    tagline: 'One trip window.',
+    period: '/ 30 days · one-time',
+    tagline: 'One trip window. Does not renew.',
     color: '#9FE8D0',
     bg: 'hsla(160,40%,12%,0.6)',
     border: 'hsla(160,50%,40%,0.25)',
@@ -247,6 +248,8 @@ function PricingPage() {
         </p>
       </motion.div>
 
+      <div className="max-w-2xl mx-auto"><HoundTrialCard /></div>
+
       {/* Tier cards */}
       <div className="max-w-2xl mx-auto space-y-3 mb-10">
         {TIERS.map((tier, i) => (
@@ -321,7 +324,7 @@ function PricingPage() {
       {/* Trust row */}
       <div className="max-w-xl mx-auto text-center space-y-2">
         <p className="text-white/25 text-[11px]">
-          No weekly. No ads. Cancel anytime. 14-day Hound trial after your first scan.
+          No weekly. No ads. Season does not renew. Annual memberships renew yearly. The Hound trial requires no card and runs for 14 days from your first signed-in scan.
         </p>
         {!user && (
           <p className="text-white/30 text-xs mt-4">
