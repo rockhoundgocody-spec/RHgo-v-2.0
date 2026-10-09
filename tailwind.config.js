@@ -10,6 +10,12 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+        discovery: {
+          bg: 'hsl(var(--discovery-bg))', surface: 'hsl(var(--discovery-surface))',
+          ink: 'hsl(var(--discovery-ink))', muted: 'hsl(var(--discovery-muted))',
+          amber: 'hsl(var(--discovery-amber))', frost: 'hsl(var(--discovery-frost))',
+          line: 'hsl(var(--discovery-line))'
+        },
   			amethyst: {
   				DEFAULT: 'hsl(var(--amethyst))',
   				deep: 'hsl(var(--amethyst-deep))',

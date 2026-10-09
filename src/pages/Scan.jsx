@@ -7,6 +7,8 @@ import useCameraStream from '@/components/scan/useCameraStream.jsx';
 import useLiveEyes from '@/components/scan/useLiveEyes';
 import LiveEyesOverlay from '@/components/scan/LiveEyesOverlay.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
+import GuestSaveInvitation from '@/components/scan/GuestSaveInvitation.jsx';
+import useSaveFeedback from '@/components/scan/useSaveFeedback';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { toast } from '@/components/ui/use-toast';
 import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
@@ -43,7 +45,7 @@ const VOICE_LINES = {
 export default function Scan() {
   useSeoRobots(true);
   useSeoMeta(
-    'Scan a rock free — AI mineral ID | RockHound-GO',
+    'Scan a rock free — AI mineral ID | RockHound GO',
     'Photograph a specimen and get a field report with confidence, lookalikes, and tests. 7 free scans per day, resetting at midnight UTC — no account required.',
   );
   const navigate = useNavigate();
@@ -55,6 +57,7 @@ export default function Scan() {
   const [result, setResult] = useState(null);
   const [primaryUrl, setPrimaryUrl] = useState(null);
   const [savedId, setSavedId] = useState(null);
+  const { saving, saveError, runSave, clearSaveError } = useSaveFeedback();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rarePopup, setRarePopup] = useState(null);
   const [torchHeld, setTorchHeld] = useState(false);
@@ -305,11 +308,9 @@ export default function Scan() {
       stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport, legalConfirmed: !!meta.legalConfirmed });
       setSheetOpen(false);
       setStage('guestSaved');
-      setTimeout(resetToCamera, 2500);
       return;
     }
-    setSheetOpen(false);
-
+    // Keep the report visible while saving, and on failure so it can be recovered.
     const place = foundLocation?.found_at || foundLocation?.lat != null
       ? foundLocation
       : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, source: 'gps' };
@@ -419,6 +420,8 @@ export default function Scan() {
   };
 
   const resetToCamera = () => {
+    if (saving) return;
+    clearSaveError();
     stop();
     setStage('camera');
     setFrozenFrame(null);
@@ -561,12 +564,7 @@ export default function Scan() {
       )}
 
       {stage === 'guestSaved' && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center" style={{ background: 'rgba(10,10,20,0.92)' }}>
-          <div className="text-center px-8">
-            <p className="text-white font-bold text-lg mb-2">Saved on this device</p>
-            <p className="text-white/50 text-sm">Create a free account to sync your finds to the cloud.</p>
-          </div>
-        </div>
+        <GuestSaveInvitation mineralName={result?.top_match} imageUrl={primaryUrl} onContinue={resetToCamera} />
       )}
 
       {stage === 'guestLimit' && (
@@ -653,9 +651,11 @@ export default function Scan() {
         result={result}
         imageUrl={primaryUrl}
         saved={!!savedId}
-        onKeep={(fr, meta) => handleSave('collected', fr, meta)}
-        onLeave={(fr, meta) => handleSave('left_in_place', fr, meta)}
-        onObserve={(fr, meta) => handleSave('observed', fr, meta)}
+        saving={saving}
+        saveError={saveError}
+        onKeep={(fr, meta) => runSave(() => handleSave('collected', fr, meta))}
+        onLeave={(fr, meta) => runSave(() => handleSave('left_in_place', fr, meta))}
+        onObserve={(fr, meta) => runSave(() => handleSave('observed', fr, meta))}
         onAsk={handleAsk}
         onRetry={resetToCamera}
         onClose={resetToCamera}

@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root, .dark {
+  --discovery-bg: 210 18% 5%;
+  --discovery-surface: 210 14% 9%;
+  --discovery-ink: 40 25% 95%;
+  --discovery-muted: 210 12% 72%;
+  --discovery-amber: 38 90% 70%;
+  --discovery-frost: 185 35% 84%;
+  --discovery-line: 210 12% 24%;
+}
+
 @layer base {
   :root {
     --background: 245 22% 8%;

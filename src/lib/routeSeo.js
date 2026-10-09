@@ -22,7 +22,7 @@ export const SITE_ORIGIN = 'https://rhgo.me';
  * matching description still helps social scrapers that ignore robots).
  */
 export const ROUTE_DESCRIPTIONS = {
-  '/': 'RockHound-GO is the AI field companion for rockhounds. Scan a photo to identify any mineral, check land access before you collect, and build your Geo-DEX collection.',
+  '/': 'Start with 7 free daily AI rock scans on RockHound GO. Explore possible mineral matches, visible clues, and suggested field checks, then build your collection.',
   '/scan': 'Scan a rock or mineral from your phone camera and get an instant AI identification with confidence, rarity, and field properties. Free to try on RockHound-GO.',
   '/demo': 'Watch RockHound-GO in action. See the AI mineral scanner, hotspot map, and Geo-DEX collection in a live demo before you sign up.',
   '/pricing': 'RockHound-GO plans from free to Pro. AI mineral identification, offline hotspot maps, and unlimited collection logging. Compare tiers and start free.',

@@ -15,7 +15,7 @@ const CONFIDENCE_BAND = (c) => {
  * Shows name + confidence, 3 why-bullets, Keep/Leave/Observed, then Tests/Save/Ask.
  */
 export default function ScanResultSheet({
-  open, result, imageUrl, saved,
+  open, result, imageUrl, saved, saving = false, saveError = '',
   onKeep, onLeave, onObserve, onAsk, onRetry, onClose,
   provenance, onProvenanceChange, locationExhausted,
   foundLocation, onFoundLocationChange,
@@ -280,16 +280,18 @@ export default function ScanResultSheet({
                   </span>
                 </label>
 
+                {saving && <p role="status" className="mb-3 text-sm text-discovery-amber">Saving your field report…</p>}
+                {saveError && <p role="alert" className="mb-3 rounded-xl border border-destructive/40 p-3 text-sm text-foreground">{saveError}</p>}
                 {/* Primary: Keep / Leave / Observed */}
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   <SheetButton
                     label="Keep"
                     onClick={() => onKeep(fieldReport, { legalConfirmed: true })}
-                    disabled={saved || !legalOk}
+                    disabled={saved || saving || !legalOk}
                     primary
                   />
-                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport, { legalConfirmed: false })} disabled={saved} />
-                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
+                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport, { legalConfirmed: false })} disabled={saved || saving} />
+                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved || saving} />
                 </div>
 
                 {/* Secondary: Tests / Save / Ask */}
@@ -299,7 +301,7 @@ export default function ScanResultSheet({
                     onClick={() => setTestsOpen(t => !t)}
                     active={testsOpen}
                   />
-                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
+                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved || saving} />
                   <SheetButton label="Ask" icon={MessageCircle} onClick={onAsk} />
                 </div>
 

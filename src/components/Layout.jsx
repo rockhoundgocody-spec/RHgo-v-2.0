@@ -207,6 +207,11 @@ export default function Layout() {
     return <Navigate to={`/signin?from_url=${q}&next=${q}`} replace />;
   }
 
+  // The public introduction must not mount account overlays or background watchers.
+  if (location.pathname === '/' && (!isAuthenticated || new URLSearchParams(location.search).get('welcome') === '1')) {
+    return <main id="main-content" tabIndex={-1} className="outline-none"><Outlet /></main>;
+  }
+
   return (
     <OracleProvider>
       <BadgeAwarderProvider>

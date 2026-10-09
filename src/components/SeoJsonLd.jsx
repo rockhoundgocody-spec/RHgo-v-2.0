@@ -8,7 +8,7 @@ const DEFAULT_GRAPH = {
     {
       '@type': 'Organization',
       '@id': 'https://rhgo.me/#organization',
-      name: 'RockHound-GO',
+      name: 'RockHound GO',
       url: 'https://rhgo.me',
       logo: 'https://rhgo.me/icons/icon-512.png',
       sameAs: [],
@@ -17,18 +17,18 @@ const DEFAULT_GRAPH = {
       '@type': 'WebSite',
       '@id': 'https://rhgo.me/#website',
       url: 'https://rhgo.me',
-      name: 'RockHound-GO',
+      name: 'RockHound GO',
       publisher: { '@id': 'https://rhgo.me/#organization' },
     },
     {
       '@type': 'WebApplication',
       '@id': 'https://rhgo.me/#app',
-      name: 'RockHound-GO',
+      name: 'RockHound GO',
       url: 'https://rhgo.me',
       applicationCategory: 'LifestyleApplication',
       operatingSystem: 'iOS, Android, Web',
       description:
-        'AI field companion for rockhounds — identify minerals, find legal dig sites, and build your Geo-DEX collection.',
+        'AI field companion for rockhounds: explore possible mineral identifications, review field evidence, and build your collection.',
       offers: {
         '@type': 'Offer',
         price: '0',
