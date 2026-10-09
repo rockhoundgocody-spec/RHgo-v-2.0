@@ -11,6 +11,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json --noEmit",
     "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
+    "test:scripts": "node --test scripts/typecheck-ratchet.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

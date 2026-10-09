@@ -41,6 +41,9 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Tooling tests (type-error ratchet)
+        run: npm run test:scripts
+
       - name: Production build
         run: npm run build
 
