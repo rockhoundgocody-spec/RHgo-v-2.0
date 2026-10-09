@@ -237,17 +237,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <BrowserRouter>
+        <AuthProvider>
         <MobileOnlyGate>
           <AnalyticsRouteListener />
           <a href="#main-content" className="skip-link">Skip to content</a>
-          <AuthProvider>
-            <CaseRedirect />
-            <AuthenticatedApp />
-          </AuthProvider>
+          <CaseRedirect />
+          <AuthenticatedApp />
           <RouteSeo />
           <Suspense fallback={null}><CookieConsentBanner /></Suspense>
           <Toaster />
         </MobileOnlyGate>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

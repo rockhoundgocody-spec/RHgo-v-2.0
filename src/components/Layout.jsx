@@ -117,14 +117,14 @@ function SubrouteBackButton({ onBack }) {
   );
 }
 
-function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion }) {
+function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion, isPublicLanding }) {
   return (
     <main
       id="main-content"
       tabIndex={-1}
       className={cn('relative outline-none', isAdminOrDocs ? 'pb-8' : '')}
       style={
-        isAdminOrDocs || isFullscreenMap
+        isAdminOrDocs || isFullscreenMap || isPublicLanding
           ? undefined
           : { paddingBottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }
       }
@@ -219,6 +219,7 @@ export default function Layout() {
           isFullscreenMap={isFullscreenMap}
           pathname={location.pathname}
           reduceMotion={reduceMotion}
+          isPublicLanding={location.pathname === '/' && !isAuthenticated}
         />
 
         {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (

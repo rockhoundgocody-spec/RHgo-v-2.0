@@ -7,6 +7,7 @@ import useCameraStream from '@/components/scan/useCameraStream.jsx';
 import useLiveEyes from '@/components/scan/useLiveEyes';
 import LiveEyesOverlay from '@/components/scan/LiveEyesOverlay.jsx';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
+import GuestReportContinuation from '@/components/scan/GuestReportContinuation';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
 import { toast } from '@/components/ui/use-toast';
 import RareMineralPopup from '@/components/scan/RareMineralPopup.jsx';
@@ -42,7 +43,7 @@ const VOICE_LINES = {
 export default function Scan() {
   useSeoRobots(true);
   useSeoMeta(
-    'Scan a rock free — AI mineral ID | RockHound-GO',
+    'Scan a rock free | RockHound GO',
     'Photograph a specimen and get a field report with confidence, lookalikes, and tests. One free guest scan — no account required.',
   );
   const navigate = useNavigate();
@@ -308,7 +309,6 @@ export default function Scan() {
       stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport, legalConfirmed: !!meta.legalConfirmed });
       setSheetOpen(false);
       setStage('guestSaved');
-      setTimeout(resetToCamera, 2500);
       return;
     }
     setSheetOpen(false);
@@ -564,11 +564,8 @@ export default function Scan() {
       )}
 
       {stage === 'guestSaved' && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center" style={{ background: 'rgba(10,10,20,0.92)' }}>
-          <div className="text-center px-8">
-            <p className="text-white font-bold text-lg mb-2">Saved on this device</p>
-            <p className="text-white/50 text-sm">Create a free account to sync your finds to the cloud.</p>
-          </div>
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-showcase-ink p-6">
+          <div className="w-full max-w-md"><GuestReportContinuation saved onContinue={resetToCamera} /></div>
         </div>
       )}
 
@@ -667,6 +664,7 @@ export default function Scan() {
         locationExhausted={locationExhausted}
         foundLocation={foundLocation}
         onFoundLocationChange={setFoundLocation}
+        isGuest={isGuest}
       />
 
       <AnimatePresence>
