@@ -34,6 +34,11 @@ export default defineConfig({
     },
   },
   test: {
+    // Edge functions import the SDK as `npm:@base44/sdk@X.Y.Z`, the form Base44's Deno runtime
+    // resolves. Node cannot, so tests that import a function module read the same package from
+    // node_modules instead. Do not change the import in the function to a bare `@base44/sdk`:
+    // this repo has no import map for it (base44/sdkPinGuard_test.ts fails on that).
+    alias: [{ find: /^npm:@base44\/sdk@[^/]+$/, replacement: '@base44/sdk' }],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'],
     setupFiles: ['./vitest.setup.js'],
