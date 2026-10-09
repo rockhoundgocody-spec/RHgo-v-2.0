@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
   Clock, Sparkles, RefreshCw,
-  Flame, Zap, ChevronLeft, Trophy, Target, Star, Cpu,
+  Flame, Zap, ChevronLeft, ChevronDown, Trophy, Target, Star, Cpu,
 } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import { SkeletonList } from '@/components/visuals/SkeletonCard.jsx';
@@ -74,8 +74,8 @@ export function QuestCard({ q }) {
       tabIndex={0}
       aria-expanded={expanded}
       aria-controls={detailsId}
-      className="rounded-2xl p-4 transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
-      style={{ background: bg, border: `1px solid ${border}`, opacity: done ? 0.7 : 1 }}
+      className="rounded-2xl p-4 transition-all duration-200 cursor-pointer select-none border hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
+      style={{ background: bg, borderColor: expanded ? `${color}60` : border, opacity: done ? 0.7 : 1 }}
       onClick={toggleExpanded}
       onKeyDown={handleKeyDown}
     >
@@ -104,7 +104,12 @@ export function QuestCard({ q }) {
             <span className="text-base font-black leading-none" style={{ color }}>+{q.xp_reward}</span>
             <span className="text-[8px] uppercase tracking-widest text-white/30">XP</span>
           </div>
-          <span aria-hidden="true" className="text-white/25 text-[10px] motion-reduce:transition-none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
+          <ChevronDown
+            size={14}
+            aria-hidden="true"
+            className="text-white/40 transition-transform duration-200 motion-reduce:transition-none"
+            style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
+          />
         </div>
       </div>
 
