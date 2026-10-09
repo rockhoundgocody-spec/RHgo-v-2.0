@@ -1,7 +1,7 @@
 // GET /sync/pull — body: { cursor?: string, limit?: number }
 // Returns: { changes: [{ entity, op: 'upsert'|'delete', record }], cursor, has_more }
 // Cursor is the server updated_date high-water mark; tombstones (deleted_at) are included.
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { nextCursor } from '../../shared/applyEvents.ts';
 
 const MAX_LIMIT = 200;

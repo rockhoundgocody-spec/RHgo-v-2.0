@@ -1,5 +1,5 @@
 import Stripe from 'npm:stripe@14.25.0';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { secrets } from 'base44:runtime';
 import { isValidRedirectTarget } from './redirectValidation.ts';
 import { resolveCheckoutPrice } from './tierPricing.ts';

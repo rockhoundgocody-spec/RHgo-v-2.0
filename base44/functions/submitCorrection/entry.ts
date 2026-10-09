@@ -1,7 +1,7 @@
 // Records a user correction to a specimen ID. Writes a TrainingCandidate
 // row that the external ML pipeline can poll and use for fine-tuning.
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {

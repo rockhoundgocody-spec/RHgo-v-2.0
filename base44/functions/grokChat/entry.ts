@@ -2,7 +2,7 @@
  * grokChat — Clover powered by xAI Grok
  * Drop-in companion chat using grok-3-mini via the OpenAI-compatible xAI API.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { chunkValues, collectPages, groupDigestRecords } from './operations.ts';
 import { logError, safeError } from '../../shared/httpErrors.ts';
 

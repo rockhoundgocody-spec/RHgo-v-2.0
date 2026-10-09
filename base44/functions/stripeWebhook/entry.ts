@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import Stripe from 'npm:stripe@14.25.0';
 import { secrets } from 'base44:runtime';
 import { entitlementOf, mapStatus, ownerEmailOf, checkoutPassEnd, periodEndOf, shouldIgnoreStripeEvent } from './subscriptionSync.ts';
