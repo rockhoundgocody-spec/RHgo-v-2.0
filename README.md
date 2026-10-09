@@ -15,15 +15,40 @@ RockHound-GO is a field intelligence and geological adventure platform for moder
 
 Roadmap/demo layers can include Community, Market, Clover AI, Land Access, Learning, Quests, and AR glasses support, but future-facing modules must not be represented as fully production-ready unless actually implemented.
 
-## Applied file package
+## Build directive and plan
 
-The uploaded RHGO project files have been consolidated into:
+- [`docs/RHGO_BUILD_DIRECTIVE.md`](docs/RHGO_BUILD_DIRECTIVE.md) — product scope, priorities and guardrails for the next implementation pass.
+- [`docs/DISCOVERY_PSYCHOLOGY_LAYER.md`](docs/DISCOVERY_PSYCHOLOGY_LAYER.md) — the post-scan Discovery Choice, XP categories and discovery chains.
 
-```text
-/docs/APPLY_THE_FILES_TO_RHGO.md
+## Development
+
+```bash
+npm ci
+cp .env.example .env.local     # then set VITE_BASE44_APP_ID (see "Configuration")
+npm run dev
 ```
 
-That document is the build directive for the next implementation pass.
+| Command | What it checks |
+| --- | --- |
+| `npm run lint` | ESLint — must be clean |
+| `npm test` | Vitest unit tests |
+| `npm run build` | Production build |
+| `npm run typecheck:ratchet` | Type errors may only go down (baseline in `.github/typecheck-baseline.json`) |
+| `deno lint && deno test -A` | Base44 backend functions in `base44/` |
+
+CI (`.github/workflows/`) runs all of the above on every pull request.
+
+## Configuration
+
+The app talks to a Base44 backend. Vite inlines `VITE_*` values into the bundle **at build time**, so they must be set when you run `npm run build`, not just on the server. See [`.env.example`](.env.example).
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `VITE_BASE44_APP_ID` | yes | Identifies your Base44 app. Without it the build succeeds but every API call fails. |
+| `VITE_BASE44_APP_BASE_URL` | yes, off `*.base44.app` | Public URL of your Base44 app. The SDK uses it for the login redirect, the Google sign-in flow and logout; if it is empty on a self-hosted origin those URLs resolve against your own server and sign-in breaks. Also the target of the dev-server `/api` proxy. |
+| `VITE_BASE44_FUNCTIONS_VERSION` | no | Pins the Base44 functions version. |
+
+> The SDK sends API calls to `https://base44.app/api` by default (see `src/api/base44Legacy.js`). When you host the frontend yourself (Caddy or Firebase), confirm that Base44 accepts requests and sign-in redirects from your origin before going live.
 
 ## Own-server PWA deployment
 
@@ -31,6 +56,8 @@ That document is the build directive for the next implementation pass.
 
 ```bash
 npm install
+VITE_BASE44_APP_ID=<your app id> \
+VITE_BASE44_APP_BASE_URL=<your Base44 app url> \
 npm run build
 ```
 
