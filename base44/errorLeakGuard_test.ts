@@ -18,7 +18,10 @@
 // were removed rather than patched.
 //
 // This catches accidental leaks, for example in a bot-written fix. It cannot stop deliberate
-// obfuscation such as `e['mes' + 'sage']` or passing the error through a helper; review covers those.
+// obfuscation such as `e['mes' + 'sage']` or passing the error through a helper. It follows a
+// variable only where it is bound by a `catch` clause or a `.catch(...)` handler, not one bound by
+// `.then(ok, (e) => ...)`, a callback's `err` or a `Promise.allSettled` result (`.message` and
+// `.stack` are flagged wherever they appear); review covers those.
 import { assertEquals } from 'jsr:@std/assert@1';
 
 const COMPLETION_MESSAGE = /\bchoices\??\.?\[\d+\]\??\.message\b/g;
@@ -27,8 +30,10 @@ const ERROR_TEXT = /\.\s*(?:message|stack)\b|\[\s*(['"`])(?:message|stack)\1\s*\
 const DESTRUCTURED_IN_CATCH = /(?<=\bcatch\s*\(\s*\{[^}]*)\b(?:message|stack)\b/g;
 // The variable of `catch (e)` and of a `.catch(...)` handler: `e => ...`, `(e) => ...`,
 // `async (e) => ...`, `function (e) { ... }`, with a space or line break wherever JavaScript allows one.
+// `async` is a modifier only when a parameter list or a name follows it, so `catch (async)` and
+// `async => ...` still bind a variable called `async`. A name followed by `(` is a call, not a binding.
 const CATCH_VARIABLE =
-  /\bcatch\s*\(\s*(?:async\b\s*)?(?:function\b\s*[\w$]*\s*)?\(?\s*(?!(?:async|function)\b)([A-Za-z_$][\w$]*)/g;
+  /\bcatch\s*\(\s*(?:async\b(?=\s*[(A-Za-z_$])\s*)?(?:function\b\s*[\w$]*\s*)?\(?\s*(?!function\b)([A-Za-z_$][\w$]*)(?![\w$])(?!\s*\()/g;
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -106,6 +111,13 @@ Deno.test('the leak detector flags what it should and nothing else', () => {
   assertEquals(flagged(`p.catch(async (e) => String(e));`), 1);
   assertEquals(flagged(`p.catch(async function named(e) { return \`\${e}\`; });`), 1);
   assertEquals(flagged(`p.catch(e => String(e));`), 1);
+  assertEquals(flagged(`p.catch(async e => String(e));`), 1);
+  assertEquals(flagged(`p.catch(async function (e) { return String(e); });`), 1);
+
+  // `async` is a modifier only before a parameter list or a name; elsewhere it is an ordinary variable
+  assertEquals(flagged(`try { run(); } catch (async) { return Response.json({ error: String(async) }); }`), 1);
+  assertEquals(flagged(`p.catch(async => String(async));`), 1);
+  assertEquals(flagged(`p.catch((async) => String(async));`), 1);
 
   // concatenation and casts
   assertEquals(flagged(`try { run(); } catch (e) { reasons.push('failed: ' + e); }`), 1);
