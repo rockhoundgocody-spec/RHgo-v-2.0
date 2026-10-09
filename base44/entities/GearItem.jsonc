@@ -1,0 +1,43 @@
+{
+  "name": "GearItem",
+  "type": "object",
+  "description": "A tool or piece of field gear a rockhound takes on expeditions.",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "tools",
+        "safety",
+        "navigation",
+        "storage",
+        "optics",
+        "other"
+      ],
+      "default": "tools"
+    },
+    "packed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

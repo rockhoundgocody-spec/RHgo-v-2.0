@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
+import GearInventory from '@/components/profile/GearInventory.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarderContext } from '@/lib/BadgeAwarderContext';
 import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
@@ -317,6 +318,7 @@ export default function Profile() {
 
       <SkillsSection />
 
+      <GearInventory />
       {/* Battle History */}
       <GlassPanel className="mb-8">
         <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-white/8">
