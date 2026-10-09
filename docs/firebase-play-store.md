@@ -54,4 +54,6 @@ Backend/data/auth still run on Base44 (and Supabase for RHgo-v-2.0); Firebase on
 GitHub repo settings (Settings -> Secrets and variables -> Actions):
 - variable `FIREBASE_PROJECT_ID`
 - secret `FIREBASE_SERVICE_ACCOUNT` (a Google Cloud service account key JSON with the "Firebase Hosting Admin" role)
-- the build variables listed in the workflow (`VITE_*`), set as repository variables
+- the build variables listed in the workflow (`VITE_*`), set as repository variables. All are optional, but without
+  `VITE_GOOGLE_MAPS_API_KEY` the maps will not load, and without `VITE_BASE44_APP_ID` / `VITE_BASE44_APP_BASE_URL`
+  the app cannot reach Base44. (A Maps key ships in the browser bundle, so restrict it by HTTP referrer in Google Cloud.)
