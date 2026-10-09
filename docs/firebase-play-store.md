@@ -64,5 +64,7 @@ GitHub repo settings (Settings -> Secrets and variables -> Actions):
 - required repository variables `VITE_BASE44_APP_ID` and `VITE_BASE44_APP_BASE_URL`; without them, API calls and
   sign-in fail.
 - optional repository variables `VITE_BASE44_FUNCTIONS_VERSION`, `VITE_GOOGLE_MAPS_API_KEY`, `VITE_GTM_ID`,
-  `VITE_GA4_MEASUREMENT_ID` and `VITE_GSC_VERIFICATION`. Without `VITE_GOOGLE_MAPS_API_KEY`, maps fall back to the
-  Base44 `getMapsKey` function. (A Maps key ships in the browser bundle, so restrict it by HTTP referrer in Google Cloud.)
+  `VITE_GA4_MEASUREMENT_ID` and `VITE_GSC_VERIFICATION`. Without `VITE_GOOGLE_MAPS_API_KEY`, maps call the
+  Base44 `getMapsKey` function, which requires a signed-in user and a backend `GOOGLE_MAPS_API_KEY` or `google_maps`
+  setting. Set a browser key or configure that backend key; otherwise collection and expedition maps cannot load.
+  (A Maps key is exposed to the browser, so restrict it by HTTP referrer in Google Cloud.)
