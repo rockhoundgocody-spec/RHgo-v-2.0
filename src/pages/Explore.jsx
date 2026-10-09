@@ -504,7 +504,7 @@ export default function Explore() {
       <div className="absolute right-3 z-[1000] flex flex-col gap-2 pointer-events-auto"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 76px)' }}>
         <button onClick={() => setShowGeology(g => { setGeologyCardOpen(!g); return !g; })}
-          aria-label="Toggle geology view" aria-pressed={showGeology}
+          aria-label="Toggle geology view" title="Toggle geology view" aria-pressed={showGeology}
           className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
           style={{
             background: showGeology ? 'hsla(150,60%,30%,.3)' : 'hsla(240,30%,8%,.88)',
@@ -515,7 +515,7 @@ export default function Explore() {
           <Mountain size={16} className={showGeology ? 'text-emerald-300' : 'text-white/50'} />
         </button>
         <button onClick={() => setShowHeatMap(h => !h)}
-          aria-label="Toggle activity heat map" aria-pressed={showHeatMap}
+          aria-label="Toggle activity heat map" title="Toggle activity heat map" aria-pressed={showHeatMap}
           className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
           style={{
             background: showHeatMap ? 'hsla(0,80%,30%,.4)' : 'hsla(240,30%,8%,.88)',
@@ -526,7 +526,7 @@ export default function Explore() {
           <Flame size={16} className={showHeatMap ? 'text-red-400' : 'text-white/50'} />
         </button>
         <button onClick={() => setShowWeather(w => !w)}
-          aria-label="Toggle weather" aria-pressed={showWeather}
+          aria-label="Toggle weather" title="Toggle weather" aria-pressed={showWeather}
           className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
           style={{
             background: showWeather ? 'hsla(38,80%,30%,.35)' : 'hsla(240,30%,8%,.88)',
@@ -543,7 +543,7 @@ export default function Explore() {
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)' }}>
         {/* Filter funnel */}
         <button onClick={() => setFilterOpen(true)}
-          aria-label="Map filters"
+          aria-label="Map filters" title="Map filters"
           className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]"
           style={{
             background: (activeLayer !== 'all' || selectedMinerals.size > 0) ? 'hsla(160,60%,40%,.3)' : 'hsla(240,30%,8%,.88)',
@@ -555,7 +555,7 @@ export default function Explore() {
         </button>
         {/* Locate */}
         <button onClick={locate} disabled={locating}
-          aria-label="My location"
+          aria-label="My location" title="My location"
           className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan"
           style={{
             background: userLocation ? 'hsla(195,100%,40%,.25)' : 'hsla(240,30%,8%,.88)',

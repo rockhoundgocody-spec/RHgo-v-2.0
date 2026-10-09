@@ -87,6 +87,7 @@ export default function QuickPinButton({ userLocation }) {
           boxShadow: state === 'saved' ? '0 0 14px hsla(142,70%,50%,.3)' : 'none',
         }}
         aria-label={getAriaLabel()}
+        title={getAriaLabel()}
         aria-pressed={state === 'saving' || state === 'saved'}
         aria-busy={state === 'saving'}
       >

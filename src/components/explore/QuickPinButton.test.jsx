@@ -50,6 +50,7 @@ describe('QuickPinButton', () => {
     expect(element).toBeDefined();
     const button = element.props.children[0];
     expect(button.props['aria-label']).toBe('Save this location to my private rock log');
+    expect(button.props['title']).toBe('Save this location to my private rock log');
     expect(button.props['aria-pressed']).toBe(false);
     expect(button.props['aria-busy']).toBe(false);
   });
