@@ -61,6 +61,8 @@ Backend, data and auth run on Base44; Firebase only hosts the frontend.
 GitHub repo settings (Settings -> Secrets and variables -> Actions):
 - variable `FIREBASE_PROJECT_ID`
 - secret `FIREBASE_SERVICE_ACCOUNT` (a Google Cloud service account key JSON with the "Firebase Hosting Admin" role)
-- the build variables listed in the workflow (`VITE_*`), set as repository variables. All are optional, but without
-  `VITE_GOOGLE_MAPS_API_KEY` the maps will not load, and without `VITE_BASE44_APP_ID` / `VITE_BASE44_APP_BASE_URL`
-  the app cannot reach Base44. (A Maps key ships in the browser bundle, so restrict it by HTTP referrer in Google Cloud.)
+- required repository variables `VITE_BASE44_APP_ID` and `VITE_BASE44_APP_BASE_URL`; without them, API calls and
+  sign-in fail.
+- optional repository variables `VITE_BASE44_FUNCTIONS_VERSION`, `VITE_GOOGLE_MAPS_API_KEY`, `VITE_GTM_ID`,
+  `VITE_GA4_MEASUREMENT_ID` and `VITE_GSC_VERIFICATION`. Without `VITE_GOOGLE_MAPS_API_KEY`, maps fall back to the
+  Base44 `getMapsKey` function. (A Maps key ships in the browser bundle, so restrict it by HTTP referrer in Google Cloud.)
