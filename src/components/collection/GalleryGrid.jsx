@@ -189,7 +189,7 @@ export function SpecimenLightboxModal({ specimen, onClose }) {
           aria-label="Close details"
           className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
           style={{ background: 'hsla(240,30%,8%,.8)', border: '1px solid hsla(255,30%,40%,.25)' }}>
-          <X size={15} className="text-white/70" />
+          <X size={15} className="text-white/70" aria-hidden="true" />
         </button>
       </motion.div>
     </motion.div>

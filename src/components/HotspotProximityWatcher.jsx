@@ -117,7 +117,7 @@ export function HotspotProximityBanner({ nearby, permission, requestPermission, 
           className="text-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
           aria-label="Dismiss"
         >
-          <X size={16} />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
     </div>
