@@ -48,3 +48,10 @@ bubblewrap build        # signs with android.keystore and produces app-release-b
 
 ## Note
 Backend/data/auth still run on Base44 (and Supabase for RHgo-v-2.0); Firebase only hosts the frontend.
+
+## Optional: deploy on every merge to main
+`.github/workflows/firebase-hosting.yml` deploys the site automatically. It stays skipped until you set, in the
+GitHub repo settings (Settings -> Secrets and variables -> Actions):
+- variable `FIREBASE_PROJECT_ID`
+- secret `FIREBASE_SERVICE_ACCOUNT` (a Google Cloud service account key JSON with the "Firebase Hosting Admin" role)
+- the build variables listed in the workflow (`VITE_*`), set as repository variables
