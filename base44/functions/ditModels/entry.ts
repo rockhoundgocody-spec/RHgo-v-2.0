@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -37,6 +38,6 @@ Deno.serve(async (req) => {
       })) || data,
     }, { status: res.ok ? 200 : res.status });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('ditModels', error);
   }
 });

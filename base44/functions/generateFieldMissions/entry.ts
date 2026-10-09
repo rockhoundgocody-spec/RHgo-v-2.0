@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -100,6 +101,6 @@ Return exactly 3 missions as JSON array.`;
 
     return Response.json({ missions: created, count: created.length });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('generateFieldMissions', error);
   }
 });

@@ -16,6 +16,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { awardXPServerSide } from '../../shared/awardXP.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 const QUEST_XP_CAP = 100;
 const ROULETTE_XP = 15;
@@ -138,6 +139,6 @@ Deno.serve(async (req) => {
     const result = await awardXPServerSide(base44, user.email, amount, reason, idempotencyKey);
     return Response.json(result);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('awardVerifiedXP', error);
   }
 });

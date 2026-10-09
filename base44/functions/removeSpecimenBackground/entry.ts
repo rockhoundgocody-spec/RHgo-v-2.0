@@ -6,6 +6,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -37,6 +38,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, cutout_url });
   } catch (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return safeError('removeSpecimenBackground', error, { extra: { success: false } });
   }
 });

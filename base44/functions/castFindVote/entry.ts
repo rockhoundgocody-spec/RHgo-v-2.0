@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import { weekKey } from "../../shared/weekKey.ts";
+import { safeError } from "../../shared/httpErrors.ts";
 
 /**
  * Cast or change a user's single vote for the current week's Find of the Week
@@ -45,6 +46,6 @@ export default async function (req: Request): Promise<Response> {
     });
     return Response.json({ ok: true, created: true });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('castFindVote', error);
   }
 }

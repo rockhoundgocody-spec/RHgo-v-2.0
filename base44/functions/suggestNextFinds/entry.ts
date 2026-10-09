@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS_MI = 3959;
@@ -207,7 +208,6 @@ Output a JSON object:
       nearby_hotspot_count: nearby.length,
     });
   } catch (error) {
-    console.error('suggestNextFinds error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return safeError('suggestNextFinds', error);
   }
 });

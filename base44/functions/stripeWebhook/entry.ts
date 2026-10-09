@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import Stripe from 'npm:stripe@14.25.0';
 import { secrets } from 'base44:runtime';
 import { entitlementOf, mapStatus, ownerEmailOf, checkoutPassEnd, periodEndOf, shouldIgnoreStripeEvent } from './subscriptionSync.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * stripeWebhook — keeps the Subscription entity in sync with Stripe.
@@ -106,7 +107,6 @@ export default async function(req) {
     }
     return Response.json({ received: true });
   } catch (error) {
-    console.error('stripeWebhook handler error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('stripeWebhook', error);
   }
 }

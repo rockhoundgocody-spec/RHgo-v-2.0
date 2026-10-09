@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import OpenAI from 'npm:openai@4.89.0';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /** American-accent speech, preserving the existing voice-persona preferences. */
 export default async function(req) {
@@ -52,7 +53,6 @@ export default async function(req) {
     const { signed_url: audioUrl } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri });
     return Response.json({ audioUrl, accent: 'en-US' });
   } catch (error) {
-    console.error('synthesizeSpeech exception:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('synthesizeSpeech', error);
   }
 }
