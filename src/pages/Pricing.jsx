@@ -206,14 +206,17 @@ function PricingPage() {
       else window.location.assign(url);
     } catch (err) {
       checkoutTab?.close();
-      const code = err?.data?.code || err?.code || err?.response?.data?.code;
+      const serverError = err?.response?.data || err?.data;
+      const code = serverError?.code || err?.code;
       const message = code === 'plan_unconfigured' || code === 'price_inactive'
         ? `${tier.name} isn't open for purchase yet. Try another plan, or check back soon.`
         : code === 'auth_required'
           ? 'Please sign in again to subscribe.'
           : err.message === 'Allow popups to continue to checkout.'
             ? err.message
-            : 'Unable to start checkout — please try again shortly.';
+            : code === 'invalid_redirect' || serverError?.error === 'Invalid successUrl or cancelUrl redirect target'
+              ? 'Checkout return address is not configured yet. Please contact support.'
+              : 'Unable to start checkout — please try again shortly.';
       setCheckoutError({ tier: tier.id, message });
     } finally {
       setUpgrading(null);

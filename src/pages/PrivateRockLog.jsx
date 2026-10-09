@@ -358,7 +358,7 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
 function Field({ label, children }) {
   return (
     <div className="mb-3">
-      <label className="block text-white/40 text-[10px] uppercase tracking-widest mb-1">{label}</label>
+      <label className="block text-muted-foreground text-[10px] uppercase tracking-widest mb-1">{label}</label>
       {children}
     </div>
   );

@@ -23,7 +23,7 @@ describe('Private log photo flow', () => {
     await waitFor(() => expect(screen.getByText('No rocks logged yet.')).toBeTruthy());
     fireEvent.click(screen.getByText('Log Rock'));
     fireEvent.change(screen.getByPlaceholderText('e.g. Petoskey Stone'), { target: { value: 'Quartz fixture' } });
-    fireEvent.change(container.querySelector('input[type="file"]'), { target: { files: [new File(['raw-metadata'], 'location.jpg', { type: 'image/jpeg' })] } });
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['raw-metadata'], 'location.jpg', { type: 'image/jpeg' })] } });
     await screen.findByText('Photo added privately');
     expect(mocks.clean.mock.calls[0][1]).toEqual({ requireSuccess: true });
     expect(mocks.upload).toHaveBeenCalled();
@@ -39,7 +39,7 @@ describe('Private log photo flow', () => {
     mocks.clean.mockRejectedValue(new Error('Could not remove photo metadata.'));
     const { container } = render(<PrivateRockLog />);
     fireEvent.click(screen.getByText('Log Rock'));
-    fireEvent.change(container.querySelector('input[type="file"]'), { target: { files: [new File(['bad'], 'bad.jpg', { type: 'image/jpeg' })] } });
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['bad'], 'bad.jpg', { type: 'image/jpeg' })] } });
     await screen.findByRole('alert');
     expect(mocks.upload).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();

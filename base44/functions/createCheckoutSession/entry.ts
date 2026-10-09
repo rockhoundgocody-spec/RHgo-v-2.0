@@ -28,7 +28,7 @@ export default async function(req) {
     if (!successUrl || !cancelUrl) return Response.json({ error: 'successUrl and cancelUrl are required' }, { status: 400 });
 
     if (!isValidRedirectTarget(successUrl) || !isValidRedirectTarget(cancelUrl)) {
-      return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target' }, { status: 400 });
+      return Response.json({ error: 'Invalid successUrl or cancelUrl redirect target', code: 'invalid_redirect' }, { status: 400 });
     }
 
     const base44 = createClientFromRequest(req);
