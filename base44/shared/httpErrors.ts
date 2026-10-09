@@ -1,16 +1,16 @@
 /**
  * Error responses for edge functions.
  *
- * The text of a thrown error (`error.message`) can carry provider, database and SDK internals:
- * host names, entity names, query fragments. That belongs in the server log, never in a response
- * body. `safeError` logs the full error under a short reference and answers with a generic message
- * plus that reference, so a user can quote it and we can find the log line.
+ * The text of a thrown error can carry provider, database and SDK internals: host names, entity
+ * names, query fragments. That belongs in the server log, never in a response body. `safeError`
+ * logs the full error under a short reference and answers with a generic message plus that
+ * reference, so a user can quote it and we can find the log line.
  *
  * Intentional, caller-safe messages (validation failures, 401/403/404/429) are not exceptions:
  * keep returning those directly with `Response.json({ error: '...' }, { status })`.
  *
- * `base44/errorLeakGuard_test.ts` fails the build if a function puts an exception's text anywhere
- * but a log line.
+ * `base44/errorLeakGuard_test.ts` fails the build if any backend file reads an exception's text
+ * (its `message` or `stack`). To log an error, pass the object itself: `console.error('what failed', err)`.
  */
 
 export const GENERIC_ERROR = 'Something went wrong. Please try again.';
