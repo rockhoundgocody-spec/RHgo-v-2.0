@@ -8,9 +8,10 @@
 // searches the whole file, comments and strings included, so a comment cannot hide code and a
 // line break cannot split a match. It looks for
 //   - `.message` / `.stack`, with a dot, `?.` or brackets (`e['message']`),
-//   - `String(e)`, `${e}` and `e.toString()` for a variable bound by a `catch`, including
-//     `e?.toString()` and `(e as Error).toString()`,
+//   - `String(e)`, `${e}`, `'x' + e` and `e.toString()` for a variable bound by a `catch` or by a
+//     `.catch(...)` handler, including `e?.toString()` and `(e as Error).toString()`,
 //   - `const { message } = e` and `catch ({ message })`.
+// A space or a line break is allowed wherever JavaScript allows one (`String (e)`, `.catch (e => ...)`).
 // In a comment, write "the error's text" instead. The one exemption is the `message` of an LLM
 // completion (`data.choices[0].message`), which is data, not an Error. Earlier versions skipped
 // comment lines and exempted console calls by matching brackets; both could be fooled, so they
@@ -24,23 +25,29 @@ const COMPLETION_MESSAGE = /\bchoices\??\.?\[\d+\]\??\.message\b/g;
 const ERROR_TEXT = /\.\s*(?:message|stack)\b|\[\s*(['"`])(?:message|stack)\1\s*\]/g;
 // `catch ({ message })`; the match is the word itself, so the report names its line
 const DESTRUCTURED_IN_CATCH = /(?<=\bcatch\s*\(\s*\{[^}]*)\b(?:message|stack)\b/g;
-// `catch (e)` and `.catch((e) => ...)` / `.catch(e => ...)`
-const CATCH_VARIABLE = /\bcatch\s*\(\s*([A-Za-z_$][\w$]*)|\.catch\(\s*\(?\s*([A-Za-z_$][\w$]*)/g;
+// The variable of `catch (e)` and of a `.catch(...)` handler: `e => ...`, `(e) => ...`,
+// `async (e) => ...`, `function (e) { ... }`, with a space or line break wherever JavaScript allows one.
+const CATCH_VARIABLE =
+  /\bcatch\s*\(\s*(?:async\b\s*)?(?:function\b\s*[\w$]*\s*)?\(?\s*(?!(?:async|function)\b)([A-Za-z_$][\w$]*)/g;
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function findLeaks(source: string): Array<{ line: number; text: string }> {
-  const caught = [...new Set([...source.matchAll(CATCH_VARIABLE)].map((m) => m[1] ?? m[2]))];
+  const caught = [...new Set([...source.matchAll(CATCH_VARIABLE)].map((m) => m[1]))];
   const names = caught.map(escapeRegExp).join('|');
   const patterns = [ERROR_TEXT, DESTRUCTURED_IN_CATCH];
   if (names) {
-    // `e`, `(e)` or `(e as Error)`
-    const variable = `\\(?\\s*(?:${names})(?:\\s+as\\s+[\\w.<>\\[\\]|]+)?\\s*\\)?`;
+    // `e`, `(e)`, `e!`, `(e as Error)` or `(e as unknown as Error)`
+    const variable = `\\(?\\s*(?:${names})!?(?:\\s+as\\s+[\\w.<>\\[\\]|]+)*\\s*\\)?`;
+    const turnedIntoText = [
+      `String\\s*\\(\\s*${variable}\\s*,?\\s*\\)`, // String(e)
+      `\\$\\{\\s*${variable}\\s*\\}`, // `${e}`
+      `(?:^|[^\\w$.])${variable}\\s*(?:\\?\\.|\\.)\\s*toString\\s*(?:\\?\\.)?\\s*\\(`, // e.toString(), e?.toString?.()
+      `(?:^|[^\\w$.])${variable}\\s*\\+(?![+=])`, // e + 'x'
+      `\\+\\s*${variable}(?![\\w$.\\[(?!])`, // 'x' + e, but not 'x' + e.code
+    ].join('|');
     patterns.push(
-      new RegExp(
-        `String\\(\\s*${variable}\\s*,?\\s*\\)|\\$\\{\\s*${variable}\\s*\\}|(?:^|[^\\w$.])${variable}\\s*(?:\\?\\.|\\.)\\s*toString\\s*(?:\\?\\.)?\\s*\\(`,
-        'g',
-      ),
+      new RegExp(turnedIntoText, 'g'),
       // `const { message } = e;`: the word, when it sits in a pattern that is assigned from `e`
       new RegExp(`\\b(?:message|stack)\\b(?=[^{}]*\\}\\s*=\\s*(?:${names})\\b)`, 'g'),
     );
@@ -91,6 +98,22 @@ Deno.test('the leak detector flags what it should and nothing else', () => {
   assertEquals(flagged(`try { run(); } catch (e) {\n  const {\n    message,\n  } = e;\n  reasons.push(message);\n}`), 1);
   assertEquals(flagged(`try { run(); } catch ({\n  stack,\n}) { reasons.push(stack); }`), 1);
 
+  // a space or a line break before a parenthesis, and the other shapes of a `.catch` handler
+  assertEquals(flagged(`try { run(); } catch (e) { return Response.json({ error: String (e) }); }`), 1);
+  assertEquals(flagged(`p.catch ((e) => String(e));`), 1);
+  assertEquals(flagged(`p.catch\n(\n  (e) => String(e),\n);`), 1);
+  assertEquals(flagged(`p.catch(function (e) { return String(e); });`), 1);
+  assertEquals(flagged(`p.catch(async (e) => String(e));`), 1);
+  assertEquals(flagged(`p.catch(async function named(e) { return \`\${e}\`; });`), 1);
+  assertEquals(flagged(`p.catch(e => String(e));`), 1);
+
+  // concatenation and casts
+  assertEquals(flagged(`try { run(); } catch (e) { reasons.push('failed: ' + e); }`), 1);
+  assertEquals(flagged(`try { run(); } catch (e) { reasons.push(e + ' failed'); }`), 1);
+  assertEquals(flagged(`try { run(); } catch (e) { reasons.push(\`failed\` + (e as Error)); }`), 1);
+  assertEquals(flagged(`try { run(); } catch (e) { reasons.push(String(e as unknown as Error)); }`), 1);
+  assertEquals(flagged(`try { run(); } catch (e) { reasons.push(String(e!)); }`), 1);
+
   // turning a caught error into text
   assertEquals(flagged(`try { run(); } catch (boom) {\n  results.errors.push(\`\${job.name}: \${boom}\`);\n}`), 1);
   assertEquals(flagged(`try { run(); } catch (boom) {\n  results.errors.push(String(boom));\n}`), 1);
@@ -124,6 +147,13 @@ Deno.test('the leak detector flags what it should and nothing else', () => {
   assertEquals(flagged(`const label = \`\${job.name} (\${job.condition})\`;`), 0);
   assertEquals(flagged(`try { run(); } catch (e) { note(thing.e.toString()); }`), 0);
   assertEquals(flagged(`const { messages, stacks } = payload;`), 0);
+  assertEquals(flagged(`try { run(); } catch (e) { note('code ' + e.code); }`), 0);
+  assertEquals(flagged(`try { run(); } catch (e) { note('code ' + e?.code); }`), 0);
+  assertEquals(flagged(`try { run(); } catch (e) { note(e?.code + 1); }`), 0);
+  assertEquals(flagged(`try { run(); } catch (e) { note(count + elapsed); }`), 0);
+  assertEquals(flagged(`p.catch(() => null);`), 0);
+  assertEquals(flagged(`p.catch(function () { return null; });`), 0);
+  assertEquals(flagged(`p.catch(async () => String(thing));`), 0);
 
   // the report names the line and shows the code, which is what a failing build is read for
   assertEquals(
