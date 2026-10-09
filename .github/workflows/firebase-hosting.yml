@@ -8,6 +8,11 @@ on:
 # Skipped until the FIREBASE_PROJECT_ID repository variable is set.
 # Needs a FIREBASE_SERVICE_ACCOUNT secret (service account JSON with the
 # "Firebase Hosting Admin" role). See docs/firebase-play-store.md.
+# Never run two deploys at once, so an older build can't land after a newer one.
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: true
+
 jobs:
   deploy:
     if: ${{ vars.FIREBASE_PROJECT_ID != '' }}
@@ -15,8 +20,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -26,7 +31,7 @@ jobs:
           VITE_GTM_ID: ${{ vars.VITE_GTM_ID }}
           VITE_GA4_MEASUREMENT_ID: ${{ vars.VITE_GA4_MEASUREMENT_ID }}
           VITE_GSC_VERIFICATION: ${{ vars.VITE_GSC_VERIFICATION }}
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
