@@ -6,12 +6,16 @@ import { Droplets, Sun } from 'lucide-react';
  */
 export default function WetDryToggle({ value, onChange }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-xl overflow-hidden"
+    <div
+      role="group"
+      aria-label="Specimen condition"
+      className="flex items-center gap-1.5 rounded-xl overflow-hidden"
       style={{
         background: 'hsla(265,40%,6%,0.8)',
         border: '1px solid hsla(280,40%,40%,0.25)',
         padding: '3px',
-      }}>
+      }}
+    >
       <button
         type="button"
         onClick={() => onChange('wet')}
@@ -26,7 +30,7 @@ export default function WetDryToggle({ value, onChange }) {
           boxShadow: value === 'wet' ? '0 0 12px hsla(195,100%,50%,0.25)' : 'none',
         }}
       >
-        <Droplets size={12} />
+        <Droplets size={12} aria-hidden="true" />
         Wet
       </button>
       <button
@@ -43,7 +47,7 @@ export default function WetDryToggle({ value, onChange }) {
           boxShadow: value === 'dry' ? '0 0 12px hsla(40,100%,50%,0.2)' : 'none',
         }}
       >
-        <Sun size={12} />
+        <Sun size={12} aria-hidden="true" />
         Dry
       </button>
     </div>
