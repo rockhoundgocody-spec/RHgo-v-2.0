@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
         lat: specimen.lat ?? null,
         lng: specimen.lng ?? null,
       });
-    } catch (e) {
+    } catch {
       // non-fatal — Specimen update already succeeded
     }
 

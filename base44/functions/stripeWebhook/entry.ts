@@ -23,14 +23,6 @@ import { safeError } from '../../shared/httpErrors.ts';
  * Uses the service role to write Subscription records (the webhook has no user auth).
  */
 
-async function getCustomerEmail(stripe, customerId) {
-  if (!customerId || typeof customerId !== 'string') return null;
-  try {
-    const c = await stripe.customers.retrieve(customerId);
-    return c && !c.deleted && c.email ? String(c.email) : null;
-  } catch { return null; }
-}
-
 async function findSubscriptionRow(base44, email, stripeSubscriptionId) {
   if (stripeSubscriptionId) {
     const bySub = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: stripeSubscriptionId });
@@ -79,7 +71,7 @@ export default async function(req) {
     let event;
     try {
       event = await stripe.webhooks.constructEventAsync(await req.text(), sig, secrets.get('STRIPE_WEBHOOK_SECRET'));
-    } catch (error) {
+    } catch {
       console.warn('stripeWebhook: rejected invalid signature');
       return Response.json({ error: 'invalid signature' }, { status: 400 });
     }
