@@ -195,13 +195,27 @@ export function flushQueue() {
         if (next.ownerId !== user.id) { index += 1; continue; }
         try {
           const entity = base44.entities[next.entity];
-          if (!entity || !['create', 'update'].includes(next.op)) throw new Error('Unsupported queued write');
-          if (next.op === 'create') await entity.create(next.data);
-          else await entity.update(next.id, next.data);
+          if (!entity || !['create', 'update'].includes(next.op)) throw Object.assign(new Error('Unsupported queued write'), { status: 400 });
+          if (next.op === 'create') {
+            await entity.create(next.data);
+          } else {
+            if (next.baseUpdatedDate && await changedSince(entity, next.id, next.baseUpdatedDate)) {
+              throw Object.assign(new Error('Changed on another device'), { status: 409 });
+            }
+            await entity.update(next.id, next.data);
+          }
         } catch (error) {
           const status = error?.status ?? error?.response?.status;
-          queue[index] = { ...next, attempts: (next.attempts || 0) + 1, lastError: status ? `Sync failed (${status})` : 'Sync did not finish' };
+          const rejected = status >= 400 && status < 500;
+          queue[index] = {
+            ...next,
+            attempts: (next.attempts || 0) + 1,
+            lastError: status === 409 ? 'Changed on another device — not overwritten' : status ? `Sync failed (${status})` : 'Sync did not finish',
+          };
           await saveQueue(queue);
+          // A write the server refused is kept for the user but must not hold
+          // every later find hostage; a network failure stops the pass.
+          if (rejected) { index += 1; continue; }
           break;
         }
         queue.splice(index, 1);
@@ -213,11 +227,25 @@ export function flushQueue() {
   });
 }
 
+/** True when the stored record was edited after the version the queued update was based on. */
+async function changedSince(entity, id, baseUpdatedDate) {
+  const rows = await entity.filter({ id }, '-updated_date', 1);
+  const current = rows?.[0];
+  if (!current) throw Object.assign(new Error('Record no longer exists'), { status: 404 });
+  const remote = Date.parse(current.updated_date);
+  const base = Date.parse(baseUpdatedDate);
+  return Number.isFinite(remote) && Number.isFinite(base) && remote > base;
+}
+
 /**
  * queueWrite — try the network first; on failure, persist for later replay.
  * Returns { ok, offline, result? } so callers can show optimistic UI.
+ *
+ * For updates, pass `baseUpdatedDate` (the record's updated_date when the user
+ * started editing). A queued update is then never replayed over a newer edit
+ * made on another device; it stays in the queue flagged as a conflict.
  */
-export async function queueWrite({ entity, op = "create", id, data, ownerId }) {
+export async function queueWrite({ entity, op = "create", id, data, ownerId, baseUpdatedDate }) {
   if (!ownerId) throw new Error('Sign in before saving a private offline find.');
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
 
@@ -236,7 +264,7 @@ export async function queueWrite({ entity, op = "create", id, data, ownerId }) {
 
   await serializeQueue(async () => {
     const queue = await loadQueue();
-    queue.push({ entity, op, id, data, ownerId, queuedAt: Date.now() });
+    queue.push({ entity, op, id, data, ownerId, queuedAt: Date.now(), ...(op === 'update' && baseUpdatedDate ? { baseUpdatedDate } : {}) });
     await saveQueue(queue);
   });
   if (typeof window !== "undefined") schedulePeriodicRetry();
