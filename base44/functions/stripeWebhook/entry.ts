@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import Stripe from 'npm:stripe@14.25.0';
 import { secrets } from 'base44:runtime';
-import { entitlementOf, mapStatus, ownerEmailOf, checkoutPassEnd, periodEndOf, shouldIgnoreStripeEvent } from './subscriptionSync.ts';
+import { entitlementOf, mapStatus, checkoutPassEnd, periodEndOf, shouldIgnoreStripeEvent, resolveSubscriptionCredit } from './subscriptionSync.ts';
 import { safeError } from '../../shared/httpErrors.ts';
 
 /**
@@ -14,8 +14,11 @@ import { safeError } from '../../shared/httpErrors.ts';
  *
  * Ownership comes from metadata.owner_email stamped by createCheckoutSession
  * (the signed-in account that started checkout); the email typed into Stripe
- * is only a fallback for older sessions. Entitlement comes from
- * metadata.tier, never from the client.
+ * is only a fallback for older sessions. For subscriptions, entitlement comes
+ * from the price the subscription is billed at (metadata.tier only when the
+ * price is unknown), never from the client. Subscriptions created before the
+ * app stamped metadata are synced through the row already stored for their
+ * Stripe subscription id (resolveSubscriptionCredit).
  *
  * Uses the service role to write Subscription records (the webhook has no user auth).
  */
@@ -80,13 +83,26 @@ export default async function(req) {
       console.warn('stripeWebhook: rejected invalid signature');
       return Response.json({ error: 'invalid signature' }, { status: 400 });
     }
-    if (shouldIgnoreStripeEvent(event, secrets.get('BASE44_APP_ID'))) return Response.json({ received: true, ignored: true });
+    const appId = secrets.get('BASE44_APP_ID');
+    const readEnv = (name: string) => secrets.get(name);
     const data = event.data.object;
-    const email = String(data.metadata.owner_email).trim();
-    const tier = entitlementOf(data.metadata);
-    const plan = data.metadata.plan || null;
     const customerId = typeof data.customer === 'string' ? data.customer : data.customer?.id;
+
+    // Credit a subscription from Stripe's current state of it.
+    const syncSubscription = async (sub) => {
+      const known = await findSubscriptionRow(base44, null, sub.id);
+      const credit = resolveSubscriptionCredit(sub, known, appId, readEnv);
+      if (!credit) return false;
+      await upsertSubscription(base44, { ...credit, customerId, subscriptionId: sub.id, status: mapStatus(sub.status), periodEnd: periodEndOf(sub), event });
+      return true;
+    };
+
     if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
+      // A checkout is only ever credited when this app stamped it.
+      if (shouldIgnoreStripeEvent(event, appId)) return Response.json({ received: true, ignored: true });
+      const email = String(data.metadata.owner_email).trim();
+      const tier = entitlementOf(data.metadata);
+      const plan = data.metadata.plan || null;
       if (data.mode === 'payment') {
         if (data.payment_status !== 'paid') return Response.json({ received: true, pending: true });
         const end = checkoutPassEnd(data);
@@ -96,14 +112,14 @@ export default async function(req) {
         const subscriptionId = typeof data.subscription === 'string' ? data.subscription : data.subscription?.id;
         if (!subscriptionId) return Response.json({ received: true, ignored: true });
         const sub = await stripe.subscriptions.retrieve(subscriptionId);
-        if (shouldIgnoreStripeEvent({ data: { object: sub } }, secrets.get('BASE44_APP_ID'))) return Response.json({ received: true, ignored: true });
-        await upsertSubscription(base44, { email: String(sub.metadata.owner_email).trim(), tier: entitlementOf(sub.metadata), plan: sub.metadata.plan, customerId, subscriptionId, status: mapStatus(sub.status), periodEnd: periodEndOf(sub), event });
+        if (!(await syncSubscription(sub))) return Response.json({ received: true, ignored: true });
       }
     } else if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
       // Fetch Stripe's current state so delayed events cannot restore an old status.
       const sub = await stripe.subscriptions.retrieve(data.id);
-      if (shouldIgnoreStripeEvent({ data: { object: sub } }, secrets.get('BASE44_APP_ID'))) return Response.json({ received: true, ignored: true });
-      await upsertSubscription(base44, { email, tier: entitlementOf(sub.metadata), plan: sub.metadata.plan, customerId, subscriptionId: sub.id, status: mapStatus(sub.status), periodEnd: periodEndOf(sub), event });
+      if (!(await syncSubscription(sub))) return Response.json({ received: true, ignored: true });
+    } else {
+      return Response.json({ received: true, ignored: true });
     }
     return Response.json({ received: true });
   } catch (error) {
