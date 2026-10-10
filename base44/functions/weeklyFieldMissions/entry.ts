@@ -42,8 +42,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── 1. List all users ──
-    const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    // Performance Optimization: Hoist static global Hotspot query and execute concurrently with User list query.
+    // ── 1. List all users and static global hotspots in parallel ──
+    const [users, hotspots] = await Promise.all([
+      base44.asServiceRole.entities.User.list('-created_date', 500),
+      base44.asServiceRole.entities.Hotspot.list('-trust_score', 200),
+    ]);
 
     let processed = 0;
     let notified = 0;
@@ -67,7 +71,6 @@ Deno.serve(async (req) => {
         const userLng = lastWithCoords?.lng;
 
         // ── 3. hotspot_manager logic: find nearby unvisited zones ──
-        const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
 
         // Unvisited = hotspot has at least one mineral the user hasn't collected
         let unvisited = hotspots.filter((h) => {
@@ -163,12 +166,22 @@ Return exactly 3 missions as JSON.`;
 
         const missions = result?.missions || [];
 
-        // ── 5. Create Quest records ──
-        for (const m of missions) {
-          await base44.asServiceRole.entities.Quest.create({
+        // Performance Optimization: Replace N sequential Quest.create calls with single bulkCreate request
+        // ── 5. Create Quest records in bulk ──
+        if (missions.length > 0) {
+          const questRecords = missions.map((m: {
+            title?: string;
+            description?: string;
+            quest_type?: string;
+            target_count?: number;
+            xp_reward?: number;
+            target_rarity?: string;
+            target_mineral?: string;
+            clover_message?: string;
+          }) => ({
             owner_email: user.email,
-            title: m.title,
-            description: m.description,
+            title: m.title || 'Field Mission',
+            description: m.description || '',
             quest_type: m.quest_type || 'daily',
             target_count: m.target_count || 1,
             xp_reward: m.xp_reward || 100,
@@ -178,7 +191,8 @@ Return exactly 3 missions as JSON.`;
             status: 'active',
             progress: 0,
             expires_at: getExpiry(m.quest_type || 'daily'),
-          });
+          }));
+          await base44.asServiceRole.entities.Quest.bulkCreate(questRecords);
         }
 
         // ── 6. Push notification to device ──
