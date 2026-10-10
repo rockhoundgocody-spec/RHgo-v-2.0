@@ -1,6 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { safeError } from '../../shared/httpErrors.ts';
 
+const MAX_PENDING_CODES = 3;
+const NEW_ACCOUNT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
  * processReferral — handles the gamified referral lifecycle.
  *
@@ -21,6 +24,12 @@ export default async function(req: Request): Promise<Response> {
 
     // ── CREATE: generate a new referral code ──
     if (action === 'create') {
+      const open = await base44.asServiceRole.entities.Referral.filter(
+        { inviter_email: user.email, status: 'pending' }, '-created_date', MAX_PENDING_CODES,
+      );
+      if ((open?.length || 0) >= MAX_PENDING_CODES) {
+        return Response.json({ referral: open[0], referralCode: open[0].referral_code });
+      }
       const code = 'CLOVER-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       const referral = await base44.entities.Referral.create({
         referral_code: code,
@@ -49,6 +58,16 @@ export default async function(req: Request): Promise<Response> {
       // Don't let users refer themselves
       if (referral.inviter_email === user.email) {
         return Response.json({ error: 'Cannot use your own referral code' }, { status: 400 });
+      }
+
+      // Only a genuinely new account, redeeming once, counts as a signup.
+      const accountAge = Date.now() - Date.parse(user.created_date || '');
+      if (!Number.isFinite(accountAge) || accountAge > NEW_ACCOUNT_WINDOW_MS) {
+        return Response.json({ error: 'Referral codes are for new accounts only' }, { status: 403 });
+      }
+      const prior = await base44.asServiceRole.entities.Referral.filter({ invitee_email: user.email }, '-created_date', 1);
+      if (prior?.length) {
+        return Response.json({ error: 'You have already used a referral code' }, { status: 409 });
       }
 
       // Mark as completed

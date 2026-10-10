@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       base44 as never,
       body?.guest_device_id,
       'identify',
-      { consume: action !== 'check' },
+      { consume: action !== 'check', req },
     );
 
     if (!result.ok) {

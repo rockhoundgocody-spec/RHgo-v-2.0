@@ -20,7 +20,7 @@ export default async function(req) {
     }
 
     if (!user?.email) {
-      const gate = await enforceGuestRate(base44, guest_device_id, 'synthesizeSpeech', { consume: true });
+      const gate = await enforceGuestRate(base44, guest_device_id, 'synthesizeSpeech', { consume: true, req });
       if (!gate.ok) {
         return Response.json(
           { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },

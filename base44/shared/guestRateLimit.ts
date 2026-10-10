@@ -25,6 +25,17 @@ export function normalizeGuestId(raw: unknown): string | null {
   return id;
 }
 
+export function clientIp(req: Request): string {
+  const h = req.headers;
+  const raw = h.get('cf-connecting-ip') || h.get('x-real-ip') || (h.get('x-forwarded-for') || '').split(',')[0];
+  return (raw || '').trim().slice(0, 64);
+}
+
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`rhgo-guest:${text}`));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+}
+
 function memKey(action: GuestRateAction, guestId: string) {
   return `${action}:${guestId}`;
 }
@@ -69,12 +80,16 @@ export async function enforceGuestRate(
   base44: LogClient | null,
   guestIdRaw: unknown,
   action: GuestRateAction,
-  { consume = true }: { consume?: boolean } = {},
+  { consume = true, req }: { consume?: boolean; req?: Request } = {},
 ) {
-  const guestId = normalizeGuestId(guestIdRaw);
-  if (!guestId) {
+  const deviceId = normalizeGuestId(guestIdRaw);
+  if (!deviceId) {
     return { ok: false as const, error: 'guest_device_id required', status: 400 };
   }
+  // The device id is client-chosen; anchor the quota to the caller's network
+  // address (hashed, never stored raw) so rotating ids can't mint new quota.
+  const ip = req ? clientIp(req) : '';
+  const guestId = ip ? `ip_${await sha256(ip)}` : deviceId;
 
   // Durable check for identify (must survive isolate restarts)
   if (action === 'identify' && base44?.asServiceRole?.entities?.CompanionLog) {
