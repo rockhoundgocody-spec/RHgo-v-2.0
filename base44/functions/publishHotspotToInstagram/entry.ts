@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { secrets } from 'base44:runtime';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { isValidCoordinatePair } from '../../shared/geoValidation.ts';
 import { safeError } from '../../shared/httpErrors.ts';
 
 /**
@@ -46,11 +47,11 @@ export default async function(req) {
 
     const mapsKey = secrets.get('GOOGLE_MAPS_API_KEY');
     let imageUrl = image_url;
-    if (!imageUrl && mapsKey && lat != null && lng != null) {
+    if (!imageUrl && mapsKey && isValidCoordinatePair(lat, lng)) {
       imageUrl =
-        `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}` +
+        `https://maps.googleapis.com/maps/api/staticmap?center=${Number(lat)},${Number(lng)}` +
         `&zoom=13&size=1080x1080&maptype=satellite` +
-        `&markers=color:0x8b5cf6%7C${lat},${lng}` +
+        `&markers=color:0x8b5cf6%7C${Number(lat)},${Number(lng)}` +
         `&key=${mapsKey}`;
     }
     if (!imageUrl) {
