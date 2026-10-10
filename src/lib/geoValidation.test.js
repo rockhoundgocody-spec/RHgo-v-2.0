@@ -2,6 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { isValidCoordinatePair, parseCoordinates } from '../../base44/shared/geoValidation.ts';
 
 describe('isValidCoordinatePair', () => {
+  it('validates hotspot coordinates for static map static URL generation in publishHotspotToInstagram', () => {
+    expect(isValidCoordinatePair(45.5, -122.6)).toBe(true);
+    expect(isValidCoordinatePair('45.5', '-122.6')).toBe(true);
+    expect(isValidCoordinatePair('45.5&zoom=20', -122.6)).toBe(false);
+    expect(isValidCoordinatePair(undefined, -122.6)).toBe(false);
+  });
+
   it('returns true for valid numeric coordinates within bounds', () => {
     expect(isValidCoordinatePair(45.5, -122.6)).toBe(true);
     expect(isValidCoordinatePair(0, 0)).toBe(true);
