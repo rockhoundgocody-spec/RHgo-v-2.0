@@ -44,7 +44,10 @@ export default function Profile() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Avatars are public: strip camera metadata (GPS) or refuse the file.
+      const clean = await stripExif(file, { requireSuccess: true, maxDimension: 1024 });
+      const upload = new File([clean], 'avatar.jpg', { type: 'image/jpeg' });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: upload });
       setAvatarUrl(file_url);
       const me = await base44.auth.me();
       const profiles = await base44.entities.PlayerProfile.filter({ owner_email: me.email }, '-created_date', 1);
