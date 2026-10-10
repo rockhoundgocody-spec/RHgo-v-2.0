@@ -34,6 +34,10 @@ export default defineConfig({
     },
   },
   test: {
+    // Backend functions import the SDK Deno-style (`npm:@base44/sdk@x.y.z`),
+    // which the Base44 deploy requires. Map it to the installed package so
+    // tests that import a function's handler resolve under Node.
+    alias: [{ find: /^npm:@base44\/sdk(@[^/]+)?$/, replacement: '@base44/sdk' }],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'],
     setupFiles: ['./vitest.setup.js'],
