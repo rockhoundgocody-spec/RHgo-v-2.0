@@ -12,6 +12,7 @@ export default function PostComposer({ onPosted }) {
   const [selectedSpecimen, setSelectedSpecimen] = useState(null);
   const [showFinds, setShowFinds] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [imageError, setImageError] = useState('');
   const [me, setMe] = useState(null);
 
   useEffect(() => {
@@ -28,13 +29,17 @@ export default function PostComposer({ onPosted }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    setImageError('');
     try {
-      // Strip EXIF metadata (e.g. embedded GPS coordinates) before upload
-      const clean = await stripExif(file);
+      // Posts are public: strip EXIF (embedded GPS) or refuse the photo.
+      const clean = await stripExif(file, { requireSuccess: true });
       const { file_url } = await base44.integrations.Core.UploadFile({ file: clean });
       setImageUrl(file_url);
+    } catch (err) {
+      setImageError(err?.message || 'Could not upload that photo.');
     } finally {
       setBusy(false);
+      e.target.value = '';
     }
   };
 
@@ -143,6 +148,7 @@ export default function PostComposer({ onPosted }) {
           {busy ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Send size={13} aria-hidden="true" />} Post
         </button>
       </div>
+      {imageError && <p role="alert" className="text-[11px] text-red-300">{imageError}</p>}
       <span className="sr-only" role="status" aria-live="polite">{busy ? 'Posting…' : ''}</span>
     </GlassPanel>
   );
