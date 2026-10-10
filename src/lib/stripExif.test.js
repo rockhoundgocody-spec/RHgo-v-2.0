@@ -166,8 +166,7 @@ describe('stripJpegMetadata', () => {
     expect(contains(out, [0xff, 0xfe])).toBe(false);
     expect(contains(out, [0x4a, 0x46, 0x49, 0x46])).toBe(true);
     expect(contains(out, [0xff, 0xdb, 0, 6, 0, 1, 2, 3])).toBe(true);
-    expect(Array.from(out.slice(-8))).toEqual([0xff, 0xda, 0, 4, 9, 9, 0x12, 0x34].slice(-6).length ? Array.from(out.slice(-8)) : []);
-    expect(Array.from(out.slice(-2))).toEqual([0xff, 0xd9]);
+    expect(Array.from(out.slice(-10))).toEqual([0xff, 0xda, 0, 4, 9, 9, 0x12, 0x34, 0xff, 0xd9]);
   });
 
   it('rejects data that is not a well-formed JPEG', () => {
