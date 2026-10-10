@@ -2,6 +2,7 @@
  * Pure helpers for stripeWebhook — kept separate so they can be unit-tested
  * without Stripe or Base44.
  */
+import { planForPrice, type EnvReader } from '../../shared/planCatalog.ts';
 
 export const TIER_DEFAULT = 'field_pro';
 const ENTITLEMENTS = new Set(['field_pro', 'family']);
@@ -42,7 +43,7 @@ type StripeLike = {
   customer_email?: string | null;
   customer_details?: { email?: string | null } | null;
   current_period_end?: number | null;
-  items?: { data?: Array<{ current_period_end?: number | null }> } | null;
+  items?: { data?: Array<{ current_period_end?: number | null; price?: { id?: string | null } | null }> } | null;
 };
 
 export function ownerEmailOf(obj: StripeLike | null | undefined): string | null {
@@ -74,6 +75,54 @@ export function shouldIgnoreStripeEvent(
   return !appId || metadata?.base44_test_checkout === 'true' ||
     metadata?.base44_app_id !== appId || !metadata?.owner_email ||
     typeof tier !== 'string' || !ENTITLEMENTS.has(tier);
+}
+
+/** The price the subscription is billed at now (its first item). */
+export function subscriptionPriceId(sub: StripeLike | null | undefined): string | null {
+  const id = sub?.items?.data?.[0]?.price?.id;
+  return typeof id === 'string' && id ? id : null;
+}
+
+type KnownRow = { owner_email?: string | null; tier?: string | null; plan?: string | null } | null | undefined;
+
+/**
+ * Who a subscription event credits, and with which tier.
+ *
+ * - Tier follows the price the subscription is on, so renewals and plan
+ *   changes made in the billing portal land on the right tier even when the
+ *   metadata says otherwise.
+ * - Subscriptions stamped by this app use metadata.owner_email.
+ * - Older subscriptions with no app metadata are credited only when this app
+ *   already holds a row for that exact Stripe subscription id — the row is
+ *   proof of ownership, and keeps their renewals and cancellations syncing.
+ * - Test checkouts and other apps' subscriptions are never credited.
+ */
+export function resolveSubscriptionCredit(
+  sub: StripeLike | null | undefined,
+  knownRow: KnownRow,
+  appId: string | null | undefined,
+  readEnv: EnvReader,
+): { email: string; tier: string; plan: string | null } | null {
+  if (!appId || !sub) return null;
+  const metadata = sub.metadata || {};
+  if (metadata.base44_test_checkout === 'true') return null;
+  if (metadata.base44_app_id && metadata.base44_app_id !== appId) return null;
+
+  const priced = planForPrice(subscriptionPriceId(sub), readEnv);
+
+  if (!shouldIgnoreStripeEvent({ data: { object: sub } }, appId)) {
+    return {
+      email: String(metadata.owner_email).trim(),
+      tier: priced?.entitlement ?? entitlementOf(metadata),
+      plan: priced?.plan ?? (metadata.plan ? String(metadata.plan) : null),
+    };
+  }
+
+  const email = knownRow?.owner_email ? String(knownRow.owner_email).trim() : '';
+  if (!email) return null;
+  const tier = priced?.entitlement ?? String(knownRow?.tier || '');
+  if (!ENTITLEMENTS.has(tier)) return null;
+  return { email, tier, plan: priced?.plan ?? (knownRow?.plan || null) };
 }
 
 export function checkoutPassEnd(
