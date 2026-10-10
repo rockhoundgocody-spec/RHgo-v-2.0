@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shareAchievement } from '@/lib/shareAchievement';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { stripExif } from '@/lib/stripExif';
 import { User, Settings, LogOut, Heart, TrendingUp, Award, Camera, Loader2, Swords, Trophy, Share2, Check, AlertCircle } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SkillsSection from '@/components/profile/SkillsSection.jsx';
@@ -16,6 +17,7 @@ export default function Profile() {
   const [stats, setStats] = useState({ findings: 0, badges: 0, rarityCounts: { common: 0, uncommon: 0, rare: 0, legendary: 0 } });
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   const [battleHistory, setBattleHistory] = useState([]);
   const [shareState, setShareState] = useState(null); // null | 'copied' | 'error'
   const { earnedCodes, allBadges } = useBadgeAwarderContext();
@@ -43,6 +45,7 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setAvatarError('');
     try {
       // Avatars are public: strip camera metadata (GPS) or refuse the file.
       const clean = await stripExif(file, { requireSuccess: true, maxDimension: 1024 });
@@ -54,8 +57,11 @@ export default function Profile() {
       if (profiles[0]) {
         await base44.entities.PlayerProfile.update(profiles[0].id, { avatar_url: file_url });
       }
+    } catch (err) {
+      setAvatarError(err?.message || 'Could not upload that photo.');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -93,6 +99,9 @@ export default function Profile() {
         <GlassPanel className="p-5 flex items-center gap-4">
           {/* Avatar with upload */}
           <div className="relative flex-shrink-0">
+            {avatarError && (
+              <p role="alert" className="absolute top-full left-0 mt-1 w-48 text-[11px] leading-snug text-red-300">{avatarError}</p>
+            )}
             <label
               className={`w-14 h-14 rounded-full bg-amethyst/15 border border-amethyst/30 flex items-center justify-center overflow-hidden relative group focus-within:outline-none focus-within:ring-2 focus-within:ring-amethyst-glow ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               aria-label="Upload avatar"
