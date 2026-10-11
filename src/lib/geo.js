@@ -71,17 +71,15 @@ export function watchGps(onFix) {
  * that hoists user location trigonometric constants (userLatRad, userLngRad, cosUserLat) and
  * inline-calculates distance and gap counts without intermediate array allocations or closures.
  * Yields ~1.25x speedup (~20% execution time reduction).
+ *
+ * @param {Array<any>} hotspots
+ * @param {{ userLocation?: { lat: number, lng: number } | null, collectedMinerals?: Set<string> | Iterable<string> }} [options]
  */
-export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
-  let collected;
-  if (collectedMinerals instanceof Set) {
-    collected = collectedMinerals;
-  } else {
-    collected = new Set();
-    if (collectedMinerals) {
-      for (const m of collectedMinerals) {
-        if (m != null) collected.add(String(m).toLowerCase());
-      }
+export function rankHotspots(hotspots, { userLocation = null, collectedMinerals = new Set() } = {}) {
+  const collected = new Set();
+  if (collectedMinerals) {
+    for (const m of /** @type {Iterable<any>} */ (collectedMinerals)) {
+      if (m != null) collected.add(String(m).toLowerCase());
     }
   }
 
