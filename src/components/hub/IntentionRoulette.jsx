@@ -114,7 +114,8 @@ export default function IntentionRoulette() {
           <button
             onClick={spin}
             disabled={loading}
-            className="w-11 h-[42px] rounded-xl flex items-center justify-center shrink-0 transition-all active:scale-90"
+            aria-label="Spin intention roulette"
+            className="w-11 h-[42px] rounded-xl flex items-center justify-center shrink-0 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             style={{
               background: loading ? 'hsla(280,50%,25%,0.6)' : 'linear-gradient(135deg, hsl(280,80%,55%), hsl(265,70%,45%))',
               border: '1px solid hsla(280,70%,60%,0.4)',
@@ -122,8 +123,8 @@ export default function IntentionRoulette() {
             }}
           >
             {loading
-              ? <Loader2 size={16} className="text-white/60 animate-spin" />
-              : <Shuffle size={16} className="text-white" />
+              ? <Loader2 size={16} className="text-white/60 animate-spin" aria-hidden="true" />
+              : <Shuffle size={16} className="text-white" aria-hidden="true" />
             }
           </button>
         </div>

@@ -78,7 +78,7 @@ function MemeCard({ challenge, onClose, reducedMotion }) {
         <div className="relative px-6 pt-8 pb-4 text-center"
           style={{ background: 'linear-gradient(180deg, hsla(30,90%,50%,0.15) 0%, transparent 100%)' }}>
           <button type="button" autoFocus onClick={onClose} aria-label="Close daily win" className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
           <div className="text-6xl mb-3">{challenge.emoji}</div>
           <div id="daily-roulette-share-title" className="text-white font-black text-lg leading-tight mb-1">{challenge.sticker}</div>
@@ -252,7 +252,7 @@ export default function DailyRoulette() {
                 style={{ background: 'hsla(145,60%,15%,0.4)', border: '1px solid hsla(145,60%,40%,0.3)' }}>
                 <CheckCircle2 size={13} /> Challenge Claimed!
                 <button type="button" onClick={() => setShowMeme(true)} aria-label="Share claimed challenge" className="ml-1 text-white/40 hover:text-white/70 transition rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
-                  <Share2 size={11} />
+                  <Share2 size={11} aria-hidden="true" />
                 </button>
               </div>
             ) : (
@@ -269,7 +269,7 @@ export default function DailyRoulette() {
               aria-label="Spin for a new challenge"
               className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{ background: 'hsla(270,60%,20%,0.4)', border: '1px solid hsla(270,60%,45%,0.3)', color: 'hsl(280,80%,75%)' }}>
-              <Dices size={13} className={spinning ? 'animate-spin motion-reduce:animate-none' : ''} />
+              <Dices size={13} className={spinning ? 'animate-spin motion-reduce:animate-none' : ''} aria-hidden="true" />
             </button>
           </div>
         </div>
