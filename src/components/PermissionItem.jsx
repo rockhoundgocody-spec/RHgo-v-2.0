@@ -4,6 +4,8 @@ import { CheckCircle2 } from 'lucide-react';
 export default function PermissionItem({ item, loading }) {
   const Icon = item.icon;
   const status = item.granted ? 'Enabled' : item.denied ? 'Blocked' : null;
+  const buttonText = loading ? 'Working…' : item.isUpdate ? 'Update' : 'Allow';
+  const actionLabel = `${loading ? 'Working on' : item.isUpdate ? 'Update' : 'Allow'} ${item.label}`;
 
   return (
     <div className="flex items-center gap-3">
@@ -41,6 +43,8 @@ export default function PermissionItem({ item, loading }) {
           onClick={item.onRequest}
           disabled={loading}
           aria-busy={loading || undefined}
+          aria-label={actionLabel}
+          title={actionLabel}
           className="flex-shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-bold transition active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow motion-reduce:transform-none motion-reduce:transition-none"
           style={{
             background: item.isUpdate ? 'hsla(38,90%,40%,0.25)' : 'hsla(280,60%,35%,0.35)',
@@ -48,7 +52,7 @@ export default function PermissionItem({ item, loading }) {
             color: item.isUpdate ? '#fbbf24' : 'hsl(280,100%,88%)',
           }}
         >
-          {loading ? 'Working…' : item.isUpdate ? 'Update' : 'Allow'}
+          {buttonText}
         </button>
       )}
     </div>
