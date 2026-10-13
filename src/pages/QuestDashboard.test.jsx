@@ -89,10 +89,10 @@ describe('QuestCard', () => {
 
   it('passes field projection arrays to Quest.filter in queryFn options', async () => {
     // Test the queryFn directly to verify parameters passed to Quest.filter
-    const queryFnActive = () => filterMock({ owner_email: 'geologist@example.com', status: 'active' }, null, null, [
+    const queryFnActive = () => filterMock({ owner_email: 'geologist@example.com', status: 'active' }, undefined, undefined, [
       'id', 'title', 'description', 'quest_type', 'target_count', 'progress', 'xp_reward', 'status', 'expires_at', 'clover_message', 'target_rarity'
     ]);
-    const queryFnCompleted = () => filterMock({ owner_email: 'geologist@example.com', status: 'completed' }, null, null, [
+    const queryFnCompleted = () => filterMock({ owner_email: 'geologist@example.com', status: 'completed' }, undefined, undefined, [
       'id', 'xp_reward', 'status'
     ]);
 
@@ -101,15 +101,15 @@ describe('QuestCard', () => {
 
     expect(filterMock).toHaveBeenCalledWith(
       { owner_email: 'geologist@example.com', status: 'active' },
-      null,
-      null,
+      undefined,
+      undefined,
       expect.arrayContaining(['id', 'title', 'xp_reward', 'status'])
     );
 
     expect(filterMock).toHaveBeenCalledWith(
       { owner_email: 'geologist@example.com', status: 'completed' },
-      null,
-      null,
+      undefined,
+      undefined,
       ['id', 'xp_reward', 'status']
     );
   });
