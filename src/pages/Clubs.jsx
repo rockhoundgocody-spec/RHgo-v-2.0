@@ -10,7 +10,7 @@ import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Cl
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
-import { isValidExternalUrl } from '../../base44/shared/urlValidation.ts';
+import { isValidExternalUrl } from '../../base44/shared/urlValidation';
 
 const EVENT_TYPE_CONFIG = {
   field_trip: { label: 'Field Trip', icon: Mountain, color: '#34d399' },

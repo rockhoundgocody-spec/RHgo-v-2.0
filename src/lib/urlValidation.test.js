@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isValidExternalUrl } from '../../base44/shared/urlValidation.ts';
+import { isValidExternalUrl } from '../../base44/shared/urlValidation';
 
 describe('isValidExternalUrl', () => {
   it('returns true for valid http and https URLs', () => {
