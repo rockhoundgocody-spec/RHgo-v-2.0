@@ -10,6 +10,7 @@ import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Cl
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
+import { isValidExternalUrl } from '../../base44/shared/urlValidation.ts';
 
 const EVENT_TYPE_CONFIG = {
   field_trip: { label: 'Field Trip', icon: Mountain, color: '#34d399' },
@@ -257,7 +258,7 @@ function ChapterCard({ chapter, events }) {
             <Mail size={11} />
           </a>
         )}
-        {chapter.website_url && (
+        {isValidExternalUrl(chapter.website_url) && (
           <a href={chapter.website_url} target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-white/60 transition">
             <Globe size={11} />
           </a>
