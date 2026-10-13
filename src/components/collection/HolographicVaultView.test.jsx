@@ -94,18 +94,26 @@ describe('HolographicVaultView', () => {
     const tree = HolographicVaultView({ specimens: mockSpecimens });
     expect(tree).not.toBeNull();
     expect(tree.type).toBe('div');
+    expect(tree.props.role).toBe('region');
+    expect(tree.props['aria-roledescription']).toBe('carousel');
+    expect(tree.props['aria-label']).toBe('Holographic specimen vault');
+    expect(tree.props.tabIndex).toBe(0);
 
     const [, navigator, pedestalCard] = tree.props.children;
 
     // Check Carousel Navigator
     const [prevBtn, counterSpan, nextBtn] = navigator.props.children;
 
+    expect(prevBtn.props.type).toBe('button');
     expect(prevBtn.props['aria-label']).toBe('Previous specimen');
     expect(prevBtn.props.className).toContain('focus-visible:ring-2');
     expect(prevBtn.props.className).toContain('focus-visible:ring-amethyst-glow');
 
+    expect(counterSpan.props.role).toBe('status');
+    expect(counterSpan.props['aria-live']).toBe('polite');
     expect(counterSpan.props.children).toEqual(['Vault ', 1, ' of ', 2]);
 
+    expect(nextBtn.props.type).toBe('button');
     expect(nextBtn.props['aria-label']).toBe('Next specimen');
     expect(nextBtn.props.className).toContain('focus-visible:ring-2');
 
@@ -196,5 +204,20 @@ describe('HolographicVaultView', () => {
 
     const prevUpdater = mockSetCurrentIndex.mock.calls[1][0];
     expect(prevUpdater(0)).toBe(1); // (0 - 1 + 2) % 2 = 1
+  });
+
+  it('supports ArrowLeft and ArrowRight keyboard navigation', () => {
+    const tree = HolographicVaultView({ specimens: mockSpecimens });
+    const preventDefault = vi.fn();
+
+    // ArrowRight -> handleNext
+    tree.props.onKeyDown({ key: 'ArrowRight', preventDefault });
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(triggerOrbHaptic).toHaveBeenLastCalledWith('tap');
+
+    // ArrowLeft -> handlePrev
+    tree.props.onKeyDown({ key: 'ArrowLeft', preventDefault });
+    expect(preventDefault).toHaveBeenCalledTimes(2);
+    expect(triggerOrbHaptic).toHaveBeenLastCalledWith('tap');
   });
 });
