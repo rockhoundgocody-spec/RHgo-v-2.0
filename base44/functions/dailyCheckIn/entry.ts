@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { resolveDayKey } from './dayKey.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * Records the user's daily mood + intention, refills companion energy,
@@ -96,6 +97,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ companion: updated, leveled_up: leveled });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('dailyCheckIn', error);
   }
 });

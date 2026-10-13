@@ -38,6 +38,7 @@ vi.mock("@/api/base44Client", () => ({
       Specimen: {
         create: vi.fn(),
         update: vi.fn(),
+        filter: vi.fn(),
       },
     },
   },
@@ -153,6 +154,55 @@ describe("offlineQueue AES-GCM encryption", () => {
     const queue = await loadQueue();
     expect(queue).toHaveLength(1);
     expect(queue[0].attempts).toBe(7);
+  });
+
+  it('a refused write stays queued but does not block later finds', async () => {
+    base44.entities.Specimen.create
+      .mockRejectedValueOnce({ status: 403 })
+      .mockResolvedValueOnce({ id: 'ok' });
+    await saveQueue([
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Refused' } },
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Fine' } },
+    ]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 1, remaining: 1 });
+    const queue = await loadQueue();
+    expect(queue[0].data.mineral_name).toBe('Refused');
+    expect(queue[0].lastError).toBe('Sync failed (403)');
+  });
+
+  it('a network failure stops the pass so ordering is kept', async () => {
+    base44.entities.Specimen.create.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await saveQueue([
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'First' } },
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Second' } },
+    ]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 0, remaining: 2 });
+    expect(base44.entities.Specimen.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('never overwrites a record edited on another device after the queued edit was made', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([{ id: 's1', updated_date: '2026-10-09T12:00:00Z' }]);
+    await saveQueue([{
+      entity: 'Specimen', op: 'update', id: 's1', ownerId: 'owner-1',
+      data: { notes: 'offline edit' }, baseUpdatedDate: '2026-10-09T10:00:00Z',
+    }]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 0, remaining: 1 });
+    expect(base44.entities.Specimen.update).not.toHaveBeenCalled();
+    expect((await loadQueue())[0].lastError).toMatch('Changed on another device');
+  });
+
+  it('replays a queued edit when the record has not changed since', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([{ id: 's1', updated_date: '2026-10-09T10:00:00Z' }]);
+    base44.entities.Specimen.update.mockResolvedValue({ id: 's1' });
+    await saveQueue([{
+      entity: 'Specimen', op: 'update', id: 's1', ownerId: 'owner-1',
+      data: { notes: 'offline edit' }, baseUpdatedDate: '2026-10-09T10:00:00Z',
+    }]);
+    expect(await flushQueue()).toEqual({ flushed: 1, remaining: 0 });
+    expect(base44.entities.Specimen.update).toHaveBeenCalledWith('s1', { notes: 'offline edit' });
   });
 
   it('never replays another account or ownerless legacy entries', async () => {

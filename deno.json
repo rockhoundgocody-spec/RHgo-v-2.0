@@ -8,7 +8,6 @@
         "no-import-prefix",
         "no-inner-declarations",
         "prefer-const",
-        "no-unused-vars",
         "no-empty"
       ]
     }

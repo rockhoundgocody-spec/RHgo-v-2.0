@@ -2,6 +2,7 @@
 // row that the external ML pipeline can poll and use for fine-tuning.
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -30,13 +31,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'user_label is required' }, { status: 400 });
     }
 
-    const created = await base44.entities.TrainingCandidate.create({
+    // Users can't create/update candidates directly; only admins may accept them.
+    const created = await base44.asServiceRole.entities.TrainingCandidate.create({
       image_url,
       image_hash,
-      predicted_label,
+      predicted_label: typeof predicted_label === 'string' ? predicted_label.slice(0, 80) : undefined,
       predicted_confidence,
-      user_label,
-      user_notes,
+      user_label: user_label.slice(0, 80),
+      user_notes: typeof user_notes === 'string' ? user_notes.slice(0, 1000) : undefined,
       lat,
       lng,
       model_version: model_version || 'gemini-flash',
@@ -46,6 +48,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ ok: true, id: created.id });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('submitCorrection', error);
   }
 });

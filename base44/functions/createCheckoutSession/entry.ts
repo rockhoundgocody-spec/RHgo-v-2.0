@@ -3,6 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
 import { isValidRedirectTarget } from './redirectValidation.ts';
 import { resolveCheckoutPrice } from './tierPricing.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * createCheckoutSession — starts Stripe Checkout for a Pricing-page plan.
@@ -87,7 +88,6 @@ export default async function(req) {
 
     return Response.json({ url: session.url });
   } catch (error) {
-    console.error('createCheckoutSession error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return safeError('createCheckoutSession', error);
   }
 }

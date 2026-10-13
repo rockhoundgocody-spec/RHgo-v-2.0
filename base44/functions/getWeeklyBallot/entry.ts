@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import { weekKey, weekRange } from "../../shared/weekKey.ts";
+import { safeError } from "../../shared/httpErrors.ts";
 
 const RARITY_RANK: Record<string, number> = {
   legendary: 4,
@@ -84,6 +85,6 @@ export default async function (req: Request): Promise<Response> {
       total_votes: votes.length,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('getWeeklyBallot', error);
   }
 }

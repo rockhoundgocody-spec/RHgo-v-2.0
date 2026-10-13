@@ -6,6 +6,7 @@
  * returns the original result instead of granting XP twice.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { safeError } from '../../shared/httpErrors.ts';
 
 const XP_PER_LEVEL = 1200;
 const MAX_LEVEL = 6;
@@ -96,6 +97,6 @@ export default async function (req) {
 
     return Response.json({ newXP, newLevel, leveledUp, badges: newBadges, already_awarded: false });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('awardXP', error);
   }
 }

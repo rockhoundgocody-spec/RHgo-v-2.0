@@ -19,6 +19,7 @@ import {
 } from '../../shared/locationSubmission.ts';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
 import { checkMemberScanQuota, recordScanReceipt, findTrustedReceipt } from '../../shared/scanQuota.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -172,7 +173,7 @@ Deno.serve(async (req) => {
       if (save || share_to_map) {
         return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
       }
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true, req });
       if (!gate.ok) {
         return Response.json(
           { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
@@ -267,7 +268,11 @@ Deno.serve(async (req) => {
       );
       const lessons = corrections
         .filter((c) => c.user_label && c.predicted_label && c.user_label !== c.predicted_label)
-        .map((c) => `previously misidentified "${c.user_label}" as "${c.predicted_label}"${c.user_notes ? ` — ${c.user_notes}` : ''}`);
+        // Labels only (no free-text notes), stripped to plain mineral-name characters.
+        .map((c) => {
+          const clean = (s: unknown) => String(s).replace(/[^\p{L}\p{N} ()'-]/gu, '').slice(0, 60).trim();
+          return `"${clean(c.predicted_label)}" was actually "${clean(c.user_label)}"`;
+        });
       if (lessons.length) {
         learnedContext = ' LEARNED CORRECTIONS (verified user feedback — weigh these as priors and avoid repeating them): ' +
           lessons.join('; ') + '.';
@@ -504,6 +509,6 @@ Deno.serve(async (req) => {
       meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('identifySpecimen', error);
   }
 });

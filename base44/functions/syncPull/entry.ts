@@ -44,7 +44,7 @@ export default async function(req) {
       has_more: merged.length > limit,
     });
   } catch (error) {
-    console.error('syncPull failed:', error?.message);
+    console.error('syncPull failed:', error);
     return Response.json({ error: 'sync pull failed' }, { status: 500 });
   }
 }

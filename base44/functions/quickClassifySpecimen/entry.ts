@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ ...cleanLiveResult(raw), meter });
   } catch (error) {
-    console.error('[quickClassifySpecimen]', (error as Error)?.message);
+    console.error('[quickClassifySpecimen]', error);
     return Response.json({ error: 'Live labels are unavailable right now' }, { status: 500 });
   }
 });

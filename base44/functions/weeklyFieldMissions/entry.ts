@@ -11,6 +11,7 @@
  * No user context (scheduled trigger) — all operations use asServiceRole.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 function getExpiry(type: string): string {
   const d = new Date();
@@ -195,13 +196,13 @@ Return exactly 3 missions as JSON.`;
             notified++;
           } catch (pushErr) {
             // Push fails if user has no native device registered — log and continue
-            console.log(`Push failed for ${user.email}: ${pushErr.message}`);
+            console.log(`Push failed for ${user.email}:`, pushErr);
           }
         }
 
         processed++;
       } catch (userErr) {
-        console.log(`Failed for ${user.email}: ${userErr.message}`);
+        console.log(`Failed for ${user.email}:`, userErr);
         errored++;
       }
     }
@@ -215,7 +216,6 @@ Return exactly 3 missions as JSON.`;
       errored,
     });
   } catch (error) {
-    console.error('weeklyFieldMissions fatal error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('weeklyFieldMissions', error);
   }
 });
