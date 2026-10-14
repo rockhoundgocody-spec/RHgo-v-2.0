@@ -66,8 +66,10 @@ export function watchGps(onFix) {
 
 /**
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
+ * @param {Array<any>} hotspots
+ * @param {{ userLocation?: { lat: number, lng: number } | null, collectedMinerals?: Set<string> | Iterable<string> }} [options]
  */
-export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
+export function rankHotspots(hotspots, { userLocation = null, collectedMinerals = new Set() } = {}) {
   // Performance Optimization: Normalize collectedMinerals into a lowercased Set without intermediate array spread allocations
   let collected;
   if (collectedMinerals instanceof Set) {
