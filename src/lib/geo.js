@@ -66,11 +66,22 @@ export function watchGps(onFix) {
 
 /**
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
+ * @param {Array<any>} hotspots
+ * @param {{ userLocation?: { lat: number, lng: number } | null, collectedMinerals?: Set<string> | Iterable<string> }} [options]
  */
-export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
-  const collected = collectedMinerals instanceof Set
-    ? collectedMinerals
-    : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
+export function rankHotspots(hotspots, { userLocation = null, collectedMinerals = new Set() } = {}) {
+  // Performance Optimization: Normalize collectedMinerals into a lowercased Set without intermediate array spread allocations
+  let collected;
+  if (collectedMinerals instanceof Set) {
+    collected = collectedMinerals;
+  } else if (collectedMinerals) {
+    collected = new Set();
+    for (const m of collectedMinerals) {
+      if (m) collected.add(String(m).toLowerCase());
+    }
+  } else {
+    collected = new Set();
+  }
 
   return (hotspots || [])
     .filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number')
@@ -79,7 +90,14 @@ export function rankHotspots(hotspots, { userLocation, collectedMinerals = new S
       const land = h.land_type || 'unknown';
       const publicBonus = PUBLIC_LAND.has(land) ? 18 : land === 'private' ? -12 : 0;
       const minerals = h.minerals || [];
-      const gapCount = minerals.filter((m) => m && !collected.has(String(m).toLowerCase())).length;
+      // Performance Optimization: Direct loop count avoids allocating a new filtered array per hotspot
+      let gapCount = 0;
+      for (let i = 0; i < minerals.length; i++) {
+        const m = minerals[i];
+        if (m && !collected.has(String(m).toLowerCase())) {
+          gapCount++;
+        }
+      }
       const trust = Number(h.trust_score) || 0.5;
       const distScore = distanceMi == null ? 0 : Math.max(0, 42 - distanceMi * 0.85);
       return {

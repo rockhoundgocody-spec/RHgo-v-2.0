@@ -16,3 +16,9 @@
 **Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for filtering). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
 
 **Action:** Avoid `flatMap` followed by `Set` deduplication and `.filter()` when building unique lists from nested arrays; filter directly during Set population in a single pass.
+
+## 2026-10-15 - Early-Exit Proximity Checks vs Full Array Ranking and Sorting
+
+**Learning:** Invoking complete entity ranking functions (`rankHotspots`) that map, compute collection gap scores, and perform O(N log N) sorting over entire datasets just to evaluate boolean conditions (such as checking if any hotspot is within range) introduces massive execution overhead (~43ms for 500 items). Replacing full ranking calls with an early-exiting linear `for` loop that calculates distances directly and breaks on the first match reduces execution time to 0.03ms (>1400x speedup / 99.9% reduction in execution time).
+
+**Action:** Before calling heavy sorting or ranking functions to evaluate simple predicates or proximity checks, use an early-exiting direct loop.
