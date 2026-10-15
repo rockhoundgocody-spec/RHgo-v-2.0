@@ -16,3 +16,9 @@
 **Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for filtering). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
 
 **Action:** Avoid `flatMap` followed by `Set` deduplication and `.filter()` when building unique lists from nested arrays; filter directly during Set population in a single pass.
+
+## 2026-10-15 - Hoisting Static Entity Queries in Multi-Tenant Edge Function Loops
+
+**Learning:** In multi-tenant scheduled/batch edge functions (such as `weeklyFieldMissions`), calling static global entity queries (e.g. `Hotspot.list`) inside a `for (const user of users)` loop executes duplicate HTTP requests for every processed user ($O(N)$ HTTP request waterfall). Hoisting static queries outside the per-user loop and running them concurrently with user retrieval via `Promise.all` eliminates $N-1$ redundant backend roundtrips.
+
+**Action:** Look for global entity queries inside user loops in edge functions and hoist them outside the loop using `Promise.all`.

@@ -42,8 +42,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── 1. List all users ──
-    const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    // ── 1. List all users and global hotspots concurrently ──
+    // Hoisting static hotspot listing outside the per-user loop eliminates N-1 redundant HTTP requests
+    const [users, hotspots] = await Promise.all([
+      base44.asServiceRole.entities.User.list('-created_date', 500),
+      base44.asServiceRole.entities.Hotspot.list('-trust_score', 200),
+    ]);
 
     let processed = 0;
     let notified = 0;
@@ -67,7 +71,6 @@ Deno.serve(async (req) => {
         const userLng = lastWithCoords?.lng;
 
         // ── 3. hotspot_manager logic: find nearby unvisited zones ──
-        const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
 
         // Unvisited = hotspot has at least one mineral the user hasn't collected
         let unvisited = hotspots.filter((h) => {
@@ -163,22 +166,24 @@ Return exactly 3 missions as JSON.`;
 
         const missions = result?.missions || [];
 
-        // ── 5. Create Quest records ──
-        for (const m of missions) {
-          await base44.asServiceRole.entities.Quest.create({
-            owner_email: user.email,
-            title: m.title,
-            description: m.description,
-            quest_type: m.quest_type || 'daily',
-            target_count: m.target_count || 1,
-            xp_reward: m.xp_reward || 100,
-            target_rarity: m.target_rarity || null,
-            target_mineral: m.target_mineral || null,
-            clover_message: m.clover_message || '',
-            status: 'active',
-            progress: 0,
-            expires_at: getExpiry(m.quest_type || 'daily'),
-          });
+        // ── 5. Create Quest records in a single bulk request ──
+        if (missions.length > 0) {
+          await base44.asServiceRole.entities.Quest.bulkCreate(
+            missions.map((m) => ({
+              owner_email: user.email,
+              title: m.title,
+              description: m.description,
+              quest_type: m.quest_type || 'daily',
+              target_count: m.target_count || 1,
+              xp_reward: m.xp_reward || 100,
+              target_rarity: m.target_rarity || null,
+              target_mineral: m.target_mineral || null,
+              clover_message: m.clover_message || '',
+              status: 'active',
+              progress: 0,
+              expires_at: getExpiry(m.quest_type || 'daily'),
+            }))
+          );
         }
 
         // ── 6. Push notification to device ──
