@@ -70,12 +70,14 @@ export default function ScanResultSheet({
             <div className="flex items-center justify-between px-4 pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/15 mx-auto" style={{ margin: '0 auto' }} />
               <button
+                type="button"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label="Close scan result"
+                title="Close scan result"
                 className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 style={{ background: 'hsla(0,0%,100%,0.06)' }}
               >
-                <X size={16} className="text-white/50" />
+                <X size={16} className="text-white/50" aria-hidden="true" />
               </button>
             </div>
 
@@ -87,11 +89,12 @@ export default function ScanResultSheet({
                   The photo is too dark to identify. Try again in daylight or use the flash.
                 </p>
                 <button
+                  type="button"
                   onClick={onRetry}
                   className="mt-5 w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a14]"
                   style={{ background: '#9FE8D0', color: '#0a0a14' }}
                 >
-                  <RotateCcw size={16} /> Retry
+                  <RotateCcw size={16} aria-hidden="true" /> Retry
                 </button>
               </div>
             ) : (
@@ -274,11 +277,12 @@ export default function ScanResultSheet({
                     type="checkbox"
                     checked={legalOk}
                     onChange={(e) => setLegalOk(e.target.checked)}
+                    aria-label="I can legally collect here"
                     className="mt-0.5 accent-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a14] rounded-sm"
                   />
                   <span className="text-[11px] text-white/65 leading-snug">
                     <span className="inline-flex items-center gap-1 text-white/85 font-semibold">
-                      <ShieldCheck size={12} /> I can legally collect here
+                      <ShieldCheck size={12} aria-hidden="true" /> I can legally collect here
                     </span>
                     <span className="block text-white/40 mt-0.5">Required to Keep. Leave / Observed never remove material.</span>
                   </span>
@@ -290,10 +294,22 @@ export default function ScanResultSheet({
                     label="Keep"
                     onClick={() => onKeep(fieldReport, { legalConfirmed: true })}
                     disabled={saved || !legalOk}
+                    title={saved ? "Already saved" : !legalOk ? "Confirm legal permission to collect here first" : "Keep specimen"}
+                    ariaLabel={saved ? "Keep (Already saved)" : !legalOk ? "Keep specimen (Requires legal permission confirmation)" : "Keep specimen"}
                     primary
                   />
-                  <SheetButton label="Leave" onClick={() => onLeave(fieldReport, { legalConfirmed: false })} disabled={saved} />
-                  <SheetButton label="Observed" onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
+                  <SheetButton
+                    label="Leave"
+                    onClick={() => onLeave(fieldReport, { legalConfirmed: false })}
+                    disabled={saved}
+                    title={saved ? "Already saved" : "Leave specimen in place"}
+                  />
+                  <SheetButton
+                    label="Observed"
+                    onClick={() => onObserve(fieldReport, { legalConfirmed: false })}
+                    disabled={saved}
+                    title={saved ? "Already saved" : "Log specimen observation"}
+                  />
                 </div>
 
                 {/* Secondary: Tests / Save / Ask */}
@@ -302,9 +318,19 @@ export default function ScanResultSheet({
                     label="Tests" icon={FlaskConical}
                     onClick={() => setTestsOpen(t => !t)}
                     active={testsOpen}
+                    title={testsOpen ? "Hide verification tests" : "Show verification tests"}
                   />
-                  <SheetButton label="Save" icon={Save} onClick={() => onObserve(fieldReport, { legalConfirmed: false })} disabled={saved} />
-                  <SheetButton label="Ask" icon={MessageCircle} onClick={onAsk} />
+                  <SheetButton
+                    label="Save" icon={Save}
+                    onClick={() => onObserve(fieldReport, { legalConfirmed: false })}
+                    disabled={saved}
+                    title={saved ? "Already saved" : "Save observation"}
+                  />
+                  <SheetButton
+                    label="Ask" icon={MessageCircle}
+                    onClick={onAsk}
+                    title="Ask Oracle assistant about this specimen"
+                  />
                 </div>
 
                 {saved && (
@@ -346,20 +372,23 @@ export default function ScanResultSheet({
   );
 }
 
-function SheetButton({ label, icon: Icon, onClick, disabled, primary, active }) {
+function SheetButton({ label, icon: Icon, onClick, disabled, primary, active, title, ariaLabel }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
+      title={title}
+      aria-label={ariaLabel || label}
       aria-expanded={active !== undefined ? active : undefined}
-      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
+      className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: primary ? '#9FE8D020' : active ? 'hsla(0,0%,100%,0.1)' : 'hsla(0,0%,100%,0.04)',
         border: `1px solid ${primary ? '#9FE8D050' : active ? 'hsla(0,0%,100%,0.2)' : 'hsla(0,0%,100%,0.08)'}`,
         color: primary ? '#9FE8D0' : 'rgba(255,255,255,0.7)',
       }}
     >
-      {Icon && <Icon size={15} />}
+      {Icon && <Icon size={15} aria-hidden="true" />}
       {label}
     </button>
   );
