@@ -82,22 +82,25 @@ Return exactly 3 missions as JSON array.`;
       return d.toISOString();
     }
 
-    const created = await Promise.all(missions.map((m) =>
-      base44.entities.Quest.create({
-        owner_email: user.email,
-        title: m.title,
-        description: m.description,
-        quest_type: m.quest_type || 'daily',
-        target_count: m.target_count || 1,
-        xp_reward: m.xp_reward || 100,
-        target_rarity: m.target_rarity || null,
-        target_mineral: m.target_mineral || null,
-        clover_message: m.clover_message || '',
-        status: 'active',
-        progress: 0,
-        expires_at: getExpiry(m.quest_type || 'daily'),
-      })
-    ));
+    // Batch create Quest records in a single bulk request to avoid N individual API calls
+    const questPayloads = missions.map((m) => ({
+      owner_email: user.email,
+      title: m.title,
+      description: m.description,
+      quest_type: m.quest_type || 'daily',
+      target_count: m.target_count || 1,
+      xp_reward: m.xp_reward || 100,
+      target_rarity: m.target_rarity || null,
+      target_mineral: m.target_mineral || null,
+      clover_message: m.clover_message || '',
+      status: 'active',
+      progress: 0,
+      expires_at: getExpiry(m.quest_type || 'daily'),
+    }));
+
+    const created = questPayloads.length > 0
+      ? await base44.entities.Quest.bulkCreate(questPayloads)
+      : [];
 
     return Response.json({ missions: created, count: created.length });
   } catch (error) {
