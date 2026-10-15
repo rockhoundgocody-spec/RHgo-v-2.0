@@ -45,7 +45,8 @@ const DEFAULT_GRAPH = {
  */
 export default function SeoJsonLd({ data = DEFAULT_GRAPH } = {}) {
   useEffect(() => {
-    let el = document.getElementById(SCRIPT_ID);
+    /** @type {HTMLScriptElement | null} */
+    let el = (document.getElementById(SCRIPT_ID));
     if (!el) {
       el = document.createElement('script');
       el.id = SCRIPT_ID;
