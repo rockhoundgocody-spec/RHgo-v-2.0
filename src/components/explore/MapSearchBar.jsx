@@ -61,7 +61,7 @@ export default function MapSearchBar({ hotspots, onSelect }) {
         />
         {query && (
           <button onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
