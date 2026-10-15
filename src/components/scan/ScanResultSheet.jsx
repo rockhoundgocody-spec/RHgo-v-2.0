@@ -372,7 +372,16 @@ export default function ScanResultSheet({
   );
 }
 
-function SheetButton({ label, icon: Icon, onClick, disabled, primary, active, title, ariaLabel }) {
+function SheetButton({
+  label,
+  icon: Icon = null,
+  onClick = undefined,
+  disabled = false,
+  primary = false,
+  active = undefined,
+  title = undefined,
+  ariaLabel = undefined,
+}) {
   return (
     <button
       type="button"
