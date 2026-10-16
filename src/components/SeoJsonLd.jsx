@@ -47,10 +47,11 @@ export default function SeoJsonLd({ data = DEFAULT_GRAPH } = {}) {
   useEffect(() => {
     let el = document.getElementById(SCRIPT_ID);
     if (!el) {
-      el = document.createElement('script');
-      el.id = SCRIPT_ID;
-      el.type = 'application/ld+json';
-      document.head.appendChild(el);
+      const script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+      el = script;
     }
     el.textContent = JSON.stringify(data);
     return () => el.remove();
