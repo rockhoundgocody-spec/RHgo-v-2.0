@@ -46,4 +46,17 @@ describe('LandAccessPanel', () => {
     expect(html).toContain('Patented Claim');
     expect(html).toContain('This site is currently closed to collecting. Do not enter.');
   });
+
+  it('blocks dangerous javascript: permit URLs to prevent DOM XSS', () => {
+    const hotspot = {
+      name: 'Malicious Mine',
+      access_status: 'restricted',
+      permit_required: true,
+      permit_url: 'javascript:alert(document.cookie)',
+    };
+    const html = renderToStaticMarkup(<LandAccessPanel hotspot={hotspot} />);
+    expect(html).toContain('Permit Required');
+    expect(html).not.toContain('href="javascript:');
+    expect(html).not.toContain('Get permit →');
+  });
 });
