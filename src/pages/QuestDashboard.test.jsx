@@ -121,14 +121,19 @@ describe('QuestCard', () => {
 
     // Call bulkCreate directly as used by generateQuests fallback
     const mockPicks = [
-      { title: 'Quest 1', quest_type: 'daily' },
-      { title: 'Quest 2', quest_type: 'daily' },
-      { title: 'Quest 3', quest_type: 'weekly' },
+      { title: 'Quest 1', quest_type: 'daily', target_count: 1, xp_reward: 100, status: 'active' },
+      { title: 'Quest 2', quest_type: 'daily', target_count: 2, xp_reward: 150, status: 'active' },
+      { title: 'Quest 3', quest_type: 'weekly', target_count: 3, xp_reward: 300, status: 'active' },
     ];
     await bulkCreateMock(mockPicks);
 
     expect(bulkCreateMock).toHaveBeenCalledTimes(1);
     expect(createMock).not.toHaveBeenCalled();
     expect(bulkCreateMock.mock.calls[0][0]).toHaveLength(3);
+    expect(bulkCreateMock.mock.calls[0][0][0]).toMatchObject({
+      title: 'Quest 1',
+      quest_type: 'daily',
+      status: 'active',
+    });
   });
 });
