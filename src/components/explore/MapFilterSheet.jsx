@@ -3,7 +3,7 @@
  * Sections: ACCESS (radio) · SPOTS (radio) · POPULAR ROCKS (multi-select + search).
  * Dark theme, mint accent, organized like the competitor but on-brand.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Check, Plus, MessageCircle } from 'lucide-react';
 
@@ -36,6 +36,18 @@ export default function MapFilterSheet({
   const activeCount = (activeLayer !== 'all' ? 1 : 0) + selectedMinerals.size;
   const subtitle = activeCount === 0 ? 'No active filters' : `${activeCount} active`;
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
   const resetAll = () => {
     onLayerChange('all');
     onClearMinerals();
@@ -55,6 +67,9 @@ export default function MapFilterSheet({
 
           {/* Sheet */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Map filters"
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             className="fixed bottom-0 inset-x-0 z-[2001] rounded-t-3xl flex flex-col"
@@ -77,12 +92,12 @@ export default function MapFilterSheet({
                 </div>
                 <div className="flex items-center gap-2">
                   {activeCount > 0 && (
-                    <button onClick={resetAll} aria-label="Reset all map filters"
+                    <button type="button" onClick={resetAll} aria-label="Reset all map filters"
                       className="px-3 py-2 rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60">
                       Reset
                     </button>
                   )}
-                  <button onClick={onClose} aria-label="Done, apply filters and close"
+                  <button type="button" onClick={onClose} aria-label="Done, apply filters and close"
                     className="px-5 py-2 rounded-full font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
                     style={{ background: '#9FE8D0', color: '#0a0a14' }}>
                     Done
@@ -97,13 +112,15 @@ export default function MapFilterSheet({
                 style={{ background: 'hsla(255,30%,12%,0.8)', border: '1px solid hsla(255,30%,25%,0.3)' }}>
                 <Search size={16} className="text-white/30" />
                 <input
+                  type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search rocks"
+                  aria-label="Search rocks"
                   className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
+                  <button type="button" onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
                     <X size={14} />
                   </button>
                 )}
@@ -113,7 +130,7 @@ export default function MapFilterSheet({
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: 'none' }}>
               {/* ACCESS */}
-              <FilterSection title="ACCESS">
+              <FilterSection title="ACCESS" role="radiogroup">
                 {ACCESS_OPTIONS.map(opt => (
                   <FilterRadioRow
                     key={opt.id}
@@ -125,7 +142,7 @@ export default function MapFilterSheet({
               </FilterSection>
 
               {/* SPOTS */}
-              <FilterSection title="SPOTS">
+              <FilterSection title="SPOTS" role="radiogroup">
                 {SPOT_OPTIONS.map(opt => (
                   <FilterRadioRow
                     key={opt.id}
@@ -140,7 +157,7 @@ export default function MapFilterSheet({
               {/* POPULAR ROCKS */}
               <FilterSection title="POPULAR ROCKS">
                 {selectedMinerals.size > 0 && (
-                  <button onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
+                  <button type="button" onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
                     className="text-[11px] text-[#9FE8D0] mb-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm">
                     Clear all ({selectedMinerals.size})
                   </button>
@@ -150,6 +167,7 @@ export default function MapFilterSheet({
                     const active = selectedMinerals.has(mineral);
                     return (
                       <button
+                        type="button"
                         key={mineral}
                         onClick={() => onToggleMineral(mineral)}
                         aria-pressed={active}
@@ -189,9 +207,9 @@ export default function MapFilterSheet({
   );
 }
 
-function FilterSection({ title, children }) {
+function FilterSection({ title, role, children }) {
   return (
-    <div className="mb-5">
+    <div className="mb-5" role={role} aria-label={title}>
       <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">{title}</h3>
       <div className="space-y-1.5">{children}</div>
     </div>
@@ -201,8 +219,10 @@ function FilterSection({ title, children }) {
 function FilterRadioRow({ label, sublabel, active, onClick }) {
   return (
     <button
+      type="button"
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
-      aria-pressed={active}
       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
