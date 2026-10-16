@@ -45,6 +45,7 @@ const DEFAULT_GRAPH = {
  */
 export default function SeoJsonLd({ data = DEFAULT_GRAPH } = {}) {
   useEffect(() => {
+    /** @type {any} */
     let el = document.getElementById(SCRIPT_ID);
     if (!el) {
       el = document.createElement('script');
@@ -53,7 +54,7 @@ export default function SeoJsonLd({ data = DEFAULT_GRAPH } = {}) {
       document.head.appendChild(el);
     }
     el.textContent = JSON.stringify(data);
-    return () => el.remove();
+    return () => { el?.remove(); };
   }, [data]);
 
   return null;
