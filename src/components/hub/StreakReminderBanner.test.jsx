@@ -60,7 +60,10 @@ describe('StreakReminderBanner', () => {
   it('contains expected accessibility attributes in component source code', () => {
     const source = StreakReminderBanner.toString();
     expect(source).toContain('aria-label');
+    expect(source).toContain('role: "region"');
+    expect(source).toContain('Streak check-in reminder');
     expect(source).toContain('Dismiss streak reminder');
+    expect(source).toContain('title: "Dismiss streak reminder"');
     expect(source).toContain('type: "button"');
     expect(source).toContain('focus-visible:ring-2');
   });
