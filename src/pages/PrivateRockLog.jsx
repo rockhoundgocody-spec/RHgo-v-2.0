@@ -54,7 +54,10 @@ export default function PrivateRockLog() {
           <div className="flex items-center gap-2">
             <Lock size={14} className="text-amethyst" />
             <h1 className="text-white font-bold text-lg">Private Rock Log</h1>
-            <HelpTip tip="New photos are stored privately with camera metadata removed. Older photos may still use public links; this update does not revoke them." />
+            <HelpTip
+              topic="Photo privacy and metadata"
+              tip="New photos are stored privately with camera metadata removed. Older photos may still use public links; this update does not revoke them."
+            />
           </div>
           <p className="text-white/35 text-[11px] mt-0.5">Only visible to you · {logs.length} finds logged</p>
         </div>
