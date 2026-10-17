@@ -6,7 +6,7 @@
 // Idempotent per (owner_email, log_date) — if a log for today already
 // exists it gets updated rather than duplicated.
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import {
   chunkValues,
   collectPages,

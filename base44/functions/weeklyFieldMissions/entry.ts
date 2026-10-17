@@ -10,7 +10,7 @@
  *
  * No user context (scheduled trigger) — all operations use asServiceRole.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 function getExpiry(type: string): string {
