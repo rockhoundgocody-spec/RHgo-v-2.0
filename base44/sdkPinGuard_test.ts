@@ -7,10 +7,10 @@
 // with the function.
 //
 // A bare `@base44/sdk`, with or without a version, is not allowed either. Base44's documentation
-// describes only `npm:` and `jsr:` specifiers and this repo has no import map, so the runtime may
-// not resolve a bare name. Bots had switched four functions to it only so that Vitest could import
-// them; Vitest now reads the package through the alias in vite.config.js, so a function keeps its
-// `npm:` import.
+// describes only `npm:` and `jsr:` specifiers, this repo has no import map, and the comment in
+// vite.config.js says the deploy requires the `npm:` form. Bots had switched four functions to a
+// bare name only so that Vitest could import them (the builder undid it on 2026-10-10); Vitest now
+// reads the package through the alias in vite.config.js, so a function keeps its `npm:` import.
 //
 // The documentation's own examples import `npm:@base44/sdk` with no version, which leaves the
 // version to the platform. That is rejected here too: a behaviour change should come from a commit.

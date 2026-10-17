@@ -51,7 +51,7 @@ Base44's own examples, and so the builder, return `error.message` from a `catch`
 
 ### Edge functions: the SDK version
 
-Every function imports the SDK as `npm:@base44/sdk@X.Y.Z`, the same version everywhere. `base44/sdkPinGuard_test.ts` fails if one differs, is a range, or is a bare `@base44/sdk` (Base44's documentation describes only `npm:` and `jsr:` specifiers and this repo has no import map, so the runtime may not resolve a bare name). The builder pins whatever version is current when it generates a function, so a new function can bring a newer one; the failure message prints the command that moves them all. A Vitest test that imports a function module reads the package through a test-only alias in `vite.config.js`: do not switch a function to a bare import to make a test pass.
+Every function imports the SDK as `npm:@base44/sdk@X.Y.Z`, the same version everywhere. `base44/sdkPinGuard_test.ts` fails if one differs, is a range, or is a bare `@base44/sdk` (Base44's documentation describes only `npm:` and `jsr:` specifiers, this repo has no import map, and the comment in `vite.config.js` says the deploy requires the `npm:` form). The builder pins whatever version is current when it generates a function, so a new function can bring a newer one; the failure message prints the command that moves them all. A Vitest test that imports a function module reads the package through the test-only alias in `vite.config.js`: do not switch a function to a bare import to make a test pass (bots did, in October, and the builder had to undo it).
 
 ## Configuration
 
