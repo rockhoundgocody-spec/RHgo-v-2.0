@@ -175,6 +175,9 @@ export async function saveQueue(items) {
     throw new Error('Device storage is full or blocked. This find was not saved; existing pending finds are intact.');
   }
   cachedQueue = structuredClone(items);
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('rhgo:offline-queue-changed'));
+  }
 }
 
 let flushing = false;

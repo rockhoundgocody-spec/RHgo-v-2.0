@@ -9,6 +9,7 @@ import SpecimenCard from '@/components/collection/SpecimenCard.jsx';
 import CrystalCard from '@/components/collection/CrystalCard.jsx';
 import HolographicVaultView from '@/components/collection/HolographicVaultView.jsx';
 import CollectionDashboard from '@/components/collection/CollectionDashboard.jsx';
+import OfflineConflictBanner from '@/components/collection/OfflineConflictBanner.jsx';
 import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
@@ -59,6 +60,8 @@ export default function Collection() {
           <button onClick={() => setView('dashboard')} aria-pressed={view === 'dashboard'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
         </div>
       </div>
+
+      <OfflineConflictBanner specimens={specimens} onResolved={refetch} />
 
       {/* Rarity + verified filters */}
       {(view === 'crystal' || view === 'grid' || view === 'gallery') && (
