@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
 
 /**

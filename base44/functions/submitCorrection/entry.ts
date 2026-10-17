@@ -31,13 +31,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'user_label is required' }, { status: 400 });
     }
 
-    const created = await base44.entities.TrainingCandidate.create({
+    // Users can't create/update candidates directly; only admins may accept them.
+    const created = await base44.asServiceRole.entities.TrainingCandidate.create({
       image_url,
       image_hash,
-      predicted_label,
+      predicted_label: typeof predicted_label === 'string' ? predicted_label.slice(0, 80) : undefined,
       predicted_confidence,
-      user_label,
-      user_notes,
+      user_label: user_label.slice(0, 80),
+      user_notes: typeof user_notes === 'string' ? user_notes.slice(0, 1000) : undefined,
       lat,
       lng,
       model_version: model_version || 'gemini-flash',

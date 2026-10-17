@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     } = await req.json();
 
     if (!user?.email) {
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'cloverChat', { consume: true });
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'cloverChat', { consume: true, req });
       if (!gate.ok) {
         return Response.json(
           { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },
