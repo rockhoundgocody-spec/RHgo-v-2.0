@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Clock, FileText, DollarSign, Lock, MapPin } from 'lucide-react';
+import { isValidExternalUrl } from '@/lib/urlValidation';
 
 const ACCESS_CONFIG = {
   open:       { label: 'Open Access',     color: '#34d399', icon: CheckCircle2, desc: 'Collecting allowed — follow local rules' },
@@ -80,7 +81,7 @@ export default function LandAccessPanel({ hotspot }) {
                   </span>
                 )}
               </div>
-              {hotspot.permit_url && (
+              {isValidExternalUrl(hotspot.permit_url) && (
                 <a
                   href={hotspot.permit_url}
                   target="_blank"
