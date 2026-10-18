@@ -6,6 +6,7 @@ import { X, Zap, RefreshCw, Lock, Loader2, Image as ImageIcon, Upload, Eye } fro
 import useCameraStream from '@/components/scan/useCameraStream.jsx';
 import useLiveEyes from '@/components/scan/useLiveEyes';
 import LiveEyesOverlay from '@/components/scan/LiveEyesOverlay.jsx';
+import ScanCloverVoice from '@/components/scan/ScanCloverVoice';
 import ScanResultSheet from '@/components/scan/ScanResultSheet.jsx';
 import GuestReportContinuation from '@/components/scan/GuestReportContinuation';
 import WetDryToggle from '@/components/scan/WetDryToggle.jsx';
@@ -45,7 +46,7 @@ function blobToDataUrl(blob) {
 
 const VOICE_LINES = {
   high: (n) => `That's ${n}. I'm pretty sure about this one.`,
-  medium: (n) => `I'm thinking ${n}, though a scratch test would settle it.`,
+  medium: (n) => `I'm thinking ${n}. A hand lens and good light may help check the details.`,
   low: () => "This one's tricky from the photo alone.",
   rare: (n) => `Oh wow — ${n}? That might actually be a rare one.`,
 };
@@ -79,6 +80,8 @@ export default function Scan() {
 
   const [cameraRetry, setCameraRetry] = useState(0);
   const processingRef = useRef(false);
+  const scanVoiceRef = useRef(null);
+  const scanVoiceActive = useRef(false);
 
   const camera = useCameraStream({ active: stage === 'camera', facing, retryKey: cameraRetry });
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
@@ -296,7 +299,7 @@ export default function Scan() {
           : band === 'high' ? VOICE_LINES.high(enriched.top_match)
           : band === 'medium' ? VOICE_LINES.medium(enriched.top_match)
           : VOICE_LINES.low();
-        setTimeout(() => speak(line), 600);
+        if (!scanVoiceActive.current) speak(line);
       }
     } catch (err) {
       const rawMsg = err?.data?.error || err?.message || '';
@@ -472,7 +475,8 @@ export default function Scan() {
 
   const handleAsk = () => {
     setSheetOpen(false);
-    navigate('/companion');
+    stop();
+    scanVoiceRef.current?.open();
   };
 
   const resetToCamera = () => {
@@ -701,6 +705,10 @@ export default function Scan() {
           </label>
         </div>
       )}
+
+      <ScanCloverVoice ref={scanVoiceRef} result={result} eyes={eyes}
+        paused={!['camera', 'result'].includes(stage)}
+        onActiveChange={active => { scanVoiceActive.current = active; }} />
 
       <ScanResultSheet
         open={sheetOpen}

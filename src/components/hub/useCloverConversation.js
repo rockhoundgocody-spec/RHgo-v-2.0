@@ -8,10 +8,11 @@ import { getCognitiveMemoryContext, recordRsiTurn } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
 import { setCloverBusy, emit } from '@/lib/cloverWake';
 import { useQueryClient } from '@tanstack/react-query';
+import voiceTimeout from '@/lib/voiceTimeout';
 
 const MAX_QUIET_TURNS = 3;
 
-export default function useCloverConversation({ companion, todaysSpecimens = 0, onFindLogged } = {}) {
+export default function useCloverConversation({ companion, todaysSpecimens = 0, onFindLogged, scanContext } = {}) {
   const [phase, setPhase] = useState('idle');
   const [messages, setMessages] = useState([]);
   const [interim, setInterim] = useState('');
@@ -43,14 +44,16 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     },
     onInterim: setInterim,
   });
+  const { start: startVoice, stop: stopVoice, listening: voiceListening, supported: voiceSupported, error: voiceError } = voice;
 
-  const beginListening = useCallback(() => {
+  const beginListening = useCallback((manual = false) => {
     if (!activeRef.current) return;
     gotResultRef.current = false;
     setInterim('');
+    if (voiceSupported === false || (voiceError && !manual)) { setPhase('resting'); return; }
     setPhase('listening');
-    voice.start();
-  }, [voice]);
+    startVoice();
+  }, [startVoice, voiceSupported, voiceError]);
 
   const { start: startBargeIn, stop: stopBargeIn } = useBargeIn(() => {
     if (!activeRef.current) return;
@@ -70,7 +73,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     if (!activeRef.current || !text?.trim() || pendingRef.current !== null) return;
     const turn = ++turnRef.current;
     stopSpeech();
-    voice.stop();
+    stopVoice();
     stopBargeIn();
 
     setInterim('');
@@ -93,7 +96,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
           if (turn !== turnRef.current) return;
           activeRef.current = false;
           stopSpeech();
-          voice.stop();
+          stopVoice();
           stopBargeIn();
           setPhase('idle');
         }, 1200);
@@ -109,7 +112,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       let gps = null;
       try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
       const { getOrCreateGuestId } = await import('@/lib/guestDevice');
-      const res = await base44.functions.invoke('cloverChat', {
+      const res = await voiceTimeout(base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
         todays_finds: todaysSpecimens,
@@ -119,7 +122,8 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         location: gps,
         user_utterance: text,
         guest_device_id: getOrCreateGuestId(),
-      });
+        scan_context: scanContext || null,
+      }));
       if (!activeRef.current || turn !== turnRef.current) return;
       const data = res?.data;
       reply = data?.reply || reply;
@@ -156,7 +160,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-12);
     setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
-  }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voice, stopBargeIn, queryClient]);
+  }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, stopVoice, stopBargeIn, queryClient, scanContext]);
   sendRef.current = send;
 
   useEffect(() => {
@@ -187,7 +191,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [phase, speaking, beginListening, startBargeIn, stopBargeIn, stopSpeech]);
 
   useEffect(() => {
-    if (phase !== 'listening' || voice.listening) return;
+    if (phase !== 'listening' || voiceListening || voiceError) return;
     if (gotResultRef.current) return;
 
     const t = setTimeout(() => {
@@ -200,12 +204,19 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       }
     }, 500);
     return () => clearTimeout(t);
-  }, [phase, voice.listening, beginListening]);
+  }, [phase, voiceListening, voiceError, beginListening]);
 
-  const start = useCallback((openingLine) => {
+  useEffect(() => {
+    if (!voiceError || !activeRef.current) return;
+    // A late permission failure must not interrupt an already-submitted chat turn.
+    setPhase(current => current === 'listening' ? 'resting' : current);
+  }, [voiceError]);
+
+  const start = useCallback((openingLine, { listenFirst = false } = {}) => {
     turnRef.current += 1;
     pendingRef.current = null;
     clearTimeout(endTimerRef.current);
+    stopVoice(); stopSpeech(); stopBargeIn();
     unlock();
     activeRef.current = true;
     quietTurnsRef.current = 0;
@@ -213,8 +224,8 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     setMessages([{ role: 'assistant', content: openingLine }]);
     historyRef.current = [{ role: 'assistant', content: openingLine }];
     import('@/lib/analytics').then(({ trackEvent }) => trackEvent('clover_session_start')).catch(() => {});
-    say(openingLine);
-  }, [say, unlock]);
+    if (listenFirst) beginListening(true); else say(openingLine);
+  }, [say, unlock, beginListening, stopVoice, stopSpeech, stopBargeIn]);
 
   const end = useCallback(() => {
     turnRef.current += 1;
@@ -222,17 +233,30 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     clearTimeout(endTimerRef.current);
     activeRef.current = false;
     stopSpeech();
-    voice.stop();
+    stopVoice();
     stopBargeIn();
     setPhase('idle');
     setInterim('');
-  }, [stopSpeech, voice, stopBargeIn]);
+  }, [stopSpeech, stopVoice, stopBargeIn]);
+
+  const pause = useCallback(() => {
+    turnRef.current += 1; pendingRef.current = null;
+    clearTimeout(endTimerRef.current);
+    stopSpeech(); stopVoice(); stopBargeIn();
+    if (activeRef.current) setPhase('resting');
+    setInterim('');
+  }, [stopSpeech, stopVoice, stopBargeIn]);
+  useEffect(() => {
+    const hidden = () => { if (document.hidden) pause(); };
+    document.addEventListener('visibilitychange', hidden);
+    return () => document.removeEventListener('visibilitychange', hidden);
+  }, [pause]);
 
   const nudge = useCallback(() => {
     if (!activeRef.current || pendingRef.current !== null) return;
     if (phase === 'speaking') { stopSpeech(); stopBargeIn(); }
     quietTurnsRef.current = 0;
-    beginListening();
+    beginListening(true);
   }, [phase, stopSpeech, stopBargeIn, beginListening]);
 
   const busyIdRef = useRef(Math.random().toString(36).slice(2));
@@ -281,9 +305,9 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   const dismissHuntSuggestions = useCallback(() => setHuntSuggestions(null), []);
 
   return {
-    phase, messages, interim, start, end, stop: end, nudge, send, unlock,
+    phase, messages, interim, start, end, stop: end, pause, nudge, send, unlock, voiceError,
     active: phase !== 'idle',
-    voiceSupported: voice.supported,
+    voiceSupported,
     getAmplitude, getSpectrum,
     huntSuggestions,
     huntLoading,

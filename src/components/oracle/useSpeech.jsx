@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import { voiceErrorMessage } from '@/lib/voiceErrors';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
@@ -294,152 +295,61 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIDENCE_THRESHOLD = 0.12;
 const MIN_TRANSCRIPT_CHARS = 2;
-const MIN_WORD_COUNT       = 1;
 const SILENCE_TIMEOUT_MS   = 2800;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
-  const onResultRef  = useRef(onResult);
-  const onInterimRef = useRef(onInterim);
-  onResultRef.current  = onResult;
-  onInterimRef.current = onInterim;
-
-  const recRef         = useRef(null);
-  const silenceTimer   = useRef(null);
-  const deadRef        = useRef(false);
-  const gotFinalRef    = useRef(false);
-  const lastInterimRef = useRef('');
-  const blockedRef     = useRef(false); // fatal error (mic denied) — stop restart loops
-
-  const SR = typeof window !== 'undefined'
-    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-    : null;
-  const supported = !!SR;
-
-  const _clearTimer = () => { clearTimeout(silenceTimer.current); silenceTimer.current = null; };
-
-  const _resetSilenceTimer = useCallback((rec) => {
-    _clearTimer();
-    silenceTimer.current = setTimeout(() => {
-      try { rec?.stop(); } catch {}
-    }, SILENCE_TIMEOUT_MS);
+  const [error, setError] = useState('');
+  const callbacks = useRef({ onResult, onInterim });
+  callbacks.current = { onResult, onInterim };
+  const recRef = useRef(null);
+  const timerRef = useRef(null);
+  const SR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+  const discard = useCallback(() => {
+    clearTimeout(timerRef.current);
+    const rec = recRef.current; recRef.current = null;
+    if (rec) { rec.onresult = rec.onend = rec.onerror = null; try { rec.abort(); } catch {} }
   }, []);
-
-  const _killRec = useCallback(() => {
-    _clearTimer();
-    if (recRef.current) {
-      try { recRef.current.abort(); } catch {}
-      recRef.current = null;
-    }
-  }, []);
-
-  const start = useCallback(() => {
-    if (!SR || blockedRef.current) return;
-    _killRec();
-    deadRef.current        = false;
-    gotFinalRef.current    = false;
-    lastInterimRef.current = '';
-    setListening(true);
-
-    const rec            = new SR();
-    rec.continuous       = true;
-    rec.interimResults   = true;
-    rec.maxAlternatives  = 3;
-    rec.lang             = 'en-US';
-    recRef.current       = rec;
-
-    rec.onresult = (e) => {
-      let interim   = '';
-      let finalText = '';
-      let finalConf = 1;
-
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i];
-        let best = r[0];
-        for (let a = 1; a < r.length; a++) {
-          if ((r[a].confidence || 0) > (best.confidence || 0)) best = r[a];
-        }
-        if (r.isFinal) {
-          finalText += best.transcript;
-          finalConf  = Math.min(finalConf, best.confidence ?? 0);
-        } else {
-          interim += best.transcript;
-        }
-      }
-
-      if (interim || finalText) _resetSilenceTimer(rec);
-
-      if (interim) {
-        lastInterimRef.current = interim;
-        if (onInterimRef.current) onInterimRef.current(interim);
-      }
-
-      if (finalText) {
-        const clean     = finalText.trim();
-        const wordCount = clean.split(/\s+/).filter(Boolean).length;
-        const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
-        const tooFew    = wordCount < MIN_WORD_COUNT;
-        const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
-
-        lastInterimRef.current = '';
-        onInterimRef.current?.('');
-        gotFinalRef.current = true;
-
-        if (!tooShort && !tooFew && !isNoise) {
-          deadRef.current = true;
-          try { rec.stop(); } catch {}
-          onResultRef.current?.(clean);
-        }
-      }
-    };
-
-    rec.onend = () => {
-      _clearTimer();
-      recRef.current = null;
-      // Flush buffered interim speech if the browser ended recognition before marking isFinal
-      if (!deadRef.current && !gotFinalRef.current && lastInterimRef.current) {
-        const buffered = lastInterimRef.current.trim();
-        lastInterimRef.current = '';
-        onInterimRef.current?.('');
-        if (buffered.length >= MIN_TRANSCRIPT_CHARS) {
-          gotFinalRef.current = true;
-          deadRef.current = true;
-          setListening(false);
-          onResultRef.current?.(buffered);
-          return;
-        }
-      }
-      if (!deadRef.current) setListening(false);
-    };
-
-    rec.onerror = (e) => {
-      _clearTimer();
-      recRef.current = null;
-      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
-        blockedRef.current = true; // permission/device failure — don't auto-restart
-      }
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        setListening(false);
-      }
-    };
-
-    try {
-      rec.start();
-      // Initial silence timer — resets on any speech activity
-      _resetSilenceTimer(rec);
-    } catch {
-      setListening(false);
-      recRef.current = null;
-    }
-  }, [SR, _killRec, _resetSilenceTimer]);
-
   const stop = useCallback(() => {
-    deadRef.current = true;
-    _killRec();
-    setListening(false);
-  }, [_killRec]);
-
-  useEffect(() => () => { deadRef.current = true; _killRec(); }, [_killRec]);
-
-  return { start, stop, listening, supported };
+    discard(); setListening(false); callbacks.current.onInterim?.('');
+  }, [discard]);
+  const start = useCallback(() => {
+    discard(); setError('');
+    if (!SR) { setError('Voice input is unavailable in this browser.'); return; }
+    const rec = new SR(); recRef.current = rec;
+    rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3; rec.lang = 'en-US';
+    let interim = '', delivered = false;
+    const current = () => recRef.current === rec;
+    const finish = () => { clearTimeout(timerRef.current); recRef.current = null; setListening(false); callbacks.current.onInterim?.(''); };
+    const resetTimer = () => { clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (current()) rec.stop(); }, SILENCE_TIMEOUT_MS); };
+    rec.onresult = e => {
+      if (!current() || delivered) return;
+      let finalText = '', confidence = 1; interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const result = e.results[i];
+        const best = Array.from(result).reduce((a, b) => (b.confidence || 0) > (a.confidence || 0) ? b : a, result[0]);
+        if (result.isFinal) { finalText += ` ${best.transcript}`; confidence = Math.min(confidence, best.confidence ?? 0); }
+        else interim += ` ${best.transcript}`;
+      }
+      if (interim || finalText) resetTimer();
+      callbacks.current.onInterim?.(interim.trim());
+      const clean = finalText.trim();
+      if (clean.length < MIN_TRANSCRIPT_CHARS || (confidence > 0 && confidence < CONFIDENCE_THRESHOLD && clean.length < 8)) return;
+      delivered = true; finish(); rec.stop(); callbacks.current.onResult?.(clean);
+    };
+    rec.onend = () => {
+      if (!current()) return;
+      const buffered = interim.trim(); finish();
+      if (!delivered && buffered.length >= MIN_TRANSCRIPT_CHARS) { delivered = true; callbacks.current.onResult?.(buffered); }
+    };
+    rec.onerror = e => {
+      if (!current()) return;
+      finish();
+      if (!['no-speech', 'aborted'].includes(e.error)) setError(voiceErrorMessage(e.error));
+    };
+    try { setListening(true); rec.start(); resetTimer(); }
+    catch (e) { finish(); setError(voiceErrorMessage(e?.name)); }
+  }, [SR, discard]);
+  useEffect(() => discard, [discard]);
+  return { start, stop, listening, supported: !!SR, error };
 }

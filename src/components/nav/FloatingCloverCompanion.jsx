@@ -93,6 +93,7 @@ export default function FloatingCloverCompanion() {
               suggestions={clover.huntSuggestions}
               onDismissSuggestions={clover.dismissHuntSuggestions}
               voiceSupported={clover.voiceSupported}
+              voiceError={clover.voiceError}
               onSend={clover.send}
               onListen={clover.nudge}
             />
