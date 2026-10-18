@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import { lazyPart } from '@/lib/lazyPart';

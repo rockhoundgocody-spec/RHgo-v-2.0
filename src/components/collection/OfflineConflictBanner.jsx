@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { AlertTriangle, Check, CloudDownload, Smartphone, Loader2 } from 'lucide-react';
+import { AlertTriangle, CloudDownload, Smartphone, Loader2 } from 'lucide-react';
 import { getQueuedConflicts, resolveQueuedConflict } from '@/lib/offlineQueue';
 import { toast } from '@/components/ui/use-toast';
 
