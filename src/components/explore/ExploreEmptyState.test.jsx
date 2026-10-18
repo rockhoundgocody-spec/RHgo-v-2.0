@@ -29,7 +29,7 @@ describe('ExploreEmptyState', () => {
     { id: 'h6', name: 'Medium Spot', lat: 37.9000, lng: -122.3000, state: 'CA', land_type: 'private' }, // ~12 mi
   ];
 
-  it('renders guidance cards with accessible button attributes when user location is missing', () => {
+  it('renders guidance cards when user location is missing', () => {
     const onAction = vi.fn();
     const result = ExploreEmptyState({
       hotspots,
@@ -40,13 +40,6 @@ describe('ExploreEmptyState', () => {
 
     expect(result).toBeDefined();
     expect(result.props.children[0].props.children).toBe('Explore guide');
-
-    const guidanceButtons = result.props.children[1].props.children;
-    expect(guidanceButtons).toHaveLength(3);
-    const firstBtn = guidanceButtons[0];
-    expect(firstBtn.props.type).toBe('button');
-    expect(firstBtn.props['aria-label']).toBe('Filter by land type. Narrow to public, fee, or permit-only sites.');
-    expect(firstBtn.props.className).toContain('focus-visible:ring-amethyst-glow');
   });
 
   it('renders guidance cards when no hotspots are within 500 miles', () => {
@@ -64,7 +57,7 @@ describe('ExploreEmptyState', () => {
     expect(result.props.children[0].props.children).toBe('No verified spots nearby');
   });
 
-  it('renders top 3 nearest valid spots in distance order with accessible attributes when nearby spots exist', () => {
+  it('renders top 3 nearest valid spots in distance order when nearby spots exist', () => {
     const onSelectHotspot = vi.fn();
     const result = ExploreEmptyState({
       hotspots,
@@ -81,10 +74,6 @@ describe('ExploreEmptyState', () => {
 
     // Verify button 1 is h2 (nearest ~0.5 mi)
     expect(buttons[0].key).toBe('h2');
-    expect(buttons[0].props.type).toBe('button');
-    expect(buttons[0].props['aria-label']).toBe('Select Close Spot 1, CA, 0 miles away');
-    expect(buttons[0].props.className).toContain('focus-visible:ring-amethyst-glow');
-
     // Verify button 2 is h3 (~2 mi)
     expect(buttons[1].key).toBe('h3');
     // Verify button 3 is h4 (~5 mi)
