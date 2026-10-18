@@ -98,7 +98,6 @@ export function HotspotProximityBanner({ nearby, permission, requestPermission, 
           </div>
           {permission !== 'granted' && (
             <button
-              type="button"
               onClick={requestPermission}
               className="mt-1 inline-flex items-center gap-1 text-[11px] text-hud hover:text-hud-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan rounded-sm"
             >
@@ -114,10 +113,9 @@ export function HotspotProximityBanner({ nearby, permission, requestPermission, 
           Explore
         </Link>
         <button
-          type="button"
           onClick={() => onDismiss(hotspotId)}
           className="text-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
-          aria-label="Dismiss hotspot notification"
+          aria-label="Dismiss"
         >
           <X size={16} />
         </button>

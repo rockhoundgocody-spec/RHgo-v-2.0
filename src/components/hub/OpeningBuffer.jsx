@@ -88,13 +88,6 @@ function BirthSequence({ onDone }) {
     setCracks(3);
   }, []);
 
-  const skipNow = useCallback((e) => {
-    e?.stopPropagation?.();
-    clearTimers();
-    stop();
-    setPhase('exit');
-  }, [stop]);
-
   const handleTap = useCallback((e) => {
     if (phase === 'exit') return;
     // Unlock audio on the first user gesture so the setTimeout-driven
@@ -262,24 +255,14 @@ function BirthSequence({ onDone }) {
             </div>
           </motion.div>
 
-          {/* Always-visible Skip button so users are never blocked */}
-          <button
-            type="button"
-            onClick={skipNow}
-            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white/75 hover:text-white transition"
-            style={{ background: 'hsla(250, 30%, 14%, 0.75)', border: '1px solid hsla(280, 60%, 70%, 0.35)' }}
-          >
-            Skip →
-          </button>
-
           {/* Tap guidance — changes by phase */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 0.6 }}
-            className="absolute bottom-4 text-white/40 text-[10px] tracking-[0.28em] uppercase text-center px-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2, duration: 0.6 }}
+            className="absolute bottom-4 text-white/20 text-[9px] tracking-[0.3em] uppercase text-center px-4">
             {phase === 'hatch' || phase === 'shell'
               ? 'Tap the crystal · help it hatch'
               : phase === 'speak'
-                ? 'Tap anywhere to continue'
-                : 'Tap to reach it · or Skip'}
+                ? 'Double-tap to skip'
+                : 'Tap to reach it'}
           </motion.div>
         </motion.div>
       )}

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import { lazyPart } from '@/lib/lazyPart';
@@ -116,7 +117,7 @@ function SubrouteBackButton({ onBack }) {
   );
 }
 
-function MainContent({ isAdminOrDocs, isFullscreenMap, isPublicLanding }) {
+function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion, isPublicLanding }) {
   return (
     <main
       id="main-content"
@@ -128,7 +129,25 @@ function MainContent({ isAdminOrDocs, isFullscreenMap, isPublicLanding }) {
           : { paddingBottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }
       }
     >
-      <Outlet />
+      {isFullscreenMap ? (
+        /* Leaflet maps break inside AnimatePresence exit transitions —
+           render the map route without the animation wrapper so
+           navigating away always works. */
+        <Outlet />
+      ) : (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={pathname}
+            variants={reduceMotion ? undefined : pageVariants}
+            initial={reduceMotion ? false : 'initial'}
+            animate={reduceMotion ? undefined : 'animate'}
+            exit={reduceMotion ? undefined : 'exit'}
+            transition={pageTransition}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
+      )}
     </main>
   );
 }
