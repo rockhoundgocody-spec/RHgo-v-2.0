@@ -77,8 +77,10 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
           {nearest.map(h => (
             <button
               key={h.id}
+              type="button"
               onClick={() => onSelectHotspot(h)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98]"
+              aria-label={`Select ${h.name}, ${h.state || ''}, ${Math.round(h._dist)} miles away`}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] hover:border-amethyst-glow/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow motion-reduce:transform-none motion-reduce:transition-none"
               style={{
                 background: 'linear-gradient(145deg,hsla(255,30%,12%,.85),hsla(240,25%,7%,.9))',
                 border: '1px solid hsla(270,30%,40%,.2)',
@@ -86,7 +88,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: 'hsla(265,40%,20%,.6)', border: '1px solid hsla(265,60%,50%,.2)' }}>
-                <Navigation size={14} className="text-amethyst-glow" />
+                <Navigation size={14} className="text-amethyst-glow" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-semibold text-[13px] leading-tight truncate">{h.name}</div>
@@ -113,8 +115,10 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
         {GUIDANCE_CARDS.map(card => (
           <button
             key={card.action}
+            type="button"
             onClick={() => onAction(card.action)}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98]"
+            aria-label={`${card.title}. ${card.desc}`}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] hover:border-amethyst-glow/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow motion-reduce:transform-none motion-reduce:transition-none"
             style={{
               background: 'linear-gradient(145deg,hsla(255,30%,12%,.85),hsla(240,25%,7%,.9))',
               border: '1px solid hsla(255,30%,40%,.15)',
@@ -122,7 +126,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: 'hsla(255,30%,16%,.6)', border: '1px solid hsla(255,30%,40%,.15)' }}>
-              <card.icon size={14} className="text-white/50" />
+              <card.icon size={14} className="text-white/50" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-white/80 font-medium text-[13px] leading-tight">{card.title}</div>
