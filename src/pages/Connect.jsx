@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AuthLayout from "@/components/AuthLayout";
-import { Plug, Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ExternalLink } from "lucide-react";
 import { isValidExternalUrl } from "@/lib/urlValidation";
 
 const MCP_URL = "https://rhgo.base44.app/api/mcp";
@@ -31,6 +31,9 @@ function CopyButton({ value, label }) {
   );
 }
 
+/**
+ * @param {{ icon?: string; name?: string; steps?: string[]; link?: string }} props
+ */
 export function ClientCard({ icon, name, steps, link }) {
   return (
     <div className="rounded-2xl p-4 mb-3"
@@ -64,7 +67,6 @@ export function ClientCard({ icon, name, steps, link }) {
 export default function Connect() {
   return (
     <AuthLayout
-      icon={Plug}
       title="Connect your AI assistant"
       subtitle="Link Claude, ChatGPT, Cursor, or any MCP client to your RockHound-GO data"
     >
