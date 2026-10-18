@@ -11,6 +11,7 @@ import {
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { agateImage } from '@/lib/agateImages';
+import { isValidExternalUrl } from '@/lib/urlValidation';
 
 const RARITY_STYLES = {
   common:    { color: '#94a3b8', bg: 'hsla(210,20%,30%,0.3)',  label: 'Common' },
@@ -346,13 +347,15 @@ function PhotoCredit({ img }) {
       {img.license ? (
         <>
           {', '}
-          {img.licenseUrl ? (
+          {isValidExternalUrl(img.licenseUrl) ? (
             <a href={img.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">{img.license}</a>
           ) : img.license}
         </>
       ) : null}
       {', via '}
-      <a href={img.page} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Wikimedia Commons</a>
+      {isValidExternalUrl(img.page) ? (
+        <a href={img.page} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Wikimedia Commons</a>
+      ) : 'Wikimedia Commons'}
       {' (resized)'}
     </p>
   );

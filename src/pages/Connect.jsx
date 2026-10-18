@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AuthLayout from "@/components/AuthLayout";
 import { Plug, Copy, Check, ExternalLink } from "lucide-react";
+import { isValidExternalUrl } from "@/lib/urlValidation";
 
 const MCP_URL = "https://rhgo.base44.app/api/mcp";
 
@@ -30,7 +31,7 @@ function CopyButton({ value, label }) {
   );
 }
 
-function ClientCard({ icon, name, steps, link }) {
+export function ClientCard({ icon, name, steps, link }) {
   return (
     <div className="rounded-2xl p-4 mb-3"
       style={{
@@ -41,7 +42,7 @@ function ClientCard({ icon, name, steps, link }) {
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xl">{icon}</span>
         <h3 className="text-white font-bold text-sm">{name}</h3>
-        {link && (
+        {isValidExternalUrl(link) && (
           <a href={link} target="_blank" rel="noopener noreferrer"
             className="ml-auto text-white/40 hover:text-white/70 transition">
             <ExternalLink size={14} />
