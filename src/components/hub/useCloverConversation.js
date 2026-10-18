@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
-import { getCognitiveMemoryContext, recordRsiTurn } from '@/lib/cloverMemory';
+import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
 import { setCloverBusy, emit } from '@/lib/cloverWake';
 
@@ -14,8 +14,6 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   const [phase, setPhase] = useState('idle');
   const [messages, setMessages] = useState([]);
   const [interim, setInterim] = useState('');
-  const [huntSuggestions, setHuntSuggestions] = useState(null);
-  const [huntLoading, setHuntLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -131,7 +129,6 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     }
 
     if (!activeRef.current) return;
-    recordRsiTurn({ type: 'voice' });
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-8);
     setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
@@ -218,70 +215,10 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
     setCloverBusy(busyIdRef.current, false);
   }, []);
 
-  const requestHuntSuggestions = useCallback(async () => {
-    if (huntLoading) return;
-    unlock?.();
-    setHuntLoading(true);
-    try {
-      let gps = null;
-      try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
-      const res = await base44.functions.invoke('suggestNextFinds', {
-        lat: gps?.lat ?? null,
-        lng: gps?.lng ?? null,
-      });
-      const data = res?.data;
-      if (data?.suggestions?.length) {
-        setHuntSuggestions(data);
-        recordRsiTurn({ type: 'radar' });
-        if (data.clover_intro) say(data.clover_intro);
-      } else {
-        throw new Error('No suggestions');
-      }
-    } catch {
-      const fallback = {
-        collection_size: todaysSpecimens || 0,
-        clover_intro: "Here are three high-probability targets based on regional glacial and alluvial priors.",
-        suggestions: [
-          {
-            mineral_name: 'Lake Superior Agate',
-            hotspot_name: 'Public Gravel & Shoreline Beds',
-            distance_mi: null,
-            what_to_look_for: 'Look for translucent waxy chalcedony with iron-red fortification bands, especially when wet.',
-            why: 'High diagnostic contrast and strong regional prior.',
-          },
-          {
-            mineral_name: 'Septarian / Chert Nodule',
-            hotspot_name: 'Creek Cuts & Exposed Till',
-            distance_mi: null,
-            what_to_look_for: 'Rounded cobbles with angular calcite or quartz vein networks inside.',
-            why: 'Tests your fracture and Mohs hardness calibration.',
-          },
-          {
-            mineral_name: 'Epidote / Unakite Float',
-            hotspot_name: 'Glacial Drift Cobble Beds',
-            distance_mi: null,
-            what_to_look_for: 'Pistachio-green epidote interlocked with pink orthoclase feldspar and clear quartz.',
-            why: 'Distinctive color pairing that builds crystalline matrix recognition.',
-          },
-        ],
-      };
-      setHuntSuggestions(fallback);
-      say(fallback.clover_intro);
-    } finally {
-      setHuntLoading(false);
-    }
-  }, [huntLoading, say, todaysSpecimens, unlock]);
-
-  const dismissHuntSuggestions = useCallback(() => setHuntSuggestions(null), []);
-
   return {
     phase, messages, interim, start, end, stop: end, nudge, send, unlock,
     active: phase !== 'idle',
     voiceSupported: voice.supported,
     getAmplitude, getSpectrum,
-    huntSuggestions,
-    huntLoading,
-    requestHuntSuggestions,
-    dismissHuntSuggestions,
   };
 }

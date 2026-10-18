@@ -10,7 +10,7 @@ import SessionRecovery from '@/components/SessionRecovery';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
-import HomeGate from '@/components/HomeGate.jsx';
+const HomeGate = lazy(() => import('@/components/HomeGate.jsx'));
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';

@@ -3,41 +3,6 @@ const EARTH_MI = 3958.8;
 const noop = () => {};
 
 export const PUBLIC_LAND = new Set(['public', 'blm', 'forest_service', 'state_park']);
-export const MAX_EXACT_GPS_ACCURACY_M = 150;
-export const MAX_USABLE_GPS_ACCURACY_M = 5000;
-
-/**
- * Evaluates a geolocation fix's accuracy in meters.
- * Rejects zero/negative accuracy or coarse cell-tower/IP fixes (>5 km),
- * and downgrades fixes looser than 150 m from 'exact' to 'approximate'.
- */
-export function evaluateGpsAccuracy(coords) {
-  if (!coords) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  const lat = coords.latitude ?? coords.lat;
-  const lng = coords.longitude ?? coords.lng;
-  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  const rawAcc = coords.accuracy;
-  if (rawAcc == null) {
-    return { usable: true, isExact: false, accuracy: null, recommendedPrivacy: 'approximate' };
-  }
-  if (typeof rawAcc !== 'number' || !Number.isFinite(rawAcc) || rawAcc <= 0 || rawAcc > MAX_USABLE_GPS_ACCURACY_M) {
-    return { usable: false, isExact: false, accuracy: Number.isFinite(rawAcc) ? rawAcc : null, recommendedPrivacy: 'private' };
-  }
-  const isExact = rawAcc <= MAX_EXACT_GPS_ACCURACY_M;
-  return {
-    usable: true,
-    isExact,
-    accuracy: Math.round(rawAcc),
-    recommendedPrivacy: isExact ? 'exact' : 'approximate',
-  };
-}
 
 export function haversineMi(a, b) {
   if (!a || !b || a.lat == null || b.lat == null || a.lng == null || b.lng == null) return null;
@@ -89,8 +54,6 @@ export function watchGps(onFix) {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       if (cancelled) return;
-      const gate = evaluateGpsAccuracy(pos.coords);
-      if (!gate.usable) return;
       const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       persistLastGps(coords);
       onFix(coords);

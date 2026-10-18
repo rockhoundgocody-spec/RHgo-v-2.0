@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -17,12 +17,11 @@ import { useSubscription } from '@/lib/useSubscription';
 import { stripExif } from '@/lib/stripExif';
 import { applyGeoPrivacy, buildSpecimenNotes, calculateRarityQualityScore, calculateAwardedXp, countNearbyScans, PROVENANCE, LOCATION_SCAN_CAP } from '@/lib/scanSave';
 import { reverseGeocode } from '@/components/scan/FoundLocationPicker.jsx';
-import { persistLastGps, evaluateGpsAccuracy } from '@/lib/geo';
+import { persistLastGps } from '@/lib/geo';
 import { trackEvent } from '@/lib/analytics';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { enrichWithScientificValidation } from '@/lib/agiGeologicalEngine';
-import { recordRsiTurn } from '@/lib/cloverMemory';
 import { scoreToBand } from '@/lib/reasoningEngine';
 import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
@@ -33,15 +32,6 @@ import {
   getOrCreateGuestId,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
-
-function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(reader.error || new Error('Failed to read photo'));
-    reader.readAsDataURL(blob);
-  });
-}
 
 const VOICE_LINES = {
   high: (n) => `That's ${n}. I'm pretty sure about this one.`,
@@ -78,7 +68,6 @@ export default function Scan() {
   const [locationExhausted, setLocationExhausted] = useState(false);
 
   const [cameraRetry, setCameraRetry] = useState(0);
-  const processingRef = useRef(false);
 
   const camera = useCameraStream({ active: stage === 'camera', facing, retryKey: cameraRetry });
   const { pendingBadge, dismissPending, refresh: refreshBadges } = useBadgeAwarder();
@@ -141,28 +130,14 @@ export default function Scan() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const accGate = evaluateGpsAccuracy(pos.coords);
-        if (!accGate.usable) return;
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: accGate.accuracy,
-          isExact: accGate.isExact,
-        };
-        persistLastGps({ lat: coords.lat, lng: coords.lng });
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        persistLastGps(coords);
         setGpsCoords(coords);
         const name = await reverseGeocode(coords.lat, coords.lng);
         if (name) setBeachName(name);
         setFoundLocation((prev) => {
           if (prev.source === 'picked') return prev;
-          return {
-            found_at: name || prev.found_at || '',
-            lat: coords.lat,
-            lng: coords.lng,
-            accuracy: accGate.accuracy,
-            isExact: accGate.isExact,
-            source: 'gps',
-          };
+          return { found_at: name || prev.found_at || '', lat: coords.lat, lng: coords.lng, source: 'gps' };
         });
       },
       () => {},
@@ -182,8 +157,6 @@ export default function Scan() {
   }, [me?.email, gpsCoords]);
 
   const processPhoto = async (blob) => {
-    if (processingRef.current) return;
-    processingRef.current = true;
     const frameUrl = URL.createObjectURL(blob);
     setFrozenFrame(frameUrl);
     setLastShotUrl(frameUrl);
@@ -191,24 +164,12 @@ export default function Scan() {
     setStage('processing');
 
     try {
-      const clean = await stripExif(blob, { maxDimension: 1280, quality: 0.85 });
+      const clean = await stripExif(blob);
       const file = new File([clean], 'shot1.jpg', { type: 'image/jpeg' });
-      let file_url = null;
-      let image_base64 = null;
-      if (!isGuest) {
-        try {
-          const uploaded = await base44.integrations.Core.UploadFile({ file });
-          file_url = uploaded?.file_url || null;
-        } catch {
-          file_url = null;
-        }
-      }
-      if (!file_url) {
-        image_base64 = await blobToDataUrl(clean);
-      }
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       // Guests skip cutout — removeSpecimenBackground requires auth (401 tax).
-      const cutoutPromise = isGuest || !file_url
+      const cutoutPromise = isGuest
         ? Promise.resolve(null)
         : base44.functions
             .invoke('removeSpecimenBackground', { image_url: file_url })
@@ -222,7 +183,7 @@ export default function Scan() {
       let identified;
       try {
         const res = await base44.functions.invoke('identifySpecimen', {
-          ...(file_url ? { image_url: file_url } : { image_base64 }),
+          image_url: file_url,
           lat: gpsCoords?.lat, lng: gpsCoords?.lng,
           save: false,
           wet_dry: wetDry,
@@ -230,9 +191,6 @@ export default function Scan() {
           ...(isGuest ? { guest_device_id: getOrCreateGuestId() } : {}),
         });
         identified = res?.data;
-        if (!file_url && identified?.uploaded_image_url) {
-          file_url = identified.uploaded_image_url;
-        }
       } catch (idErr) {
         const status = idErr?.status;
         const code = idErr?.data?.code || idErr?.code;
@@ -262,9 +220,8 @@ export default function Scan() {
       const serverQuota = identified?.quota;
 
       const cutoutUrl = await cutoutPromise;
-      const finalUrl = cutoutUrl || file_url || frameUrl;
+      const finalUrl = cutoutUrl || file_url;
       const enriched = enrichWithScientificValidation(resultData);
-      recordRsiTurn({ type: 'scan', confidence: enriched?.confidence, mineral: enriched?.top_match });
 
       setResult(enriched);
       setPrimaryUrl(finalUrl);
@@ -299,18 +256,12 @@ export default function Scan() {
         setTimeout(() => speak(line), 600);
       }
     } catch (err) {
-      const rawMsg = err?.data?.error || err?.message || '';
-      const friendly = /network error|failed to fetch/i.test(rawMsg)
-        ? 'Connection interrupted while analyzing the photo. Check signal and tap to retry.'
-        : rawMsg || 'Could not identify that photo. Try more light or another angle.';
       toast({
         title: 'Scan failed',
-        description: friendly,
+        description: err?.message || 'Could not identify that photo. Try more light or another angle.',
         variant: 'destructive',
       });
       setStage('camera');
-    } finally {
-      processingRef.current = false;
     }
   };
 
@@ -364,14 +315,9 @@ export default function Scan() {
 
     const place = foundLocation?.found_at || foundLocation?.lat != null
       ? foundLocation
-      : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, isExact: gpsCoords?.isExact, source: 'gps' };
+      : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, source: 'gps' };
     const pickedSpot = place.source === 'picked';
-    // Never store an automatic GPS fix with coarse/unknown accuracy (>150 m) as an exact pin.
-    const geoPrivacy = pickedSpot
-      ? 'exact'
-      : place.lat != null
-        ? 'approximate'
-        : 'private';
+    const geoPrivacy = pickedSpot ? 'exact' : (place.lat != null ? 'approximate' : 'private');
     const { lat, lng } = applyGeoPrivacy(
       { lat: place.lat, lng: place.lng },
       geoPrivacy,

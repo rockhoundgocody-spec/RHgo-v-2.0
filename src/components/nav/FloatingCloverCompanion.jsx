@@ -88,10 +88,8 @@ export default function FloatingCloverCompanion() {
                 setExpanded(false);
                 clover.end();
               }}
-              onHunt={clover.requestHuntSuggestions}
-              huntLoading={clover.huntLoading}
-              suggestions={clover.huntSuggestions}
-              onDismissSuggestions={clover.dismissHuntSuggestions}
+              onHunt={() => {}}
+              huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
               onListen={clover.nudge}
