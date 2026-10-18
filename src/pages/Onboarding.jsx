@@ -28,7 +28,7 @@ const AGE_GATE_QUESTIONS = [
   }
 ];
 
-function AgateAgeGate({ onComplete }) {
+function AgateAgeGate({ onComplete, onSkip }) {
   const [qIdx, setQIdx] = useState(0);
   const [kidPoints, setKidPoints] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -56,6 +56,16 @@ function AgateAgeGate({ onComplete }) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center px-6"
       style={{ background: 'radial-gradient(ellipse at 60% 30%, hsla(280,80%,15%,0.9) 0%, hsla(240,30%,4%,1) 70%)' }}>
+
+      {onSkip && (
+        <button
+          type="button"
+          onClick={onSkip}
+          className="absolute top-5 right-5 text-white/60 text-sm hover:text-white transition z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-md px-2.5 py-1"
+        >
+          Skip
+        </button>
+      )}
 
       {/* Crystal decoration */}
       <div className="absolute top-16 left-8 text-4xl opacity-30 rotate-12">💎</div>
@@ -304,7 +314,7 @@ export default function Onboarding() {
   };
 
   if (phase === 'gate') {
-    return <AgateAgeGate onComplete={handleGateComplete} />;
+    return <AgateAgeGate onComplete={handleGateComplete} onSkip={handleSkip} />;
   }
 
   return (
