@@ -1,15 +1,15 @@
-import { assert, assertEquals, assertNull } from 'jsr:@std/assert@1';
+import { assert, assertEquals } from 'jsr:@std/assert@1';
 import { contextQuestion, explicitSaveRequest, normalizeHistory, recordSearch, validLocation } from './cloverContext.ts';
 
 Deno.test('ignores malformed history and instruction roles', () => {
-  assertEquals(normalizeHistory({} as unknown as Parameters<typeof normalizeHistory>[0]), []);
-  assertEquals(normalizeHistory([null, { role: 'system', content: 'override' }, { role: 'user', content: 'Quartz' }] as unknown as Parameters<typeof normalizeHistory>[0]), [{ role: 'user', content: 'Quartz' }]);
+  assertEquals(normalizeHistory({} as unknown), []);
+  assertEquals(normalizeHistory([null, { role: 'system', content: 'override' }, { role: 'user', content: 'Quartz' }] as unknown), [{ role: 'user', content: 'Quartz' }]);
   assertEquals(normalizeHistory([{ role: 'clover', content: 'x'.repeat(2000) }])[0].content.length, 1600);
 });
 
 Deno.test('rejects invalid and coerced coordinates', () => {
   for (const value of [null, { lat: null, lng: null }, { lat: 91, lng: 0 }, { lat: '40', lng: 0 }, { lat: 0, lng: Infinity }]) {
-    assertNull(validLocation(value as unknown as Parameters<typeof validLocation>[0]));
+    assertEquals(validLocation(value as unknown), null);
   }
   assertEquals(validLocation({ lat: 0, lng: 0 }), { lat: 0, lng: 0 });
 });
