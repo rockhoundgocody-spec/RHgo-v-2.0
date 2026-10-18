@@ -20,7 +20,8 @@ export function contextQuestion(question, history) {
 
 export function recordSearch(question, fields) {
   const generic = new Set(['last', 'latest', 'recent', 'recently', 'newest', 'today', 'yesterday', 'week', 'month', 'saved', 'logged', 'specimen', 'collection']);
-  const terms = [...new Set(tokenize(question))].filter((term) => !generic.has(term)).slice(0, 8);
+  const inquiry = question.replace(/\b(?:do not|don['’]t|never)\s+(?:save|log|record)\b.*$/i, '').trim();
+  const terms = [...new Set(tokenize(inquiry))].filter((term) => !generic.has(term)).slice(0, 8);
   if (!terms.length) return {};
   const pattern = terms.join('|'); // tokenize only emits alphanumeric terms.
   return { $or: fields.map((field) => ({ [field]: { $regex: pattern, $options: 'i' } })) };

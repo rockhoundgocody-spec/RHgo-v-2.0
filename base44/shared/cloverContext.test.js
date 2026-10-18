@@ -17,6 +17,7 @@ describe('Clover context boundaries', () => {
     expect(contextQuestion('Tell me about pyrite', history)).toBe('Tell me about pyrite');
     expect(recordSearch('quartz (.*)', ['mineral_name'])).toEqual({ $or: [{ mineral_name: { $regex: 'quartz', $options: 'i' } }] });
     expect(recordSearch('my latest specimen', ['mineral_name'])).toEqual({});
+    expect(recordSearch("What is my latest specimen? Don't save anything.", ['mineral_name'])).toEqual({});
   });
   it('requires explicit non-negated permission to save', () => {
     for (const text of ['I found quartz', "Don't save my rock", 'How do I save this?', 'Could you log quartz? No, cancel']) expect(explicitSaveRequest(text)).toBe(false);
