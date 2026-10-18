@@ -7,6 +7,7 @@ import {
   readLastGps,
   watchGps,
   rankHotspots,
+  hasNearbyHotspots,
   escapeHtml,
   evaluateGpsAccuracy,
 } from './geo';
@@ -180,6 +181,35 @@ describe('geo library', () => {
       });
 
       expect(onFix).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hasNearbyHotspots', () => {
+    const userLocation = { lat: 45.5, lng: -122.6 };
+    const nearbyHotspot = { id: 'near', lat: 45.51, lng: -122.61 }; // ~1 mile away
+    const farHotspot = { id: 'far', lat: 48.0, lng: -120.0 }; // ~200 miles away
+
+    it('returns true if userLocation is missing or invalid', () => {
+      expect(hasNearbyHotspots([farHotspot], null)).toBe(true);
+      expect(hasNearbyHotspots([farHotspot], { lat: null, lng: -122.6 })).toBe(true);
+    });
+
+    it('returns false if hotspots array is empty or invalid', () => {
+      expect(hasNearbyHotspots([], userLocation)).toBe(false);
+      expect(hasNearbyHotspots(null, userLocation)).toBe(false);
+    });
+
+    it('returns true as soon as a hotspot within maxDistanceMi is found', () => {
+      expect(hasNearbyHotspots([farHotspot, nearbyHotspot], userLocation, 75)).toBe(true);
+    });
+
+    it('returns false if all hotspots are farther than maxDistanceMi', () => {
+      expect(hasNearbyHotspots([farHotspot], userLocation, 75)).toBe(false);
+    });
+
+    it('ignores hotspots with missing or non-numeric coordinates', () => {
+      const invalid = { id: 'inv', lat: 'invalid', lng: -122.6 };
+      expect(hasNearbyHotspots([invalid], userLocation, 75)).toBe(false);
     });
   });
 

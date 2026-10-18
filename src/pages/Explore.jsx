@@ -38,7 +38,7 @@ import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
 import ExploreEmptyState from '@/components/explore/ExploreEmptyState.jsx';
 import { useNavigate } from 'react-router-dom';
-import { formatDistance, persistLastGps, rankHotspots } from '@/lib/geo';
+import { formatDistance, hasNearbyHotspots as checkNearbyHotspots, persistLastGps, rankHotspots } from '@/lib/geo';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -338,8 +338,7 @@ export default function Explore() {
   }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower, userLocation]);
 
   const hasNearbyHotspots = useMemo(() => {
-    if (!userLocation) return true;
-    return rankHotspots(hotspots, { userLocation }).some((h) => h.distanceMi != null && h.distanceMi <= 75);
+    return checkNearbyHotspots(hotspots, userLocation, 75);
   }, [hotspots, userLocation]);
 
   const showEmptyPanel = !loading && !!userLocation && !hasNearbyHotspots;

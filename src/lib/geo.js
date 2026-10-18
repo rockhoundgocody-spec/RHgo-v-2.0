@@ -102,6 +102,41 @@ export function watchGps(onFix) {
 }
 
 /**
+ * Efficiently checks if any hotspot is within maxDistanceMi of userLocation.
+ * Uses bounding box pre-filtering and exits on the first match to avoid
+ * running full array mapping, gap calculation, and O(N log N) sorting.
+ */
+export function hasNearbyHotspots(hotspots, userLocation, maxDistanceMi = 75) {
+  if (!userLocation || typeof userLocation.lat !== 'number' || typeof userLocation.lng !== 'number') {
+    return true;
+  }
+  if (!Array.isArray(hotspots) || hotspots.length === 0) {
+    return false;
+  }
+
+  // 1 degree latitude ~ 69 miles. 1 degree longitude ~ 69 * cos(lat) miles (max 69 miles).
+  // Allow a generous bounding box threshold in degrees for fast coarse filtering.
+  const degThreshold = (maxDistanceMi / 60.0);
+
+  for (let i = 0; i < hotspots.length; i++) {
+    const h = hotspots[i];
+    if (!h || typeof h.lat !== 'number' || typeof h.lng !== 'number') continue;
+
+    const dLat = Math.abs(h.lat - userLocation.lat);
+    const dLng = Math.abs(h.lng - userLocation.lng);
+
+    if (dLat <= degThreshold && dLng <= degThreshold) {
+      const dist = haversineMi(userLocation, h);
+      if (dist != null && dist <= maxDistanceMi) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
  */
 export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
