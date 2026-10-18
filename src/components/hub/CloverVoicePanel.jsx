@@ -172,7 +172,7 @@ export default function CloverVoicePanel({
               className="px-3 py-2 text-[10px] font-bold text-amethyst-glow tracking-wide"
               style={{ borderBottom: '1px solid hsla(280,80%,60%,0.2)', background: 'hsla(270,60%,30%,0.25)' }}
             >
-              🎯 Hunt Next — {suggestions.collection_size} in collection
+              {suggestions.error ? 'Hunt suggestions unavailable' : `Hunt Next — ${suggestions.collection_size} in collection`}
             </div>
             <div className="space-y-2 p-2">
               {suggestions.clover_intro && (
@@ -214,6 +214,7 @@ export default function CloverVoicePanel({
           <Keyboard size={12} className="text-white/25 shrink-0" />
           <input
             value={draft}
+            disabled={phase === 'thinking'}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && draft.trim()) { onSend(draft.trim()); setDraft(''); }

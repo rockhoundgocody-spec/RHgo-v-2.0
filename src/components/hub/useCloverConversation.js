@@ -7,6 +7,7 @@ import useBargeIn from './useBargeIn';
 import { getCognitiveMemoryContext, recordRsiTurn } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
 import { setCloverBusy, emit } from '@/lib/cloverWake';
+import { useQueryClient } from '@tanstack/react-query';
 
 const MAX_QUIET_TURNS = 3;
 
@@ -19,6 +20,10 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const turnRef = useRef(0);
+  const pendingRef = useRef(null);
+  const endTimerRef = useRef(null);
 
   const activeRef = useRef(false);
   const historyRef = useRef([]);
@@ -62,11 +67,15 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [speak]);
 
   const send = useCallback(async (text) => {
-    if (!activeRef.current || !text?.trim()) return;
+    if (!activeRef.current || !text?.trim() || pendingRef.current !== null) return;
+    const turn = ++turnRef.current;
+    stopSpeech();
+    voice.stop();
+    stopBargeIn();
 
     setInterim('');
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
-    historyRef.current = [...historyRef.current, { role: 'user', content: text }].slice(-8);
+    historyRef.current = [...historyRef.current, { role: 'user', content: text }].slice(-12);
     setPhase('thinking');
 
     const local = applyCloverUtterance(text, { pathname: location.pathname });
@@ -76,11 +85,12 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
     if (local.handled) {
       if (!activeRef.current) return;
-      historyRef.current = [...historyRef.current, { role: 'assistant', content: local.reply }].slice(-8);
+      historyRef.current = [...historyRef.current, { role: 'assistant', content: local.reply }].slice(-12);
       setMessages((prev) => [...prev, { role: 'assistant', content: local.reply }]);
       say(local.reply);
       if (local.endSession) {
-        setTimeout(() => {
+        endTimerRef.current = setTimeout(() => {
+          if (turn !== turnRef.current) return;
           activeRef.current = false;
           stopSpeech();
           voice.stop();
@@ -93,6 +103,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
     let reply = "Sorry, I missed that — one more time?";
     let sources = [];
+    pendingRef.current = turn;
     try {
       const cognitiveContext = getCognitiveMemoryContext();
       let gps = null;
@@ -109,6 +120,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         user_utterance: text,
         guest_device_id: getOrCreateGuestId(),
       });
+      if (!activeRef.current || turn !== turnRef.current) return;
       const data = res?.data;
       reply = data?.reply || reply;
       sources = Array.isArray(data?.sources) ? data.sources : [];
@@ -117,25 +129,34 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
 
       if (data?.log_find && data?.find_details) {
         try {
-          await base44.functions.invoke('parseSpecimenDictation', {
+          const saved = await base44.functions.invoke('parseSpecimenDictation', {
             transcript: data.find_details, create: true,
           });
-          onFindLogged?.(data.find_details.split(' ').slice(0, 3).join(' '));
-        } catch {}
+          if (!saved?.data?.created?.id) throw new Error('Find was not saved');
+          queryClient.invalidateQueries({ queryKey: ['entity', 'Specimen'] });
+          if (!activeRef.current || turn !== turnRef.current) return;
+          const mineral = saved.data.fields?.mineral_name || 'your specimen';
+          reply = `Saved ${mineral} to your collection.`;
+          onFindLogged?.(mineral);
+        } catch {
+          reply = "I couldn't confirm that save. Your description is still in this conversation; check Collection before trying again.";
+        }
       }
     } catch (err) {
       const msg = String(err?.message || err?.data?.error || '');
       reply = /429|rate limit|Guest rate/i.test(msg)
         ? "That's my free chatter for now — sign in and I'll keep the conversation going."
-        : "I lost you for a second there. Still with me?";
+        : "I couldn't reach the conversation service. Your message is still here; please try again.";
+    } finally {
+      if (pendingRef.current === turn) pendingRef.current = null;
     }
 
-    if (!activeRef.current) return;
+    if (!activeRef.current || turn !== turnRef.current) return;
     recordRsiTurn({ type: 'voice' });
-    historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-8);
+    historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-12);
     setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
-  }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voice, stopBargeIn]);
+  }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voice, stopBargeIn, queryClient]);
   sendRef.current = send;
 
   useEffect(() => {
@@ -182,6 +203,9 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [phase, voice.listening, beginListening]);
 
   const start = useCallback((openingLine) => {
+    turnRef.current += 1;
+    pendingRef.current = null;
+    clearTimeout(endTimerRef.current);
     unlock();
     activeRef.current = true;
     quietTurnsRef.current = 0;
@@ -193,6 +217,9 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [say, unlock]);
 
   const end = useCallback(() => {
+    turnRef.current += 1;
+    pendingRef.current = null;
+    clearTimeout(endTimerRef.current);
     activeRef.current = false;
     stopSpeech();
     voice.stop();
@@ -202,7 +229,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [stopSpeech, voice, stopBargeIn]);
 
   const nudge = useCallback(() => {
-    if (!activeRef.current) return;
+    if (!activeRef.current || pendingRef.current !== null) return;
     if (phase === 'speaking') { stopSpeech(); stopBargeIn(); }
     quietTurnsRef.current = 0;
     beginListening();
@@ -214,12 +241,15 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
   }, [phase]);
 
   useEffect(() => () => {
+    turnRef.current += 1;
+    clearTimeout(endTimerRef.current);
     activeRef.current = false;
     setCloverBusy(busyIdRef.current, false);
   }, []);
 
   const requestHuntSuggestions = useCallback(async () => {
-    if (huntLoading) return;
+    if (huntLoading || pendingRef.current !== null || !activeRef.current) return;
+    const sessionTurn = turnRef.current;
     unlock?.();
     setHuntLoading(true);
     try {
@@ -229,6 +259,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         lat: gps?.lat ?? null,
         lng: gps?.lng ?? null,
       });
+      if (!activeRef.current || sessionTurn !== turnRef.current) return;
       const data = res?.data;
       if (data?.suggestions?.length) {
         setHuntSuggestions(data);
@@ -238,35 +269,10 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
         throw new Error('No suggestions');
       }
     } catch {
-      const fallback = {
-        collection_size: todaysSpecimens || 0,
-        clover_intro: "Here are three high-probability targets based on regional glacial and alluvial priors.",
-        suggestions: [
-          {
-            mineral_name: 'Lake Superior Agate',
-            hotspot_name: 'Public Gravel & Shoreline Beds',
-            distance_mi: null,
-            what_to_look_for: 'Look for translucent waxy chalcedony with iron-red fortification bands, especially when wet.',
-            why: 'High diagnostic contrast and strong regional prior.',
-          },
-          {
-            mineral_name: 'Septarian / Chert Nodule',
-            hotspot_name: 'Creek Cuts & Exposed Till',
-            distance_mi: null,
-            what_to_look_for: 'Rounded cobbles with angular calcite or quartz vein networks inside.',
-            why: 'Tests your fracture and Mohs hardness calibration.',
-          },
-          {
-            mineral_name: 'Epidote / Unakite Float',
-            hotspot_name: 'Glacial Drift Cobble Beds',
-            distance_mi: null,
-            what_to_look_for: 'Pistachio-green epidote interlocked with pink orthoclase feldspar and clear quartz.',
-            why: 'Distinctive color pairing that builds crystalline matrix recognition.',
-          },
-        ],
-      };
-      setHuntSuggestions(fallback);
-      say(fallback.clover_intro);
+      if (!activeRef.current || sessionTurn !== turnRef.current) return;
+      const message = "I couldn't load grounded hunt suggestions. Try Hunt again when connected; I won't guess a location or collecting permission.";
+      setHuntSuggestions({ error: true, suggestions: [], clover_intro: message });
+      say(message);
     } finally {
       setHuntLoading(false);
     }

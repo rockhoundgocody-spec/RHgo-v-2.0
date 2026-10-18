@@ -1,5 +1,7 @@
 export function detectLogIntent(text) {
   const normalized = String(text ?? '').toLowerCase();
+  if (/\b(don['’]?t|do not|never|stop|cancel)\b/.test(normalized)) return false;
+  if (!/^(?:(?:hey\s+)?clover[,!:.]?\s*)?(?:please\s+|(?:can|could|would) you\s+)*(?:log|save|record|add|create|catalog|new specimen)\b/.test(normalized.trim())) return false;
   return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(normalized)
     || /\b(new specimen|log this|save this|record this)\b/.test(normalized);
 }
