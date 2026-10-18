@@ -94,17 +94,17 @@ export default function ExpeditionDetail() {
 
         {/* Actions */}
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition">
-            <Edit size={16} /> Edit
+          <button className="flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
+            <Edit size={16} aria-hidden="true" /> Edit
           </button>
-          <button className="flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition">
-            <Share2 size={16} /> Share
+          <button className="flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
+            <Share2 size={16} aria-hidden="true" /> Share
           </button>
           <button
             onClick={() => setShowMap(!showMap)}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-semibold transition"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amethyst-deep hover:bg-amethyst text-white font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
-            <MapIcon size={16} /> Map
+            <MapIcon size={16} aria-hidden="true" /> Map
           </button>
         </div>
       </div>
