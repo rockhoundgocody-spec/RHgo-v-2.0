@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Clock, FileText, DollarSign, Lock, MapPin } from 'lucide-react';
-import { isValidExternalUrl } from '../../../base44/shared/urlValidation.ts';
+import { isValidExternalUrl } from '@/lib/urlValidation';
 
 const ACCESS_CONFIG = {
   open:       { label: 'Open Access',     color: '#34d399', icon: CheckCircle2, desc: 'Collecting allowed — follow local rules' },
