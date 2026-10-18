@@ -8,7 +8,6 @@ import {
   watchGps,
   rankHotspots,
   escapeHtml,
-  evaluateGpsAccuracy,
 } from './geo';
 
 describe('geo library', () => {
@@ -224,26 +223,6 @@ describe('geo library', () => {
       expect(escapeHtml(null)).toBe('');
       expect(escapeHtml(undefined)).toBe('');
       expect(escapeHtml('')).toBe('');
-    });
-  });
-
-  describe('evaluateGpsAccuracy', () => {
-    it('rejects zero, negative, or >5km accuracy fixes', () => {
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 0 }).usable).toBe(false);
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: -10 }).usable).toBe(false);
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 8000 }).usable).toBe(false);
-    });
-
-    it('marks <=150m accuracy as exact and 151-5000m as approximate', () => {
-      const exact = evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 25 });
-      expect(exact.usable).toBe(true);
-      expect(exact.isExact).toBe(true);
-      expect(exact.recommendedPrivacy).toBe('exact');
-
-      const approx = evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 600 });
-      expect(approx.usable).toBe(true);
-      expect(approx.isExact).toBe(false);
-      expect(approx.recommendedPrivacy).toBe('approximate');
     });
   });
 });

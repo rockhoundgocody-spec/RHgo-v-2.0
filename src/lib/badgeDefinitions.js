@@ -364,12 +364,9 @@ export const BADGES = [
   })),
 ];
 
-// Fast Map lookup table for O(1) badge definition retrieval
-const BADGE_MAP = new Map(BADGES.map(badge => [badge.code, badge]));
-
 export const getBadgeDefinition = code => {
   const resolvedCode = ALIASES[code] || code;
-  return BADGE_MAP.get(resolvedCode) || BADGE_MAP.get(code) || BADGES[0];
+  return BADGES.find(b => b.code === resolvedCode) || BADGES.find(b => b.code === code) || BADGES[0];
 };
 
 export const evaluateEarnedCodes = (specimens, context = {}) => {

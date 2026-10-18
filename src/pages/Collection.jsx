@@ -9,7 +9,6 @@ import SpecimenCard from '@/components/collection/SpecimenCard.jsx';
 import CrystalCard from '@/components/collection/CrystalCard.jsx';
 import HolographicVaultView from '@/components/collection/HolographicVaultView.jsx';
 import CollectionDashboard from '@/components/collection/CollectionDashboard.jsx';
-import OfflineConflictBanner from '@/components/collection/OfflineConflictBanner.jsx';
 import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
@@ -51,17 +50,15 @@ export default function Collection() {
         </div>
         {/* View toggle */}
         <div className="flex gap-1 p-1 rounded-xl glass-panel" role="group" aria-label="Collection views">
-          <button onClick={() => setView('vault')} aria-pressed={view === 'vault'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'vault' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="3D Vault view" title="3D Holographic Vault"><Gem size={16} aria-hidden="true" /></button>
-          <button onClick={() => setView('crystal')} aria-pressed={view === 'crystal'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'crystal' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Crystal view"><Sparkles size={16} aria-hidden="true" /></button>
-          <button onClick={() => setView('gallery')} aria-pressed={view === 'gallery'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'gallery' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Gallery view"><Images size={16} aria-hidden="true" /></button>
-          <button onClick={() => setView('grid')} aria-pressed={view === 'grid'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'grid' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Grid view"><LayoutGrid size={16} aria-hidden="true" /></button>
-          <button onClick={() => setView('map')} aria-pressed={view === 'map'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'map' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Map view"><Map size={16} aria-hidden="true" /></button>
-          <Link to="/vault" className="p-2 rounded-lg transition text-amethyst/50 hover:text-amethyst focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none" aria-label="Vault Galaxy" title="Vault Galaxy — your collection as a 3D star map"><Orbit size={16} aria-hidden="true" /></Link>
-          <button onClick={() => setView('dashboard')} aria-pressed={view === 'dashboard'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} aria-hidden="true" /></button>
+          <button onClick={() => setView('vault')} aria-pressed={view === 'vault'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'vault' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="3D Vault view" title="3D Holographic Vault"><Gem size={16} /></button>
+          <button onClick={() => setView('crystal')} aria-pressed={view === 'crystal'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'crystal' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Crystal view"><Sparkles size={16} /></button>
+          <button onClick={() => setView('gallery')} aria-pressed={view === 'gallery'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'gallery' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Gallery view"><Images size={16} /></button>
+          <button onClick={() => setView('grid')} aria-pressed={view === 'grid'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'grid' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Grid view"><LayoutGrid size={16} /></button>
+          <button onClick={() => setView('map')} aria-pressed={view === 'map'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'map' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Map view"><Map size={16} /></button>
+          <Link to="/vault" className="p-2 rounded-lg transition text-amethyst/50 hover:text-amethyst focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none" aria-label="Vault Galaxy" title="Vault Galaxy — your collection as a 3D star map"><Orbit size={16} /></Link>
+          <button onClick={() => setView('dashboard')} aria-pressed={view === 'dashboard'} className={`p-2 rounded-lg transition focus-visible:ring-2 focus-visible:ring-amethyst focus-visible:outline-none ${view === 'dashboard' ? 'bg-amethyst/30 text-white' : 'text-amethyst/50 hover:text-amethyst'}`} aria-label="Dashboard view"><BarChart2 size={16} /></button>
         </div>
       </div>
-
-      <OfflineConflictBanner specimens={specimens} onResolved={refetch} />
 
       {/* Rarity + verified filters */}
       {(view === 'crystal' || view === 'grid' || view === 'gallery') && (
@@ -106,7 +103,7 @@ export default function Collection() {
         to="/compare"
         className="mb-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amethyst/30 bg-amethyst/8 hover:bg-amethyst/15 text-amethyst-glow text-[11px] uppercase tracking-[0.25em] transition"
         >
-          <GitCompareArrows size={14} aria-hidden="true" />
+          <GitCompareArrows size={14} />
           Compare Specimens
         </Link>
       )}

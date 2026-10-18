@@ -127,12 +127,11 @@ export default function IntroCinematic({ onDone, initialName = '' }) {
   }, [step, audio, initialName]);
 
   const handleNameSubmit = useCallback(() => {
-    const trimmed = nameInput.trim().slice(0, 30) || 'Explorer';
+    const trimmed = nameInput.trim().slice(0, 30);
+    if (!trimmed) return;
     setName(trimmed);
     audio.playChime();
-    if (nameInput.trim()) {
-      base44.auth.updateMe({ full_name: trimmed }).catch(() => {});
-    }
+    base44.auth.updateMe({ full_name: trimmed }).catch(() => {});
     setStep(6); // → email step
   }, [nameInput, audio]);
 
@@ -172,7 +171,7 @@ export default function IntroCinematic({ onDone, initialName = '' }) {
   const scene = isStory ? SCENES[step - 1] : null;
   const showTapPrompt = isStory || isRole;
   const showDots = step >= 1 && step <= 8;
-  const showSkip = true;
+  const showSkip = step >= 1 && step <= 8;
   const dotIndex = step - 1;
   const bgStyle = scene ? scene.bg : isRole ? ROLE_BG : isName || isEmail || isChoice || isTutorial ? DEFAULT_BG : 'radial-gradient(ellipse at 50% 50%, hsl(250 40% 5%) 0%, hsl(240 30% 2%) 100%)';
 
@@ -366,7 +365,8 @@ export default function IntroCinematic({ onDone, initialName = '' }) {
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={handleNameSubmit}
-              className="w-full h-14 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2"
+              disabled={!nameInput.trim()}
+              className="w-full h-14 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 disabled:opacity-40"
               style={{
                 background: 'linear-gradient(135deg, hsla(280, 80%, 50%, 0.8), hsla(265, 70%, 40%, 0.9))',
                 boxShadow: '0 0 30px hsla(280, 80%, 50%, 0.3)',
