@@ -405,14 +405,14 @@ export default function LiquidMineralBadge({
                          : i % 4 === 2 ? scheme.crystal
                          : 'hsla(48,100%,80%,0.7)'; // gold sparkle
             return (
-              <div key={i} className="absolute rounded-full" style={{
+              <div key={i} className="absolute rounded-full" style={/** @type {any} */ ({
                 left: `${cx}%`, top: `${cy}%`,
                 width: ps, height: ps,
                 background: color,
                 boxShadow: `0 0 ${ps * 3.5}px ${color}`,
                 '--px': pxVal, '--py': pyVal,
                 animation: `lmb-particle ${dur}s ${delay}s ease-in-out infinite`,
-              }} />
+              })} />
             );
           })}
         </div>
