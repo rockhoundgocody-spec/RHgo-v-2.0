@@ -183,7 +183,14 @@ export function useSpeechSynthesis() {
       sourceRef.current = null;
       if (source) { source.onended = null; try { source.stop(); } catch {} source.disconnect(); }
       stopAmpLoop();
-      fallbackCleanupRef.current = _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent);
+      fallbackCleanupRef.current = _browserFallback(
+        text,
+        setSpeaking,
+        stopAmpLoop,
+        voiceConfig,
+        isCurrent,
+        { amplitudeRef, bassRef, midRef, trebleRef }
+      );
     }
   }, [startAmpLoop, stopAmpLoop, stop]);
 
@@ -213,18 +220,41 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
 }
 
-function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent) {
+function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent, refs = {}) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
   let started = false;
   let timer;
+  let prosodyRaf = null;
+  const stopProsody = () => {
+    if (prosodyRaf) { cancelAnimationFrame(prosodyRaf); prosodyRaf = null; }
+  };
+  const startProsody = () => {
+    stopProsody();
+    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const step = () => {
+      if (!isCurrent()) { stopProsody(); return; }
+      const elapsed = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) * 0.001;
+      const b = 0.28 + Math.abs(Math.sin(elapsed * 6.2)) * 0.38;
+      const m = 0.22 + Math.abs(Math.sin(elapsed * 9.5 + 0.9)) * 0.34;
+      const tr = 0.14 + Math.abs(Math.cos(elapsed * 13.1)) * 0.25;
+      if (refs.bassRef) refs.bassRef.current = b;
+      if (refs.midRef) refs.midRef.current = m;
+      if (refs.trebleRef) refs.trebleRef.current = tr;
+      if (refs.amplitudeRef) refs.amplitudeRef.current = b * 0.5 + m * 0.35 + tr * 0.15;
+      prosodyRaf = requestAnimationFrame(step);
+    };
+    prosodyRaf = requestAnimationFrame(step);
+  };
   const cleanup = () => {
     clearTimeout(timer);
+    stopProsody();
     window.speechSynthesis.removeEventListener('voiceschanged', _speak);
   };
   const _speak = () => {
     if (started || !isCurrent()) return;
     started = true;
-    cleanup();
+    clearTimeout(timer);
+    window.speechSynthesis.removeEventListener('voiceschanged', _speak);
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
     utter.rate     = voiceConfig.rate || 1.0;
@@ -233,12 +263,12 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
     const voices   = window.speechSynthesis.getVoices();
     // Use only an explicitly American device voice; never substitute a UK/Irish voice.
     const american = voices.filter((v) => /^en[-_]US$/i.test(v.lang) && !/british|irish|en[-_]GB|en[-_]IE/i.test(v.name));
-    const best = american.find((v) => /samantha|ava|zoe|allison|female/i.test(v.name)) || american[0];
-    if (!best) { setSpeaking(false); stopAmpLoop(); return; }
+    const best = american.find((v) => /samantha|ava|zoe|allison|aria|jenny|nicky|siri|google us english|natural|female/i.test(v.name)) || american[0];
+    if (!best) { setSpeaking(false); stopProsody(); stopAmpLoop(); return; }
     utter.voice = best;
-    utter.onstart  = () => { if (isCurrent()) setSpeaking(true); };
-    utter.onend    = () => { if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
-    utter.onerror  = (e) => { if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
+    utter.onstart  = () => { if (isCurrent()) { setSpeaking(true); startProsody(); } };
+    utter.onend    = () => { stopProsody(); if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
+    utter.onerror  = (e) => { stopProsody(); if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   };
@@ -274,11 +304,12 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   onResultRef.current  = onResult;
   onInterimRef.current = onInterim;
 
-  const recRef       = useRef(null);
-  const silenceTimer = useRef(null);
-  const deadRef      = useRef(false);
-  const gotFinalRef  = useRef(false);
-  const blockedRef   = useRef(false); // fatal error (mic denied) — stop restart loops
+  const recRef         = useRef(null);
+  const silenceTimer   = useRef(null);
+  const deadRef        = useRef(false);
+  const gotFinalRef    = useRef(false);
+  const lastInterimRef = useRef('');
+  const blockedRef     = useRef(false); // fatal error (mic denied) — stop restart loops
 
   const SR = typeof window !== 'undefined'
     ? (window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -305,8 +336,9 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const start = useCallback(() => {
     if (!SR || blockedRef.current) return;
     _killRec();
-    deadRef.current     = false;
-    gotFinalRef.current = false;
+    deadRef.current        = false;
+    gotFinalRef.current    = false;
+    lastInterimRef.current = '';
     setListening(true);
 
     const rec            = new SR();
@@ -337,7 +369,10 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
 
       if (interim || finalText) _resetSilenceTimer(rec);
 
-      if (interim && onInterimRef.current) onInterimRef.current(interim);
+      if (interim) {
+        lastInterimRef.current = interim;
+        if (onInterimRef.current) onInterimRef.current(interim);
+      }
 
       if (finalText) {
         const clean     = finalText.trim();
@@ -346,6 +381,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         const tooFew    = wordCount < MIN_WORD_COUNT;
         const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
 
+        lastInterimRef.current = '';
         onInterimRef.current?.('');
         gotFinalRef.current = true;
 
@@ -360,6 +396,19 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
     rec.onend = () => {
       _clearTimer();
       recRef.current = null;
+      // Flush buffered interim speech if the browser ended recognition before marking isFinal
+      if (!deadRef.current && !gotFinalRef.current && lastInterimRef.current) {
+        const buffered = lastInterimRef.current.trim();
+        lastInterimRef.current = '';
+        onInterimRef.current?.('');
+        if (buffered.length >= MIN_TRANSCRIPT_CHARS) {
+          gotFinalRef.current = true;
+          deadRef.current = true;
+          setListening(false);
+          onResultRef.current?.(buffered);
+          return;
+        }
+      }
       if (!deadRef.current) setListening(false);
     };
 

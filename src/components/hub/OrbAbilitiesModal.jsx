@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Compass, Zap, Star, Loader2, CheckCircle2 } from 'lucide-react';
+import { Sparkles, X, Compass, Zap, Star, Loader2, CheckCircle2, BrainCircuit, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLuckyMineralOfTheDay, playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
 import { fetchGeologyAt } from '@/lib/macrostrat';
+import { getRsiTelemetry, runRsiSelfReflection, recordRsiTurn } from '@/lib/cloverMemory';
 import { base44 } from '@/api/base44Client';
 
 export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
@@ -11,6 +13,8 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
   const [strataData, setStrataData] = useState(null);
   const [claimed, setClaimed] = useState(false);
   const [justClaimed, setJustClaimed] = useState(false);
+  const [rsiState, setRsiState] = useState(() => getRsiTelemetry());
+  const [optimizing, setOptimizing] = useState(false);
   const luckyMineral = getLuckyMineralOfTheDay();
 
   const todayKey = `rhgo_resonance_${luckyMineral.dateKey}`;
@@ -22,8 +26,25 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
 
     if (mode === 'radar') {
       loadStrata();
+      recordRsiTurn({ type: 'radar' });
+    }
+    if (mode === 'rsi') {
+      setRsiState(getRsiTelemetry());
     }
   }, [open, mode, todayKey]);
+
+  const handleRunRsiCycle = () => {
+    if (optimizing) return;
+    setOptimizing(true);
+    playOrbChime(741, 2.0);
+    triggerOrbHaptic('blessing');
+    setTimeout(() => {
+      const updated = runRsiSelfReflection();
+      setRsiState(updated);
+      setOptimizing(false);
+      onAction?.('rsi_evolved', updated);
+    }, 450);
+  };
 
   const loadStrata = async () => {
     setLoading(true);
@@ -89,12 +110,14 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
     onAction?.('blessing');
   };
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-[6500] flex items-end sm:items-center justify-center p-4 pb-safe"
+        role="dialog"
+        aria-modal="true"
+        className="fixed inset-0 z-[9500] flex items-end sm:items-center justify-center p-4 pb-safe"
         style={{
           background: 'hsla(250,50%,4%,0.82)',
           backdropFilter: 'blur(12px)',
@@ -257,8 +280,81 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
               </Button>
             </div>
           )}
+
+          {/* ── RSI AGENT AUTO-IMPROVEMENT CORE ── */}
+          {mode === 'rsi' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ background: 'hsla(275,85%,55%,0.22)', border: '1px solid hsla(280,90%,68%,0.45)' }}
+                >
+                  <BrainCircuit size={20} className="text-amethyst-glow" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white leading-tight">RSI Cognitive Core</h3>
+                  <p className="text-[11px] text-white/55">
+                    Gen {rsiState.rsiGeneration} · Calibration {Math.round((rsiState.calibrationScore || 0.88) * 100)}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Auto-Improving Skills List */}
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {(rsiState.autoSkills || []).map((skill) => {
+                  const pct = Math.min(100, Math.round(((skill.xp || 0) / (skill.xpToNext || 100)) * 100));
+                  return (
+                    <div
+                      key={skill.id}
+                      className="p-2.5 rounded-xl space-y-1.5"
+                      style={{ background: 'hsla(250,28%,13%,0.75)', border: '1px solid hsla(275,60%,55%,0.24)' }}
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white">{skill.title}</span>
+                        <span className="text-[10px] font-mono text-hud-cyan font-semibold">
+                          Lv.{skill.level} · {pct}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${pct}%`,
+                            background: 'linear-gradient(90deg, hsl(275 85% 65%), hsl(188 100% 70%))',
+                          }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-white/60 leading-snug">{skill.heuristic}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Latest Self-Reflection */}
+              {rsiState.reflections?.[0] && (
+                <div className="p-2.5 rounded-xl bg-black/30 border border-white/10 text-[10px] text-white/75 leading-relaxed">
+                  <span className="text-amethyst-glow font-bold uppercase tracking-wider">Active Reflection: </span>
+                  {rsiState.reflections[0]}
+                </div>
+              )}
+
+              <Button
+                onClick={handleRunRsiCycle}
+                disabled={optimizing}
+                className="w-full h-11 text-xs font-extrabold rounded-2xl text-slate-950 shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                style={{
+                  background: '#9FE8D0',
+                  boxShadow: '0 4px 24px rgba(159,232,208,0.35)',
+                }}
+              >
+                <RefreshCw size={14} className={optimizing ? 'animate-spin' : ''} />
+                {optimizing ? 'Synthesizing Heuristics…' : 'Run Self-Optimization Cycle'}
+              </Button>
+            </div>
+          )}
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

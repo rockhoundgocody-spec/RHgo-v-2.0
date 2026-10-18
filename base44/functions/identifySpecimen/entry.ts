@@ -5,7 +5,7 @@
  * Body: { image_url, lat?, lng?, save?, share_to_map?, prefilled_result?,
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
@@ -150,14 +150,14 @@ async function submitLocationForReview(
   return base44.asServiceRole.entities.LocationSubmission.create(data);
 }
 
-Deno.serve(async (req) => {
+export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json();
     const {
-      image_url, specimen_id, lat, lng,
+      image_url: raw_image_url, image_base64 = null, specimen_id, lat, lng,
       save = false, share_to_map = false, geo_privacy = 'private',
       prefilled_result = null,
       wet_dry = null,
@@ -167,6 +167,7 @@ Deno.serve(async (req) => {
       disposition = null,
       guest_device_id = null,
     } = body;
+    let image_url = raw_image_url;
 
     const isGuest = !user?.email;
     if (isGuest) {
@@ -210,6 +211,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (!image_url && typeof image_base64 === 'string' && image_base64.length > 0) {
+      const cleaned = image_base64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+      if (cleaned.length > 7_000_000) {
+        return Response.json({ error: 'Photo exceeds maximum upload size (5 MB)' }, { status: 413 });
+      }
+      const binary = atob(cleaned);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const file = new File([bytes], 'specimen.jpg', { type: 'image/jpeg' });
+      const uploaded = await base44.asServiceRole.integrations.Core.UploadPublicFile({ file });
+      image_url = uploaded?.file_url || null;
+    }
+
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
     if (!isValidImageUrl(image_url)) {
@@ -224,7 +238,9 @@ Deno.serve(async (req) => {
     const hasValidCoords = lat != null && lng != null && typeof lat !== 'boolean' && typeof lng !== 'boolean' && Number.isFinite(numLat) && Number.isFinite(numLng) && numLat >= -90 && numLat <= 90 && numLng >= -180 && numLng <= 180;
     if (hasValidCoords) {
       try {
-        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`);
+        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`, {
+          signal: AbortSignal.timeout(4000),
+        });
         if (geoRes.ok) {
           const geoJson = await geoRes.json();
           const units = geoJson?.success?.data || [];
@@ -303,7 +319,7 @@ Deno.serve(async (req) => {
     let identification = prefilled_result;
     const ranIdentification = !identification;
     if (!identification) {
-      identification = await base44.integrations.Core.InvokeLLM({
+      identification = await base44.asServiceRole.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
@@ -497,6 +513,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       identification,
+      uploaded_image_url: image_url,
       saved_specimen_id: savedSpecimen?.id || null,
       location_submission: locationSubmission,
       hotspot_contribution: null,
@@ -511,4 +528,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return safeError('identifySpecimen', error);
   }
-});
+}
