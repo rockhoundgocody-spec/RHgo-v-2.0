@@ -20,6 +20,8 @@ export default function StreakAtRiskCard({ companion }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
+      role="region"
+      aria-label="Streak warning"
       className="rounded-2xl p-4 relative overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, hsla(15,90%,28%,0.45), hsla(280,60%,18%,0.55))',
@@ -27,11 +29,11 @@ export default function StreakAtRiskCard({ companion }) {
         boxShadow: '0 0 32px -8px hsla(20,100%,50%,0.35)',
       }}
     >
-      <div className="absolute inset-0 pointer-events-none hub-shimmer-overlay" />
+      <div className="absolute inset-0 pointer-events-none hub-shimmer-overlay" aria-hidden="true" />
       <div className="relative flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full flex items-center justify-center"
+        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
           style={{ background: 'hsla(20,100%,50%,0.2)', border: '1px solid hsla(20,100%,60%,0.45)' }}>
-          <Flame size={20} className="text-orange-300" style={{ filter: 'drop-shadow(0 0 8px hsla(20,100%,60%,0.8))' }} />
+          <Flame size={20} className="text-orange-300" aria-hidden="true" style={{ filter: 'drop-shadow(0 0 8px hsla(20,100%,60%,0.8))' }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-orange-200 font-bold text-sm">{streak}-day streak at risk</div>
@@ -39,7 +41,8 @@ export default function StreakAtRiskCard({ companion }) {
         </div>
         <Link
           to="/companion"
-          className="shrink-0 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider"
+          aria-label={`Check in to save your ${streak}-day streak`}
+          className="shrink-0 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all active:scale-95 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
           style={{ background: '#9FE8D0', color: '#0a0a14' }}
         >
           Save it
