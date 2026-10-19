@@ -29,7 +29,7 @@ describe('ExploreEmptyState', () => {
     { id: 'h6', name: 'Medium Spot', lat: 37.9000, lng: -122.3000, state: 'CA', land_type: 'private' }, // ~12 mi
   ];
 
-  it('renders guidance cards when user location is missing', () => {
+  it('renders guidance cards when user location is missing with accessible button properties', () => {
     const onAction = vi.fn();
     const result = ExploreEmptyState({
       hotspots,
@@ -40,6 +40,16 @@ describe('ExploreEmptyState', () => {
 
     expect(result).toBeDefined();
     expect(result.props.children[0].props.children).toBe('Explore guide');
+
+    const buttonContainer = result.props.children[1];
+    const cardButtons = buttonContainer.props.children;
+    expect(cardButtons).toHaveLength(3);
+
+    cardButtons.forEach((btn) => {
+      expect(btn.props.type).toBe('button');
+      expect(btn.props['aria-label']).toBeDefined();
+      expect(btn.props.className).toContain('focus-visible:ring-2');
+    });
   });
 
   it('renders guidance cards when no hotspots are within 500 miles', () => {
@@ -74,10 +84,17 @@ describe('ExploreEmptyState', () => {
 
     // Verify button 1 is h2 (nearest ~0.5 mi)
     expect(buttons[0].key).toBe('h2');
+    expect(buttons[0].props.type).toBe('button');
+    expect(buttons[0].props['aria-label']).toContain('Close Spot 1');
+    expect(buttons[0].props.className).toContain('focus-visible:ring-2');
+
     // Verify button 2 is h3 (~2 mi)
     expect(buttons[1].key).toBe('h3');
+    expect(buttons[1].props.type).toBe('button');
+
     // Verify button 3 is h4 (~5 mi)
     expect(buttons[2].key).toBe('h4');
+    expect(buttons[2].props.type).toBe('button');
   });
 
   it('handles empty hotspots list gracefully', () => {
