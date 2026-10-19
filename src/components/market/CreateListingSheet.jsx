@@ -3,7 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gem, DollarSign, ArrowRightLeft, Check } from 'lucide-react';
+import { X, Gem, DollarSign, ArrowRightLeft, Check, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const RARITY_CFG = {
@@ -26,7 +26,15 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
   useEffect(() => {
     if (!open) return;
     base44.entities.Specimen.list('-found_date', 50).then(setSpecimens).catch(() => {});
-  }, [open]);
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (prefillSpecimen) setSelectedSpecimen(prefillSpecimen);
@@ -78,26 +86,28 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
 
             <div className="flex items-center justify-between px-5 pb-3">
               <h2 className="text-white font-black text-lg">List for Trade</h2>
-              <button onClick={onClose} aria-label="Close trade listing" className="w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" style={{ background: 'hsla(255,20%,20%,0.6)' }}>
-                <X size={16} className="text-white/50" />
+              <button type="button" onClick={onClose} aria-label="Close trade listing" className="w-8 h-8 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" style={{ background: 'hsla(255,20%,20%,0.6)' }}>
+                <X size={16} className="text-white/50" aria-hidden="true" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4">
               {/* Pick specimen */}
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-white/40 mb-2 block">Select Specimen</label>
+                <label id="specimen-select-label" className="text-[10px] uppercase tracking-wider text-white/40 mb-2 block">Select Specimen</label>
                 <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                   {specimens.map(s => {
                     const rc = RARITY_CFG[s.rarity] || RARITY_CFG.common;
                     const sel = selectedSpecimen?.id === s.id;
                     return (
-                      <button key={s.id} onClick={() => setSelectedSpecimen(s)}
-                        className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition"
+                      <button key={s.id} type="button" onClick={() => setSelectedSpecimen(s)}
+                        aria-pressed={sel}
+                        aria-label={`Select specimen ${s.mineral_name}`}
+                        className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
                         style={{ background: sel ? `${rc.color}22` : 'hsla(255,20%,12%,0.6)', border: `1px solid ${sel ? rc.color : 'hsla(255,20%,30%,0.2)'}`, minWidth: 72 }}>
                         {s.image_url
                           ? <img src={s.image_url} alt={s.mineral_name} className="w-12 h-12 rounded-lg object-cover" />
-                          : <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: `${rc.color}22` }}><Gem size={20} style={{ color: rc.color }} /></div>}
+                          : <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: `${rc.color}22` }}><Gem size={20} style={{ color: rc.color }} aria-hidden="true" /></div>}
                         <span className="text-[9px] text-white/70 truncate w-full text-center">{s.mineral_name}</span>
                       </button>
                     );
@@ -109,38 +119,38 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
                 <>
                   {/* Title */}
                   <div>
-                    <label className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Listing Title</label>
-                    <input value={title} onChange={e => setTitle(e.target.value)}
+                    <label htmlFor="listing-title-input" className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Listing Title</label>
+                    <input id="listing-title-input" value={title} onChange={e => setTitle(e.target.value)}
                       placeholder={selectedSpecimen.mineral_name}
-                      className="w-full px-4 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
                       style={{ background: 'hsla(255,20%,14%,0.8)', border: '1px solid hsla(270,20%,30%,0.3)' }} />
                   </div>
 
                   {/* Description */}
                   <div>
-                    <label className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Description</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)}
+                    <label htmlFor="listing-description-input" className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Description</label>
+                    <textarea id="listing-description-input" value={description} onChange={e => setDescription(e.target.value)}
                       rows={3} placeholder="Describe the specimen, find conditions, weight, size…"
-                      className="w-full px-4 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none resize-none"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none resize-none focus-visible:ring-2 focus-visible:ring-purple-400"
                       style={{ background: 'hsla(255,20%,14%,0.8)', border: '1px solid hsla(270,20%,30%,0.3)' }} />
                   </div>
 
                   {/* Pricing */}
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Asking Price (USD)</label>
+                      <label htmlFor="listing-price-input" className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 block">Asking Price (USD)</label>
                       <div className="relative">
-                        <DollarSign size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-                        <input type="number" value={askingPrice} onChange={e => setAskingPrice(e.target.value)}
-                          disabled={tradeOnly} placeholder="0.00"
-                          className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none"
+                        <DollarSign size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" aria-hidden="true" />
+                        <input id="listing-price-input" type="number" value={askingPrice} onChange={e => setAskingPrice(e.target.value)}
+                          disabled={tradeOnly} placeholder="0.00" title={tradeOnly ? 'Price disabled when trade only is enabled' : undefined}
+                          className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white/90 placeholder-white/25 outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
                           style={{ background: tradeOnly ? 'hsla(255,20%,10%,0.4)' : 'hsla(255,20%,14%,0.8)', border: '1px solid hsla(270,20%,30%,0.3)', opacity: tradeOnly ? 0.4 : 1 }} />
                       </div>
                     </div>
                     <div className="flex flex-col items-center justify-end gap-1">
-                      <label className="text-[10px] uppercase tracking-wider text-white/40">Trade only</label>
-                      <button onClick={() => setTradeOnly(t => !t)}
-                        className="w-12 h-7 rounded-full transition-all relative flex items-center"
+                      <label htmlFor="trade-only-toggle" id="trade-only-label" className="text-[10px] uppercase tracking-wider text-white/40">Trade only</label>
+                      <button id="trade-only-toggle" type="button" role="switch" aria-checked={tradeOnly} aria-labelledby="trade-only-label" onClick={() => setTradeOnly(t => !t)}
+                        className="w-12 h-7 rounded-full transition-all relative flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
                         style={{ background: tradeOnly ? 'hsla(195,80%,35%,0.5)' : 'hsla(255,20%,20%,0.5)', border: `1px solid ${tradeOnly ? 'hsla(195,90%,55%,0.4)' : 'hsla(255,20%,30%,0.2)'}` }}>
                         <div className="w-5 h-5 rounded-full transition-all absolute"
                           style={{ background: tradeOnly ? 'hsl(195,100%,70%)' : 'hsl(255,20%,50%)', left: tradeOnly ? '50%' : '4px' }} />
@@ -151,15 +161,15 @@ export default function CreateListingSheet({ open, onClose, onCreated, prefillSp
               )}
 
               {/* Submit */}
-              <button onClick={handleSubmit} disabled={!selectedSpecimen || saving || done}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]"
+              <button type="button" onClick={handleSubmit} disabled={!selectedSpecimen || saving || done}
+                className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:opacity-40"
                 style={{
                   background: done ? 'hsla(145,70%,30%,0.5)' : 'linear-gradient(135deg, hsla(270,60%,35%,0.6), hsla(195,70%,30%,0.5))',
                   border: `1px solid ${done ? 'hsla(145,80%,55%,0.4)' : 'hsla(270,60%,55%,0.35)'}`,
                   color: done ? 'hsl(145,80%,70%)' : 'hsl(270,100%,88%)',
                   opacity: !selectedSpecimen ? 0.4 : 1,
                 }}>
-                {done ? <><Check size={16} /> Listed!</> : saving ? 'Creating…' : <><ArrowRightLeft size={15} /> Post Listing</>}
+                {done ? <><Check size={16} aria-hidden="true" /> Listed!</> : saving ? <><Loader2 size={15} className="animate-spin" aria-hidden="true" /> Creating…</> : <><ArrowRightLeft size={15} aria-hidden="true" /> Post Listing</>}
               </button>
             </div>
           </motion.div>

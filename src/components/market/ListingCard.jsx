@@ -9,7 +9,7 @@ const RARITY_CFG = {
   legendary: { color: '#a78bfa', glow: 'hsla(270,80%,65%,0.5)',  label: 'Legendary' },
 };
 
-export default function ListingCard({ listing, index = 0, onTap }) {
+export default function ListingCard({ listing, index = 0, onTap = undefined }) {
   const rc = RARITY_CFG[listing.rarity] || RARITY_CFG.common;
   const title = listing.title || listing.mineral_name;
   const priceInfo = listing.trade_only
