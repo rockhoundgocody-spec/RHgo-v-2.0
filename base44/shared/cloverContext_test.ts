@@ -12,7 +12,7 @@ Deno.test('cloverContext: ignores malformed history and instruction roles', () =
 
 Deno.test('cloverContext: rejects invalid and coerced coordinates', () => {
   for (const value of [null, { lat: null, lng: null }, { lat: 91, lng: 0 }, { lat: '40', lng: 0 }, { lat: 0, lng: Infinity }]) {
-    assertEquals(validLocation(value as any), null);
+    assertEquals(validLocation(value as unknown), null);
   }
   assertEquals(validLocation({ lat: 0, lng: 0 }), { lat: 0, lng: 0 });
 });
