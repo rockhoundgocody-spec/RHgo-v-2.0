@@ -5,6 +5,9 @@ import {
   recordDiscoveryToMemory,
   getCognitiveMemoryContext,
   clearCloverMemoryForTest,
+  getRsiTelemetry,
+  recordRsiTurn,
+  runRsiSelfReflection,
 } from './cloverMemory';
 
 describe('cloverMemory', () => {
@@ -34,5 +37,17 @@ describe('cloverMemory', () => {
     const ctx = getCognitiveMemoryContext();
     expect(ctx).toContain('Yooperlite');
     expect(ctx).toContain('Cognitive Memory');
+    expect(ctx).toContain('RSI Gen');
+  });
+
+  it('evolves RSI generation and auto-skills through self-reflection cycles', () => {
+    recordRsiTurn({ type: 'voice' });
+    const before = getRsiTelemetry();
+    expect(before.totalVoiceTurns).toBe(1);
+    expect(before.autoSkills.length).toBeGreaterThanOrEqual(5);
+
+    const after = runRsiSelfReflection();
+    expect(after.rsiGeneration).toBeGreaterThan(before.rsiGeneration);
+    expect(after.latestReflection).toBeTruthy();
   });
 });

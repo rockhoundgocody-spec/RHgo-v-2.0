@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import { voiceErrorMessage } from '@/lib/voiceErrors';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
@@ -183,7 +184,14 @@ export function useSpeechSynthesis() {
       sourceRef.current = null;
       if (source) { source.onended = null; try { source.stop(); } catch {} source.disconnect(); }
       stopAmpLoop();
-      fallbackCleanupRef.current = _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent);
+      fallbackCleanupRef.current = _browserFallback(
+        text,
+        setSpeaking,
+        stopAmpLoop,
+        voiceConfig,
+        isCurrent,
+        { amplitudeRef, bassRef, midRef, trebleRef }
+      );
     }
   }, [startAmpLoop, stopAmpLoop, stop]);
 
@@ -213,18 +221,41 @@ export function useSpeechSynthesis() {
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
 }
 
-function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent) {
+function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent, refs = {}) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
   let started = false;
   let timer;
+  let prosodyRaf = null;
+  const stopProsody = () => {
+    if (prosodyRaf) { cancelAnimationFrame(prosodyRaf); prosodyRaf = null; }
+  };
+  const startProsody = () => {
+    stopProsody();
+    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const step = () => {
+      if (!isCurrent()) { stopProsody(); return; }
+      const elapsed = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) * 0.001;
+      const b = 0.28 + Math.abs(Math.sin(elapsed * 6.2)) * 0.38;
+      const m = 0.22 + Math.abs(Math.sin(elapsed * 9.5 + 0.9)) * 0.34;
+      const tr = 0.14 + Math.abs(Math.cos(elapsed * 13.1)) * 0.25;
+      if (refs.bassRef) refs.bassRef.current = b;
+      if (refs.midRef) refs.midRef.current = m;
+      if (refs.trebleRef) refs.trebleRef.current = tr;
+      if (refs.amplitudeRef) refs.amplitudeRef.current = b * 0.5 + m * 0.35 + tr * 0.15;
+      prosodyRaf = requestAnimationFrame(step);
+    };
+    prosodyRaf = requestAnimationFrame(step);
+  };
   const cleanup = () => {
     clearTimeout(timer);
+    stopProsody();
     window.speechSynthesis.removeEventListener('voiceschanged', _speak);
   };
   const _speak = () => {
     if (started || !isCurrent()) return;
     started = true;
-    cleanup();
+    clearTimeout(timer);
+    window.speechSynthesis.removeEventListener('voiceschanged', _speak);
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
     utter.rate     = voiceConfig.rate || 1.0;
@@ -233,12 +264,12 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
     const voices   = window.speechSynthesis.getVoices();
     // Use only an explicitly American device voice; never substitute a UK/Irish voice.
     const american = voices.filter((v) => /^en[-_]US$/i.test(v.lang) && !/british|irish|en[-_]GB|en[-_]IE/i.test(v.name));
-    const best = american.find((v) => /samantha|ava|zoe|allison|female/i.test(v.name)) || american[0];
-    if (!best) { setSpeaking(false); stopAmpLoop(); return; }
+    const best = american.find((v) => /samantha|ava|zoe|allison|aria|jenny|nicky|siri|google us english|natural|female/i.test(v.name)) || american[0];
+    if (!best) { setSpeaking(false); stopProsody(); stopAmpLoop(); return; }
     utter.voice = best;
-    utter.onstart  = () => { if (isCurrent()) setSpeaking(true); };
-    utter.onend    = () => { if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
-    utter.onerror  = (e) => { if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
+    utter.onstart  = () => { if (isCurrent()) { setSpeaking(true); startProsody(); } };
+    utter.onend    = () => { stopProsody(); if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
+    utter.onerror  = (e) => { stopProsody(); if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   };
@@ -264,133 +295,61 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIDENCE_THRESHOLD = 0.12;
 const MIN_TRANSCRIPT_CHARS = 2;
-const MIN_WORD_COUNT       = 1;
 const SILENCE_TIMEOUT_MS   = 2800;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
-  const onResultRef  = useRef(onResult);
-  const onInterimRef = useRef(onInterim);
-  onResultRef.current  = onResult;
-  onInterimRef.current = onInterim;
-
-  const recRef       = useRef(null);
-  const silenceTimer = useRef(null);
-  const deadRef      = useRef(false);
-  const gotFinalRef  = useRef(false);
-  const blockedRef   = useRef(false); // fatal error (mic denied) — stop restart loops
-
-  const SR = typeof window !== 'undefined'
-    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-    : null;
-  const supported = !!SR;
-
-  const _clearTimer = () => { clearTimeout(silenceTimer.current); silenceTimer.current = null; };
-
-  const _resetSilenceTimer = useCallback((rec) => {
-    _clearTimer();
-    silenceTimer.current = setTimeout(() => {
-      try { rec?.stop(); } catch {}
-    }, SILENCE_TIMEOUT_MS);
+  const [error, setError] = useState('');
+  const callbacks = useRef({ onResult, onInterim });
+  callbacks.current = { onResult, onInterim };
+  const recRef = useRef(null);
+  const timerRef = useRef(null);
+  const SR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+  const discard = useCallback(() => {
+    clearTimeout(timerRef.current);
+    const rec = recRef.current; recRef.current = null;
+    if (rec) { rec.onresult = rec.onend = rec.onerror = null; try { rec.abort(); } catch {} }
   }, []);
-
-  const _killRec = useCallback(() => {
-    _clearTimer();
-    if (recRef.current) {
-      try { recRef.current.abort(); } catch {}
-      recRef.current = null;
-    }
-  }, []);
-
-  const start = useCallback(() => {
-    if (!SR || blockedRef.current) return;
-    _killRec();
-    deadRef.current     = false;
-    gotFinalRef.current = false;
-    setListening(true);
-
-    const rec            = new SR();
-    rec.continuous       = true;
-    rec.interimResults   = true;
-    rec.maxAlternatives  = 3;
-    rec.lang             = 'en-US';
-    recRef.current       = rec;
-
-    rec.onresult = (e) => {
-      let interim   = '';
-      let finalText = '';
-      let finalConf = 1;
-
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i];
-        let best = r[0];
-        for (let a = 1; a < r.length; a++) {
-          if ((r[a].confidence || 0) > (best.confidence || 0)) best = r[a];
-        }
-        if (r.isFinal) {
-          finalText += best.transcript;
-          finalConf  = Math.min(finalConf, best.confidence ?? 0);
-        } else {
-          interim += best.transcript;
-        }
-      }
-
-      if (interim || finalText) _resetSilenceTimer(rec);
-
-      if (interim && onInterimRef.current) onInterimRef.current(interim);
-
-      if (finalText) {
-        const clean     = finalText.trim();
-        const wordCount = clean.split(/\s+/).filter(Boolean).length;
-        const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
-        const tooFew    = wordCount < MIN_WORD_COUNT;
-        const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
-
-        onInterimRef.current?.('');
-        gotFinalRef.current = true;
-
-        if (!tooShort && !tooFew && !isNoise) {
-          deadRef.current = true;
-          try { rec.stop(); } catch {}
-          onResultRef.current?.(clean);
-        }
-      }
-    };
-
-    rec.onend = () => {
-      _clearTimer();
-      recRef.current = null;
-      if (!deadRef.current) setListening(false);
-    };
-
-    rec.onerror = (e) => {
-      _clearTimer();
-      recRef.current = null;
-      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
-        blockedRef.current = true; // permission/device failure — don't auto-restart
-      }
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        setListening(false);
-      }
-    };
-
-    try {
-      rec.start();
-      // Initial silence timer — resets on any speech activity
-      _resetSilenceTimer(rec);
-    } catch {
-      setListening(false);
-      recRef.current = null;
-    }
-  }, [SR, _killRec, _resetSilenceTimer]);
-
   const stop = useCallback(() => {
-    deadRef.current = true;
-    _killRec();
-    setListening(false);
-  }, [_killRec]);
-
-  useEffect(() => () => { deadRef.current = true; _killRec(); }, [_killRec]);
-
-  return { start, stop, listening, supported };
+    discard(); setListening(false); callbacks.current.onInterim?.('');
+  }, [discard]);
+  const start = useCallback(() => {
+    discard(); setError('');
+    if (!SR) { setError('Voice input is unavailable in this browser.'); return; }
+    const rec = new SR(); recRef.current = rec;
+    rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3; rec.lang = 'en-US';
+    let interim = '', delivered = false;
+    const current = () => recRef.current === rec;
+    const finish = () => { clearTimeout(timerRef.current); recRef.current = null; setListening(false); callbacks.current.onInterim?.(''); };
+    const resetTimer = () => { clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (current()) rec.stop(); }, SILENCE_TIMEOUT_MS); };
+    rec.onresult = e => {
+      if (!current() || delivered) return;
+      let finalText = '', confidence = 1; interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const result = e.results[i];
+        const best = Array.from(result).reduce((a, b) => (b.confidence || 0) > (a.confidence || 0) ? b : a, result[0]);
+        if (result.isFinal) { finalText += ` ${best.transcript}`; confidence = Math.min(confidence, best.confidence ?? 0); }
+        else interim += ` ${best.transcript}`;
+      }
+      if (interim || finalText) resetTimer();
+      callbacks.current.onInterim?.(interim.trim());
+      const clean = finalText.trim();
+      if (clean.length < MIN_TRANSCRIPT_CHARS || (confidence > 0 && confidence < CONFIDENCE_THRESHOLD && clean.length < 8)) return;
+      delivered = true; finish(); rec.stop(); callbacks.current.onResult?.(clean);
+    };
+    rec.onend = () => {
+      if (!current()) return;
+      const buffered = interim.trim(); finish();
+      if (!delivered && buffered.length >= MIN_TRANSCRIPT_CHARS) { delivered = true; callbacks.current.onResult?.(buffered); }
+    };
+    rec.onerror = e => {
+      if (!current()) return;
+      finish();
+      if (!['no-speech', 'aborted'].includes(e.error)) setError(voiceErrorMessage(e.error));
+    };
+    try { setListening(true); rec.start(); resetTimer(); }
+    catch (e) { finish(); setError(voiceErrorMessage(e?.name)); }
+  }, [SR, discard]);
+  useEffect(() => discard, [discard]);
+  return { start, stop, listening, supported: !!SR, error };
 }

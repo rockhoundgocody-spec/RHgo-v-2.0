@@ -19,8 +19,10 @@ export default function useBargeIn(onBargeIn) {
   const ctxRef = useRef(null);
   const rafRef = useRef(null);
   const runningRef = useRef(false);
+  const generation = useRef(0);
 
   const stop = useCallback(() => {
+    generation.current += 1;
     runningRef.current = false;
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     if (streamRef.current) {
@@ -38,6 +40,7 @@ export default function useBargeIn(onBargeIn) {
     if (runningRef.current) return;
     if (!navigator.mediaDevices?.getUserMedia) return;
     runningRef.current = true;
+    const token = ++generation.current;
 
     let stream;
     try {
@@ -45,16 +48,18 @@ export default function useBargeIn(onBargeIn) {
         audio: { echoCancellation: true, noiseSuppression: true },
       });
     } catch {
-      runningRef.current = false;
+      if (token === generation.current) runningRef.current = false;
       return;
     }
-    if (!runningRef.current) {
+    if (token !== generation.current || !runningRef.current) {
       stream.getTracks().forEach((t) => t.stop());
       return;
     }
     streamRef.current = stream;
 
     const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) { stop(); return; }
+    try {
     const ctx = new Ctx();
     ctxRef.current = ctx;
     const analyser = ctx.createAnalyser();
@@ -86,6 +91,7 @@ export default function useBargeIn(onBargeIn) {
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
+    } catch { stop(); }
   }, [stop]);
 
   useEffect(() => () => stop(), [stop]);

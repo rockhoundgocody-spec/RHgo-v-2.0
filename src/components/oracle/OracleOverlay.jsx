@@ -3,7 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { X, Send, Mic, Volume2, VolumeX, Loader2, Radio, Gem } from 'lucide-react';
 import VoiceStateHUD from './VoiceStateHUD.jsx';
 import { useOracle } from './OracleContext.jsx';
-import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
+import { useSpeechSynthesis } from './useSpeech';
+import useVoiceInput from './useVoiceInput';
 const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import { detectLogIntent, getCurrentCoordinates } from './oracleActions';
 
@@ -27,7 +28,7 @@ export default function OracleOverlay() {
   const liveModeRef = useRef(false);
   liveModeRef.current = liveMode;
 
-  const { speak, stop: stopSpeak, speaking, getAmplitude } = useSpeechSynthesis();
+  const { speak, stop: stopSpeak, speaking, getAmplitude, unlock } = useSpeechSynthesis();
   const handleDictation = useCallback(async (transcript) => {
     setThinking(true);
     let summary;
@@ -58,6 +59,7 @@ export default function OracleOverlay() {
   const sendMessage = useCallback(async (textOverride) => {
     const text = (textOverride ?? input).trim();
     if (!text || thinking) return;
+    unlock?.();
     const next = [...messages, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
@@ -103,7 +105,7 @@ export default function OracleOverlay() {
   }, [sendMessage]);
   const handleInterim = useCallback((partial) => setInput(partial), []);
   const { start: startListen, stop: stopListen, listening, supported: micSupported } =
-    useSpeechRecognition({ onResult: handleVoiceResult, onInterim: handleInterim });
+    useVoiceInput({ onResult: handleVoiceResult, onInterim: handleInterim });
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

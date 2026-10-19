@@ -10,8 +10,9 @@ import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
 import useCloverConversation from './useCloverConversation.js';
 import { playOrbChime, playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
-import { Zap } from 'lucide-react';
+import { Zap, Compass, BrainCircuit } from 'lucide-react';
 import { on } from '@/lib/cloverWake';
+import { getRsiTelemetry } from '@/lib/cloverMemory';
 
 const OPENERS = [
   "Here, hound. What are we checking?",
@@ -40,6 +41,7 @@ export default function HeroOrb({ companion, size = 148 }) {
 
   const luckyMineral = getLuckyMineralOfTheDay();
   const isResonanceClaimed = typeof window !== 'undefined' && localStorage.getItem(`rhgo_resonance_${luckyMineral.dateKey}`) === '1';
+  const [rsiGen, setRsiGen] = useState(() => getRsiTelemetry().rsiGeneration);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -138,17 +140,21 @@ export default function HeroOrb({ companion, size = 148 }) {
               messages={clover.messages}
               interim={clover.interim}
               onClose={clover.end}
-              onHunt={() => {}}
-              huntLoading={false}
+              onHunt={clover.requestHuntSuggestions}
+              huntLoading={clover.huntLoading}
+              suggestions={clover.huntSuggestions}
+              onDismissSuggestions={clover.dismissHuntSuggestions}
               voiceSupported={clover.voiceSupported}
+              voiceError={clover.voiceError}
               onSend={clover.send}
               onListen={clover.nudge}
             />
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           <button
+            type="button"
             onClick={() => {
               playOrbChime(639, 2.0);
               triggerOrbHaptic('pulse');
@@ -169,17 +175,69 @@ export default function HeroOrb({ companion, size = 148 }) {
             <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
             <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Challenge'}</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playOrbChime(528, 1.5);
+              triggerOrbHaptic('tap');
+              setCustomOrbState('radar');
+              setAbilitiesModal('radar');
+            }}
+            className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+            style={{
+              background: 'hsla(195,90%,22%,0.35)',
+              border: '1px solid hsla(195,95%,60%,0.45)',
+              color: 'hsl(190,95%,82%)',
+            }}
+            title="Lithosphere Strata Radar"
+          >
+            <Compass size={12} className="text-hud-cyan" />
+            <span>Strata Radar</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playOrbChime(741, 1.6);
+              triggerOrbHaptic('pulse');
+              setRsiGen(getRsiTelemetry().rsiGeneration);
+              setAbilitiesModal('rsi');
+            }}
+            className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+            style={{
+              background: 'hsla(275,75%,26%,0.4)',
+              border: '1px solid hsla(280,85%,68%,0.48)',
+              color: 'hsl(280,95%,88%)',
+            }}
+            title="RSI Agent Auto-Improvement Core"
+          >
+            <BrainCircuit size={12} className="text-amethyst-glow" />
+            <span>RSI Gen {rsiGen}</span>
+          </button>
         </div>
       </div>
 
       <OrbAbilitiesModal
         open={!!abilitiesModal}
         mode={abilitiesModal}
-        onClose={() => setAbilitiesModal(null)}
-        onAction={(action) => {
+        onClose={() => {
+          setAbilitiesModal(null);
+          setCustomOrbState(null);
+          setRsiGen(getRsiTelemetry().rsiGeneration);
+        }}
+        onAction={(action, payload) => {
           if (action === 'blessing') {
             setCustomOrbState('blessing');
             setTimeout(() => setCustomOrbState((s) => s === 'blessing' ? null : s), 4500);
+          } else if (action === 'rsi_evolved') {
+            setRsiGen(payload?.rsiGeneration || getRsiTelemetry().rsiGeneration);
+            setCustomOrbState('blessing');
+            setTimeout(() => setCustomOrbState((s) => s === 'blessing' ? null : s), 3000);
+            if (payload?.latestReflection) {
+              clover.unlock?.();
+              clover.start(payload.latestReflection);
+            }
           }
         }}
       />

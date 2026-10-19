@@ -71,6 +71,38 @@ describe('HotspotProximityWatcher utilities', () => {
     });
   });
 
+  describe('HotspotProximityBanner Component', () => {
+    it('renders with type="button" on action buttons and descriptive aria-label on dismiss button', async () => {
+      const { renderToStaticMarkup } = await import('react-dom/server');
+      const React = await import('react');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { HotspotProximityBanner } = await import('./HotspotProximityWatcher.jsx');
+
+      const mockNearby = {
+        distance_m: 500,
+        hotspot: { id: 'hs-1', name: 'Crystal Ridge' },
+      };
+
+      const html = renderToStaticMarkup(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(HotspotProximityBanner, {
+            nearby: mockNearby,
+            permission: 'default',
+            requestPermission: () => {},
+            onDismiss: () => {},
+            hotspotId: 'hs-1',
+          })
+        )
+      );
+
+      expect(html).toContain('type="button"');
+      expect(html).toContain('aria-label="Dismiss hotspot notification"');
+      expect(html).toContain('Enable push notifications');
+    });
+  });
+
   describe('formatDistance', () => {
     it('converts meters to miles and kilometers formatted to 1 decimal place', () => {
       const { distMiles, distKm } = formatDistance(1609.34);

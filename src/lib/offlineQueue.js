@@ -175,6 +175,9 @@ export async function saveQueue(items) {
     throw new Error('Device storage is full or blocked. This find was not saved; existing pending finds are intact.');
   }
   cachedQueue = structuredClone(items);
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('rhgo:offline-queue-changed'));
+  }
 }
 
 let flushing = false;
@@ -199,7 +202,7 @@ export function flushQueue() {
           if (next.op === 'create') {
             await entity.create(next.data);
           } else {
-            if (next.baseUpdatedDate && await changedSince(entity, next.id, next.baseUpdatedDate)) {
+            if (next.baseUpdatedDate && await changedSince(entity, next.id, next.baseUpdatedDate, next.baseSnapshot, next.data)) {
               throw Object.assign(new Error('Changed on another device'), { status: 409 });
             }
             await entity.update(next.id, next.data);
@@ -210,6 +213,7 @@ export function flushQueue() {
           queue[index] = {
             ...next,
             attempts: (next.attempts || 0) + 1,
+            conflict: status === 409 ? true : Boolean(next.conflict),
             lastError: status === 409 ? 'Changed on another device — not overwritten' : status ? `Sync failed (${status})` : 'Sync did not finish',
           };
           await saveQueue(queue);
@@ -227,14 +231,26 @@ export function flushQueue() {
   });
 }
 
-/** True when the stored record was edited after the version the queued update was based on. */
-async function changedSince(entity, id, baseUpdatedDate) {
+/** True when the stored record was edited on a conflicting field after the version the queued update was based on. */
+async function changedSince(entity, id, baseUpdatedDate, baseSnapshot, patchData) {
   const rows = await entity.filter({ id }, '-updated_date', 1);
   const current = rows?.[0];
   if (!current) throw Object.assign(new Error('Record no longer exists'), { status: 404 });
   const remote = Date.parse(current.updated_date);
   const base = Date.parse(baseUpdatedDate);
-  return Number.isFinite(remote) && Number.isFinite(base) && remote > base;
+  if (!(Number.isFinite(remote) && Number.isFinite(base) && remote > base)) {
+    return false;
+  }
+  // If we have a base snapshot of the record before offline editing and none of the
+  // patched keys were altered on the remote server, the two edits touched disjoint fields.
+  if (baseSnapshot && patchData && typeof baseSnapshot === 'object' && typeof patchData === 'object') {
+    const keys = Object.keys(patchData);
+    const disjoint = keys.length > 0 && keys.every(
+      (k) => JSON.stringify(current[k]) === JSON.stringify(baseSnapshot[k])
+    );
+    if (disjoint) return false;
+  }
+  return true;
 }
 
 /**
@@ -245,7 +261,7 @@ async function changedSince(entity, id, baseUpdatedDate) {
  * started editing). A queued update is then never replayed over a newer edit
  * made on another device; it stays in the queue flagged as a conflict.
  */
-export async function queueWrite({ entity, op = "create", id, data, ownerId, baseUpdatedDate }) {
+export async function queueWrite({ entity, op = "create", id, data, ownerId, baseUpdatedDate, baseSnapshot }) {
   if (!ownerId) throw new Error('Sign in before saving a private offline find.');
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
 
@@ -264,11 +280,58 @@ export async function queueWrite({ entity, op = "create", id, data, ownerId, bas
 
   await serializeQueue(async () => {
     const queue = await loadQueue();
-    queue.push({ entity, op, id, data, ownerId, queuedAt: Date.now(), ...(op === 'update' && baseUpdatedDate ? { baseUpdatedDate } : {}) });
+    const resolvedBaseDate = op === 'update' ? (baseUpdatedDate || new Date().toISOString()) : undefined;
+    queue.push({
+      entity,
+      op,
+      id,
+      data,
+      ownerId,
+      queuedAt: Date.now(),
+      ...(resolvedBaseDate ? { baseUpdatedDate: resolvedBaseDate } : {}),
+      ...(op === 'update' && baseSnapshot ? { baseSnapshot } : {}),
+    });
     await saveQueue(queue);
   });
   if (typeof window !== "undefined") schedulePeriodicRetry();
   return { ok: true, offline: true };
+}
+
+/**
+ * Returns all queued items currently flagged with a 409 conflict.
+ */
+export async function getQueuedConflicts(ownerId) {
+  const queue = await loadQueue().catch(() => []);
+  return queue.filter((item) => (ownerId ? item.ownerId === ownerId : true) && (item.conflict || /Changed on another device/i.test(item.lastError || '')));
+}
+
+/**
+ * Resolves a conflicted offline update:
+ * - 'keep_remote': drops the local queued update and keeps the server version
+ * - 'keep_local': forces the local update to apply over the current server version
+ */
+export async function resolveQueuedConflict(recordId, strategy = 'keep_remote') {
+  return serializeQueue(async () => {
+    const queue = await loadQueue();
+    const idx = queue.findIndex((item) => item.id === recordId && item.op === 'update');
+    if (idx === -1) return { resolved: false };
+    const target = queue[idx];
+    if (strategy === 'keep_remote') {
+      queue.splice(idx, 1);
+      await saveQueue(queue);
+      return { resolved: true, strategy: 'keep_remote' };
+    }
+    if (strategy === 'keep_local') {
+      const entity = base44.entities[target.entity];
+      if (entity) {
+        await entity.update(target.id, target.data);
+      }
+      queue.splice(idx, 1);
+      await saveQueue(queue);
+      return { resolved: true, strategy: 'keep_local' };
+    }
+    return { resolved: false };
+  });
 }
 
 export function getQueueLength(ownerId) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import { Cookie, X } from 'lucide-react';
 import { hasConsentChoice, setConsentGranted, setConsentDeclined, subscribe } from '@/lib/cookieConsent';
 import { enableAnalytics } from '@/lib/analytics';
@@ -11,6 +12,7 @@ import { enableAnalytics } from '@/lib/analytics';
  * The choice persists in localStorage so the banner never reappears.
  */
 export default function CookieConsentBanner() {
+  const { pathname } = useLocation();
   const [show, setShow] = useState(!hasConsentChoice());
 
   useEffect(() => {
@@ -27,14 +29,15 @@ export default function CookieConsentBanner() {
     setConsentDeclined();
   };
 
-  if (!show) return null;
+  const isFullscreenScan = pathname.startsWith('/scan');
+  if (!show || isFullscreenScan) return null;
 
   // Escape #root's isolated stacking context, just like the bottom navigation.
   return createPortal(
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-[calc(116px+env(safe-area-inset-bottom,0px))] min-[900px]:bottom-3 left-0 right-0 z-[9999] flex justify-center px-3 pointer-events-none"
+      className="fixed bottom-[calc(116px+env(safe-area-inset-bottom,0px))] min-[900px]:bottom-3 left-0 right-0 z-[5000] flex justify-center px-3 pointer-events-none"
     >
       <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-[rgba(159,232,208,0.22)] bg-[rgba(17,16,25,0.96)] backdrop-blur-xl shadow-2xl p-4">
         <div className="flex items-start gap-3">

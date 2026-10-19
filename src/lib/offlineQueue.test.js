@@ -28,6 +28,8 @@ import {
   flushQueue,
   getQueueLength,
   installOfflineQueue,
+  getQueuedConflicts,
+  resolveQueuedConflict,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
@@ -192,6 +194,29 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(result).toEqual({ flushed: 0, remaining: 1 });
     expect(base44.entities.Specimen.update).not.toHaveBeenCalled();
     expect((await loadQueue())[0].lastError).toMatch('Changed on another device');
+    const conflicts = await getQueuedConflicts('owner-1');
+    expect(conflicts).toHaveLength(1);
+    const resolved = await resolveQueuedConflict('s1', 'keep_remote');
+    expect(resolved.resolved).toBe(true);
+    expect(await loadQueue()).toHaveLength(0);
+  });
+
+  it('merges disjoint-field updates when baseSnapshot shows remote did not touch the edited field', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([
+      { id: 's2', updated_date: '2026-10-09T12:00:00Z', notes: 'original', rarity: 'rare' },
+    ]);
+    base44.entities.Specimen.update.mockResolvedValue({ id: 's2' });
+    await saveQueue([{
+      entity: 'Specimen',
+      op: 'update',
+      id: 's2',
+      ownerId: 'owner-1',
+      data: { notes: 'added field note' },
+      baseUpdatedDate: '2026-10-09T10:00:00Z',
+      baseSnapshot: { notes: 'original', rarity: 'common' },
+    }]);
+    expect(await flushQueue()).toEqual({ flushed: 1, remaining: 0 });
+    expect(base44.entities.Specimen.update).toHaveBeenCalledWith('s2', { notes: 'added field note' });
   });
 
   it('replays a queued edit when the record has not changed since', async () => {

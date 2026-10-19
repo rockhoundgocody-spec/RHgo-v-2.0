@@ -3,6 +3,7 @@
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
+import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -29,6 +30,10 @@ Deno.serve(async (req) => {
 
     if (!user_label || typeof user_label !== 'string') {
       return Response.json({ error: 'user_label is required' }, { status: 400 });
+    }
+
+    if (image_url && !isValidImageUrl(image_url)) {
+      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
     }
 
     // Users can't create/update candidates directly; only admins may accept them.
