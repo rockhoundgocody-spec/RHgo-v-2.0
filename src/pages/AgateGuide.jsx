@@ -11,6 +11,7 @@ import {
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { agateImage } from '@/lib/agateImages';
+import { isValidExternalUrl } from '@/lib/urlValidation';
 
 const RARITY_STYLES = {
   common:    { color: '#94a3b8', bg: 'hsla(210,20%,30%,0.3)',  label: 'Common' },
@@ -340,19 +341,26 @@ export default function AgateGuide() {
 // Wikimedia Commons licenses (CC BY / BY-SA) require crediting the photographer.
 function PhotoCredit({ img }) {
   if (!img) return null;
+  const hasValidPage = isValidExternalUrl(img.page);
+  const hasValidLicense = isValidExternalUrl(img.licenseUrl);
+
   return (
     <p className="mt-4 text-[10px] leading-relaxed text-white/35">
       Photo: {img.artist || 'Unknown'}
       {img.license ? (
         <>
           {', '}
-          {img.licenseUrl ? (
+          {hasValidLicense ? (
             <a href={img.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">{img.license}</a>
           ) : img.license}
         </>
       ) : null}
       {', via '}
-      <a href={img.page} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Wikimedia Commons</a>
+      {hasValidPage ? (
+        <a href={img.page} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Wikimedia Commons</a>
+      ) : (
+        <span>Wikimedia Commons</span>
+      )}
       {' (resized)'}
     </p>
   );
