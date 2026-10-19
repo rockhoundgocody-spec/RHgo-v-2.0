@@ -75,7 +75,7 @@ export default function ScanResultSheet({
                 className="w-8 h-8 rounded-full flex items-center justify-center absolute right-4 top-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 style={{ background: 'hsla(0,0%,100%,0.06)' }}
               >
-                <X size={16} className="text-white/50" />
+                <X size={16} className="text-white/50" aria-hidden="true" />
               </button>
             </div>
 
