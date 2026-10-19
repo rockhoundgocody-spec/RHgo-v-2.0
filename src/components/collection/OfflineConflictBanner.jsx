@@ -193,7 +193,7 @@ export default function OfflineConflictBanner({ specimens = [], onResolved }) {
                   }}
                 >
                   {busyLocal ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                   ) : (
                     <Smartphone size={14} aria-hidden="true" />
                   )}
@@ -210,7 +210,7 @@ export default function OfflineConflictBanner({ specimens = [], onResolved }) {
                   }}
                 >
                   {busyRemote ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                   ) : (
                     <CloudDownload size={14} aria-hidden="true" />
                   )}
