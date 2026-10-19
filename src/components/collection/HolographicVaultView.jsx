@@ -80,7 +80,7 @@ export default function HolographicVaultView({ specimens = [] }) {
               />
             ) : (
               <div className="w-full h-full bg-black/40 flex items-center justify-center">
-                <Gem size={48} className="text-amethyst-glow/50" />
+                <Gem size={48} className="text-amethyst-glow/50" aria-hidden="true" />
               </div>
             )}
             {/* Holographic scanner line */}
@@ -133,7 +133,7 @@ export default function HolographicVaultView({ specimens = [] }) {
           <div className="mt-4">
             <Link to={`/specimen/${current.id}`}>
               <Button className="w-full h-11 text-xs font-extrabold rounded-xl text-white bg-gradient-to-r from-amethyst to-purple-800 hover:from-amethyst-glow transition flex items-center justify-center gap-1.5">
-                Inspect Specimen Dossier <ArrowRight size={14} />
+                Inspect Specimen Dossier <ArrowRight size={14} aria-hidden="true" />
               </Button>
             </Link>
           </div>
