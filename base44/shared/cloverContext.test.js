@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'npm:vitest@4.1.9';
+import { describe, expect, it } from 'npm:vitest@^4.1.9';
 import { contextQuestion, explicitSaveRequest, normalizeHistory, recordSearch, validLocation } from './cloverContext.ts';
 
 describe('Clover context boundaries', () => {
