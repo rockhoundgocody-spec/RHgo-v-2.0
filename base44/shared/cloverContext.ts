@@ -1,33 +1,33 @@
 import { tokenize } from './cloverVault.ts';
 
-export function normalizeHistory(history) {
+export function normalizeHistory(history: any) {
   if (!Array.isArray(history)) return [];
-  return history.filter((m) => m && ['user', 'assistant', 'clover'].includes(m.role) && typeof m.content === 'string')
-    .slice(-12).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
+  return history.filter((m: any) => m && ['user', 'assistant', 'clover'].includes(m.role) && typeof m.content === 'string')
+    .slice(-12).map((m: any) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
 }
 
-export function validLocation(location) {
+export function validLocation(location: any) {
   if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
   return Number.isFinite(location.lat) && Math.abs(location.lat) <= 90 && Number.isFinite(location.lng) && Math.abs(location.lng) <= 180
     ? { lat: location.lat, lng: location.lng } : null;
 }
 
-export function contextQuestion(question, history) {
+export function contextQuestion(question: any, history: any) {
   if (!/\b(it|its|that|those|them|there|same|this one)\b/i.test(question)) return question;
-  const previous = history.filter((m) => m.role === 'user' && m.content !== question).slice(-2);
-  return [...previous.map((m) => m.content), question].join(' ').slice(-2400);
+  const previous = history.filter((m: any) => m.role === 'user' && m.content !== question).slice(-2);
+  return [...previous.map((m: any) => m.content), question].join(' ').slice(-2400);
 }
 
-export function recordSearch(question, fields) {
+export function recordSearch(question: any, fields: any) {
   const generic = new Set(['last', 'latest', 'recent', 'recently', 'newest', 'today', 'yesterday', 'week', 'month', 'saved', 'logged', 'specimen', 'collection']);
   const inquiry = question.replace(/\b(?:do not|don['’]t|never)\s+(?:save|log|record)\b.*$/i, '').trim();
   const terms = [...new Set(tokenize(inquiry))].filter((term) => !generic.has(term)).slice(0, 8);
   if (!terms.length) return {};
   const pattern = terms.join('|'); // tokenize only emits alphanumeric terms.
-  return { $or: fields.map((field) => ({ [field]: { $regex: pattern, $options: 'i' } })) };
+  return { $or: fields.map((field: any) => ({ [field]: { $regex: pattern, $options: 'i' } })) };
 }
 
-export function explicitSaveRequest(text) {
+export function explicitSaveRequest(text: any) {
   if (/\b(don['’]?t|do not|never|stop|cancel|not now)\b/i.test(text)) return false;
   return /^(?:(?:hey\s+)?clover[,!:.]?\s*)?(?:please\s+|(?:can|could|would) you\s+)*(?:log|save|record|catalog|add)\b/i.test(text.trim());
 }

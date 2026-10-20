@@ -1,4 +1,4 @@
-import { assertEquals, assertNull } from 'jsr:@std/assert@1';
+import { assertEquals } from 'jsr:@std/assert@1';
 import { contextQuestion, explicitSaveRequest, normalizeHistory, recordSearch, validLocation } from './cloverContext.ts';
 
 Deno.test('Clover context boundaries - ignores malformed history and instruction roles', () => {
@@ -9,7 +9,7 @@ Deno.test('Clover context boundaries - ignores malformed history and instruction
 
 Deno.test('Clover context boundaries - rejects invalid and coerced coordinates', () => {
   for (const value of [null, { lat: null, lng: null }, { lat: 91, lng: 0 }, { lat: '40', lng: 0 }, { lat: 0, lng: Infinity }]) {
-    assertNull(validLocation(value));
+    assertEquals(validLocation(value), null);
   }
   assertEquals(validLocation({ lat: 0, lng: 0 }), { lat: 0, lng: 0 });
 });
