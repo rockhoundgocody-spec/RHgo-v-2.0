@@ -2,7 +2,7 @@
 // The frontend calls this on app open / Settings refresh and caches the
 // result. While null, the app falls back to the existing Gemini path.
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
 import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
