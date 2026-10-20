@@ -38,7 +38,7 @@ import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
 import ExploreEmptyState from '@/components/explore/ExploreEmptyState.jsx';
 import { useNavigate } from 'react-router-dom';
-import { formatDistance, persistLastGps, rankHotspots } from '@/lib/geo';
+import { formatDistance, haversineMi, persistLastGps, rankHotspots } from '@/lib/geo';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -337,9 +337,18 @@ export default function Explore() {
     return rankHotspots(list, { userLocation, collectedMinerals });
   }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower, userLocation]);
 
+  // Bolt Optimization: Direct linear early-exit check to determine if any hotspot is within 75 miles.
+  // Avoids O(N log N) full sorting, array mapping, and gap calculation in rankHotspots when checking boolean proximity.
   const hasNearbyHotspots = useMemo(() => {
     if (!userLocation) return true;
-    return rankHotspots(hotspots, { userLocation }).some((h) => h.distanceMi != null && h.distanceMi <= 75);
+    for (let i = 0; i < hotspots.length; i++) {
+      const h = hotspots[i];
+      if (typeof h?.lat === 'number' && typeof h?.lng === 'number') {
+        const dist = haversineMi(userLocation, h);
+        if (dist != null && dist <= 75) return true;
+      }
+    }
+    return false;
   }, [hotspots, userLocation]);
 
   const showEmptyPanel = !loading && !!userLocation && !hasNearbyHotspots;
