@@ -122,6 +122,7 @@ export default function ReferralEngine({ companion }) {
               type="button"
               onClick={copyLink}
               aria-label={copied ? 'Copied referral link' : 'Copy referral link'}
+              title={copied ? 'Copied link to clipboard!' : 'Copy referral link to clipboard'}
               aria-live="polite"
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{ background: copied ? 'hsla(150,70%,40%,0.3)' : 'hsla(280,70%,50%,0.25)', color: copied ? '#34d399' : '#e0b0ff' }}

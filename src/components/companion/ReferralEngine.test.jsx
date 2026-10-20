@@ -72,7 +72,7 @@ describe('ReferralEngine Accessibility and UX', () => {
     expect(typeof progressBar.props['aria-valuenow']).toBe('number');
   });
 
-  it('renders Copy referral link button with accessible attributes and focus-visible styling', () => {
+  it('renders Copy referral link button with accessible attributes, state-aware title tooltip and focus-visible styling', () => {
     mockCopiedState = false;
     const element = ReferralEngine({ companion: null });
 
@@ -82,12 +82,13 @@ describe('ReferralEngine Accessibility and UX', () => {
 
     expect(copyButton.props.type).toBe('button');
     expect(copyButton.props['aria-label']).toBe('Copy referral link');
+    expect(copyButton.props.title).toBe('Copy referral link to clipboard');
     expect(copyButton.props['aria-live']).toBe('polite');
     expect(copyButton.props.className).toContain('focus-visible:ring-2');
     expect(copyButton.props.className).toContain('focus-visible:ring-amethyst-glow/50');
   });
 
-  it('renders Copied referral link button with updated aria-label when copied', () => {
+  it('renders Copied referral link button with updated aria-label and state-aware title tooltip when copied', () => {
     mockCopiedState = true;
     const element = ReferralEngine({ companion: null });
 
@@ -96,5 +97,6 @@ describe('ReferralEngine Accessibility and UX', () => {
     const copyButton = buttonRow.props.children[1];
 
     expect(copyButton.props['aria-label']).toBe('Copied referral link');
+    expect(copyButton.props.title).toBe('Copied link to clipboard!');
   });
 });
