@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import CaseFileLedger from './CaseFileLedger.jsx';
 
 describe('CaseFileLedger Accessibility and UX', () => {
-  it('renders collapsed ledger button with proper ARIA attributes and focus ring', () => {
+  it('renders collapsed ledger button with proper ARIA attributes, visible button text, and focus ring', () => {
     const html = renderToStaticMarkup(
       <CaseFileLedger
         evidence={[{ source: 'scratch', observation: 'Scratches glass', reliability: 0.9 }]}
@@ -19,9 +19,13 @@ describe('CaseFileLedger Accessibility and UX', () => {
     // Explicit type="button"
     expect(html).toContain('type="button"');
 
-    // ARIA expanded & label
+    // ARIA expanded state
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain('aria-label="Expand case file ledger"');
+
+    // No aria-label override so screen readers read internal summary text naturally
+    expect(html).not.toContain('aria-label=');
+    expect(html).toContain('Case File');
+    expect(html).toContain('1 evidence · 1 contradictions · 1 missing');
 
     // Focus-visible ring
     expect(html).toContain('focus-visible:ring-2');
@@ -38,7 +42,7 @@ describe('CaseFileLedger Accessibility and UX', () => {
     expect(html).not.toContain('Evidence Ledger');
   });
 
-  it('renders expanded ledger container with matching id and accessible labels when showLedger is true', () => {
+  it('renders expanded ledger container with matching id when showLedger is true', () => {
     const html = renderToStaticMarkup(
       <CaseFileLedger
         evidence={[{ source: 'scratch', observation: 'Scratches glass', reliability: 0.9 }]}
@@ -49,9 +53,8 @@ describe('CaseFileLedger Accessibility and UX', () => {
       />
     );
 
-    // ARIA expanded & label for expanded state
+    // ARIA expanded for expanded state
     expect(html).toContain('aria-expanded="true"');
-    expect(html).toContain('aria-label="Collapse case file ledger"');
 
     // Content elements visible
     expect(html).toContain('Contradiction Ledger');
