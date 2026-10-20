@@ -1,33 +1,5 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
-
-const mockLocalStorage = (() => {
-  let store = {};
-  return {
-    getItem: vi.fn((key) => store[key] || null),
-    setItem: vi.fn((key, value) => { store[key] = String(value); }),
-    removeItem: vi.fn((key) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
-  };
-})();
-
-beforeAll(() => {
-  globalThis.document = { title: '' };
-  globalThis.window = {
-    location: {
-      search: '',
-      href: '',
-      pathname: '',
-      hash: '',
-    },
-    history: {
-      replaceState: vi.fn(),
-    },
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    localStorage: mockLocalStorage,
-  };
-  globalThis.localStorage = mockLocalStorage;
-});
 
 describe('HotspotProximityWatcher utilities', () => {
   let STORAGE_KEY, getDismissed, saveDismissed, formatDistance;
