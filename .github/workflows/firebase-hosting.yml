@@ -1,0 +1,44 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Skipped until the FIREBASE_PROJECT_ID repository variable is set, and only
+# ever deploys from main (manual runs from other branches are skipped).
+# Needs a FIREBASE_SERVICE_ACCOUNT secret (service account JSON with the
+# "Firebase Hosting Admin" role). See docs/firebase-play-store.md.
+# Never run two deploys at once, so an older build can't land after a newer one.
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ vars.FIREBASE_PROJECT_ID != '' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_GTM_ID: ${{ vars.VITE_GTM_ID }}
+          VITE_GA4_MEASUREMENT_ID: ${{ vars.VITE_GA4_MEASUREMENT_ID }}
+          VITE_GSC_VERIFICATION: ${{ vars.VITE_GSC_VERIFICATION }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ vars.VITE_GOOGLE_MAPS_API_KEY }}
+          VITE_BASE44_APP_ID: ${{ vars.VITE_BASE44_APP_ID }}
+          VITE_BASE44_FUNCTIONS_VERSION: ${{ vars.VITE_BASE44_FUNCTIONS_VERSION }}
+          VITE_BASE44_APP_BASE_URL: ${{ vars.VITE_BASE44_APP_BASE_URL }}
+      - uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          channelId: live
