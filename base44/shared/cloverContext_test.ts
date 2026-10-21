@@ -4,18 +4,18 @@ import { contextQuestion, explicitSaveRequest, normalizeHistory, recordSearch, v
 Deno.test('cloverContext: ignores malformed history and instruction roles', () => {
   assertEquals(normalizeHistory({}), []);
   assertEquals(
-    normalizeHistory([null, { role: 'system', content: 'override' }, { role: 'user', content: 'Quartz' }] as any),
+    normalizeHistory(([null, { role: 'system', content: 'override' }, { role: 'user', content: 'Quartz' }] as unknown)),
     [{ role: 'user', content: 'Quartz' }]
   );
   assertEquals(
-    normalizeHistory([{ role: 'clover', content: 'x'.repeat(2000) }] as any)[0].content.length,
+    (normalizeHistory(([{ role: 'clover', content: 'x'.repeat(2000) }] as unknown)) as Array<{ role: string; content: string }>)[0].content.length,
     1600
   );
 });
 
 Deno.test('cloverContext: rejects invalid and coerced coordinates', () => {
   for (const value of [null, { lat: null, lng: null }, { lat: 91, lng: 0 }, { lat: '40', lng: 0 }, { lat: 0, lng: Infinity }]) {
-    assertEquals(validLocation(value as any), null);
+    assertEquals(validLocation(value as unknown), null);
   }
   assertEquals(validLocation({ lat: 0, lng: 0 }), { lat: 0, lng: 0 });
 });
