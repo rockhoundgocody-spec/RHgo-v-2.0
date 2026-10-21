@@ -86,7 +86,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: 'hsla(265,40%,20%,.6)', border: '1px solid hsla(265,60%,50%,.2)' }}>
-                <Navigation size={14} className="text-amethyst-glow" />
+                <Navigation size={14} className="text-amethyst-glow" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-semibold text-[13px] leading-tight truncate">{h.name}</div>
@@ -122,7 +122,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: 'hsla(255,30%,16%,.6)', border: '1px solid hsla(255,30%,40%,.15)' }}>
-              <card.icon size={14} className="text-white/50" />
+              <card.icon size={14} className="text-white/50" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-white/80 font-medium text-[13px] leading-tight">{card.title}</div>
