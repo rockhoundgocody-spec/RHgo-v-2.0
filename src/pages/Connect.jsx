@@ -31,7 +31,7 @@ function CopyButton({ value, label }) {
   );
 }
 
-function ClientCard({ icon, name, steps, link }) {
+export function ClientCard({ icon, name, steps, link }) {
   return (
     <div className="rounded-2xl p-4 mb-3"
       style={{
