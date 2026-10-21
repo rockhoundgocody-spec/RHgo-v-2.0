@@ -1,24 +1,37 @@
 import { tokenize } from './cloverVault.ts';
 
-export function normalizeHistory(history: any) {
+export type HistoryMessage = {
+  role: string;
+  content: string;
+};
+
+export type GeoLocation = {
+  lat: number;
+  lng: number;
+};
+
+export function normalizeHistory(history: unknown): HistoryMessage[] {
   if (!Array.isArray(history)) return [];
-  return history.filter((m) => m && ['user', 'assistant', 'clover'].includes(m.role) && typeof m.content === 'string')
-    .slice(-12).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
+  return history
+    .filter((m): m is HistoryMessage => Boolean(m) && ['user', 'assistant', 'clover'].includes(m.role) && typeof m.content === 'string')
+    .slice(-12)
+    .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
 }
 
-export function validLocation(location: any) {
-  if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
-  return Number.isFinite(location.lat) && Math.abs(location.lat) <= 90 && Number.isFinite(location.lng) && Math.abs(location.lng) <= 180
-    ? { lat: location.lat, lng: location.lng } : null;
+export function validLocation(location: unknown): GeoLocation | null {
+  if (!location || typeof (location as GeoLocation).lat !== 'number' || typeof (location as GeoLocation).lng !== 'number') return null;
+  const loc = location as GeoLocation;
+  return Number.isFinite(loc.lat) && Math.abs(loc.lat) <= 90 && Number.isFinite(loc.lng) && Math.abs(loc.lng) <= 180
+    ? { lat: loc.lat, lng: loc.lng } : null;
 }
 
-export function contextQuestion(question: string, history: any[]) {
+export function contextQuestion(question: string, history: HistoryMessage[]): string {
   if (!/\b(it|its|that|those|them|there|same|this one)\b/i.test(question)) return question;
-  const previous = history.filter((m: any) => m.role === 'user' && m.content !== question).slice(-2);
-  return [...previous.map((m: any) => m.content), question].join(' ').slice(-2400);
+  const previous = history.filter((m) => m.role === 'user' && m.content !== question).slice(-2);
+  return [...previous.map((m) => m.content), question].join(' ').slice(-2400);
 }
 
-export function recordSearch(question: string, fields: string[]) {
+export function recordSearch(question: string, fields: string[]): Record<string, unknown> {
   const generic = new Set(['last', 'latest', 'recent', 'recently', 'newest', 'today', 'yesterday', 'week', 'month', 'saved', 'logged', 'specimen', 'collection']);
   const inquiry = question.replace(/\b(?:do not|don['’]t|never)\s+(?:save|log|record)\b.*$/i, '').trim();
   const terms = [...new Set(tokenize(inquiry))].filter((term) => !generic.has(term)).slice(0, 8);
@@ -27,7 +40,7 @@ export function recordSearch(question: string, fields: string[]) {
   return { $or: fields.map((field: string) => ({ [field]: { $regex: pattern, $options: 'i' } })) };
 }
 
-export function explicitSaveRequest(text: string) {
+export function explicitSaveRequest(text: string): boolean {
   if (/\b(don['’]?t|do not|never|stop|cancel|not now)\b/i.test(text)) return false;
   return /^(?:(?:hey\s+)?clover[,!:.]?\s*)?(?:please\s+|(?:can|could|would) you\s+)*(?:log|save|record|catalog|add)\b/i.test(text.trim());
 }
