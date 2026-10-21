@@ -1,5 +1,6 @@
 const GPS_KEY = 'rhgo_last_gps';
 const EARTH_MI = 3958.8;
+const DEG_TO_RAD = Math.PI / 180;
 const noop = () => {};
 
 export const PUBLIC_LAND = new Set(['public', 'blm', 'forest_service', 'state_park']);
@@ -41,12 +42,13 @@ export function evaluateGpsAccuracy(coords) {
 
 export function haversineMi(a, b) {
   if (!a || !b || a.lat == null || b.lat == null || a.lng == null || b.lng == null) return null;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const dLat = (b.lat - a.lat) * DEG_TO_RAD;
+  const dLng = (b.lng - a.lng) * DEG_TO_RAD;
+  const lat1 = a.lat * DEG_TO_RAD;
+  const lat2 = b.lat * DEG_TO_RAD;
+  const sinDLat = Math.sin(dLat / 2);
+  const sinDLng = Math.sin(dLng / 2);
+  const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
   return EARTH_MI * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
@@ -105,9 +107,10 @@ export function watchGps(onFix) {
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
  */
 export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
-  const collected = collectedMinerals instanceof Set
-    ? collectedMinerals
-    : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
+  // Normalize collected set once upfront to lowercased strings
+  const collected = new Set(
+    Array.from(collectedMinerals, (m) => String(m).toLowerCase())
+  );
 
   return (hotspots || [])
     .filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number')
@@ -116,7 +119,13 @@ export function rankHotspots(hotspots, { userLocation, collectedMinerals = new S
       const land = h.land_type || 'unknown';
       const publicBonus = PUBLIC_LAND.has(land) ? 18 : land === 'private' ? -12 : 0;
       const minerals = h.minerals || [];
-      const gapCount = minerals.filter((m) => m && !collected.has(String(m).toLowerCase())).length;
+      let gapCount = 0;
+      for (let i = 0; i < minerals.length; i++) {
+        const m = minerals[i];
+        if (m && !collected.has(String(m).toLowerCase())) {
+          gapCount++;
+        }
+      }
       const trust = Number(h.trust_score) || 0.5;
       const distScore = distanceMi == null ? 0 : Math.max(0, 42 - distanceMi * 0.85);
       return {

@@ -16,3 +16,9 @@
 **Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for filtering). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
 
 **Action:** Avoid `flatMap` followed by `Set` deduplication and `.filter()` when building unique lists from nested arrays; filter directly during Set population in a single pass.
+
+## 2026-10-18 - Avoid Full Array Sorting and Mapping for Boolean Proximity Checks
+
+**Learning:** Calling heavy sorting/ranking pipelines (`rankHotspots(hotspots, { userLocation })`) just to evaluate boolean existence checks (e.g. `hasNearbyHotspots` checking if any hotspot is within range) causes unnecessary O(N log N) sorting, distance mapping, object cloning, and gap calculation on every render. Replacing full list ranking with a direct linear `for` loop that evaluates distances and exits early on the first match reduces execution time from O(N log N) to O(1) best-case with zero object allocations.
+
+**Action:** Whenever checking if an item in a collection meets a spatial or numerical proximity threshold, use an early-exit `for` loop over raw items rather than running a complete ranking or sorting algorithm.
