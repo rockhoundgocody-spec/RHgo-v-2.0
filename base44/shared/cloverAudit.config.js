@@ -1,1 +1,0 @@
-export default { resolve: { alias: { 'npm:vitest@4.1.9': 'vitest' } }, test: { include: ['base44/shared/cloverContext.test.js'], environment: 'node' } };
