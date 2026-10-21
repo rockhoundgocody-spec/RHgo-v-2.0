@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
+// @vitest-environment jsdom
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import AREncounterScreen, { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
 import { base44 } from "@/api/base44Client";
+
+// Mock framer-motion to simplify DOM testing
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: React.forwardRef(({ children, ...props }, ref) => <div ref={ref} {...props}>{children}</div>),
+    button: React.forwardRef(({ children, ...props }, ref) => <button ref={ref} {...props}>{children}</button>),
+  },
+  AnimatePresence: ({ children }) => <>{children}</>,
+}));
+
+vi.mock("canvas-confetti", () => ({
+  default: vi.fn(),
+}));
 
 vi.mock("@/api/base44Client", () => ({
   base44: {
@@ -71,6 +87,18 @@ describe("getCelebrationOptions", () => {
 describe("saveCatchToCollection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    if (typeof window !== "undefined") {
+      window.matchMedia = window.matchMedia || vi.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+    }
   });
 
   it("creates a Specimen entity and asks the server to award verified XP", async () => {
@@ -128,5 +156,35 @@ describe("saveCatchToCollection", () => {
     base44.auth.me.mockRejectedValue(new Error("Network error"));
 
     await expect(saveCatchToCollection({ mineral_name: "Gold", rarity: "rare" }, "success")).resolves.not.toThrow();
+  });
+});
+
+describe("AREncounterScreen Component UX & Accessibility", () => {
+  const dummySpawn = {
+    mineral_name: "Amethyst",
+    rarity: "rare",
+    catch_chance: 0.6,
+    xp: 200,
+    emoji: "🔮",
+    is_shiny: false,
+  };
+
+  it("renders dialog with correct ARIA attributes, tooltips, and responds to Escape key", () => {
+    const onDismiss = vi.fn();
+    render(<AREncounterScreen spawn={dummySpawn} onDismiss={onDismiss} />);
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-label")).toBe("Amethyst AR encounter");
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+
+    const closeBtn = screen.getByRole("button", { name: "Close encounter" });
+    expect(closeBtn.getAttribute("title")).toBe("Close encounter (Esc)");
+
+    const catchBtn = screen.getByRole("button", { name: "Catch Amethyst" });
+    expect(catchBtn.getAttribute("title")).toBe("Throw Field Lens to catch Amethyst");
+
+    // Test Escape key press via focus trap
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });

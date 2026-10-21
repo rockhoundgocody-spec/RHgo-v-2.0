@@ -57,17 +57,16 @@ export function useAutoDismiss({ visible, hotspotId, onDismiss }) {
 export function useScrollDismiss({ visible, hotspotId, onDismiss }) {
   useEffect(() => {
     if (!visible || !hotspotId) return;
-    const root = document.getElementById('root') || window;
+    const target = document.getElementById('root') || document.documentElement;
     const onScroll = () => {
-      const el = root === window ? document.documentElement : root;
-      const scrolled = el.scrollTop;
-      const total = el.scrollHeight - el.clientHeight;
+      const scrolled = target.scrollTop;
+      const total = target.scrollHeight - target.clientHeight;
       if (total > 0 && scrolled / total >= 0.33) {
         onDismiss(hotspotId);
       }
     };
-    root.addEventListener('scroll', onScroll, { passive: true });
-    return () => root.removeEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, [visible, hotspotId, onDismiss]);
 }
 

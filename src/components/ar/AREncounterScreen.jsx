@@ -9,6 +9,7 @@ import { X, Zap, Star, Share2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { RARITY_XP_MAP } from "@/lib/spawnEngine";
 import useReducedMotion from "@/lib/useReducedMotion";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const RARITY_THEMES = {
   common:    { bg: "hsla(215,35%,25%,0.9)",  glow: "hsl(215,35%,68%)",  ring: "#94a3b8", label: "COMMON"    },
@@ -100,6 +101,7 @@ export function EncounterTopBar({ spawn, theme, onDismiss }) {
         type="button"
         className="w-10 h-10 rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
         aria-label="Close encounter"
+        title="Close encounter (Esc)"
         style={{ background: "hsla(0,0%,0%,0.5)", border: "1px solid hsla(0,0%,100%,0.15)" }}>
         <X size={18} className="text-white/60" />
       </button>
@@ -122,6 +124,7 @@ export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme,
             onClick={handleThrow}
             onTouchEnd={handleSwipe}
             aria-label={`Catch ${spawn.mineral_name}`}
+            title={`Throw Field Lens to catch ${spawn.mineral_name}`}
           >
             {/* Glow rings */}
             {[1.8, 1.5, 1.25].map((scale, i) => (
@@ -213,6 +216,8 @@ export function EncounterResultCard({ phase, result, theme, spawn, xp, onDismiss
                   navigator.share?.({ title: "RockHound-GO Find!", text }) || navigator.clipboard?.writeText(text);
                 }}
                   type="button"
+                  aria-label={`Share ${spawn.mineral_name} catch`}
+                  title="Share catch report"
                   className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                   style={{ background: `${theme.glow}22`, border: `1px solid ${theme.ring}55`, color: theme.glow }}>
                   <Share2 size={14} /> Share
@@ -249,7 +254,10 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
   const [particles, setParticles] = useState([]);
   const reduceMotion = useReducedMotion();
 
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
+
+  useFocusTrap(containerRef, { active: true, onClose: onDismiss });
 
   const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
@@ -317,8 +325,10 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
 
   return (
     <motion.div
+      ref={containerRef}
+      tabIndex={-1}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden outline-none"
       style={{ background: "#040810" }}
       role="dialog"
       aria-modal="true"
