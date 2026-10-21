@@ -1,5 +1,7 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { planRoute } from './ExpeditionPlanner';
+import { renderToStaticMarkup } from 'react-dom/server';
+import ExpeditionPlanner, { planRoute } from './ExpeditionPlanner';
 
 describe('planRoute', () => {
   it('returns empty route when origin or hotspots are missing or empty', () => {
@@ -36,5 +38,14 @@ describe('planRoute', () => {
     expect(route).toHaveLength(2);
     expect(route[0].id).toBe(1);
     expect(route[1].id).toBe(2);
+  });
+});
+
+describe('ExpeditionPlanner component rendering', () => {
+  it('renders closed toggle button with state-aware ARIA label and title', () => {
+    const html = renderToStaticMarkup(<ExpeditionPlanner hotspots={[]} specimens={[]} />);
+    expect(html).toContain('aria-label="Open Expedition Planner"');
+    expect(html).toContain('title="Plan expedition route based on collection gaps"');
+    expect(html).toContain('aria-expanded="false"');
   });
 });
