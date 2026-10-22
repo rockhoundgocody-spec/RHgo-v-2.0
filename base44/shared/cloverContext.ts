@@ -1,6 +1,6 @@
 import { tokenize } from './cloverVault.ts';
 
-export function normalizeHistory(history: any): Array<{ role: string; content: string }> {
+export function normalizeHistory(history: unknown): Array<{ role: string; content: string }> {
   if (!Array.isArray(history)) return [];
   return history
     .filter((m) => m && ['user', 'assistant', 'clover'].includes(m.role) && typeof m.content === 'string')
@@ -8,10 +8,12 @@ export function normalizeHistory(history: any): Array<{ role: string; content: s
     .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content).slice(0, 1600) }));
 }
 
-export function validLocation(location: any): { lat: number; lng: number } | null {
-  if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
-  return Number.isFinite(location.lat) && Math.abs(location.lat) <= 90 && Number.isFinite(location.lng) && Math.abs(location.lng) <= 180
-    ? { lat: location.lat, lng: location.lng } : null;
+export function validLocation(location: unknown): { lat: number; lng: number } | null {
+  if (!location || typeof location !== 'object') return null;
+  const loc = location as { lat?: unknown; lng?: unknown };
+  if (typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return null;
+  return Number.isFinite(loc.lat) && Math.abs(loc.lat) <= 90 && Number.isFinite(loc.lng) && Math.abs(loc.lng) <= 180
+    ? { lat: loc.lat, lng: loc.lng } : null;
 }
 
 export function contextQuestion(question: string, history: Array<{ role: string; content: string }>): string {

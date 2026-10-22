@@ -80,8 +80,8 @@ describe("saveCatchToCollection", () => {
       is_shiny: false,
     };
 
-    base44.auth.me.mockResolvedValue({ email: "geologist@example.com" });
-    base44.entities.Specimen.create.mockResolvedValue({ id: "spec-1" });
+    (/** @type {any} */ (base44.auth.me)).mockResolvedValue({ email: "geologist@example.com" });
+    (/** @type {any} */ (base44.entities.Specimen.create)).mockResolvedValue({ id: "spec-1" });
 
     await saveCatchToCollection(spawn, "success");
 
@@ -108,9 +108,9 @@ describe("saveCatchToCollection", () => {
       is_shiny: true,
     };
 
-    base44.auth.me.mockResolvedValue({ email: "geologist@example.com" });
-    base44.entities.Specimen.create.mockResolvedValue({ id: "spec-2" });
-    base44.entities.PlayerProfile.filter.mockResolvedValue([
+    (/** @type {any} */ (base44.auth.me)).mockResolvedValue({ email: "geologist@example.com" });
+    (/** @type {any} */ (base44.entities.Specimen.create)).mockResolvedValue({ id: "spec-2" });
+    (/** @type {any} */ (base44.entities.PlayerProfile.filter)).mockResolvedValue([
       { id: "profile-1", total_xp: 200 },
     ]);
 
@@ -125,7 +125,7 @@ describe("saveCatchToCollection", () => {
   });
 
   it("gracefully catches errors without throwing", async () => {
-    base44.auth.me.mockRejectedValue(new Error("Network error"));
+    (/** @type {any} */ (base44.auth.me)).mockRejectedValue(new Error("Network error"));
 
     await expect(saveCatchToCollection({ mineral_name: "Gold", rarity: "rare" }, "success")).resolves.not.toThrow();
   });
