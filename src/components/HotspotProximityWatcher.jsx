@@ -59,7 +59,7 @@ export function useScrollDismiss({ visible, hotspotId, onDismiss }) {
     if (!visible || !hotspotId) return;
     const root = document.getElementById('root') || window;
     const onScroll = () => {
-      const el = root === window ? document.documentElement : root;
+      const el = /** @type {HTMLElement} */ (root === window ? document.documentElement : root);
       const scrolled = el.scrollTop;
       const total = el.scrollHeight - el.clientHeight;
       if (total > 0 && scrolled / total >= 0.33) {
