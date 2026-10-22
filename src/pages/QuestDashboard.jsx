@@ -208,8 +208,8 @@ export default function QuestDashboard() {
 
   const { data: quests = [], refetch, isLoading } = useQuery({
     queryKey: ['quests-dashboard', user?.email],
-    // Optimization (Bolt): Pass field projection array as 4th arg to filter() to fetch only required quest attributes
-    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'active' }, null, null, [
+    // Optimization (Bolt): Pass field projection array as 5th arg to filter() to fetch only required quest attributes
+    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'active' }, undefined, undefined, undefined, [
       'id', 'title', 'description', 'quest_type', 'target_count', 'progress', 'xp_reward', 'status', 'expires_at', 'clover_message', 'target_rarity'
     ]),
     enabled: !!user?.email,
@@ -218,8 +218,8 @@ export default function QuestDashboard() {
 
   const { data: completedQuests = [] } = useQuery({
     queryKey: ['quests-completed', user?.email],
-    // Optimization (Bolt): Pass field projection array as 4th arg to filter() to fetch only required fields for stats calculation
-    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'completed' }, null, null, [
+    // Optimization (Bolt): Pass field projection array as 5th arg to filter() to fetch only required fields for stats calculation
+    queryFn: () => base44.entities.Quest.filter({ owner_email: user?.email, status: 'completed' }, undefined, undefined, undefined, [
       'id', 'xp_reward', 'status'
     ]),
     enabled: !!user?.email,
