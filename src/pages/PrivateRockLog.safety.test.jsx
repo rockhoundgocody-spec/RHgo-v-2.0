@@ -44,4 +44,29 @@ describe('Private log photo flow', () => {
     expect(mocks.upload).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
   });
+
+  it('supports dialog closing on Escape key and associates labels with form inputs', async () => {
+    render(<PrivateRockLog />);
+    await waitFor(() => expect(screen.getByText('No rocks logged yet.')).toBeTruthy());
+
+    // Open modal
+    fireEvent.click(screen.getByText('Log Rock'));
+
+    // Check dialog role and aria-label
+    const dialog = screen.getByRole('dialog', { name: 'Log a Rock Find' });
+    expect(dialog).toBeTruthy();
+
+    // Verify label association
+    const mineralInput = screen.getByLabelText('Mineral Name *');
+    expect(mineralInput).toBeTruthy();
+    expect(mineralInput.tagName).toBe('INPUT');
+
+    const notesInput = screen.getByLabelText('Notes');
+    expect(notesInput).toBeTruthy();
+    expect(notesInput.tagName).toBe('TEXTAREA');
+
+    // Test Escape key dismissal
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
 });
