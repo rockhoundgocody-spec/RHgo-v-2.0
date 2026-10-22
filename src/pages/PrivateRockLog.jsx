@@ -2,7 +2,7 @@
  * PrivateRockLog — personal, private map + list of rocks you've physically collected.
  * Coordinates and photos are visible only to you.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
@@ -64,6 +64,7 @@ export default function PrivateRockLog() {
           </div>
         )}
         <button
+          type="button"
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
           style={{
@@ -71,7 +72,7 @@ export default function PrivateRockLog() {
             boxShadow: '0 4px 16px hsla(280,80%,50%,0.35)',
           }}
         >
-          <Plus size={15} /> Log Rock
+          <Plus size={15} aria-hidden="true" /> Log Rock
         </button>
       </div>
 
@@ -139,12 +140,13 @@ function LogCard({ log, onDelete }) {
             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{log.rarity}</span>
           </div>
           <button
+            type="button"
             onClick={() => onDelete(log.id)}
             className="text-white/20 hover:text-rose-400 transition shrink-0 focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:outline-none rounded-sm"
             aria-label="Delete log"
             title="Delete log"
           >
-            <Trash2 size={14} />
+            <Trash2 size={14} aria-hidden="true" />
           </button>
         </div>
         {log.location_label && (
@@ -180,7 +182,26 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
+  const mineralNameId = useId();
+  const notesId = useId();
+  const locationLabelId = useId();
+  const latId = useId();
+  const lngId = useId();
+  const rarityId = useId();
+  const foundDateId = useId();
+  const weightLbsId = useId();
+
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const getLocation = () => {
     setLocating(true);
@@ -249,6 +270,9 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Log a Rock Find"
         className="w-full max-w-md rounded-t-3xl p-5 overflow-y-auto"
         style={{
           maxHeight: 'calc(100dvh - 60px)',
@@ -258,8 +282,9 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
       >
         <h2 className="text-white font-bold text-base mb-4 text-center">Log a Rock Find</h2>
 
-        <Field label="Mineral Name *">
+        <Field label="Mineral Name *" htmlFor={mineralNameId}>
           <input
+            id={mineralNameId}
             value={form.mineral_name}
             onChange={e => set('mineral_name', e.target.value)}
             placeholder="e.g. Petoskey Stone"
@@ -267,8 +292,9 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
           />
         </Field>
 
-        <Field label="Notes">
+        <Field label="Notes" htmlFor={notesId}>
           <textarea
+            id={notesId}
             value={form.notes}
             onChange={e => set('notes', e.target.value)}
             rows={2}
@@ -277,8 +303,9 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
           />
         </Field>
 
-        <Field label="Location Name">
+        <Field label="Location Name" htmlFor={locationLabelId}>
           <input
+            id={locationLabelId}
             value={form.location_label}
             onChange={e => set('location_label', e.target.value)}
             placeholder="e.g. Lake Michigan North Beach"
@@ -287,11 +314,12 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
         </Field>
 
         {/* GPS */}
-        <Field label="GPS Coordinates">
+        <Field label="GPS Coordinates" htmlFor={latId}>
           <div className="flex gap-2">
-            <input value={form.lat} onChange={e => set('lat', e.target.value)} placeholder="Lat" className="input-base flex-1" />
-            <input value={form.lng} onChange={e => set('lng', e.target.value)} placeholder="Lng" className="input-base flex-1" />
+            <input id={latId} value={form.lat} onChange={e => set('lat', e.target.value)} placeholder="Lat" aria-label="Latitude" className="input-base flex-1" />
+            <input id={lngId} value={form.lng} onChange={e => set('lng', e.target.value)} placeholder="Lng" aria-label="Longitude" className="input-base flex-1" />
             <button
+              type="button"
               onClick={getLocation}
               disabled={locating}
               className="px-3 rounded-xl text-xs font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:outline-none"
@@ -299,24 +327,24 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
               aria-label="Get current location"
               title="Get current location"
             >
-              {locating ? '…' : <MapPin size={14} />}
+              {locating ? '…' : <MapPin size={14} aria-hidden="true" />}
             </button>
           </div>
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Rarity">
-            <select value={form.rarity} onChange={e => set('rarity', e.target.value)} className="input-base">
+          <Field label="Rarity" htmlFor={rarityId}>
+            <select id={rarityId} value={form.rarity} onChange={e => set('rarity', e.target.value)} className="input-base">
               {['common','uncommon','rare','legendary'].map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </Field>
-          <Field label="Date Found">
-            <input type="date" value={form.found_date} onChange={e => set('found_date', e.target.value)} className="input-base" />
+          <Field label="Date Found" htmlFor={foundDateId}>
+            <input id={foundDateId} type="date" value={form.found_date} onChange={e => set('found_date', e.target.value)} className="input-base" />
           </Field>
         </div>
 
-        <Field label="Weight (lbs)">
-          <input type="number" value={form.weight_lbs} onChange={e => set('weight_lbs', e.target.value)} placeholder="0.5" step="0.1" className="input-base" />
+        <Field label="Weight (lbs)" htmlFor={weightLbsId}>
+          <input id={weightLbsId} type="number" value={form.weight_lbs} onChange={e => set('weight_lbs', e.target.value)} placeholder="0.5" step="0.1" className="input-base" />
         </Field>
 
         {/* Photo upload */}
@@ -337,10 +365,11 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
         {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
+          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!form.mineral_name.trim() || !userEmail || saving || uploading}
             className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
@@ -355,10 +384,14 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, htmlFor, children }) {
   return (
     <div className="mb-3">
-      <label className="block text-muted-foreground text-[10px] uppercase tracking-widest mb-1">{label}</label>
+      {htmlFor ? (
+        <label htmlFor={htmlFor} className="block text-muted-foreground text-[10px] uppercase tracking-widest mb-1">{label}</label>
+      ) : (
+        <span className="block text-muted-foreground text-[10px] uppercase tracking-widest mb-1">{label}</span>
+      )}
       {children}
     </div>
   );
