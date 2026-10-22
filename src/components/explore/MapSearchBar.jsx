@@ -2,6 +2,8 @@
  * MapSearchBar — search hotspots by name, state, or mineral.
  * Shows a dropdown of matching results; selecting one flies the map
  * to that hotspot and opens its detail sheet.
+ * Supports full keyboard navigation (ArrowUp/Down, Enter, Home/End, Escape)
+ * and ARIA combobox pattern with aria-activedescendant.
  */
 import React, { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { Search, X, MapPin } from 'lucide-react';
@@ -9,6 +11,7 @@ import { Search, X, MapPin } from 'lucide-react';
 export default function MapSearchBar({ hotspots = [], onSelect }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef(null);
   const listboxId = useId();
 
@@ -25,9 +28,14 @@ export default function MapSearchBar({ hotspots = [], onSelect }) {
   }, [query, hotspots]);
 
   useEffect(() => {
+    setActiveIndex(-1);
+  }, [query]);
+
+  useEffect(() => {
     const handler = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setFocused(false);
+        setActiveIndex(-1);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -38,16 +46,42 @@ export default function MapSearchBar({ hotspots = [], onSelect }) {
     onSelect?.(h);
     setQuery('');
     setFocused(false);
+    setActiveIndex(-1);
   };
+
+  const isOpen = focused && Boolean(query.trim());
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       setFocused(false);
       setQuery('');
+      setActiveIndex(-1);
+      return;
+    }
+
+    if (!isOpen || results.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setActiveIndex(results.length - 1);
+    } else if (e.key === 'Enter') {
+      if (activeIndex >= 0 && activeIndex < results.length) {
+        e.preventDefault();
+        handleSelect(results[activeIndex]);
+      }
     }
   };
 
-  const isOpen = focused && Boolean(query.trim());
+  const activeOptionId = isOpen && activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -72,12 +106,13 @@ export default function MapSearchBar({ hotspots = [], onSelect }) {
           aria-expanded={isOpen}
           aria-autocomplete="list"
           aria-controls={listboxId}
+          aria-activedescendant={activeOptionId}
           className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ml-2"
         />
         {query && (
           <button
             type="button"
-            onClick={() => { setQuery(''); setFocused(true); }}
+            onClick={() => { setQuery(''); setFocused(true); setActiveIndex(-1); }}
             aria-label="Clear search"
             className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
           >
@@ -100,25 +135,33 @@ export default function MapSearchBar({ hotspots = [], onSelect }) {
           }}
         >
           {results.length > 0 ? (
-            results.map(h => (
-              <button
-                key={h.id}
-                type="button"
-                role="option"
-                aria-selected={false}
-                aria-label={`${h.name}, ${h.state || ''}`}
-                onClick={() => handleSelect(h)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
-              >
-                <MapPin size={13} className="text-amethyst-glow shrink-0" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
-                  <div className="text-[10px] text-white/40 truncate">
-                    {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+            results.map((h, index) => {
+              const optionId = `${listboxId}-option-${index}`;
+              const isSelected = index === activeIndex;
+              return (
+                <button
+                  key={h.id}
+                  id={optionId}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  aria-label={`${h.name}, ${h.state || ''}`}
+                  onClick={() => handleSelect(h)}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10 ${
+                    isSelected ? 'bg-white/10 text-white' : 'hover:bg-white/5 text-white/85'
+                  }`}
+                >
+                  <MapPin size={13} className="text-amethyst-glow shrink-0" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12px] font-semibold truncate">{h.name}</div>
+                    <div className="text-[10px] text-white/40 truncate">
+                      {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))
+                </button>
+              );
+            })
           ) : (
             <div className="px-3 py-3 text-center text-[12px] text-white/40">
               No matching hotspots or minerals found
