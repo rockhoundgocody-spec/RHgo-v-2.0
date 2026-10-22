@@ -78,7 +78,10 @@ export default async function(req) {
     // 1. Resolve the IG Business account id + username
     const meRes = await fetch(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
     const me = await meRes.json();
-    if (!me.id) return Response.json({ error: 'Could not resolve Instagram account', detail: me }, { status: 502 });
+    if (!me.id) {
+      console.error('Instagram account resolution failed:', me);
+      return Response.json({ error: 'Could not resolve Instagram account' }, { status: 502 });
+    }
     const igUserId = me.id;
 
     // 2. Create a media container
@@ -93,7 +96,8 @@ export default async function(req) {
     });
     const created = await createRes.json();
     if (!created.id) {
-      return Response.json({ error: 'Failed to create IG media container', detail: created }, { status: 502 });
+      console.error('Instagram media container creation failed:', created);
+      return Response.json({ error: 'Failed to create IG media container' }, { status: 502 });
     }
     const creationId = created.id;
 
@@ -107,7 +111,8 @@ export default async function(req) {
       const st = await stRes.json();
       if (st.status_code === 'FINISHED') { ready = true; break; }
       if (st.status_code === 'ERROR') {
-        return Response.json({ error: 'IG media processing error', detail: st }, { status: 502 });
+        console.error('Instagram media processing failed:', st);
+        return Response.json({ error: 'IG media processing error' }, { status: 502 });
       }
     }
     if (!ready) {
@@ -125,7 +130,8 @@ export default async function(req) {
     });
     const published = await pubRes.json();
     if (!published.id) {
-      return Response.json({ error: 'Failed to publish IG media', detail: published }, { status: 502 });
+      console.error('Instagram media publishing failed:', published);
+      return Response.json({ error: 'Failed to publish IG media' }, { status: 502 });
     }
 
     return Response.json({
