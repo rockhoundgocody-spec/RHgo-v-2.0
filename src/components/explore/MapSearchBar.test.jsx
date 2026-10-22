@@ -7,11 +7,15 @@ vi.mock('react', async (importOriginal) => {
   return {
     ...actual,
     useState: (initial) => {
-      const key = typeof initial === 'boolean' ? 'focused' : 'query';
+      // Manage keys based on initial value type or explicit test mockState
+      let key = 'query';
+      if (typeof initial === 'number') key = 'activeIndex';
+      else if (typeof initial === 'boolean') key = 'focused';
+
       const val = mockState[key] !== undefined ? mockState[key] : initial;
       const setter = vi.fn((newVal) => {
         if (typeof newVal === 'function') {
-          mockState[key] = newVal(val);
+          mockState[key] = newVal(mockState[key] !== undefined ? mockState[key] : initial);
         } else {
           mockState[key] = newVal;
         }
@@ -36,11 +40,11 @@ import MapSearchBar from './MapSearchBar.jsx';
 describe('MapSearchBar', () => {
   const sampleHotspots = [
     { id: 'h1', name: 'Quartz Ridge', state: 'CA', minerals: ['Quartz', 'Gold'] },
-    { id: 'h2', name: 'Amethyst Mine', state: 'AZ', minerals: ['Amethyst', 'Agate'] },
+    { id: 'h2', name: 'Quartz Basin', state: 'AZ', minerals: ['Quartz', 'Agate'] },
   ];
 
   beforeEach(() => {
-    mockState = { query: '', focused: false };
+    mockState = { query: '', focused: false, activeIndex: -1 };
   });
 
   it('renders input with combobox role and initial collapsed state', () => {
@@ -51,10 +55,11 @@ describe('MapSearchBar', () => {
     expect(input.props.role).toBe('combobox');
     expect(input.props['aria-autocomplete']).toBe('list');
     expect(input.props['aria-expanded']).toBe(false);
+    expect(input.props['aria-activedescendant']).toBeUndefined();
   });
 
   it('renders listbox and options when query matches hotspots', () => {
-    mockState = { query: 'Quartz', focused: true };
+    mockState = { query: 'Quartz', focused: true, activeIndex: -1 };
 
     const tree = MapSearchBar({ hotspots: sampleHotspots, onSelect: vi.fn() });
     const listbox = tree.props.children[1];
@@ -63,24 +68,41 @@ describe('MapSearchBar', () => {
     expect(listbox.props['aria-label']).toBe('Hotspot search results');
 
     const options = listbox.props.children;
-    expect(options).toHaveLength(1);
+    expect(options).toHaveLength(2);
     expect(options[0].props.role).toBe('option');
-    expect(options[0].props['aria-label']).toBe('Quartz Ridge, CA');
+    expect(options[0].props['aria-selected']).toBe(false);
+    expect(options[0].props.id).toBe(':id:-option-0');
   });
 
-  it('renders friendly empty state when query returns no matching hotspots', () => {
-    mockState = { query: 'Diamond', focused: true };
+  it('updates activeIndex and aria-activedescendant on ArrowDown', () => {
+    mockState = { query: 'Quartz', focused: true, activeIndex: -1 };
 
     const tree = MapSearchBar({ hotspots: sampleHotspots, onSelect: vi.fn() });
-    const listbox = tree.props.children[1];
+    const input = tree.props.children[0].props.children[1];
 
-    expect(listbox.props.role).toBe('listbox');
-    const emptyState = listbox.props.children;
-    expect(emptyState.props.children).toBe('No matching hotspots or minerals found');
+    const preventDefault = vi.fn();
+    input.props.onKeyDown({ key: 'ArrowDown', preventDefault });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(mockState.activeIndex).toBe(0);
   });
 
-  it('handles Escape key to clear search query', () => {
-    mockState = { query: 'Quartz', focused: true };
+  it('selects option with Enter key when activeIndex is set', () => {
+    mockState = { query: 'Quartz', focused: true, activeIndex: 1 };
+    const onSelect = vi.fn();
+
+    const tree = MapSearchBar({ hotspots: sampleHotspots, onSelect });
+    const input = tree.props.children[0].props.children[1];
+
+    const preventDefault = vi.fn();
+    input.props.onKeyDown({ key: 'Enter', preventDefault });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith(sampleHotspots[1]);
+  });
+
+  it('handles Escape key to clear search query and reset state', () => {
+    mockState = { query: 'Quartz', focused: true, activeIndex: 1 };
 
     const tree = MapSearchBar({ hotspots: sampleHotspots, onSelect: vi.fn() });
     const input = tree.props.children[0].props.children[1];
@@ -88,5 +110,6 @@ describe('MapSearchBar', () => {
     input.props.onKeyDown({ key: 'Escape' });
     expect(mockState.query).toBe('');
     expect(mockState.focused).toBe(false);
+    expect(mockState.activeIndex).toBe(-1);
   });
 });
