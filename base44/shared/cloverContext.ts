@@ -6,10 +6,11 @@ export function normalizeHistory(history: unknown) {
     .slice(-12).map((m: { role: string; content: string }) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
 }
 
-export function validLocation(location: { lat?: number | null; lng?: number | null } | null | undefined) {
-  if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
-  return Number.isFinite(location.lat) && Math.abs(location.lat) <= 90 && Number.isFinite(location.lng) && Math.abs(location.lng) <= 180
-    ? { lat: location.lat, lng: location.lng } : null;
+export function validLocation(location: unknown) {
+  const loc = location as { lat?: number | null; lng?: number | null } | null | undefined;
+  if (!loc || typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return null;
+  return Number.isFinite(loc.lat) && Math.abs(loc.lat) <= 90 && Number.isFinite(loc.lng) && Math.abs(loc.lng) <= 180
+    ? { lat: loc.lat, lng: loc.lng } : null;
 }
 
 export function contextQuestion(question: string, history: Array<{ role: string; content: string }>) {
