@@ -1,6 +1,26 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
+import React from "react";
+import { render } from "@testing-library/react";
+import AREncounterScreen, { calculateCatchOutcome, getCelebrationOptions, saveCatchToCollection } from "./AREncounterScreen.jsx";
 import { base44 } from "@/api/base44Client";
+
+// Mock framer-motion to simplify DOM testing without animation loops
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, className, style, ...props }) => (
+      <div className={className} style={style} {...props}>
+        {children}
+      </div>
+    ),
+    button: ({ children, onClick, className, style, ...props }) => (
+      <button onClick={onClick} className={className} style={style} {...props}>
+        {children}
+      </button>
+    ),
+  },
+  AnimatePresence: ({ children }) => <>{children}</>,
+}));
 
 vi.mock("@/api/base44Client", () => ({
   base44: {
@@ -128,5 +148,40 @@ describe("saveCatchToCollection", () => {
     base44.auth.me.mockRejectedValue(new Error("Network error"));
 
     await expect(saveCatchToCollection({ mineral_name: "Gold", rarity: "rare" }, "success")).resolves.not.toThrow();
+  });
+});
+
+describe("AREncounterScreen keyboard accessibility", () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
+
+  it("renders role='dialog' with accessible attributes and listens for Escape key", () => {
+    const onDismiss = vi.fn();
+    const spawn = { mineral_name: "Amethyst", rarity: "rare", catch_chance: 0.5, xp: 100, emoji: "💎" };
+
+    const { getByRole } = render(
+      <AREncounterScreen spawn={spawn} onDismiss={onDismiss} />
+    );
+
+    const dialog = getByRole("dialog");
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.getAttribute("aria-label")).toBe("Amethyst AR encounter");
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });
