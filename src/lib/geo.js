@@ -103,35 +103,64 @@ export function watchGps(onFix) {
 
 /**
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
+ * Bolt Optimization: Normalizes collected minerals upfront and uses a single-pass loop
+ * to filter, decorate, and count collection gaps without intermediate array allocations.
  */
 export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
-  const collected = collectedMinerals instanceof Set
-    ? collectedMinerals
-    : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
+  let collected;
+  if (collectedMinerals instanceof Set) {
+    collected = new Set();
+    for (const item of collectedMinerals) {
+      collected.add(String(item).toLowerCase());
+    }
+  } else if (Array.isArray(collectedMinerals)) {
+    collected = new Set();
+    for (let i = 0; i < collectedMinerals.length; i++) {
+      collected.add(String(collectedMinerals[i]).toLowerCase());
+    }
+  } else {
+    collected = new Set();
+  }
 
-  return (hotspots || [])
-    .filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number')
-    .map((h) => {
-      const distanceMi = userLocation ? haversineMi(userLocation, h) : null;
-      const land = h.land_type || 'unknown';
-      const publicBonus = PUBLIC_LAND.has(land) ? 18 : land === 'private' ? -12 : 0;
-      const minerals = h.minerals || [];
-      const gapCount = minerals.filter((m) => m && !collected.has(String(m).toLowerCase())).length;
-      const trust = Number(h.trust_score) || 0.5;
-      const distScore = distanceMi == null ? 0 : Math.max(0, 42 - distanceMi * 0.85);
-      return {
-        ...h,
-        distanceMi,
-        gapCount,
-        huntScore: distScore + publicBonus + gapCount * 4 + trust * 20,
-      };
-    })
-    .sort((a, b) => {
-      if (a.distanceMi != null && b.distanceMi != null && Math.abs(a.distanceMi - b.distanceMi) > 2) {
-        return a.distanceMi - b.distanceMi;
+  const list = hotspots || [];
+  const decorated = [];
+
+  for (let i = 0; i < list.length; i++) {
+    const h = list[i];
+    if (!h || typeof h.lat !== 'number' || typeof h.lng !== 'number') continue;
+
+    const distanceMi = userLocation ? haversineMi(userLocation, h) : null;
+    const land = h.land_type || 'unknown';
+    const publicBonus = PUBLIC_LAND.has(land) ? 18 : land === 'private' ? -12 : 0;
+    const minerals = h.minerals;
+
+    let gapCount = 0;
+    if (minerals && minerals.length > 0) {
+      for (let j = 0; j < minerals.length; j++) {
+        const m = minerals[j];
+        if (m && !collected.has(String(m).toLowerCase())) {
+          gapCount++;
+        }
       }
-      return (b.huntScore || 0) - (a.huntScore || 0);
+    }
+
+    const trust = Number(h.trust_score) || 0.5;
+    const distScore = distanceMi == null ? 0 : Math.max(0, 42 - distanceMi * 0.85);
+
+    decorated.push({
+      ...h,
+      distanceMi,
+      gapCount,
+      huntScore: distScore + publicBonus + gapCount * 4 + trust * 20,
     });
+  }
+
+  return decorated.sort((a, b) => {
+    if (a.distanceMi != null && b.distanceMi != null && Math.abs(a.distanceMi - b.distanceMi) > 2) {
+      return a.distanceMi - b.distanceMi;
+    }
+    return (b.huntScore || 0) - (a.huntScore || 0);
+  });
 }
 
 export function escapeHtml(value) {
