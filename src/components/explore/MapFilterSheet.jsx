@@ -3,9 +3,10 @@
  * Sections: ACCESS (radio) · SPOTS (radio) · POPULAR ROCKS (multi-select + search).
  * Dark theme, mint accent, organized like the competitor but on-brand.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Check, Plus, MessageCircle } from 'lucide-react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 const ACCESS_OPTIONS = [
   { id: 'all',    label: 'All access' },
@@ -26,6 +27,13 @@ export default function MapFilterSheet({
   minerals = [],
 }) {
   const [search, setSearch] = useState('');
+  const sheetRef = useRef(null);
+  const titleId = useId();
+
+  useFocusTrap(sheetRef, {
+    active: open,
+    onClose,
+  });
 
   const filteredMinerals = useMemo(() => {
     if (!search.trim()) return minerals;
@@ -49,15 +57,21 @@ export default function MapFilterSheet({
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
+            aria-hidden="true"
             className="fixed inset-0 z-[2000]"
             style={{ background: 'rgba(0,0,0,0.55)' }}
           />
 
           {/* Sheet */}
           <motion.div
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="fixed bottom-0 inset-x-0 z-[2001] rounded-t-3xl flex flex-col"
+            className="fixed bottom-0 inset-x-0 z-[2001] rounded-t-3xl flex flex-col focus:outline-none"
             style={{
               background: '#0a0a14',
               border: '1px solid hsla(270,30%,40%,0.2)',
@@ -72,17 +86,17 @@ export default function MapFilterSheet({
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-white font-bold text-base">Map filters</h2>
+                  <h2 id={titleId} className="text-white font-bold text-base">Map filters</h2>
                   <p className="text-white/40 text-xs">{subtitle}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {activeCount > 0 && (
-                    <button onClick={resetAll} aria-label="Reset all map filters"
+                    <button type="button" onClick={resetAll} aria-label="Reset all map filters"
                       className="px-3 py-2 rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60">
                       Reset
                     </button>
                   )}
-                  <button onClick={onClose} aria-label="Done, apply filters and close"
+                  <button type="button" onClick={onClose} aria-label="Done, apply filters and close"
                     className="px-5 py-2 rounded-full font-bold text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
                     style={{ background: '#9FE8D0', color: '#0a0a14' }}>
                     Done
@@ -95,16 +109,18 @@ export default function MapFilterSheet({
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
                 style={{ background: 'hsla(255,30%,12%,0.8)', border: '1px solid hsla(255,30%,25%,0.3)' }}>
-                <Search size={16} className="text-white/30" />
+                <Search size={16} className="text-white/30" aria-hidden="true" />
                 <input
+                  type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search rocks"
+                  aria-label="Search rocks"
                   className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
-                    <X size={14} />
+                  <button type="button" onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
+                    <X size={14} aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -113,7 +129,7 @@ export default function MapFilterSheet({
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: 'none' }}>
               {/* ACCESS */}
-              <FilterSection title="ACCESS">
+              <FilterSection title="ACCESS" role="radiogroup" ariaLabel="Access filters">
                 {ACCESS_OPTIONS.map(opt => (
                   <FilterRadioRow
                     key={opt.id}
@@ -125,7 +141,7 @@ export default function MapFilterSheet({
               </FilterSection>
 
               {/* SPOTS */}
-              <FilterSection title="SPOTS">
+              <FilterSection title="SPOTS" role="radiogroup" ariaLabel="Spot filters">
                 {SPOT_OPTIONS.map(opt => (
                   <FilterRadioRow
                     key={opt.id}
@@ -140,7 +156,7 @@ export default function MapFilterSheet({
               {/* POPULAR ROCKS */}
               <FilterSection title="POPULAR ROCKS">
                 {selectedMinerals.size > 0 && (
-                  <button onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
+                  <button type="button" onClick={onClearMinerals} aria-label={`Clear all ${selectedMinerals.size} selected minerals`}
                     className="text-[11px] text-[#9FE8D0] mb-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60 rounded-sm">
                     Clear all ({selectedMinerals.size})
                   </button>
@@ -150,6 +166,7 @@ export default function MapFilterSheet({
                     const active = selectedMinerals.has(mineral);
                     return (
                       <button
+                        type="button"
                         key={mineral}
                         onClick={() => onToggleMineral(mineral)}
                         aria-pressed={active}
@@ -161,9 +178,9 @@ export default function MapFilterSheet({
                       >
                         <span className="text-white text-sm capitalize">{mineral}</span>
                         {active ? (
-                          <Check size={16} style={{ color: '#9FE8D0' }} />
+                          <Check size={16} style={{ color: '#9FE8D0' }} aria-hidden="true" />
                         ) : (
-                          <Plus size={16} className="text-white/30" />
+                          <Plus size={16} className="text-white/30" aria-hidden="true" />
                         )}
                       </button>
                     );
@@ -178,7 +195,7 @@ export default function MapFilterSheet({
 
               {/* Feedback */}
               <div className="flex items-center justify-center gap-1.5 pt-4 pb-2 text-white/30 text-xs">
-                <MessageCircle size={12} />
+                <MessageCircle size={12} aria-hidden="true" />
                 <span>How can we improve map filters?</span>
               </div>
             </div>
@@ -189,9 +206,9 @@ export default function MapFilterSheet({
   );
 }
 
-function FilterSection({ title, children }) {
+function FilterSection({ title, role, ariaLabel, children }) {
   return (
-    <div className="mb-5">
+    <div className="mb-5" role={role} aria-label={ariaLabel}>
       <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">{title}</h3>
       <div className="space-y-1.5">{children}</div>
     </div>
@@ -201,8 +218,10 @@ function FilterSection({ title, children }) {
 function FilterRadioRow({ label, sublabel, active, onClick }) {
   return (
     <button
+      type="button"
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
-      aria-pressed={active}
       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]/60"
       style={{
         background: active ? 'hsla(160,50%,20%,0.3)' : 'hsla(255,30%,12%,0.5)',
