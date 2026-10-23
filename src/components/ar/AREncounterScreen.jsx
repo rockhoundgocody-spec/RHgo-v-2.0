@@ -253,6 +253,17 @@ export default function AREncounterScreen({ spawn, onCatch, onDismiss }) {
 
   const theme = RARITY_THEMES[spawn.rarity] || RARITY_THEMES.common;
 
+  // Close full-screen overlay on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onDismiss?.();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onDismiss]);
+
   // Start camera for AR feel
   useARCamera(videoRef);
 
