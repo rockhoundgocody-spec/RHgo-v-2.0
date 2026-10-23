@@ -206,7 +206,7 @@ export default function MapFilterSheet({
   );
 }
 
-function FilterSection({ title, role, ariaLabel, children }) {
+function FilterSection({ title, role = undefined, ariaLabel = undefined, children }) {
   return (
     <div className="mb-5" role={role} aria-label={ariaLabel}>
       <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">{title}</h3>
@@ -215,7 +215,7 @@ function FilterSection({ title, role, ariaLabel, children }) {
   );
 }
 
-function FilterRadioRow({ label, sublabel, active, onClick }) {
+function FilterRadioRow({ label, sublabel = undefined, active, onClick }) {
   return (
     <button
       type="button"

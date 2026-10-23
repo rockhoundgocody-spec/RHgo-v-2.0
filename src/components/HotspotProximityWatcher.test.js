@@ -11,8 +11,8 @@ const mockLocalStorage = (() => {
 })();
 
 beforeAll(() => {
-  globalThis.document = { title: '' };
-  globalThis.window = {
+  globalThis.document = /** @type {any} */ ({ title: '' });
+  globalThis.window = /** @type {any} */ ({
     location: {
       search: '',
       href: '',
@@ -25,8 +25,8 @@ beforeAll(() => {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     localStorage: mockLocalStorage,
-  };
-  globalThis.localStorage = mockLocalStorage;
+  });
+  globalThis.localStorage = /** @type {any} */ (mockLocalStorage);
 });
 
 describe('HotspotProximityWatcher utilities', () => {
