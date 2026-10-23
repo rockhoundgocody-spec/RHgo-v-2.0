@@ -14,9 +14,11 @@ import { withSessionTimeout } from '@/lib/sessionTimeout';
 
 const STORAGE_KEY = "rh-offline-queue-v1";
 const KEY_STORAGE_KEY = "rh-offline-queue-key-v1";
+const KEY_DB_NAME = "rh-offline-key-db";
+const KEY_STORE_NAME = "keys";
+const KEY_ID = "queue-aes-key";
 
 let memoryKey = null;
-let memoryKeyRaw = null;
 let cachedQueue = null;
 let mutation = Promise.resolve();
 function serializeQueue(work) {
@@ -53,14 +55,75 @@ function base64ToBuffer(base64) {
   return bytes.buffer;
 }
 
-async function getOrCreateKey() {
-  const storedKey = localStorage.getItem(KEY_STORAGE_KEY);
-  if (memoryKey && storedKey === memoryKeyRaw) return memoryKey;
+let keyDbPromise = null;
+function openKeyDB() {
+  if (typeof indexedDB === "undefined") return Promise.resolve(null);
+  if (keyDbPromise) return keyDbPromise;
+  keyDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(KEY_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(KEY_STORE_NAME)) {
+        db.createObjectStore(KEY_STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => {
+      keyDbPromise = null;
+      reject(req.error);
+    };
+  });
+  return keyDbPromise;
+}
+
+async function loadKeyFromIDB() {
+  try {
+    const db = await openKeyDB();
+    if (!db) return null;
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(KEY_STORE_NAME, "readonly");
+      const req = tx.objectStore(KEY_STORE_NAME).get(KEY_ID);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function saveKeyToIDB(key) {
+  try {
+    const db = await openKeyDB();
+    if (!db) return;
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(KEY_STORE_NAME, "readwrite");
+      tx.objectStore(KEY_STORE_NAME).put(key, KEY_ID);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // fallback to memoryKey
+  }
+}
+
+/** For testing or resetting in-memory key cache */
+export function _resetKeyCache() {
   memoryKey = null;
+  keyDbPromise = null;
+}
+
+async function getOrCreateKey() {
+  if (memoryKey) return memoryKey;
   const cryptoObj = getCrypto();
   if (!cryptoObj) return null;
 
   try {
+    const idbKey = await loadKeyFromIDB();
+    if (idbKey) {
+      memoryKey = idbKey;
+      return memoryKey;
+    }
+
     const storedKeyRaw = typeof localStorage !== "undefined" ? localStorage.getItem(KEY_STORAGE_KEY) : null;
     if (storedKeyRaw) {
       const rawKeyBuffer = base64ToBuffer(storedKeyRaw);
@@ -68,10 +131,13 @@ async function getOrCreateKey() {
         "raw",
         rawKeyBuffer,
         { name: "AES-GCM", length: 256 },
-        true,
+        false,
         ["encrypt", "decrypt"]
       );
-      memoryKeyRaw = storedKeyRaw;
+      await saveKeyToIDB(memoryKey);
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(KEY_STORAGE_KEY);
+      }
       return memoryKey;
     }
 
@@ -80,16 +146,11 @@ async function getOrCreateKey() {
     }
     memoryKey = await cryptoObj.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
-      true,
+      false,
       ["encrypt", "decrypt"]
     );
 
-    const exportedKey = await cryptoObj.subtle.exportKey("raw", memoryKey);
-    const keyBase64 = bufferToBase64(exportedKey);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(KEY_STORAGE_KEY, keyBase64);
-      memoryKeyRaw = keyBase64;
-    }
+    await saveKeyToIDB(memoryKey);
     return memoryKey;
   } catch (err) {
     memoryKey = null;

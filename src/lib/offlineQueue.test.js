@@ -30,6 +30,7 @@ import {
   installOfflineQueue,
   getQueuedConflicts,
   resolveQueuedConflict,
+  _resetKeyCache,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
@@ -50,9 +51,10 @@ describe("offlineQueue AES-GCM encryption", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    _resetKeyCache();
   });
 
-  it("persists items encrypted in localStorage", async () => {
+  it("persists items encrypted in localStorage without storing raw key bytes in localStorage", async () => {
     const offlineItem = { entity: "Specimen", op: "create", data: { mineral_name: "Quartz" }, ownerId: 'owner-1' };
 
     // Force offline queueing by rejecting network request with non-4xx error
@@ -73,10 +75,56 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(typeof parsedStored.iv).toBe("string");
     expect(typeof parsedStored.data).toBe("string");
 
+    // Ensure raw key is NOT saved in localStorage
+    expect(localStorage.getItem("rh-offline-queue-key-v1")).toBeNull();
+
     // Verify loadQueue decrypts the stored item correctly
     const items = await loadQueue();
     expect(items.length).toBe(1);
     expect(items[0].data.mineral_name).toBe("Quartz");
+  });
+
+  it("migrates legacy raw key from localStorage into IndexedDB and removes it from localStorage", async () => {
+    // Setup legacy raw key in localStorage
+    const rawKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    const exportedRaw = await crypto.subtle.exportKey("raw", rawKey);
+    const bytes = new Uint8Array(exportedRaw);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const keyBase64 = btoa(binary);
+
+    localStorage.setItem("rh-offline-queue-key-v1", keyBase64);
+
+    // Encrypt test payload using legacy rawKey
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encodedData = new TextEncoder().encode(JSON.stringify([{ entity: "Specimen", op: "create", data: { mineral_name: "Beryl" } }]));
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, rawKey, encodedData);
+
+    let ivBin = "";
+    const ivBytes = new Uint8Array(iv);
+    for (let i = 0; i < ivBytes.byteLength; i++) ivBin += String.fromCharCode(ivBytes[i]);
+
+    let cipherBin = "";
+    const cipherBytes = new Uint8Array(ciphertext);
+    for (let i = 0; i < cipherBytes.byteLength; i++) cipherBin += String.fromCharCode(cipherBytes[i]);
+
+    localStorage.setItem("rh-offline-queue-v1", JSON.stringify({
+      version: 1,
+      iv: btoa(ivBin),
+      data: btoa(cipherBin),
+    }));
+
+    // Trigger loadQueue which should migrate key and decrypt
+    const items = await loadQueue();
+    expect(items).toHaveLength(1);
+    expect(items[0].data.mineral_name).toBe("Beryl");
+
+    // Key should now be removed from localStorage
+    expect(localStorage.getItem("rh-offline-queue-key-v1")).toBeNull();
   });
 
   it("handles legacy unencrypted items gracefully and encrypts them on next load/save", async () => {
