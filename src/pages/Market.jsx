@@ -58,20 +58,21 @@ export default function Market() {
       <div className="mb-4 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
-            <input type="text" placeholder="Search specimens, minerals, regions…"
+            <Search size={14} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none" />
+            <input type="text" placeholder="Search specimens, minerals, regions…" aria-label="Search listings"
               value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none"
+              className="w-full pl-9 pr-4 py-2.5 rounded-2xl text-sm text-white/90 placeholder-white/30 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{ background: 'hsla(245,30%,10%,0.8)', border: '1px solid hsla(270,30%,35%,0.25)', backdropFilter: 'blur(16px)' }} />
           </div>
           <button onClick={() => setFilterOpen(f => !f)}
-            className="px-3.5 py-2.5 rounded-2xl flex items-center gap-2 text-sm transition active:scale-95"
+            aria-expanded={filterOpen}
+            className="px-3.5 py-2.5 rounded-2xl flex items-center gap-2 text-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
             style={{
               background: filterOpen ? 'hsla(270,60%,30%,0.4)' : 'hsla(245,30%,10%,0.8)',
               border: `1px solid ${filterOpen ? 'hsla(280,60%,55%,0.35)' : 'hsla(270,30%,35%,0.25)'}`,
               color: filterOpen ? 'hsl(280,100%,85%)' : 'hsla(0,0%,100%,0.5)',
             }}>
-            <Filter size={14} /> Filters
+            <Filter size={14} aria-hidden="true" /> Filters
           </button>
         </div>
 
@@ -80,7 +81,7 @@ export default function Market() {
           {FILTERS.map(f => (
             <button key={f.key} onClick={() => setActiveFilter(f.key)}
               aria-pressed={activeFilter === f.key}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] transition active:scale-95"
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
               style={{
                 background: activeFilter === f.key ? 'hsla(270,60%,30%,0.5)' : 'hsla(245,25%,12%,0.6)',
                 border: `1px solid ${activeFilter === f.key ? 'hsla(280,60%,55%,0.4)' : 'hsla(270,20%,30%,0.2)'}`,
@@ -111,7 +112,7 @@ export default function Market() {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={() => setCreateOpen(true)}
-        className="fixed right-4 bottom-44 z-40 flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm"
+        className="fixed right-4 bottom-44 z-40 flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow"
         style={{
           background: 'linear-gradient(135deg, hsla(270,60%,35%,0.8), hsla(195,70%,30%,0.7))',
           border: '1px solid hsla(270,60%,55%,0.4)',
@@ -120,7 +121,7 @@ export default function Market() {
           color: 'hsl(280,100%,90%)',
         }}
       >
-        <Plus size={18} /> List
+        <Plus size={18} aria-hidden="true" /> List
       </motion.button>
 
       <CreateListingSheet open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => {}} />
