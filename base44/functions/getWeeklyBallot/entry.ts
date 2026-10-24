@@ -24,7 +24,7 @@ export default async function (req: Request): Promise<Response> {
     const wk = weekKey(now);
     const { start, end } = weekRange(now);
 
-    const posts = await base44.entities.Post.filter({ post_type: "find_share" });
+    const posts = await base44.asServiceRole.entities.Post.filter({ post_type: "find_share" });
     const eligible = posts.filter((p) => {
       if (!p.created_date) return false;
       const at = new Date(p.created_date);
@@ -63,7 +63,7 @@ export default async function (req: Request): Promise<Response> {
       image_url: p.image_url,
       rarity: p.rarity,
       body: p.body,
-      author_name: p.author_name || (p.owner_email || "").split("@")[0] || "unknown",
+      author_name: p.author_name || "Rockhound",
       location_label: p.location_label,
       votes: tally[p.id] || 0,
     }));

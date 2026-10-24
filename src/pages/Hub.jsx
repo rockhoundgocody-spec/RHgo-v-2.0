@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
+import { fetchHotspots } from '@/lib/hotspotApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ScanLine, MapPin, Compass, Flame } from 'lucide-react';
@@ -57,7 +58,7 @@ export default function Hub() {
       }
     })();
 
-    base44.entities.Hotspot.list('-trust_score', 80)
+    fetchHotspots({ limit: 80 })
       .then((h) => { if (!cancelled) setHotspots(h || []); })
       .catch(() => {});
 

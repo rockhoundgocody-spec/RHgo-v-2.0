@@ -96,7 +96,10 @@ export function computeBadgeMetrics(specimens = [], context = {}) {
   const profile = context.playerProfile || null;
   const myEmail = profile?.owner_email || context.ownerEmail || null;
 
-  const myPosts = myEmail ? posts.filter((p) => p.owner_email === myEmail) : [];
+  // Feed posts arrive email-free with is_mine flags; legacy raw rows still match by email.
+  const isMine = (row) => row?.is_mine === true || (!!myEmail && row?.email === myEmail);
+  const isMyPost = (p) => p?.is_mine === true || (!!myEmail && p?.owner_email === myEmail);
+  const myPosts = posts.filter(isMyPost);
   const communityPostCount = myPosts.length;
   const totalReactions = myPosts.reduce((sum, p) => {
     const r = p.reactions || {};
@@ -104,13 +107,11 @@ export function computeBadgeMetrics(specimens = [], context = {}) {
   }, 0);
 
   let commentHelpCount = 0;
-  if (myEmail) {
-    for (const p of posts) {
-      if (p.owner_email === myEmail) continue; // only comments on OTHERS' posts count
-      const comments = Array.isArray(p.comments) ? p.comments : [];
-      for (const c of comments) {
-        if (c?.email === myEmail) commentHelpCount += 1;
-      }
+  for (const p of posts) {
+    if (isMyPost(p)) continue; // only comments on OTHERS' posts count
+    const comments = Array.isArray(p.comments) ? p.comments : [];
+    for (const c of comments) {
+      if (isMine(c)) commentHelpCount += 1;
     }
   }
 

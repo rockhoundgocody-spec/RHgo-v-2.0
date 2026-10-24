@@ -18,7 +18,7 @@ export default async function (req: Request): Promise<Response> {
     const entryId = body?.entry_id;
     if (!entryId) return Response.json({ error: "Missing entry_id" }, { status: 400 });
 
-    const post = await base44.entities.Post.get(entryId);
+    const post = await base44.asServiceRole.entities.Post.get(entryId);
     if (!post || post.post_type !== "find_share")
       return Response.json({ error: "Entry is not a find-share post" }, { status: 400 });
 
