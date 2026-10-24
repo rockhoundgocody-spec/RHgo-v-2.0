@@ -10,8 +10,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-duluth-park-point',
     name: 'Park Point Beach (Duluth, MN)',
-    lat: 46.7725,
-    lng: -92.0833,
+    lat: 46.77,
+    lng: -92.08,
     land_type: 'public',
     minerals: ['Lake Superior Agate', 'Banded Chert', 'Basalt', 'Epidote'],
     difficulty: 'easy',
@@ -23,8 +23,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-beaver-bay-beach',
     name: 'Beaver Bay Shingle Beach (MN)',
-    lat: 47.2575,
-    lng: -91.2986,
+    lat: 47.26,
+    lng: -91.3,
     land_type: 'public',
     minerals: ['Lake Superior Agate', 'Thomsonite', 'Prehnite', 'Chlorastrolite'],
     difficulty: 'easy',
@@ -36,8 +36,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-petoskey-state-park',
     name: 'Petoskey State Park (Little Traverse Bay, MI)',
-    lat: 45.4056,
-    lng: -84.9125,
+    lat: 45.41,
+    lng: -84.91,
     land_type: 'state_park',
     minerals: ['Petoskey Stone', 'Favosites (Charlevoix Stone)', 'Calcite'],
     difficulty: 'easy',
@@ -49,8 +49,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-crisp-point-yooperlite',
     name: 'Crisp Point Light Beach (Lake Superior, MI)',
-    lat: 46.7533,
-    lng: -85.2581,
+    lat: 46.75,
+    lng: -85.26,
     land_type: 'public',
     minerals: ['Yooperlite (Fluorescent Sodalite Syenite)', 'Lake Superior Agate', 'Jasper'],
     difficulty: 'moderate',
@@ -62,8 +62,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-keokuk-geodes',
     name: 'Keokuk Geode Beds (Des Moines River, IA/MO)',
-    lat: 40.4042,
-    lng: -91.3855,
+    lat: 40.4,
+    lng: -91.39,
     land_type: 'public',
     minerals: ['Quartz Geode', 'Chalcedony', 'Pyrite', 'Calcite'],
     difficulty: 'moderate',
@@ -77,8 +77,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-herkimer-diamond-mines',
     name: 'Herkimer Diamond Mines (Middleville, NY)',
-    lat: 43.1417,
-    lng: -74.9669,
+    lat: 43.14,
+    lng: -74.97,
     land_type: 'public',
     minerals: ['Herkimer Diamond (Doubly Terminated Quartz)', 'Anthraxolite', 'Dolomite'],
     difficulty: 'easy',
@@ -90,8 +90,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-st-clair-fern-fossils',
     name: 'St. Clair Carboniferous Fern Beds (PA)',
-    lat: 40.7189,
-    lng: -76.1953,
+    lat: 40.72,
+    lng: -76.2,
     land_type: 'public',
     minerals: ['Pyrophyllite White Fern Fossils', 'Anthracite', 'Pecopteris'],
     difficulty: 'moderate',
@@ -105,8 +105,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-crater-of-diamonds',
     name: 'Crater of Diamonds State Park (Murfreesboro, AR)',
-    lat: 34.0333,
-    lng: -93.6706,
+    lat: 34.03,
+    lng: -93.67,
     land_type: 'state_park',
     minerals: ['Diamond', 'Amethyst', 'Jasper', 'Agate', 'Peridot'],
     difficulty: 'easy',
@@ -118,8 +118,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-emerald-hollow-mine',
     name: 'Emerald Hollow Mine (Hiddenite, NC)',
-    lat: 35.9189,
-    lng: -81.0808,
+    lat: 35.92,
+    lng: -81.08,
     land_type: 'public',
     minerals: ['Emerald', 'Hiddenite (Spodumene)', 'Aquamarine', 'Rutile', 'Garnet'],
     difficulty: 'easy',
@@ -131,8 +131,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-graves-mountain',
     name: 'Graves Mountain (Lincolnton, GA)',
-    lat: 33.7431,
-    lng: -82.5186,
+    lat: 33.74,
+    lng: -82.52,
     land_type: 'public',
     minerals: ['Rutile', 'Iridescent Hematite', 'Lazulite', 'Pyrophyllite'],
     difficulty: 'moderate',
@@ -146,8 +146,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-topaz-mountain',
     name: 'Topaz Mountain (Thomas Range, UT)',
-    lat: 39.7128,
-    lng: -113.1039,
+    lat: 39.71,
+    lng: -113.1,
     land_type: 'blm',
     minerals: ['Sherry Topaz', 'Bixbyite', 'Pseudobrookite', 'Red Beryl'],
     difficulty: 'moderate',
@@ -159,8 +159,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-crystal-park-montana',
     name: 'Crystal Park (Pioneer Mountains, MT)',
-    lat: 45.4975,
-    lng: -113.0972,
+    lat: 45.5,
+    lng: -113.1,
     land_type: 'forest_service',
     minerals: ['Quartz Crystal', 'Smoky Quartz', 'Amethyst'],
     difficulty: 'easy',
@@ -172,8 +172,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-oregon-sunstone-area',
     name: 'Oregon Sunstone Public Collection Area (Plush, OR)',
-    lat: 42.7214,
-    lng: -119.8822,
+    lat: 42.72,
+    lng: -119.88,
     land_type: 'blm',
     minerals: ['Oregon Sunstone (Labradorite Feldspar)', 'Copper Schiller Sunstone'],
     difficulty: 'easy',
@@ -185,8 +185,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-glass-buttes-obsidian',
     name: 'Glass Buttes (High Desert, OR)',
-    lat: 43.5594,
-    lng: -120.0617,
+    lat: 43.56,
+    lng: -120.06,
     land_type: 'blm',
     minerals: ['Rainbow Obsidian', 'Mahogany Obsidian', 'Midnight Lace Obsidian', 'Fire Obsidian'],
     difficulty: 'moderate',
@@ -198,8 +198,8 @@ export const SEED_HOTSPOTS = [
   {
     id: 'seed-rockhound-state-park',
     name: 'Rockhound State Park (Deming, NM)',
-    lat: 32.1869,
-    lng: -107.6167,
+    lat: 32.19,
+    lng: -107.62,
     land_type: 'state_park',
     minerals: ['Thundereggs', 'Agate', 'Jasper', 'Rhyolite Geodes', 'Perlite'],
     difficulty: 'easy',
@@ -214,13 +214,21 @@ export const SEED_HOTSPOTS = [
  * Returns merged hotspots prioritizing user/backend database records while ensuring
  * all geographic seed hotspots exist so the map is never empty.
  */
-export function getAugmentedHotspots(liveHotspots = []) {
+export function getAugmentedHotspots(liveHotspots = [], exactCoords = []) {
+  // Seeds ship with ~1 km coordinates; the server sends exact ones only to paid, non-Stealth users.
+  const exactById = new Map(exactCoords.map(c => [c.id, c]));
+  const seeds = SEED_HOTSPOTS.map(s => {
+    const exact = exactById.get(s.id);
+    return exact
+      ? { ...s, lat: exact.lat, lng: exact.lng, coords_precision: 'exact' }
+      : { ...s, coords_precision: 'approximate' };
+  });
   if (!liveHotspots || liveHotspots.length === 0) {
-    return SEED_HOTSPOTS;
+    return seeds;
   }
 
   const liveNames = new Set(liveHotspots.map(h => (h.name || '').toLowerCase().trim()));
-  const missingSeeds = SEED_HOTSPOTS.filter(s => !liveNames.has(s.name.toLowerCase().trim()));
+  const missingSeeds = seeds.filter(s => !liveNames.has(s.name.toLowerCase().trim()));
 
   return [...liveHotspots, ...missingSeeds];
 }

@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { getAugmentedHotspots } from '@/lib/seedHotspots';
 
 /**
  * Hotspots come only through the server, which rounds coordinates to ~1 km
@@ -8,7 +9,7 @@ import { base44 } from '@/api/base44Client';
 export async function fetchHotspots({ sort = '-trust_score', limit = 200 } = {}) {
   try {
     const res = await base44.functions.invoke('getHotspots', { sort, limit });
-    return res?.data?.hotspots || [];
+    return getAugmentedHotspots(res?.data?.hotspots || [], res?.data?.seed_coords || []);
   } catch (error) {
     if (error?.response?.status === 401 || error?.status === 401) return [];
     throw error;
