@@ -57,7 +57,7 @@ function StatPill({ value, label, color }) {
 }
 
 // Compact hotspot card in the bottom sheet list (Memoized to prevent unnecessary re-renders)
-const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick, distanceMi }) {
+function HotspotCardInner({ hotspot, active, hasGap, onClick, distanceMi }) {
   const color = hasGap ? '#c084fc' : LAND_COLORS[hotspot.land_type] || LAND_COLORS.unknown;
   // Determine rarity-themed border for special hotspots
   const hasLegendary = (hotspot.minerals||[]).some(m =>
@@ -130,7 +130,8 @@ const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick
       </div>
     </motion.div>
   );
-});
+}
+const HotspotCard = memo(HotspotCardInner);
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Explore() {

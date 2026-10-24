@@ -102,12 +102,12 @@ export function watchGps(onFix) {
 }
 
 /**
- * Rank sites for a hunter: closer + public land + collection gaps + trust.
- */
-/**
  * Fast boolean check to see if any hotspot is within `maxRadiusMi` miles of `userLocation`.
  * Performance Optimization: Uses an early-exit linear loop with direct `haversineMi` distance checks
  * to avoid full array mapping, gap counting, and O(N log N) sorting overhead (>1000x faster than `rankHotspots`).
+ * @param {any[]} hotspots
+ * @param {{ lat: number, lng: number } | null | undefined} userLocation
+ * @param {number} [maxRadiusMi]
  */
 export function hasNearbyHotspots(hotspots, userLocation, maxRadiusMi = 75) {
   if (!userLocation || !Array.isArray(hotspots)) return true;
@@ -123,7 +123,12 @@ export function hasNearbyHotspots(hotspots, userLocation, maxRadiusMi = 75) {
   return false;
 }
 
-export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
+/**
+ * Rank sites for a hunter: closer + public land + collection gaps + trust.
+ * @param {any[]} hotspots
+ * @param {{ userLocation?: { lat: number, lng: number } | null, collectedMinerals?: Set<string> | string[] }} [options]
+ */
+export function rankHotspots(hotspots, { userLocation = null, collectedMinerals = new Set() } = {}) {
   const collected = collectedMinerals instanceof Set
     ? collectedMinerals
     : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
