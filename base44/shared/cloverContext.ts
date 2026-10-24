@@ -6,13 +6,13 @@ export function normalizeHistory(history: unknown) {
     .slice(-12).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content.slice(0, 1600) }));
 }
 
-export function validLocation(location: any) {
+export function validLocation(location: Record<string, unknown> | null | undefined) {
   if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
   return Number.isFinite(location.lat) && Math.abs(location.lat) <= 90 && Number.isFinite(location.lng) && Math.abs(location.lng) <= 180
     ? { lat: location.lat, lng: location.lng } : null;
 }
 
-export function contextQuestion(question: string, history: any[]) {
+export function contextQuestion(question: string, history: Array<Record<string, unknown>>) {
   if (!/\b(it|its|that|those|them|there|same|this one)\b/i.test(question)) return question;
   const previous = history.filter((m) => m.role === 'user' && m.content !== question).slice(-2);
   return [...previous.map((m) => m.content), question].join(' ').slice(-2400);
