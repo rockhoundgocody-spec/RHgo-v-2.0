@@ -10,6 +10,7 @@ import {
   type VaultItem,
 } from '../../shared/cloverVault.ts';
 import { safeError } from '../../shared/httpErrors.ts';
+import { coarsenHotspot } from '../../shared/hotspotPrecision.ts';
 
 // "Brain swap" choices from the Clover command router → Base44 models.
 // Grok (the default brain) uses the app-level model.
@@ -25,7 +26,7 @@ async function loadVault(base44, user, location, question) {
     base44.entities.Specimen.filter({ ...owner, ...recordSearch(question, ['mineral_name', 'common_name', 'found_at', 'notes']) }, { sort: '-created_date', limit: 50 }),
     base44.entities.PrivateRockLog.filter({ owner_email: user.email, ...recordSearch(question, ['mineral_name', 'location_label', 'notes']) }, { sort: '-created_date', limit: 30 }),
     base44.entities.MemoryCapsule.filter({ owner_email: user.email, ...recordSearch(question, ['expedition_name', 'location_name', 'story']) }, { sort: '-created_date', limit: 20 }),
-    location ? base44.entities.Hotspot.filter({ lat: { $gte: location.lat - 2, $lte: location.lat + 2 }, lng: { $gte: location.lng - 2, $lte: location.lng + 2 } }, { limit: 50 }) : Promise.resolve({ items: [] }),
+    location ? base44.asServiceRole.entities.Hotspot.filter({ lat: { $gte: location.lat - 2, $lte: location.lat + 2 }, lng: { $gte: location.lng - 2, $lte: location.lng + 2 } }, { limit: 50 }).then((r) => ({ items: (r.items || []).map(coarsenHotspot) })) : Promise.resolve({ items: [] }),
     base44.entities.Specimen.count(owner),
   ];
   const results = await Promise.allSettled(queries);

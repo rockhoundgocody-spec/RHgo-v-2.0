@@ -6,6 +6,7 @@ import {
   persistLastGps,
   readLastGps,
   watchGps,
+  hasNearbyHotspots,
   rankHotspots,
   escapeHtml,
   evaluateGpsAccuracy,
@@ -180,6 +181,34 @@ describe('geo library', () => {
       });
 
       expect(onFix).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hasNearbyHotspots', () => {
+    const mockHotspots = [
+      { id: '1', lat: 45.5, lng: -122.6 }, // 0 mi from user
+      { id: '2', lat: 46.5, lng: -122.6 }, // ~69 mi from user
+      { id: '3', lat: 48.0, lng: -122.6 }, // ~172 mi from user
+    ];
+
+    it('returns true when userLocation is null or undefined', () => {
+      expect(hasNearbyHotspots(mockHotspots, null)).toBe(true);
+      expect(hasNearbyHotspots(mockHotspots, undefined)).toBe(true);
+    });
+
+    it('returns true when hotspots is not an array', () => {
+      expect(hasNearbyHotspots(null, { lat: 45.5, lng: -122.6 })).toBe(true);
+    });
+
+    it('returns true if any hotspot is within maxRadiusMi', () => {
+      const userLocation = { lat: 45.5, lng: -122.6 };
+      expect(hasNearbyHotspots(mockHotspots, userLocation, 75)).toBe(true);
+    });
+
+    it('returns false if all hotspots are beyond maxRadiusMi', () => {
+      const userLocation = { lat: 45.5, lng: -122.6 };
+      const farHotspots = [{ id: '3', lat: 48.0, lng: -122.6 }]; // ~172 mi away
+      expect(hasNearbyHotspots(farHotspots, userLocation, 75)).toBe(false);
     });
   });
 

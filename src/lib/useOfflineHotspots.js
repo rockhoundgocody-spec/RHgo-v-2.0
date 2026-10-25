@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { fetchHotspots } from '@/lib/hotspotApi';
 import { saveCache, loadCache } from '@/lib/offlineCache';
 import { getAugmentedHotspots } from '@/lib/seedHotspots';
 
@@ -39,7 +39,7 @@ export default function useOfflineHotspots() {
   const { data = [], isFetching, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const fresh = await base44.entities.Hotspot.list(undefined, FETCH_LIMIT);
+      const fresh = await fetchHotspots({ limit: FETCH_LIMIT });
       setIsOffline(false);
       setCachedAt(Date.now());
       saveCache(CACHE_KEY, fresh);
