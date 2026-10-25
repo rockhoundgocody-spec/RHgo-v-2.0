@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef } from 'react';
  * phone speaker bleeds into the mic — a low threshold would make Clover
  * interrupt herself on her own voice.
  */
-const RMS_THRESHOLD = 0.14;
-const SUSTAIN_MS = 320;
+const RMS_THRESHOLD = 0.20;
+const SUSTAIN_MS = 450;
 
 export default function useBargeIn(onBargeIn) {
   const cbRef = useRef(onBargeIn);
