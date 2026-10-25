@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Users, MapPin, Calendar, Plus, Building2, Globe, Mail, CheckCircle2, Clock, Mountain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isValidExternalUrl } from '@/lib/urlValidation';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 
@@ -257,7 +258,7 @@ function ChapterCard({ chapter, events }) {
             <Mail size={11} />
           </a>
         )}
-        {chapter.website_url && (
+        {isValidExternalUrl(chapter.website_url) && (
           <a href={chapter.website_url} target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-white/60 transition">
             <Globe size={11} />
           </a>
