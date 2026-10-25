@@ -58,6 +58,12 @@
     "plan": {
       "type": "string",
       "description": "Pricing-page plan purchased (season, hound, steward, club, field_pro, family)"
+    },
+    "last_stripe_event_id": {
+      "type": "string"
+    },
+    "last_stripe_event_created": {
+      "type": "number"
     }
   },
   "required": [

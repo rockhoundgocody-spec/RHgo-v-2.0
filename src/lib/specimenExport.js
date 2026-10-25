@@ -1,6 +1,6 @@
 /**
- * specimenExport — CSV and KMZ export utilities for PrivateRockLog entries.
- * CSV is a flat spreadsheet; KMZ is a Google Earth-compatible placemark file.
+ * specimenExport — CSV and KML export utilities for PrivateRockLog entries.
+ * CSV is a flat spreadsheet; KML is a Google Earth-compatible placemark file.
  */
 
 /**
@@ -21,8 +21,9 @@ export function exportToCsv(logs, filename = 'rockhound-finds.csv') {
 
   const escape = (val) => {
     if (val == null) return '';
-    const s = String(val);
-    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    const raw = String(val);
+    const s = /^[\s\u0000-\u001f]*[=+\-@]/.test(raw) ? `'${raw}` : raw;
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
       return `"${s.replace(/"/g, '""')}"`;
     }
     return s;
@@ -33,9 +34,9 @@ export function exportToCsv(logs, filename = 'rockhound-finds.csv') {
     escape(log.rarity),
     escape(log.found_date),
     escape(log.location_label),
-    log.lat || '',
-    log.lng || '',
-    log.weight_lbs || '',
+    typeof log.lat === 'number' && Number.isFinite(log.lat) ? log.lat : '',
+    typeof log.lng === 'number' && Number.isFinite(log.lng) ? log.lng : '',
+    typeof log.weight_lbs === 'number' && Number.isFinite(log.weight_lbs) ? log.weight_lbs : '',
     escape(log.notes),
     escape(log.image_url),
   ]);
@@ -51,16 +52,16 @@ export function exportToCsv(logs, filename = 'rockhound-finds.csv') {
  */
 export function exportToKmz(logs, filename = 'rockhound-finds.kml') {
   const placemarks = logs
-    .filter(log => log.lat && log.lng)
+    .filter(log => typeof log.lat === 'number' && Number.isFinite(log.lat) && typeof log.lng === 'number' && Number.isFinite(log.lng))
     .map(log => {
       const name = log.mineral_name || 'Unknown';
       const desc = [
-        log.rarity ? `Rarity: ${log.rarity}` : '',
-        log.found_date ? `Found: ${log.found_date}` : '',
-        log.location_label ? `Location: ${log.location_label}` : '',
-        log.weight_lbs ? `Weight: ${log.weight_lbs} lbs` : '',
-        log.notes ? `Notes: ${log.notes}` : '',
-        log.image_url ? `<img src="${log.image_url}" width="200"/>` : '',
+        log.rarity ? `Rarity: ${escapeXml(log.rarity)}` : '',
+        log.found_date ? `Found: ${escapeXml(log.found_date)}` : '',
+        log.location_label ? `Location: ${escapeXml(log.location_label)}` : '',
+        log.weight_lbs != null ? `Weight: ${escapeXml(log.weight_lbs)} lbs` : '',
+        log.notes ? `Notes: ${escapeXml(log.notes)}` : '',
+        /^https:\/\//i.test(log.image_url || '') ? `<img src="${escapeXml(log.image_url)}" width="200"/>` : '',
       ].filter(Boolean).join('<br/>');
 
       return `    <Placemark>
@@ -76,7 +77,7 @@ export function exportToKmz(logs, filename = 'rockhound-finds.kml') {
   const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>RockHound-GO Finds</name>
+    <name>RockHound GO Finds</name>
     <description>Private rock collection export</description>
 ${placemarks}
   </Document>
@@ -89,7 +90,9 @@ function escapeXml(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 function downloadBlob(content, filename, mimeType) {

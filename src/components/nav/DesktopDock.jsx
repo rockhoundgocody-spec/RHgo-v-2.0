@@ -14,7 +14,7 @@ const NAV_TABS = [
   { to: '/', label: 'Home', Icon: Home },
   { to: '/explore', label: 'Map', Icon: Map },
   { to: '/scan', label: 'Scan', hero: true, Icon: ScanLine },
-  { to: '/collection', label: 'Geo-DEX', Icon: Gem },
+  { to: '/collection', label: 'Collection', Icon: Gem },
   { to: '/market', label: 'Market', Icon: Store },
 ];
 

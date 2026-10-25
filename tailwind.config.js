@@ -4,12 +4,18 @@ module.exports = {
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
+        fontFamily: { heading: 'var(--font-heading)', body: 'var(--font-body)', display: 'var(--font-display)' },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+            showcase: {
+                ink: 'hsl(var(--showcase-ink))', frost: 'hsl(var(--showcase-frost))',
+                amber: 'hsl(var(--showcase-amber))', muted: 'hsl(var(--showcase-muted))',
+                panel: 'hsl(var(--showcase-panel))', line: 'hsl(var(--showcase-line))'
+            },
   			amethyst: {
   				DEFAULT: 'hsl(var(--amethyst))',
   				deep: 'hsl(var(--amethyst-deep))',

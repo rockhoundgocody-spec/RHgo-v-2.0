@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -81,25 +82,28 @@ Return exactly 3 missions as JSON array.`;
       return d.toISOString();
     }
 
-    const created = await Promise.all(missions.map((m) =>
-      base44.entities.Quest.create({
-        owner_email: user.email,
-        title: m.title,
-        description: m.description,
-        quest_type: m.quest_type || 'daily',
-        target_count: m.target_count || 1,
-        xp_reward: m.xp_reward || 100,
-        target_rarity: m.target_rarity || null,
-        target_mineral: m.target_mineral || null,
-        clover_message: m.clover_message || '',
-        status: 'active',
-        progress: 0,
-        expires_at: getExpiry(m.quest_type || 'daily'),
-      })
-    ));
+    // Save missions using bulkCreate to reduce 3 HTTP request round-trips to a single payload
+    const created = missions.length > 0
+      ? await base44.entities.Quest.bulkCreate(
+          missions.map((m) => ({
+            owner_email: user.email,
+            title: m.title,
+            description: m.description,
+            quest_type: m.quest_type || 'daily',
+            target_count: m.target_count || 1,
+            xp_reward: m.xp_reward || 100,
+            target_rarity: m.target_rarity || null,
+            target_mineral: m.target_mineral || null,
+            clover_message: m.clover_message || '',
+            status: 'active',
+            progress: 0,
+            expires_at: getExpiry(m.quest_type || 'daily'),
+          }))
+        )
+      : [];
 
     return Response.json({ missions: created, count: created.length });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('generateFieldMissions', error);
   }
 });

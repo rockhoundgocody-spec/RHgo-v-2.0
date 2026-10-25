@@ -12,6 +12,9 @@ vi.mock('@/api/base44Client', () => ({
     auth: {
       me: () => mockAuthMe(),
     },
+    functions: {
+      invoke: async () => ({ data: { posts: await mockPostList() } }),
+    },
     entities: {
       Specimen: {
         list: (...args) => mockSpecimenList(...args),

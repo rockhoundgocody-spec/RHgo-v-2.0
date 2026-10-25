@@ -10,10 +10,12 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json --noEmit",
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
+    "test:scripts": "node --test scripts/typecheck-ratchet.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.52",
+    "@base44/sdk": "^0.8.53",
     "@base44/vite-plugin": "^1.0.44",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@radix-ui/react-accordion": "^1.2.3",

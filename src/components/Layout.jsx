@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, FileCode2, ChevronLeft } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OracleProvider } from '@/components/oracle/OracleContext.jsx';
 import { lazyPart } from '@/lib/lazyPart';
 import { useOracle } from '@/components/oracle/OracleContext.jsx';
-import HotspotProximityWatcher from '@/components/HotspotProximityWatcher.jsx';
 import StreakReminderBanner from '@/components/hub/StreakReminderBanner.jsx';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import ProfileDrawer from '@/components/ProfileDrawer.jsx';
@@ -118,37 +116,19 @@ function SubrouteBackButton({ onBack }) {
   );
 }
 
-function MainContent({ isAdminOrDocs, isFullscreenMap, pathname, reduceMotion }) {
+function MainContent({ isAdminOrDocs, isFullscreenMap, isPublicLanding }) {
   return (
     <main
       id="main-content"
       tabIndex={-1}
       className={cn('relative outline-none', isAdminOrDocs ? 'pb-8' : '')}
       style={
-        isAdminOrDocs || isFullscreenMap
+        isAdminOrDocs || isFullscreenMap || isPublicLanding
           ? undefined
           : { paddingBottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }
       }
     >
-      {isFullscreenMap ? (
-        /* Leaflet maps break inside AnimatePresence exit transitions —
-           render the map route without the animation wrapper so
-           navigating away always works. */
-        <Outlet />
-      ) : (
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={pathname}
-            variants={reduceMotion ? undefined : pageVariants}
-            initial={reduceMotion ? false : 'initial'}
-            animate={reduceMotion ? undefined : 'animate'}
-            exit={reduceMotion ? undefined : 'exit'}
-            transition={pageTransition}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
-      )}
+      <Outlet />
     </main>
   );
 }
@@ -220,13 +200,13 @@ export default function Layout() {
           isFullscreenMap={isFullscreenMap}
           pathname={location.pathname}
           reduceMotion={reduceMotion}
+          isPublicLanding={location.pathname === '/' && !isAuthenticated}
         />
 
         {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        {!isFullscreenCamera && isAuthenticated && <HotspotProximityWatcher />}
         {!isFullscreenCamera && isAuthenticated && <StreakReminderBanner />}
         {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
         {isAuthenticated && <BadgeUnlockWatcher />}

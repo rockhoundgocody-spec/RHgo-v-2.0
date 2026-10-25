@@ -4,6 +4,8 @@ import {
   uploadChronolithImages,
 } from './chronolithUploads.js';
 
+const passThrough = async (file) => file;
+
 const image = (name, overrides = {}) => ({
   name,
   type: 'image/jpeg',
@@ -26,6 +28,7 @@ describe('uploadChronolithImages', () => {
     const urls = await uploadChronolithImages(
       [image('one.jpg'), image('two.jpg'), image('three.jpg'), image('ignored.jpg')],
       upload,
+      passThrough,
     );
 
     expect(peak).toBe(3);
@@ -59,6 +62,29 @@ describe('uploadChronolithImages', () => {
     await expect(uploadChronolithImages(
       [image('quartz.jpg')],
       vi.fn().mockResolvedValue({}),
+      passThrough,
     )).rejects.toThrow('Upload failed for quartz.jpg');
+  });
+
+  it('uploads the metadata-stripped copy, never the original file', async () => {
+    const original = new File(['raw-with-gps'], 'agate.jpg', { type: 'image/jpeg' });
+    const upload = vi.fn(async () => ({ file_url: 'https://images.test/agate.jpg' }));
+    const clean = vi.fn(async () => new Blob(['clean'], { type: 'image/jpeg' }));
+
+    await uploadChronolithImages([original], upload, clean);
+
+    expect(clean).toHaveBeenCalledWith(original);
+    const sent = upload.mock.calls[0][0].file;
+    expect(sent).not.toBe(original);
+    expect(sent.name).toBe('agate.jpg');
+    expect(await sent.text()).toBe('clean');
+  });
+
+  it('stops before upload when metadata cannot be removed', async () => {
+    const upload = vi.fn();
+    const clean = vi.fn().mockRejectedValue(new Error('Could not remove photo metadata.'));
+
+    await expect(uploadChronolithImages([image('x.heic')], upload, clean)).rejects.toThrow('Could not remove photo metadata');
+    expect(upload).not.toHaveBeenCalled();
   });
 });

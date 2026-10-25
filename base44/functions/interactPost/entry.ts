@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
+import { isActor, publicComments } from '../../shared/postPrivacy.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -16,24 +18,19 @@ Deno.serve(async (req) => {
       const valid = ['fire', 'gem', 'clap', 'wow'];
       if (!valid.includes(reaction_type)) return Response.json({ error: 'Invalid reaction' }, { status: 400 });
 
-      const reactors = post.reactors || [];
-      // One reaction per user: remove any existing by this user
-      const filtered = reactors.filter(r => r.email !== user.email);
-      const existing = reactors.find(r => r.email === user.email);
-      // Toggle off if same type, else set new type
+      // Normalize legacy email rows to user ids; one reaction per user.
+      const reactors = (post.reactors || []).filter(r => !isActor(r, user)).map(r => ({ user_id: r.user_id, type: r.type }));
+      const existing = (post.reactors || []).find(r => isActor(r, user));
       const newReactors = existing && existing.type === reaction_type
-        ? filtered
-        : [...filtered, { email: user.email, type: reaction_type }];
+        ? reactors
+        : [...reactors, { user_id: user.id, type: reaction_type }];
 
       const counts = { fire: 0, gem: 0, clap: 0, wow: 0 };
       for (const r of newReactors) counts[r.type] = (counts[r.type] || 0) + 1;
 
-      await base44.asServiceRole.entities.Post.update(post_id, {
-        reactors: newReactors,
-        reactions: counts,
-      });
+      await base44.asServiceRole.entities.Post.update(post_id, { reactors: newReactors, reactions: counts });
 
-      const myReaction = newReactors.find(r => r.email === user.email)?.type || null;
+      const myReaction = newReactors.find(r => r.user_id === user.id)?.type || null;
       return Response.json({ reactions: counts, myReaction });
     }
 
@@ -41,24 +38,21 @@ Deno.serve(async (req) => {
       const text = (comment_body || '').trim();
       if (!text) return Response.json({ error: 'Empty comment' }, { status: 400 });
 
-      const comments = post.comments || [];
+      const comments = (post.comments || []).map(c => ({ user_id: c.user_id, name: c.name, body: c.body, at: c.at }));
       comments.push({
-        email: user.email,
+        user_id: user.id,
         name: user.full_name || 'Rockhound',
         body: text.slice(0, 500),
         at: new Date().toISOString(),
       });
 
-      await base44.asServiceRole.entities.Post.update(post_id, {
-        comments,
-        comment_count: comments.length,
-      });
+      await base44.asServiceRole.entities.Post.update(post_id, { comments, comment_count: comments.length });
 
-      return Response.json({ comments, comment_count: comments.length });
+      return Response.json({ comments: publicComments(comments, user), comment_count: comments.length });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('interactPost', error);
   }
 });

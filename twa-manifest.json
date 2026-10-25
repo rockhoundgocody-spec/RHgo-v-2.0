@@ -10,7 +10,7 @@
   "backgroundColor": "#0a0a14",
   "startUrl": "/",
   "iconUrl": "https://YOUR_FIREBASE_PROJECT_ID.web.app/icons/icon-512.png",
-  "maskableIconUrl": "https://YOUR_FIREBASE_PROJECT_ID.web.app/icons/icon-512-maskable.png",
+  "maskableIconUrl": "https://YOUR_FIREBASE_PROJECT_ID.web.app/icons/maskable-512.png",
   "appVersionName": "1.0.0",
   "appVersion": "1",
   "enableNotifications": false,

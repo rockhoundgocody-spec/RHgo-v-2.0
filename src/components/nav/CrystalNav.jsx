@@ -14,7 +14,7 @@ const NAV_TABS = [
   { to: '/', label: 'Home', Icon: Home },
   { to: '/explore', label: 'Map', Icon: Map },
   { to: '/scan', label: 'Scan', hero: true },
-  { to: '/collection', label: 'Geo-DEX', Icon: Gem },
+  { to: '/collection', label: 'Collection', Icon: Gem },
   { to: '/market', label: 'Market', Icon: Store },
 ];
 
@@ -30,7 +30,8 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
   // over or hide the nav (iOS WebKit fixed-position bug).
   return createPortal(
     <nav
-      className="rhgo-crystal-nav fixed left-1/2 z-[5000] flex items-center"
+      aria-label="Primary navigation"
+      className="rhgo-crystal-nav fixed left-1/2 z-[5000] flex items-center w-[calc(100%-24px)] max-w-md"
       style={{
         bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         transform: 'translateX(-50%) translateZ(0)',
@@ -68,27 +69,19 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
             key={tab.to}
             onClick={() => onTabClick(tab.to, isActive)}
             aria-current={isActive ? 'page' : undefined}
-            className="relative flex flex-col items-center gap-1 px-3 py-2 rounded-full transition-colors select-none min-w-[52px] min-h-[48px] justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
-            style={{
-              color: isActive ? 'hsl(195,100%,75%)' : 'hsla(220,30%,70%,0.55)',
-              background: isActive ? 'hsla(195,100%,60%,0.07)' : 'transparent',
-            }}
+            className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-2xl transition-colors select-none min-h-[56px] justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50 ${isActive ? 'bg-hud-cyan/15 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             aria-label={tab.label}
           >
             <div style={{ filter: isActive ? 'drop-shadow(0 0 6px hsla(195,100%,60%,0.6))' : 'none' }}>
               <Icon size={19} strokeWidth={isActive ? 2 : 1.6} />
             </div>
-            <span
-              className="text-[8px] font-semibold uppercase tracking-[0.18em]"
-              style={{ color: isActive ? 'hsla(195,100%,82%,0.95)' : 'hsla(220,25%,65%,0.45)' }}
-            >
+            <span className={`text-[11px] leading-4 whitespace-nowrap ${isActive ? 'font-bold' : 'font-medium'}`}>
               {tab.label}
             </span>
             {isActive && (
               <motion.div
                 layoutId="nav-indicator"
-                className="absolute bottom-1 w-1 h-1 rounded-full"
-                style={{ background: 'hsl(195,100%,70%)', boxShadow: '0 0 8px hsla(195,100%,65%,0.8)' }}
+                className="absolute bottom-0.5 w-5 h-0.5 rounded-full bg-hud-cyan"
               />
             )}
           </button>
@@ -101,7 +94,7 @@ export default function CrystalNav({ activeTab, onTabClick, pathname }) {
 
 function HeroScanButton({ isActive, onClick }) {
   return (
-    <div className="flex flex-col items-center gap-1 -mt-6 px-1 select-none">
+    <div className="flex flex-1 min-w-0 flex-col items-center gap-1 -mt-6 px-1 select-none">
       <motion.button
         type="button"
         onClick={onClick}
@@ -128,10 +121,7 @@ function HeroScanButton({ isActive, onClick }) {
           style={{ color: isActive ? 'hsl(280,100%,88%)' : 'hsla(270,60%,85%,0.85)' }}
         />
       </motion.button>
-      <span
-        className="text-[8px] font-semibold uppercase tracking-[0.22em]"
-        style={{ color: isActive ? 'hsla(0,0%,100%,0.85)' : 'hsla(255,15%,60%,0.5)' }}
-      >
+      <span className={`text-[11px] leading-4 ${isActive ? 'font-bold text-foreground border-b-2 border-hud-cyan' : 'font-medium text-muted-foreground'}`}>
         Scan
       </span>
     </div>

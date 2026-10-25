@@ -38,7 +38,7 @@ function timeAgo(dateStr) {
 export default function PostCard({ post, myEmail, myVoteId }) {
   const [reactions, setReactions] = useState(post.reactions || { fire: 0, gem: 0, clap: 0, wow: 0 });
   const [myReaction, setMyReaction] = useState(
-    (post.reactors || []).find(r => r.email === myEmail)?.type || null
+    post.my_reaction || null
   );
   const [comments, setComments] = useState(post.comments || []);
   const [showComments, setShowComments] = useState(false);

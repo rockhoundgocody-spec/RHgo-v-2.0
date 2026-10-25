@@ -66,6 +66,27 @@ export function useSubscription(user) {
     return () => { cancelled = true; };
   }, [user?.email, reloadKey]);
 
+  // Trial activation refreshes every mounted access check, not just its card.
+  useEffect(() => {
+    const changed = () => {
+      if (!user?.email) return;
+      sessionStorage.removeItem(`sub_${hashEmail(user.email)}`);
+      setLoading(true);
+      setReloadKey((key) => key + 1);
+    };
+    window.addEventListener('rhgo-subscription-changed', changed);
+    return () => window.removeEventListener('rhgo-subscription-changed', changed);
+  }, [user?.email]);
+
+  // Re-evaluate an open screen at the exact end of a trial or pass.
+  useEffect(() => {
+    const end = Date.parse(subscription?.trial_end && subscription?.status === 'trialing'
+      ? subscription.trial_end : subscription?.current_period_end || '');
+    if (!Number.isFinite(end) || end <= Date.now()) return;
+    const timer = setTimeout(() => setReloadKey((key) => key + 1), Math.min(end - Date.now() + 1, 2147483647));
+    return () => clearTimeout(timer);
+  }, [subscription]);
+
   // Trialing and past-due (Stripe still retrying) subscribers keep access;
   // see subscriptionAccess.js — the same rule the server enforces.
   const isPaid = isPaidSubscription(subscription);

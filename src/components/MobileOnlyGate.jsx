@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import DesktopShell from '@/components/DesktopShell';
 
 const DESKTOP_MIN = 900;
@@ -9,6 +11,8 @@ const DESKTOP_MIN = 900;
  * unframed. OAuth consent pages always render full-width for external clients.
  */
 export default function MobileOnlyGate({ children }) {
+  const { pathname } = useLocation();
+  const { isAuthenticated } = useAuth();
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_MIN : false,
   );
@@ -20,8 +24,9 @@ export default function MobileOnlyGate({ children }) {
   }, []);
 
   // OAuth consent must render full-width and unframed for external AI clients.
-  const isOAuth = typeof window !== 'undefined' && window.location.pathname.startsWith('/oauth');
-  if (!isDesktop || isOAuth) return children;
+  const isOAuth = pathname.startsWith('/oauth');
+  const isPublicShowcase = pathname === '/demo' || (pathname === '/' && !isAuthenticated);
+  if (!isDesktop || isOAuth || isPublicShowcase || pathname === '/scan') return children;
 
   return <DesktopShell>{children}</DesktopShell>;
 }

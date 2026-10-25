@@ -54,7 +54,16 @@ export default [
       "react/react-in-jsx-scope": "off",
       "react/no-unknown-property": [
         "error",
-        { ignore: ["cmdk-input-wrapper", "toast-close"] },
+        {
+          ignore: [
+            "cmdk-input-wrapper",
+            "toast-close",
+            // React 18 only passes the lowercase attribute through without a
+            // dev warning; `fetchPriority` is a React 19 prop. Drop this entry
+            // when the app moves to React 19.
+            "fetchpriority",
+          ],
+        },
       ],
       "react-hooks/rules-of-hooks": "error",
     },

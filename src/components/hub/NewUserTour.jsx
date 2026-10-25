@@ -61,13 +61,21 @@ export default function NewUserTour() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (!localStorage.getItem(TOUR_KEY)) {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    if (params?.get('tour') === '1') {
+      setStep(0);
       setVisible(true);
     }
+    const onOpenTour = () => {
+      setStep(0);
+      setVisible(true);
+    };
+    window.addEventListener('rhgo:open-tour', onOpenTour);
+    return () => window.removeEventListener('rhgo:open-tour', onOpenTour);
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(TOUR_KEY, '1');
+    try { localStorage.setItem(TOUR_KEY, '1'); } catch {}
     setVisible(false);
   };
 

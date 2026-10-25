@@ -10,20 +10,27 @@ Play Console account: robbincole6@gmail.com (uploading is done by the account ow
 npm i -g firebase-tools
 firebase login
 # set the real project id in .firebaserc and twa-manifest.json
-npm ci && npm run build
+npm ci
+# build-time settings: Vite inlines VITE_* values into the bundle (see .env.example)
+export VITE_BASE44_APP_ID=<your Base44 app id>
+export VITE_BASE44_APP_BASE_URL=<your Base44 app URL, e.g. https://your-app.base44.app>
+npm run build
 firebase deploy --only hosting
 ```
 Site: https://YOUR_FIREBASE_PROJECT_ID.web.app (add a custom domain in the Firebase console if wanted).
 
-### Sign-in (Supabase OAuth)
-Login builds its redirect from the page origin. In the Supabase dashboard (Authentication -> URL Configuration) add
-`https://YOUR_FIREBASE_PROJECT_ID.web.app/**` (and any custom domain) to the allowed Redirect URLs, and add the same
-origin in the Google OAuth client if it restricts origins. Otherwise Google sign-in cannot return to the app.
+### Sign-in (Base44 auth)
+Sign-in, Google OAuth and sign-out are handled by Base44, not by Firebase. The SDK builds those URLs from
+`VITE_BASE44_APP_BASE_URL`; if it is empty they resolve against the Firebase origin and fail, so it must be set at
+build time. Before going live, verify against the real backend that:
+- the Firebase site origin (and any custom domain) is accepted by Base44 as a sign-in return target, and
+- Base44's API accepts requests from that origin (the SDK calls `https://base44.app/api` by default; see `src/api/base44Legacy.js`), and
+- the Google OAuth client allows the origin if it restricts origins.
 
-## 2. Before building the Android app
-Play needs real PNG icons, not the remote JPG/URL icons currently in `public/manifest.json`:
-- add `public/icons/icon-512.png` and `public/icons/icon-512-maskable.png` (plus 192px) and point `manifest.json` at them
-- redeploy so the URLs in `twa-manifest.json` resolve
+## 2. Icons
+`public/manifest.json` and `twa-manifest.json` both use the PNG icons in `public/icons/`
+(`icon-192.png`, `icon-512.png`, `maskable-512.png`). After deploying, confirm the URLs in
+`twa-manifest.json` (`iconUrl`, `maskableIconUrl`) return the images, since Bubblewrap downloads them at build time.
 
 ## 3. Build the Android bundle
 ```bash
@@ -47,4 +54,4 @@ bubblewrap build        # signs with android.keystore and produces app-release-b
    New personal developer accounts must run a closed test with 12+ testers for 14 days first.
 
 ## Note
-Backend/data/auth still run on Base44 (and Supabase for RHgo-v-2.0); Firebase only hosts the frontend.
+Backend, data and auth run on Base44; Firebase only hosts the frontend.

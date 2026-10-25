@@ -1,11 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import { withSessionTimeout } from '@/lib/sessionTimeout';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 // (toast import removed — auth-persistence fix no longer toasts on timeout)
 
-// If the session check hasn't settled by then, stop blocking the app and
-// continue as logged-out. A late result still applies when it arrives.
-const AUTH_CHECK_TIMEOUT_MS = 20000;
+// Recover with an explicit retry screen rather than guessing that the user signed out.
 
 const AuthContext = createContext();
 
@@ -17,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const authRequest = useRef(0);
 
   useEffect(() => {
     checkAppState();
@@ -63,19 +63,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    const request = ++authRequest.current;
     setIsLoadingAuth(true);
-    let settled = false;
-    // Safety net only: if the session check truly never settles (hung network,
-    // unreachable auth server), log a warning after the timeout — but do NOT
-    // declare the user logged out. Declaring logged out here was the root cause
-    // of the Login → Profile → Login bounce: a slow me() flipped the app to
-    // logged-out, Layout redirected to /signin, then me() resolved and sent the
-    // user back — repeating on every reload. Keep the loading state so
-    // protected routes never flash-redirect before the real session resolves.
-    const timer = setTimeout(() => {
-      if (settled) return;
-      console.warn('[auth] Session check is taking longer than expected — still waiting, not bouncing.');
-    }, AUTH_CHECK_TIMEOUT_MS);
+    setAuthError(prev => prev?.type === 'session_timeout' ? null : prev);
 
     try {
       // ── BOOT-TIME TOKEN RESTORATION ──────────────────────────────────────
@@ -96,11 +86,17 @@ export const AuthProvider = ({ children }) => {
         }
       } catch { /* localStorage may be blocked by privacy settings */ }
 
-      const currentUser = await base44.auth.me();
+      const currentUser = await withSessionTimeout(base44.auth.me());
+      if (request !== authRequest.current) return;
       setUser(currentUser);
       setIsAuthenticated(true);
       setAuthError((prev) => (prev?.type === 'user_not_registered' ? null : prev));
     } catch (error) {
+      if (request !== authRequest.current) return;
+      if (error?.code === 'session_timeout' || error?.code === 'ERR_NETWORK' || error instanceof TypeError) {
+        setAuthError({ type: 'session_timeout', message: error.message });
+        return;
+      }
       /* visitor is simply logged out */
       setUser(null);
       setIsAuthenticated(false);
@@ -110,14 +106,16 @@ export const AuthProvider = ({ children }) => {
         setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
       }
     } finally {
-      settled = true;
-      clearTimeout(timer);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
+      if (request === authRequest.current) {
+        setAuthChecked(true);
+        setIsLoadingAuth(false);
+      }
     }
   };
 
   const logout = (shouldRedirect = true) => {
+    authRequest.current += 1;
+    setAuthError(null);
     setUser(null);
     setIsAuthenticated(false);
     

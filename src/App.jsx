@@ -6,10 +6,11 @@ import { BrowserRouter, Route, Routes, Navigate, useLocation } from 'react-route
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import SessionRecovery from '@/components/SessionRecovery';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
-const HomeGate = lazy(() => import('@/components/HomeGate.jsx'));
+import HomeGate from '@/components/HomeGate.jsx';
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
@@ -103,6 +104,7 @@ function SignInFirst() {
  */
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const { pathname } = useLocation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -113,6 +115,7 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
+    if (authError.type === 'session_timeout' && pathname !== '/demo') return <SessionRecovery />;
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
@@ -237,17 +240,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <BrowserRouter>
+        <AuthProvider>
         <MobileOnlyGate>
           <AnalyticsRouteListener />
           <a href="#main-content" className="skip-link">Skip to content</a>
-          <AuthProvider>
-            <CaseRedirect />
-            <AuthenticatedApp />
-          </AuthProvider>
+          <CaseRedirect />
+          <AuthenticatedApp />
           <RouteSeo />
           <Suspense fallback={null}><CookieConsentBanner /></Suspense>
           <Toaster />
         </MobileOnlyGate>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

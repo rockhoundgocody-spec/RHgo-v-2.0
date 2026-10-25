@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * autoClassifySpecimen — entity-automation handler that fires on every new
@@ -180,7 +181,7 @@ Deno.serve(async (req) => {
         lat: specimen.lat ?? null,
         lng: specimen.lng ?? null,
       });
-    } catch (e) {
+    } catch {
       // non-fatal — Specimen update already succeeded
     }
 
@@ -190,6 +191,6 @@ Deno.serve(async (req) => {
       updates,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('autoClassifySpecimen', error);
   }
 });

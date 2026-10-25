@@ -1,8 +1,9 @@
 // Inspired by react-hot-toast library
 import { useState, useEffect } from "react";
 
-const TOAST_LIMIT = 20;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_LIMIT = 2;
+const TOAST_REMOVE_DELAY = 3500;
+const TOAST_AUTO_DISMISS_MS = 4500;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -46,11 +47,15 @@ const _clearFromRemoveQueue = (toastId) => {
 
 export const reducer = (state, action) => {
   switch (action.type) {
-    case actionTypes.ADD_TOAST:
+    case actionTypes.ADD_TOAST: {
+      const deduped = state.toasts.filter(
+        (t) => !(t.open !== false && t.title === action.toast.title && t.description === action.toast.description)
+      );
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [action.toast, ...deduped].slice(0, TOAST_LIMIT),
       };
+    }
 
     case actionTypes.UPDATE_TOAST:
       return {
@@ -134,6 +139,14 @@ function toast({ ...props }) {
     },
   });
 
+  const duration = typeof props.duration === "number" ? props.duration : TOAST_AUTO_DISMISS_MS;
+  if (duration > 0) {
+    setTimeout(() => {
+      dismiss();
+      dispatch({ type: actionTypes.REMOVE_TOAST, toastId: id });
+    }, duration);
+  }
+
   return {
     id,
     dismiss,
@@ -161,4 +174,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast }; 
+export { useToast, toast };

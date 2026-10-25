@@ -1,5 +1,5 @@
 /**
- * Pricing.jsx — RockHound-GO Field Kit Tiers
+ * Pricing.jsx — RockHound GO Field Kit Tiers
  *
  * Field (free) · Season ($12.99/30 days) · Hound ($79/yr) · Steward ($149/yr) · Club ($199/yr)
  *
@@ -16,10 +16,14 @@ import { useAuth } from '@/lib/AuthContext';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 import { isNativeApp } from '@/lib/isNativeApp';
+import HoundTrialCard from '@/components/payments/HoundTrialCard';
 
+const returnOrigin = typeof window !== 'undefined'
+  ? (window.self !== window.top ? 'https://rhgo.me' : window.location.origin)
+  : '';
 const STRIPE_CONFIG = {
-  successUrl: typeof window !== 'undefined' ? `${window.location.origin}/settings?upgrade=success` : '',
-  cancelUrl:  typeof window !== 'undefined' ? `${window.location.origin}/pricing` : '',
+  successUrl: `${returnOrigin}/settings?upgrade=success`,
+  cancelUrl: `${returnOrigin}/pricing`,
 };
 
 const TIERS = [
@@ -47,8 +51,8 @@ const TIERS = [
     id: 'season',
     name: 'Season',
     price: '$12.99',
-    period: '/ 30 days',
-    tagline: 'One trip window.',
+    period: '/ 30 days · one-time',
+    tagline: 'One trip window. Does not renew.',
     color: '#9FE8D0',
     bg: 'hsla(160,40%,12%,0.6)',
     border: 'hsla(160,50%,40%,0.25)',
@@ -161,7 +165,7 @@ export default function Pricing() {
 function PricingPage() {
   useSeoRobots(true);
   useSeoMeta(
-    'RockHound-GO Pricing — Field, Season, Hound, Steward & Club',
+    'RockHound GO Pricing — Field, Season, Hound, Steward & Club',
     'Free field kit with 5 scans/month. Hound annual $79/yr for unlimited scans, legal land overlay, and offline maps. Steward $149/yr for dealers. Club $199/yr for 8 seats.'
   );
   const navigate = useNavigate();
@@ -176,11 +180,6 @@ function PricingPage() {
 
     base44.analytics.track({ eventName: 'pricing_upgrade_tapped', properties: { tier: tier.id } });
 
-    if (typeof window !== 'undefined' && window.self !== window.top) {
-      alert('Checkout only works from the published app — open it in a new tab to upgrade.');
-      return;
-    }
-
     // A subscription is credited to the signed-in account, so sign in first
     // and come straight back here.
     if (!user?.email) {
@@ -188,9 +187,15 @@ function PricingPage() {
       return;
     }
 
+    if (upgrading) return;
     setUpgrading(tier.id);
     setCheckoutError(null);
+    let checkoutTab = null;
     try {
+      const framed = window.self !== window.top;
+      checkoutTab = framed ? window.open('', '_blank') : null;
+      if (framed && !checkoutTab) throw new Error('Allow popups to continue to checkout.');
+      if (checkoutTab) checkoutTab.opener = null;
       const res = await base44.functions.invoke('createCheckoutSession', {
         successUrl: STRIPE_CONFIG.successUrl,
         cancelUrl: STRIPE_CONFIG.cancelUrl,
@@ -198,14 +203,21 @@ function PricingPage() {
       });
       const url = res?.data?.url;
       if (!url) throw new Error('No checkout URL returned');
-      window.location.href = url;
+      if (checkoutTab) checkoutTab.location.replace(url);
+      else window.location.assign(url);
     } catch (err) {
-      const code = err?.data?.code || err?.code || err?.response?.data?.code;
+      checkoutTab?.close();
+      const serverError = err?.response?.data || err?.data;
+      const code = serverError?.code || err?.code;
       const message = code === 'plan_unconfigured' || code === 'price_inactive'
         ? `${tier.name} isn't open for purchase yet. Try another plan, or check back soon.`
         : code === 'auth_required'
           ? 'Please sign in again to subscribe.'
-          : 'Unable to start checkout — please try again shortly.';
+          : err.message === 'Allow popups to continue to checkout.'
+            ? err.message
+            : code === 'invalid_redirect' || serverError?.error === 'Invalid successUrl or cancelUrl redirect target'
+              ? 'Checkout return address is not configured yet. Please contact support.'
+              : 'Unable to start checkout — please try again shortly.';
       setCheckoutError({ tier: tier.id, message });
     } finally {
       setUpgrading(null);
@@ -235,6 +247,8 @@ function PricingPage() {
           Not an AI rock app. A field kit that does not lie — honest ID, legal land, a collection you can sell later.
         </p>
       </motion.div>
+
+      <div className="max-w-2xl mx-auto"><HoundTrialCard /></div>
 
       {/* Tier cards */}
       <div className="max-w-2xl mx-auto space-y-3 mb-10">
@@ -290,7 +304,7 @@ function PricingPage() {
               ) : (
                 <>
                   <button onClick={() => handleUpgrade(tier)}
-                    disabled={upgrading === tier.id}
+                    disabled={upgrading !== null}
                     className="w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 disabled:opacity-60"
                     style={tier.ctaStyle}>
                     {upgrading === tier.id ? 'Redirecting…' : tier.cta}
@@ -310,7 +324,7 @@ function PricingPage() {
       {/* Trust row */}
       <div className="max-w-xl mx-auto text-center space-y-2">
         <p className="text-white/25 text-[11px]">
-          No weekly. No ads. Cancel anytime. 14-day Hound trial after your first scan.
+          No weekly. No ads. Season does not renew. Annual memberships renew yearly. The Hound trial requires no card and runs for 14 days from your first signed-in scan.
         </p>
         {!user && (
           <p className="text-white/30 text-xs mt-4">

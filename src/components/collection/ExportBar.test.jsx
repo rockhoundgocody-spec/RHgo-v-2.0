@@ -76,7 +76,7 @@ describe('ExportBar', () => {
         expect(kmzButton.props.type).toBe('button');
         expect(kmzButton.props.disabled).toBe(true);
         expect(kmzButton.props.title).toBe('No specimens available to export');
-        expect(kmzButton.props['aria-label']).toBe('Export as KMZ for Google Earth (No specimens to export)');
+        expect(kmzButton.props['aria-label']).toBe('Export as KML for Google Earth (No specimens to export)');
       });
     });
 
@@ -107,7 +107,7 @@ describe('ExportBar', () => {
 
       expect(kmzButton.props.disabled).toBe(false);
       expect(kmzButton.props.title).toBeUndefined();
-      expect(kmzButton.props['aria-label']).toBe('Export as KMZ for Google Earth');
+      expect(kmzButton.props['aria-label']).toBe('Export as KML for Google Earth');
       expect(kmzButton.props.className).toContain('focus-visible:ring-amber-400');
     });
 
@@ -125,7 +125,7 @@ describe('ExportBar', () => {
 
       expect(kmzIcon.type).toBe(FileText);
       expect(kmzIcon.props['aria-hidden']).toBe('true');
-      expect(kmzLabel.props.children).toBe('KMZ');
+      expect(kmzLabel.props.children).toBe('KML');
     });
   });
 
@@ -140,7 +140,7 @@ describe('ExportBar', () => {
       expect(csvButton.props.children[0].type).toBe(Loader2);
       expect(csvButton.props.children[0].props['aria-hidden']).toBe('true');
 
-      // KMZ button is also disabled while CSV is exporting
+      // KML button is also disabled while CSV is exporting
       expect(kmzButton.props.disabled).toBe(true);
     });
 
@@ -150,11 +150,11 @@ describe('ExportBar', () => {
       const [csvButton, kmzButton] = result.props.children;
 
       expect(kmzButton.props.disabled).toBe(true);
-      expect(kmzButton.props['aria-label']).toBe('Exporting KMZ file...');
+      expect(kmzButton.props['aria-label']).toBe('Exporting KML file...');
       expect(kmzButton.props.children[0].type).toBe(Loader2);
       expect(kmzButton.props.children[0].props['aria-hidden']).toBe('true');
 
-      // CSV button is also disabled while KMZ is exporting
+      // CSV button is also disabled while KML is exporting
       expect(csvButton.props.disabled).toBe(true);
     });
   });
@@ -179,7 +179,7 @@ describe('ExportBar', () => {
       const result = renderExportBar({ logs: mockLogs, done: 'kmz' });
       const [, kmzButton] = result.props.children;
 
-      expect(kmzButton.props['aria-label']).toBe('Exported KMZ file');
+      expect(kmzButton.props['aria-label']).toBe('Exported KML file');
       expect(kmzButton.props.children[0].type).toBe(Check);
       expect(kmzButton.props.children[0].props['aria-hidden']).toBe('true');
       expect(kmzButton.props.children[1].props.children).toBe('Exported');
@@ -214,7 +214,7 @@ describe('ExportBar', () => {
       expect(mockSetDone).toHaveBeenLastCalledWith(null);
     });
 
-    it('executes full KMZ export lifecycle when KMZ button is clicked', async () => {
+    it('executes full KML export lifecycle when KML button is clicked', async () => {
       const mockLogs = [{ id: '2', mineral_name: 'Amethyst' }];
       const result = renderExportBar({ logs: mockLogs });
       const [, kmzButton] = result.props.children;

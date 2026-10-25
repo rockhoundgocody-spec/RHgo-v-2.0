@@ -24,16 +24,22 @@ export type SubscriptionLike = {
   status?: string | null;
   current_period_end?: string | null;
   stripe_subscription_id?: string | null;
+  trial_end?: string | null;
+  plan?: string | null;
 } | null | undefined;
 
 export function isPaidSubscription(sub: SubscriptionLike, now: number = Date.now()): boolean {
   if (!sub) return false;
   if (!PAID_TIERS.has(String(sub.tier))) return false;
   if (!PAID_STATUSES.has(String(sub.status))) return false;
+  if (sub.status === 'trialing' && (sub.trial_end || sub.plan === 'hound_trial')) {
+    const end = Date.parse(sub.trial_end || sub.current_period_end || '');
+    if (!Number.isFinite(end) || end <= now) return false;
+  }
   if (sub.current_period_end) {
     const end = Date.parse(sub.current_period_end);
     if (Number.isFinite(end)) {
-      const grace = sub.stripe_subscription_id ? RENEWAL_GRACE_MS : 0;
+      const grace = sub.stripe_subscription_id && sub.status !== 'trialing' ? RENEWAL_GRACE_MS : 0;
       if (end + grace < now) return false;
     }
   }

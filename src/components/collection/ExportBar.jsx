@@ -1,5 +1,5 @@
 /**
- * ExportBar — CSV and KMZ export buttons for the Private Rock Log.
+ * ExportBar — CSV and KML export buttons for the Private Rock Log.
  * Lets users download their full collection as a spreadsheet or Google Earth file.
  */
 import React, { useState } from 'react';
@@ -38,10 +38,10 @@ export default function ExportBar({ logs }) {
   };
 
   const getKmzAriaLabel = () => {
-    if (exporting === 'kmz') return 'Exporting KMZ file...';
-    if (done === 'kmz') return 'Exported KMZ file';
-    if (!hasLogs) return 'Export as KMZ for Google Earth (No specimens to export)';
-    return 'Export as KMZ for Google Earth';
+    if (exporting === 'kmz') return 'Exporting KML file...';
+    if (done === 'kmz') return 'Exported KML file';
+    if (!hasLogs) return 'Export as KML for Google Earth (No specimens to export)';
+    return 'Export as KML for Google Earth';
   };
 
   const disabledTitle = !hasLogs ? 'No specimens available to export' : undefined;
@@ -82,7 +82,7 @@ export default function ExportBar({ logs }) {
         {exporting === 'kmz' ? <Loader2 size={12} className="animate-spin" aria-hidden="true" />
          : done === 'kmz' ? <Check size={12} aria-hidden="true" />
          : <FileText size={12} aria-hidden="true" />}
-        <span>{done === 'kmz' ? 'Exported' : 'KMZ'}</span>
+        <span>{done === 'kmz' ? 'Exported' : 'KML'}</span>
       </button>
     </div>
   );

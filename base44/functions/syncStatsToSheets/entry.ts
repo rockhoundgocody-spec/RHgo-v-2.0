@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { safeError } from '../../shared/httpErrors.ts';
 
 const SHEET_NAME = 'RockHound-GO Daily Stats';
 
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('syncStatsToSheets', error);
   }
 });
 

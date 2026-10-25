@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
+import { safeError } from '../../shared/httpErrors.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHRONOLITH — investigateCase
@@ -228,7 +229,6 @@ Produce the structured output.`;
 
     return Response.json({ case: caseRecord });
   } catch (error) {
-    console.error('CHRONOLITH investigateCase error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return safeError('investigateCase', error);
   }
 });

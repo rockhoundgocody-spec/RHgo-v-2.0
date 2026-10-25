@@ -28,15 +28,19 @@ import {
   flushQueue,
   getQueueLength,
   installOfflineQueue,
+  getQueuedConflicts,
+  resolveQueuedConflict,
 } from "./offlineQueue";
 import { base44 } from "@/api/base44Client";
 
 vi.mock("@/api/base44Client", () => ({
   base44: {
+    auth: { me: vi.fn().mockResolvedValue({ id: 'owner-1' }) },
     entities: {
       Specimen: {
         create: vi.fn(),
         update: vi.fn(),
+        filter: vi.fn(),
       },
     },
   },
@@ -49,7 +53,7 @@ describe("offlineQueue AES-GCM encryption", () => {
   });
 
   it("persists items encrypted in localStorage", async () => {
-    const offlineItem = { entity: "Specimen", op: "create", data: { mineral_name: "Quartz" } };
+    const offlineItem = { entity: "Specimen", op: "create", data: { mineral_name: "Quartz" }, ownerId: 'owner-1' };
 
     // Force offline queueing by rejecting network request with non-4xx error
     base44.entities.Specimen.create.mockRejectedValueOnce(new TypeError("Network error"));
@@ -83,7 +87,8 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(items.length).toBe(1);
     expect(items[0].data.mineral_name).toBe("Agate");
 
-    // Ensure it re-saved as encrypted JSON
+    // Loading is read-only; migration is explicit so legacy ownership is never guessed.
+    await saveQueue(items);
     const rawStored = localStorage.getItem("rh-offline-queue-v1");
     expect(rawStored.includes("Agate")).toBe(false);
     const parsedStored = JSON.parse(rawStored);
@@ -92,9 +97,8 @@ describe("offlineQueue AES-GCM encryption", () => {
 
   it("handles corrupted storage data gracefully", async () => {
     localStorage.setItem("rh-offline-queue-v1", "corrupted-non-json-string");
-    const items = await loadQueue();
-    expect(items).toEqual([]);
-    expect(getQueueLength()).toBe(0);
+    await expect(loadQueue()).rejects.toThrow('preserved');
+    expect(localStorage.getItem('rh-offline-queue-v1')).toBe('corrupted-non-json-string');
   });
 
   it("returns an empty queue when storage has no queue payload", async () => {
@@ -121,12 +125,12 @@ describe("offlineQueue AES-GCM encryption", () => {
         op: "create",
         data: { mineral_name: `Specimen ${index}` },
       }));
+      await expect(saveQueue(items)).rejects.toThrow('not saved');
+      expect(localStorage.getItem('rh-offline-queue-v1')).toBeNull();
       await saveQueue(items);
-
-      expect(getQueueLength()).toBe(4);
       const persisted = await loadQueue();
-      expect(persisted).toHaveLength(4);
-      expect(persisted[0].data.mineral_name).toBe("Specimen 4");
+      expect(persisted).toHaveLength(8);
+      expect(persisted[0].data.mineral_name).toBe('Specimen 0');
     } finally {
       localStorage.setItem = originalSetItem;
     }
@@ -135,7 +139,7 @@ describe("offlineQueue AES-GCM encryption", () => {
   it("flushes queue when network returns", async () => {
     base44.entities.Specimen.create.mockResolvedValueOnce({ id: "spec-123" });
 
-    await saveQueue([{ entity: "Specimen", op: "create", data: { mineral_name: "Fluorite" } }]);
+    await saveQueue([{ entity: "Specimen", op: "create", data: { mineral_name: "Fluorite" }, ownerId: 'owner-1' }]);
     expect(getQueueLength()).toBe(1);
 
     const flushResult = await flushQueue();
@@ -143,6 +147,104 @@ describe("offlineQueue AES-GCM encryption", () => {
     expect(flushResult.remaining).toBe(0);
     expect(getQueueLength()).toBe(0);
     expect(base44.entities.Specimen.create).toHaveBeenCalledWith({ mineral_name: "Fluorite" });
+  });
+
+  it('retains denied writes after more than five retries', async () => {
+    base44.entities.Specimen.create.mockRejectedValue({ status: 403 });
+    await saveQueue([{ entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Pending fixture' } }]);
+    for (let attempt = 0; attempt < 7; attempt++) await flushQueue();
+    const queue = await loadQueue();
+    expect(queue).toHaveLength(1);
+    expect(queue[0].attempts).toBe(7);
+  });
+
+  it('a refused write stays queued but does not block later finds', async () => {
+    base44.entities.Specimen.create
+      .mockRejectedValueOnce({ status: 403 })
+      .mockResolvedValueOnce({ id: 'ok' });
+    await saveQueue([
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Refused' } },
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Fine' } },
+    ]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 1, remaining: 1 });
+    const queue = await loadQueue();
+    expect(queue[0].data.mineral_name).toBe('Refused');
+    expect(queue[0].lastError).toBe('Sync failed (403)');
+  });
+
+  it('a network failure stops the pass so ordering is kept', async () => {
+    base44.entities.Specimen.create.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await saveQueue([
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'First' } },
+      { entity: 'Specimen', op: 'create', ownerId: 'owner-1', data: { mineral_name: 'Second' } },
+    ]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 0, remaining: 2 });
+    expect(base44.entities.Specimen.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('never overwrites a record edited on another device after the queued edit was made', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([{ id: 's1', updated_date: '2026-10-09T12:00:00Z' }]);
+    await saveQueue([{
+      entity: 'Specimen', op: 'update', id: 's1', ownerId: 'owner-1',
+      data: { notes: 'offline edit' }, baseUpdatedDate: '2026-10-09T10:00:00Z',
+    }]);
+    const result = await flushQueue();
+    expect(result).toEqual({ flushed: 0, remaining: 1 });
+    expect(base44.entities.Specimen.update).not.toHaveBeenCalled();
+    expect((await loadQueue())[0].lastError).toMatch('Changed on another device');
+    const conflicts = await getQueuedConflicts('owner-1');
+    expect(conflicts).toHaveLength(1);
+    const resolved = await resolveQueuedConflict('s1', 'keep_remote');
+    expect(resolved.resolved).toBe(true);
+    expect(await loadQueue()).toHaveLength(0);
+  });
+
+  it('merges disjoint-field updates when baseSnapshot shows remote did not touch the edited field', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([
+      { id: 's2', updated_date: '2026-10-09T12:00:00Z', notes: 'original', rarity: 'rare' },
+    ]);
+    base44.entities.Specimen.update.mockResolvedValue({ id: 's2' });
+    await saveQueue([{
+      entity: 'Specimen',
+      op: 'update',
+      id: 's2',
+      ownerId: 'owner-1',
+      data: { notes: 'added field note' },
+      baseUpdatedDate: '2026-10-09T10:00:00Z',
+      baseSnapshot: { notes: 'original', rarity: 'common' },
+    }]);
+    expect(await flushQueue()).toEqual({ flushed: 1, remaining: 0 });
+    expect(base44.entities.Specimen.update).toHaveBeenCalledWith('s2', { notes: 'added field note' });
+  });
+
+  it('replays a queued edit when the record has not changed since', async () => {
+    base44.entities.Specimen.filter.mockResolvedValue([{ id: 's1', updated_date: '2026-10-09T10:00:00Z' }]);
+    base44.entities.Specimen.update.mockResolvedValue({ id: 's1' });
+    await saveQueue([{
+      entity: 'Specimen', op: 'update', id: 's1', ownerId: 'owner-1',
+      data: { notes: 'offline edit' }, baseUpdatedDate: '2026-10-09T10:00:00Z',
+    }]);
+    expect(await flushQueue()).toEqual({ flushed: 1, remaining: 0 });
+    expect(base44.entities.Specimen.update).toHaveBeenCalledWith('s1', { notes: 'offline edit' });
+  });
+
+  it('never replays another account or ownerless legacy entries', async () => {
+    await saveQueue([
+      { entity: 'Specimen', op: 'create', ownerId: 'other-owner', data: { mineral_name: 'Other fixture' } },
+      { entity: 'Specimen', op: 'create', data: { mineral_name: 'Legacy fixture' } },
+    ]);
+    const result = await flushQueue();
+    expect(result.flushed).toBe(0);
+    expect(await loadQueue()).toHaveLength(2);
+    expect(base44.entities.Specimen.create).not.toHaveBeenCalled();
+  });
+
+  it('does not lose simultaneous queued writes', async () => {
+    base44.entities.Specimen.create.mockRejectedValue(new TypeError('Offline'));
+    await Promise.all(['one', 'two'].map(mineral_name => queueWrite({ entity: 'Specimen', ownerId: 'owner-1', data: { mineral_name } })));
+    expect(await loadQueue()).toHaveLength(2);
   });
 
   it("logs a warning when loadQueue fails during initial queue load", async () => {

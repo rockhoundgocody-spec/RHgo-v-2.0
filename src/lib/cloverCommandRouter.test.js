@@ -3,6 +3,15 @@ import { parseCloverCommand, routeForTarget, INTENTS } from './cloverCommandRout
 import { applyCloverUtterance } from './cloverRuntime';
 
 describe('Clover voice routing', () => {
+  it('does not execute negated commands or switch models on a mention', () => {
+    expect(applyCloverUtterance("Don't open the map").navigateTo).toBeUndefined();
+    expect(parseCloverCommand('What does Claude think about quartz?').intent).toBe(INTENTS.ASK);
+    expect(parseCloverCommand('please use Claude').intent).toBe(INTENTS.BRAIN_SWAP);
+    expect(parseCloverCommand('Why did you stop listening?').intent).toBe(INTENTS.ASK);
+    expect(routeForTarget('my collection')).toBe('/collection');
+    expect(routeForTarget('scanner')).toBe('/scan');
+    expect(applyCloverUtterance('write the listing').reply).toContain('Nothing has been drafted');
+  });
   it('routes every pull to a screen that exists', () => {
     expect(routeForTarget('Sweetwater barite')).toBe('/vault?q=Sweetwater%20barite');
     expect(routeForTarget('the BLM wash site')).toBe('/vault?q=the%20BLM%20wash%20site');

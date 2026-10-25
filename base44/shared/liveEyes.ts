@@ -112,7 +112,7 @@ export async function meterLiveCall(
     );
     paid = isPaidSubscription(subs?.[0] as never, now.getTime());
   } catch (err) {
-    console.error('[liveEyes] subscription lookup failed:', (err as Error)?.message);
+    console.error('[liveEyes] subscription lookup failed:', err);
   }
   const limit = paid ? LIVE_DAILY_LIMIT.paid : LIVE_DAILY_LIMIT.free;
 
@@ -127,7 +127,7 @@ export async function meterLiveCall(
     else await Meter.create({ owner_email: user.email, day_key: day, count: 1 });
     return { ok: true, paid, used: used + 1, limit, resetAt };
   } catch (err) {
-    console.error('[liveEyes] meter failed, allowing call:', (err as Error)?.message);
+    console.error('[liveEyes] meter failed, allowing call:', err);
     return { ok: true, paid, used: null, limit, resetAt };
   }
 }

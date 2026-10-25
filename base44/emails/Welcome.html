@@ -1,0 +1,74 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome to RockHound GO, {{first_name}}</mj-title>
+    <mj-preview>Your field kit is ready. One quick step keeps our emails out of spam.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#161b22" padding="0 36px" />
+      <mj-column padding="0" />
+      <mj-text color="#f3f5f7" font-size="16px" line-height="1.65" padding="0" />
+      <mj-button background-color="#e8b764" color="#101419" border-radius="12px" font-size="16px" font-weight="700" inner-padding="16px 30px" padding="0" align="left" />
+      <mj-image padding="0" />
+      <mj-divider border-color="#2a323c" border-width="1px" padding="0" />
+      <mj-class name="h" font-weight="700" color="#ffffff" />
+      <mj-class name="label" font-size="12px" letter-spacing="2px" text-transform="uppercase" font-weight="700" color="#e8b764" />
+      <mj-class name="muted" color="#c3ccd2" />
+    </mj-attributes>
+    <mj-style>
+      @media (max-width:480px) { .hero-h div { font-size:30px !important; line-height:1.15 !important; } }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#101419" width="600px">
+    <mj-wrapper padding="28px 12px" background-color="#101419">
+      <mj-section background-color="#e8b764" padding="22px 36px" border-radius="12px 12px 0 0">
+        <mj-column>
+          <mj-image src="https://media.base44.com/images/public/69f35dd14650b54681c835ec/64fc40049_1000004994.png" alt="RockHound GO logo" width="40px" align="center" padding="0 0 10px" />
+          <mj-text align="center" font-size="13px" letter-spacing="4px" font-weight="700" text-transform="uppercase" color="#101419">RockHound GO</mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section padding="0"><mj-column><mj-image src="https://media.base44.com/images/public/69f35dd14650b54681c835ec/dbd543718_generated_image.png" alt="Rockhound in the field" width="600px" /></mj-column></mj-section>
+
+      <mj-section padding="40px 36px 12px">
+        <mj-column>
+          <mj-text mj-class="h" css-class="hero-h" font-size="36px" line-height="1.15" padding="0 0 14px">Welcome, {{first_name}}!</mj-text>
+          <mj-text mj-class="muted" font-size="17px">Your field kit is ready. Log finds, save photos and locations, and keep every hotspot organized in one place.</mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section padding="20px 36px 36px"><mj-column><mj-button href="https://rhgo.me/scan">Start Logging Finds</mj-button></mj-column></mj-section>
+
+      <mj-section padding="0 36px 36px">
+        <mj-column background-color="#1f2630" border-radius="12px" padding="24px" border="1px solid #e8b764">
+          <mj-text mj-class="label" padding="0 0 8px">Keep us in your inbox</mj-text>
+          <mj-text mj-class="h" font-size="18px" line-height="1.35" padding="0 0 10px">One tap so field alerts never land in spam</mj-text>
+          <mj-text mj-class="muted" font-size="15px" padding="0 0 18px">Replying to this email is the fastest way to tell your inbox we are a trusted sender. Just tap below and hit send.</mj-text>
+          <mj-button href="mailto:{{reply_to_email}}?subject=Save%20RockHound%20GO&amp;body=Hi%2C%20please%20keep%20me%20in%20the%20loop!">Reply to Save Us</mj-button>
+          <mj-text mj-class="muted" font-size="13px" padding="18px 0 0">Gmail: move this email to Primary. Outlook: choose "Add to Safe senders". Apple Mail: tap our name and "Add to VIPs".</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0 36px"><mj-column><mj-divider /></mj-column></mj-section>
+      <mj-section padding="32px 36px 16px"><mj-column><mj-text mj-class="label">What you can do</mj-text></mj-column></mj-section>
+      <mj-section padding="0 26px 18px">
+        <mj-column padding="0 10px 22px">
+          <mj-text mj-class="h" font-size="17px" padding="0 0 6px">Identify finds</mj-text>
+          <mj-text mj-class="muted" font-size="15px">Scan a specimen and get an honest ID with confidence.</mj-text>
+        </mj-column>
+        <mj-column padding="0 10px 22px">
+          <mj-text mj-class="h" font-size="17px" padding="0 0 6px">Find hotspots</mj-text>
+          <mj-text mj-class="muted" font-size="15px">See land access and plan your next trip.</mj-text>
+        </mj-column>
+        <mj-column padding="0 10px 22px">
+          <mj-text mj-class="h" font-size="17px" padding="0 0 6px">Build your collection</mj-text>
+          <mj-text mj-class="muted" font-size="15px">Keep locations private or share with your club.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#e8b764" padding="24px 36px" border-radius="0 0 12px 12px">
+        <mj-column>
+          <mj-text align="center" font-size="15px" font-weight="700" color="#101419" padding="0 0 4px">RockHound GO</mj-text>
+          <mj-text align="center" font-size="13px" color="#101419"><a href="https://rhgo.me" style="color:#101419;">rhgo.me</a></mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>

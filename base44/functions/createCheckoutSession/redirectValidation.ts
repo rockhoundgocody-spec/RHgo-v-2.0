@@ -10,6 +10,9 @@ export function isValidRedirectTarget(urlStr: string): boolean {
     }
 
     const hostname = parsed.hostname.toLowerCase();
+    if (parsed.username || parsed.password) return false;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && parsed.protocol !== 'https:') return false;
+    if (hostname === 'rhgo.me' || hostname === 'www.rhgo.me') return parsed.port === '' || parsed.port === '443';
     if (
       hostname === 'localhost' ||
       hostname === '127.0.0.1' ||

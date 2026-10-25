@@ -8,6 +8,7 @@ import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from 'rea
 import 'leaflet/dist/leaflet.css';
 import { Crosshair, Loader2, MapPin, Navigation, Search, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { fetchHotspots } from '@/lib/hotspotApi';
 
 const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const US_CENTER = [39.5, -98.35];
@@ -102,7 +103,7 @@ export default function FoundLocationPicker({
 
   useEffect(() => {
     let cancelled = false;
-    base44.entities.Hotspot.list('-trust_score', 400)
+    fetchHotspots({ limit: 400 })
       .then((rows) => {
         if (!cancelled) setSites(rows || []);
       })

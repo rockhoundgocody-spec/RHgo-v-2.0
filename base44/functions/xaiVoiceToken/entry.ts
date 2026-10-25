@@ -1,4 +1,4 @@
-import { createClientFromRequest } from '@base44/sdk';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
 export async function handleXaiVoiceTokenRequest(
   req: Request,

@@ -25,6 +25,10 @@
     "image_url": {
       "type": "string"
     },
+    "image_file_uri": {
+      "type": "string",
+      "description": "Private photo storage URI. Resolve a short-lived signed URL only when displaying it."
+    },
     "found_date": {
       "type": "string",
       "format": "date"
