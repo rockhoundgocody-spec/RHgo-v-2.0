@@ -7,11 +7,6 @@ import PostComposer from '@/components/community/PostComposer.jsx';
 
 const PAGE = 15;
 
-async function fetchFeed(params) {
-  const res = await base44.functions.invoke('listPosts', params);
-  return res?.data?.posts || [];
-}
-
 export default function Community() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +27,8 @@ export default function Community() {
     try {
       const me = await base44.auth.me();
       if (me?.email) setMyEmail(me.email);
-      const arr = await fetchFeed({ limit: PAGE });
+      const batch = await base44.entities.Post.list('-created_date', PAGE);
+      const arr = batch || [];
       setPosts(arr);
       setHasMore(arr.length === PAGE);
     } catch {
@@ -50,7 +46,17 @@ export default function Community() {
     const lastId = last?.id;
     try {
       // Use id as a tiebreaker so equal-timestamp posts never skip or duplicate.
-      const arr = await fetchFeed({ limit: PAGE, before_date: oldest, before_id: lastId });
+      const batch = await base44.entities.Post.filter(
+        {
+          $or: [
+            { created_date: { $lt: oldest } },
+            { created_date: oldest, id: { $ne: lastId } },
+          ],
+        },
+        '-created_date',
+        PAGE
+      );
+      const arr = batch || [];
       setPosts(prev => [...prev, ...arr]);
       setHasMore(arr.length === PAGE);
     } catch {
@@ -69,23 +75,18 @@ export default function Community() {
     return unsubscribe;
   }, [refreshMyVote]);
 
-  // Live feed: raw post events are owner-only, so refresh the email-free
-  // first page on own events and every 30s for everyone else's posts.
+  // Real-time subscription — new posts appear instantly
   useEffect(() => {
-    const refreshTop = async () => {
-      const top = await fetchFeed({ limit: PAGE }).catch(() => null);
-      if (!top) return;
-      setPosts(prev => {
-        const ids = new Set(top.map(p => p.id));
-        return [...top, ...prev.filter(p => !ids.has(p.id))];
-      });
-    };
     const unsubscribe = base44.entities.Post.subscribe((event) => {
-      if (event.type === 'delete') setPosts(prev => prev.filter(p => p.id !== event.id));
-      else refreshTop();
+      if (event.type === 'create' && event.data) {
+        setPosts(prev => [event.data, ...prev]);
+      } else if (event.type === 'update' && event.data) {
+        setPosts(prev => prev.map(p => p.id === event.data.id ? event.data : p));
+      } else if (event.type === 'delete') {
+        setPosts(prev => prev.filter(p => p.id !== event.id));
+      }
     });
-    const timer = setInterval(refreshTop, 30000);
-    return () => { unsubscribe(); clearInterval(timer); };
+    return unsubscribe;
   }, []);
 
   return (

@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shuffle, MapPin, Loader2, Navigation, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { fetchHotspots } from '@/lib/hotspotApi';
 import { Link } from 'react-router-dom';
 
 const SAMPLE_INTENTIONS = [
@@ -49,7 +48,7 @@ export default function IntentionRoulette() {
         setResult({ ...response.data, usedIntention: intentionText });
       } catch {
         // Client fallback if the function isn't deployed yet
-        const hotspots = await fetchHotspots({ limit: 80 });
+        const hotspots = await base44.entities.Hotspot.list('-trust_score', 80);
         const withGeo = (hotspots || []).filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number');
         const scored = withGeo.map((h) => {
           const dLat = h.lat - lat;

@@ -2,8 +2,6 @@
 // row that the external ML pipeline can poll and use for fine-tuning.
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { safeError } from '../../shared/httpErrors.ts';
-import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -32,18 +30,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'user_label is required' }, { status: 400 });
     }
 
-    if (image_url && !isValidImageUrl(image_url)) {
-      return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
-    }
-
-    // Users can't create/update candidates directly; only admins may accept them.
-    const created = await base44.asServiceRole.entities.TrainingCandidate.create({
+    const created = await base44.entities.TrainingCandidate.create({
       image_url,
       image_hash,
-      predicted_label: typeof predicted_label === 'string' ? predicted_label.slice(0, 80) : undefined,
+      predicted_label,
       predicted_confidence,
-      user_label: user_label.slice(0, 80),
-      user_notes: typeof user_notes === 'string' ? user_notes.slice(0, 1000) : undefined,
+      user_label,
+      user_notes,
       lat,
       lng,
       model_version: model_version || 'gemini-flash',
@@ -53,6 +46,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ ok: true, id: created.id });
   } catch (error) {
-    return safeError('submitCorrection', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

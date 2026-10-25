@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { deleteMineralsInBatches } from './operations.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 // Admin-only maintenance: finds Mineral records with identical names,
 // keeps the OLDEST copy of each, deletes the rest.
@@ -61,6 +60,6 @@ Deno.serve(async (req) => {
       duplicates: toDelete.map((d) => d.name),
     });
   } catch (error) {
-    return safeError('dedupeMineral', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

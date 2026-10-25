@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Temporal-Depletion Engine — resolveDepletion
@@ -186,6 +185,6 @@ Deno.serve(async (req) => {
       applied: apply,
     });
   } catch (error) {
-    return safeError('resolveDepletion', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

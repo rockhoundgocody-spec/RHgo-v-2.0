@@ -1,37 +1,220 @@
-import React, { useEffect } from 'react';
-import { X, Mic } from 'lucide-react';
-import { useOracle } from '@/components/oracle/OracleContext';
-import useCloverConversation from '@/components/hub/useCloverConversation';
-import VoiceStateHUD from '@/components/oracle/VoiceStateHUD';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { base44 } from '@/api/base44Client';
+import { X, Mic, Gem } from 'lucide-react';
+import VoiceStateHUD from './VoiceStateHUD.jsx';
 const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
+import { useOracle } from './OracleContext.jsx';
+import { useSpeechSynthesis, useSpeechRecognition } from './useSpeech';
 
+/**
+ * Full-screen, chat-less live conversation experience.
+ * Matches the Hub theme: amethyst gradients, hud-cyan accents, glass-panel surfaces.
+ * Voice-only — last user line + last oracle reply float around a giant orb.
+ */
 export default function OracleLiveOverlay() {
-  const { open, closeOracle } = useOracle();
-  const clover = useCloverConversation();
-  const { end } = clover;
-  useEffect(() => { if (!open) end(); }, [open, end]);
-  if (!open) return null;
-  const start = () => {
-    if (clover.phase === 'idle') clover.start('I am here. Ask me about a specimen or a field question.', { listenFirst: true });
-    else clover.nudge();
+  const { open, autoLive, closeOracle } = useOracle();
+  const [thinking, setThinking] = useState(false);
+  const [interim, setInterim] = useState('');
+  const [lastUser, setLastUser] = useState('');
+  const [lastOracle, setLastOracle] = useState(
+    "Hi, I'm Clover 🍀 Cole. Tap to begin — ask me anything, or say \"log a specimen\"."
+  );
+  const [dictationMode, setDictationMode] = useState(false);
+  const dictationRef = useRef(false);
+  dictationRef.current = dictationMode;
+  const historyRef = useRef([]); // {role, content}[]
+
+  const { speak, stop: stopSpeak, speaking, getAmplitude, getSpectrum } =
+    useSpeechSynthesis();
+
+  const handleResult = useCallback((transcript) => {
+    setInterim('');
+    handleUserTurn(transcript);
+
+  }, []);
+  const handleInterim = useCallback((p) => setInterim(p), []);
+
+  const { start: startListen, stop: stopListen, listening, supported: micSupported } =
+    useSpeechRecognition({ onResult: handleResult, onInterim: handleInterim });
+
+  // Auto-listen loop: when oracle stops speaking, start mic again
+  useEffect(() => {
+    if (!open || !autoLive) return;
+    if (!speaking && !thinking && !listening) {
+      const t = setTimeout(() => {
+        if (open && !speaking && !thinking) startListen();
+      }, 350);
+      return () => clearTimeout(t);
+    }
+  }, [open, autoLive, speaking, thinking, listening, startListen]);
+
+  useEffect(() => {
+    if (!open) {
+      stopSpeak();
+      stopListen();
+      setInterim('');
+      setDictationMode(false);
+      historyRef.current = [];
+    }
+  }, [open, stopSpeak, stopListen]);
+
+  const detectLogIntent = (t) => {
+    const s = t.toLowerCase();
+    return /\b(log|save|record|add|create|catalog)\b.*\b(specimen|find|rock|mineral|sample|stone|crystal)\b/.test(s)
+      || /\b(new specimen|log this|save this|record this)\b/.test(s);
   };
-  const lastUser = [...clover.messages].reverse().find(m => m.role === 'user')?.content;
-  const lastReply = [...clover.messages].reverse().find(m => m.role === 'assistant')?.content;
-  return <section aria-label="Clover live conversation" className="fixed inset-0 z-[60] bg-background text-foreground flex flex-col items-center justify-between gap-4 p-6 overflow-y-auto">
-    <header className="w-full flex items-center justify-between"><h2 className="font-semibold">Clover · Live conversation</h2><button type="button" aria-label="End live" onClick={() => { end(); closeOracle(); }} className="min-w-11 min-h-11 grid place-items-center"><X size={20} /></button></header>
-    <div className="flex flex-col items-center text-center max-w-md gap-4">
-      <button type="button" onClick={start} disabled={clover.phase === 'thinking'} aria-label={clover.phase === 'idle' ? 'Start live conversation' : 'Speak to Clover'} className="rounded-full focus-visible:ring-2 focus-visible:ring-showcase-amber">
-        <React.Suspense fallback={<Mic size={80} />}><AmethystOrb size={240} speaking={clover.phase === 'speaking'} listening={clover.phase === 'listening'} getAmplitude={clover.getAmplitude} getSpectrum={clover.getSpectrum} /></React.Suspense>
-      </button>
-      <VoiceStateHUD listening={clover.phase === 'listening'} thinking={clover.phase === 'thinking'} speaking={clover.phase === 'speaking'} interim={clover.interim} />
-      {lastUser && <p className="text-muted-foreground">{lastUser}</p>}
-      <p aria-live="polite" className="text-lg leading-relaxed">{lastReply || 'Tap the microphone to begin.'}</p>
-      {clover.voiceError && <p role="alert" className="text-showcase-amber">{clover.voiceError}</p>}
+  const getCoords = () =>
+    new Promise((r) => {
+      if (!navigator.geolocation) return r({});
+      navigator.geolocation.getCurrentPosition(
+        (p) => r({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => r({}),
+        { timeout: 4000, maximumAge: 60000 }
+      );
+    });
+
+  const replyAndSpeak = (text) => {
+    setLastOracle(text);
+    historyRef.current.push({ role: 'assistant', content: text });
+    speak(text);
+  };
+
+  const handleUserTurn = async (text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setLastUser(trimmed);
+    historyRef.current.push({ role: 'user', content: trimmed });
+
+    // continuing dictation
+    if (dictationRef.current) {
+      setThinking(true);
+      const coords = await getCoords();
+      const res = await base44.functions.invoke('parseSpecimenDictation', {
+        transcript: trimmed,
+        create: true,
+        ...coords,
+      });
+      const data = res?.data || {};
+      const f = data.fields || {};
+      const ok = !!data.created;
+      const summary = ok
+        ? `Logged ${f.mineral_name}${f.found_at ? ` from ${f.found_at}` : ''}${
+            f.rarity && f.rarity !== 'common' ? ` — ${f.rarity}` : ''
+          }. Weather and lunar data filling in now.`
+        : "I couldn't save that. Try again with the mineral name.";
+      setDictationMode(false);
+      setThinking(false);
+      replyAndSpeak(summary);
+      return;
+    }
+
+    if (detectLogIntent(trimmed)) {
+      setDictationMode(true);
+      replyAndSpeak('Yes — describe the specimen. Mineral, location, and any notes.');
+      return;
+    }
+
+    setThinking(true);
+    const { getOrCreateGuestId } = await import('@/lib/guestDevice');
+    const res = await base44.functions.invoke('cloverChat', {
+      history: historyRef.current.slice(-8),
+      companion: null,
+      todays_finds: 0,
+      guest_device_id: getOrCreateGuestId(),
+    });
+    const replyText = res?.data?.reply || "I'm here with you.";
+    setThinking(false);
+    replyAndSpeak(replyText);
+  };
+
+  if (!open) return null;
+
+  // status string kept for aria-label only
+  const statusLabel = speaking ? 'Speaking' : listening ? 'Listening' : thinking ? 'Processing' : 'Ready';
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background overflow-hidden">
+      {/* ambient backdrop — matches Hub */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(60% 50% at 50% 30%, hsla(280,90%,45%,0.30) 0%, transparent 70%), radial-gradient(40% 40% at 50% 90%, hsla(195,90%,40%,0.18) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* top bar */}
+      <div className="w-full flex items-center justify-between px-5 pt-6">
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-hud-cyan/80 glow-hud">
+            Live Channel
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          {dictationMode && (
+            <span className="ml-2 text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-amethyst/30 text-white border border-amethyst/50 flex items-center gap-1">
+              <Gem size={10} /> Logging
+            </span>
+          )}
+        </div>
+        <button
+          onClick={closeOracle}
+          className="p-2 rounded-full glass-panel text-amethyst/80 hover:text-white"
+          aria-label="End live"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* center orb */}
+      <div className="flex flex-col items-center px-6 -mt-4">
+        <button
+          onClick={() => (listening ? stopListen() : startListen())}
+          className="rounded-full transition active:scale-95 focus:outline-none"
+          aria-label={listening ? 'Stop listening' : 'Start listening'}
+        >
+          <React.Suspense fallback={<div style={{ width: 300, height: 300 }} />}>
+            <AmethystOrb
+              size={300}
+              speaking={speaking}
+              getAmplitude={getAmplitude}
+              getSpectrum={getSpectrum}
+            />
+          </React.Suspense>
+        </button>
+
+        {/* HUD state indicator */}
+        <div className="mt-6" aria-label={statusLabel}>
+          <VoiceStateHUD
+            listening={listening}
+            thinking={thinking}
+            speaking={speaking}
+            interim={interim}
+          />
+          {/* idle state label */}
+          {!listening && !thinking && !speaking && (
+            <div className="text-[10px] font-mono uppercase tracking-[0.5em] text-amethyst/60 text-center mt-1">
+              Clover 🍀 Cole
+            </div>
+          )}
+        </div>
+
+        {/* last user utterance (no interim — that lives in VoiceStateHUD) */}
+        <div className="mt-4 min-h-[2.5rem] max-w-md text-center text-white/85 text-base leading-snug">
+          {!interim && lastUser && <span className="text-white/60">"{lastUser}"</span>}
+        </div>
+
+        {/* oracle reply */}
+        <div className="mt-3 max-w-md text-center text-white text-lg leading-relaxed glow-amethyst">
+          {lastOracle}
+        </div>
+      </div>
+
+      {/* bottom hint */}
+      <div className="w-full flex items-center justify-center gap-2 pb-8 text-[10px] font-mono uppercase tracking-[0.4em] text-white/40">
+        <Mic size={12} />
+        {micSupported ? 'Tap to toggle mic · say "log a specimen" to save a find' : 'Voice not supported on this device'}
+      </div>
     </div>
-    <button type="button" onClick={clover.phase === 'idle' || clover.phase === 'resting' ? start : clover.pause} disabled={clover.phase === 'thinking' || !clover.voiceSupported}
-      className="min-h-12 px-5 rounded-xl bg-showcase-amber text-showcase-ink font-semibold disabled:opacity-50">
-      {clover.phase === 'idle' ? 'Start microphone' : clover.phase === 'resting' ? 'Resume microphone' : 'Pause microphone'}
-    </button>
-    {!clover.voiceSupported && <p className="text-muted-foreground">Voice input is unavailable in this browser.</p>}
-  </section>;
+  );
 }

@@ -27,8 +27,6 @@ describe('base44Client', () => {
       functionsVersion: 'v2',
       requiresAuth: false,
       appBaseUrl: 'https://test.base44.app',
-      // No cookie consent in the test environment, so analytics/session recording stays off.
-      analytics: { enabled: false },
     });
 
     expect(base44).toBe(mockClientInstance);

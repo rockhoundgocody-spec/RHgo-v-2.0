@@ -16,10 +16,8 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { awardXPServerSide } from '../../shared/awardXP.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 const QUEST_XP_CAP = 100;
-const QUEST_DAILY_CAP = 3;
 const ROULETTE_XP = 15;
 const GUEST_RECLAIM_XP = 25;
 const DISP_XP: Record<string, number> = { collected: 25, left_in_place: 40, observed: 15 };
@@ -54,31 +52,7 @@ Deno.serve(async (req) => {
       if (quest.status !== 'completed') {
         return Response.json({ error: 'Quest not completed' }, { status: 400 });
       }
-      // Status/progress are client-writable: re-derive completion from real finds.
-      const since = quest.created_date || new Date(0).toISOString();
-      const finds = await base44.asServiceRole.entities.Specimen.filter(
-        {
-          created_by_id: user.id,
-          created_date: { $gte: since },
-          ...(quest.target_mineral ? { mineral_name: quest.target_mineral } : {}),
-        },
-        '-created_date',
-        50,
-      ).catch(() => []);
-      const need = Math.min(Math.max(Number(quest.target_count) || 1, 1), 50);
-      if ((finds?.length || 0) < need) {
-        return Response.json({ error: 'Quest progress not verified' }, { status: 400 });
-      }
-      const today = new Date().toISOString().split('T')[0];
-      const questAwards = await base44.asServiceRole.entities.XPAward.filter(
-        { owner_email: user.email, idempotency_key: { $regex: '^quest:' }, created_date: { $gte: `${today}T00:00:00` } },
-        '-created_date',
-        QUEST_DAILY_CAP + 1,
-      ).catch(() => []);
-      if ((questAwards?.length || 0) >= QUEST_DAILY_CAP) {
-        return Response.json({ error: 'Daily quest XP limit reached', capped: true }, { status: 429 });
-      }
-      amount = Math.min(Math.max(Number(quest.xp_reward) || 0, 0), QUEST_XP_CAP);
+      amount = Math.min(quest.xp_reward || 0, QUEST_XP_CAP);
       reason = `Quest: ${quest.title}`;
       idempotencyKey = `quest:${quest.id}`;
 
@@ -143,8 +117,7 @@ Deno.serve(async (req) => {
       if ((todays?.length || 0) >= AR_DAILY_CAP) {
         return Response.json({ error: 'Daily AR catch XP limit reached', already_awarded: false, capped: true }, { status: 429 });
       }
-      // Rarity/notes are client-writable on Specimen, so AR catches earn the flat base rate.
-      amount = AR_XP.common;
+      amount = AR_XP[specimen.rarity] || AR_XP.common;
       reason = 'AR catch';
       idempotencyKey = `ar_catch:${specimen.id}`;
 
@@ -165,6 +138,6 @@ Deno.serve(async (req) => {
     const result = await awardXPServerSide(base44, user.email, amount, reason, idempotencyKey);
     return Response.json(result);
   } catch (error) {
-    return safeError('awardVerifiedXP', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

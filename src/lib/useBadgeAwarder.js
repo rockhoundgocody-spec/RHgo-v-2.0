@@ -37,7 +37,7 @@ export function useBadgeAwarder() {
           'id', 'mineral_name', 'found_at', 'rarity', 'verified', 'ai_confidence', 'notes', 'found_date', 'created_date'
         ]),
         base44.entities.Badge.filter({ owner_email: me.email }),
-        base44.functions.invoke('listPosts', { limit: 200 }).then((r) => r?.data?.posts || []).catch(() => []),
+        base44.entities.Post.list('-created_date', 200).catch(() => []),
         base44.entities.PlayerProfile.filter({ owner_email: me.email }).catch(() => []),
         base44.entities.Quest.filter({ owner_email: me.email }).catch(() => []),
       ]);

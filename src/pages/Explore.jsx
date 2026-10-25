@@ -38,7 +38,7 @@ import MapFilterSheet from '@/components/explore/MapFilterSheet.jsx';
 import MapSearchBar from '@/components/explore/MapSearchBar.jsx';
 import ExploreEmptyState from '@/components/explore/ExploreEmptyState.jsx';
 import { useNavigate } from 'react-router-dom';
-import { formatDistance, persistLastGps, rankHotspots, hasNearbyHotspots as checkNearbyHotspots } from '@/lib/geo';
+import { formatDistance, persistLastGps, rankHotspots, readLastGps } from '@/lib/geo';
 
 // ── Rarity-aware color for hotspot list cards ─────────────────────────────────
 const LAND_COLORS = {
@@ -57,7 +57,7 @@ function StatPill({ value, label, color }) {
 }
 
 // Compact hotspot card in the bottom sheet list (Memoized to prevent unnecessary re-renders)
-function HotspotCardInner({ hotspot, active, hasGap, onClick, distanceMi }) {
+const HotspotCard = memo(function HotspotCard({ hotspot, active, hasGap, onClick, distanceMi }) {
   const color = hasGap ? '#c084fc' : LAND_COLORS[hotspot.land_type] || LAND_COLORS.unknown;
   // Determine rarity-themed border for special hotspots
   const hasLegendary = (hotspot.minerals||[]).some(m =>
@@ -130,8 +130,7 @@ function HotspotCardInner({ hotspot, active, hasGap, onClick, distanceMi }) {
       </div>
     </motion.div>
   );
-}
-const HotspotCard = memo(HotspotCardInner);
+});
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Explore() {
@@ -338,10 +337,9 @@ export default function Explore() {
     return rankHotspots(list, { userLocation, collectedMinerals });
   }, [hotspots, activeLayer, collectionGapIds, collectedMinerals, selectedMineralsLower, userLocation]);
 
-  // Performance Optimization: Replaced rankHotspots().some() with direct early-exit checkNearbyHotspots()
-  // to avoid O(N log N) sorting and gap counting when only a boolean distance check is needed.
   const hasNearbyHotspots = useMemo(() => {
-    return checkNearbyHotspots(hotspots, userLocation, 75);
+    if (!userLocation) return true;
+    return rankHotspots(hotspots, { userLocation }).some((h) => h.distanceMi != null && h.distanceMi <= 75);
   }, [hotspots, userLocation]);
 
   const showEmptyPanel = !loading && !!userLocation && !hasNearbyHotspots;

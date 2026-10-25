@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { chunkValues, collectPages, groupDigestRecords } from './operations.ts';
-import { logError, safeError } from '../../shared/httpErrors.ts';
 
 /**
  * sendWeeklySummary — scheduled weekly digest.
@@ -75,13 +74,13 @@ Deno.serve(async (req) => {
         });
         sent += 1;
       } catch (e) {
-        errors.push({ email: user.email, error: `send failed (ref ${logError('sendWeeklySummary', e)})` });
+        errors.push({ email: user.email, error: String(e?.message || e) });
       }
     }
 
     return Response.json({ sent, errors, total_users: users.length });
   } catch (error) {
-    return safeError('sendWeeklySummary', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 

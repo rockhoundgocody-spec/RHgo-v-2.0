@@ -3,7 +3,6 @@
  * Drop-in companion chat using grok-3-mini via the OpenAI-compatible xAI API.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -79,6 +78,7 @@ ${stateBits}`;
 
     return Response.json({ reply, model: 'grok-3-mini' });
   } catch (error) {
-    return safeError('grokChat', error);
+    console.error('grokChat error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

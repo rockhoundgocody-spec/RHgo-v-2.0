@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { bulkCreateInChunks } from './bulkCreateInChunks.ts';
-import { logError, safeError } from '../../shared/httpErrors.ts';
 
 /**
  * crawlMindat — admin-only crawler that pulls mineral species from mindat.org
@@ -95,7 +94,7 @@ Deno.serve(async (req) => {
         // polite delay between detail fetches
         await sleep(400);
       } catch (e) {
-        errors.push({ name: c.name, reason: `error (ref ${logError('crawlMindat', e)})` });
+        errors.push({ name: c.name, reason: String(e.message || e) });
       }
     }
 
@@ -127,7 +126,8 @@ Deno.serve(async (req) => {
   } catch (error) {
     // Never return a stack trace to the client — it leaks internal paths and
     // module layout. Log it server-side instead.
-    return safeError('crawlMindat', error);
+    console.error('crawlMindat error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 
@@ -167,7 +167,7 @@ async function crawlSpeciesIndex(base44, letter, limit, offset, dryRun) {
       const detail = await fetchAndParseMineral(base44, c);
       if (detail) created.push(detail);
       await sleep(400);
-    } catch (e) { errors.push({ name: c.name, reason: `error (ref ${logError('crawlMindat', e)})` }); }
+    } catch (e) { errors.push({ name: c.name, reason: String(e.message || e) }); }
   }
 
   if (!dryRun && created.length) {

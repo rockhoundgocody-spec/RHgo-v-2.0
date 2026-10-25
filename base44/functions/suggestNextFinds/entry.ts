@@ -1,6 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { safeError } from '../../shared/httpErrors.ts';
-import { canSeeExactHotspots, coarsenHotspot } from '../../shared/hotspotPrecision.ts';
 
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS_MI = 3959;
@@ -48,8 +46,7 @@ Deno.serve(async (req) => {
       : 'No specimens logged yet.';
 
     // 2. Nearby hotspots — public read, sort by distance if geo available
-    const exact = await canSeeExactHotspots(base44, user);
-    const hotspots = (await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200)).map(h => exact ? h : coarsenHotspot(h));
+    const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
     let scored;
     if (lat != null && lng != null) {
       const userLatRad = lat * DEG_TO_RAD;
@@ -210,6 +207,7 @@ Output a JSON object:
       nearby_hotspot_count: nearby.length,
     });
   } catch (error) {
-    return safeError('suggestNextFinds', error);
+    console.error('suggestNextFinds error:', error);
+    return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 });

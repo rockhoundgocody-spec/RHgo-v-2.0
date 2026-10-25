@@ -12,7 +12,7 @@
  * banner (see cookieConsent.js + CookieConsentBanner.jsx). Until then, zero
  * GA/GTM network calls happen — only the non-tracking Search Console meta.
  */
-import { analyticsAllowed } from '@/lib/recordingGate';
+import { isConsentGranted } from '@/lib/cookieConsent';
 
 const GTM_ID = (import.meta.env.VITE_GTM_ID || '').trim();
 const GA4_ID = (import.meta.env.VITE_GA4_MEASUREMENT_ID || '').trim();
@@ -102,7 +102,7 @@ export function initAnalytics() {
  * Until consent is granted, zero GA/GTM network calls happen.
  */
 export function enableAnalytics() {
-  if (!analyticsAllowed()) return;
+  if (!isConsentGranted()) return;
   installGtm();
   installGa4();
 }

@@ -3,14 +3,11 @@
  * Coordinates and photos are visible only to you.
  */
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { MapPin, Plus, Gem, Trash2, Lock, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpTip from '@/components/hub/HelpTip.jsx';
 import ExportBar from '@/components/collection/ExportBar.jsx';
-import PrivateLogPhoto from '@/components/collection/PrivateLogPhoto';
-import { uploadPrivateRockPhoto } from '@/lib/privateRockPhoto';
 
 const RARITY_COLORS = {
   common:   'hsl(195,80%,70%)',
@@ -33,9 +30,7 @@ export default function PrivateRockLog() {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const user = await base44.auth.me();
-      setUserEmail(user.email);
-      const data = await base44.entities.PrivateRockLog.filter({ created_by_id: user.id }, '-created_date');
+      const data = await base44.entities.PrivateRockLog.list('-created_date');
       setLogs(data || []);
     } catch {}
     setLoading(false);
@@ -54,7 +49,7 @@ export default function PrivateRockLog() {
           <div className="flex items-center gap-2">
             <Lock size={14} className="text-amethyst" />
             <h1 className="text-white font-bold text-lg">Private Rock Log</h1>
-            <HelpTip topic="Private photo storage" tip="New photos are stored privately with camera metadata removed. Older photos may still use public links; this update does not revoke them." />
+            <HelpTip tip="Your personal stash — exact GPS, photos, and notes saved only for your eyes. No other user can see these finds." />
           </div>
           <p className="text-white/35 text-[11px] mt-0.5">Only visible to you · {logs.length} finds logged</p>
         </div>
@@ -125,8 +120,8 @@ function LogCard({ log, onDelete }) {
         border: '1px solid hsla(270,30%,40%,0.2)',
       }}
     >
-      {log.image_file_uri || log.image_url ? (
-        <PrivateLogPhoto fileUri={log.image_file_uri} legacyUrl={log.image_url} alt={log.mineral_name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+      {log.image_url ? (
+        <img src={log.image_url} alt={log.mineral_name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
       ) : (
         <div className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'hsla(255,20%,18%,0.6)' }}>
           <Image size={22} className="text-white/20" />
@@ -171,14 +166,13 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
     rarity: 'common',
     found_date: new Date().toISOString().split('T')[0],
     weight_lbs: '',
-    image_file_uri: '',
+    image_url: '',
     lat: '',
     lng: '',
   });
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -199,20 +193,16 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    setError('');
     try {
-      set('image_file_uri', await uploadPrivateRockPhoto(file));
-    } catch (error) {
-      setError(error.message || 'Photo upload failed. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+      const res = await base44.integrations.Core.UploadFile({ file });
+      set('image_url', res.file_url);
+    } catch {}
+    setUploading(false);
   };
 
   const handleSave = async () => {
-    if (!form.mineral_name.trim() || !userEmail || uploading || saving) return;
+    if (!form.mineral_name.trim()) return;
     setSaving(true);
-    setError('');
     try {
       const payload = {
         owner_email: userEmail,
@@ -221,26 +211,23 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
         location_label: form.location_label,
         rarity: form.rarity,
         found_date: form.found_date,
-        image_file_uri: form.image_file_uri,
+        image_url: form.image_url,
         lat: form.lat ? parseFloat(form.lat) : undefined,
         lng: form.lng ? parseFloat(form.lng) : undefined,
         weight_lbs: form.weight_lbs ? parseFloat(form.weight_lbs) : undefined,
       };
       const created = await base44.entities.PrivateRockLog.create(payload);
       onSaved(created);
-    } catch (error) {
-      setError(error.message || 'Your log was not saved. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    } catch {}
+    setSaving(false);
   };
 
-  return createPortal(
+  return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[6000] flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ background: 'hsla(245,30%,4%,0.75)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
@@ -327,14 +314,12 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
               style={{ background: 'hsla(255,20%,18%,0.6)', border: '1px solid hsla(255,20%,30%,0.3)' }}
             >
               <Image size={14} />
-              {uploading ? 'Uploading…' : form.image_file_uri ? 'Photo added privately' : 'Choose photo'}
+              {uploading ? 'Uploading…' : form.image_url ? '✓ Photo added' : 'Choose photo'}
             </div>
             <input type="file" accept="image/*" onChange={handleImage} className="sr-only" />
           </label>
-          {form.image_file_uri && <PrivateLogPhoto fileUri={form.image_file_uri} alt="Private photo preview" className="mt-2 w-20 h-20 rounded-xl object-cover" />}
-          <p className="text-muted-foreground text-xs mt-2">Photos are private. Camera location metadata is removed before upload.</p>
+          {form.image_url && <img src={form.image_url} alt="preview" className="mt-2 w-20 h-20 rounded-xl object-cover" />}
         </Field>
-        {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
 
         <div className="flex gap-3 mt-5">
           <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white/40 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none" style={{ background: 'hsla(255,20%,18%,0.5)', border: '1px solid hsla(255,20%,30%,0.25)' }}>
@@ -342,7 +327,7 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
           </button>
           <button
             onClick={handleSave}
-            disabled={!form.mineral_name.trim() || !userEmail || saving || uploading}
+            disabled={!form.mineral_name.trim() || saving}
             className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
             style={{ background: 'linear-gradient(135deg, hsl(280 70% 55%), hsl(265 75% 45%))', boxShadow: '0 4px 20px hsla(280,80%,50%,0.3)' }}
           >
@@ -350,15 +335,14 @@ function AddLogForm({ userEmail, onSaved, onClose }) {
           </button>
         </div>
       </motion.div>
-    </motion.div>,
-    document.body
+    </motion.div>
   );
 }
 
 function Field({ label, children }) {
   return (
     <div className="mb-3">
-      <label className="block text-muted-foreground text-[10px] uppercase tracking-widest mb-1">{label}</label>
+      <label className="block text-white/40 text-[10px] uppercase tracking-widest mb-1">{label}</label>
       {children}
     </div>
   );

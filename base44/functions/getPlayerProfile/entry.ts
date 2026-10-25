@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -25,6 +24,6 @@ Deno.serve(async (req) => {
 
     return Response.json(profile);
   } catch (error) {
-    return safeError('getPlayerProfile', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

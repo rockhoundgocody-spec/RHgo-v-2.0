@@ -6,6 +6,23 @@ import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { Button } from '@/components/ui/button';
 import MindatCrawlerPanel from '@/components/admin/MindatCrawlerPanel.jsx';
 
+const SEED_HOTSPOTS = [
+  { name: 'Crater of Diamonds State Park', state: 'AR', country: 'USA', lat: 34.0353, lng: -93.6713, land_type: 'state_park', minerals: ['Diamond', 'Quartz', 'Jasper'], difficulty: 'easy', description: 'Only public diamond mine in the world. Keep what you find.', trust_score: 0.98, source: 'state_official' },
+  { name: 'Herkimer Diamond Mines', state: 'NY', country: 'USA', lat: 43.0392, lng: -74.9788, land_type: 'private', minerals: ['Quartz (Herkimer Diamond)', 'Pyrite'], difficulty: 'easy', description: 'Famous double-terminated quartz crystals.', trust_score: 0.95, source: 'commercial' },
+  { name: 'Topaz Mountain', state: 'UT', country: 'USA', lat: 39.7019, lng: -113.1308, land_type: 'blm', minerals: ['Topaz', 'Red Beryl', 'Garnet'], difficulty: 'moderate', description: 'BLM open collecting area for sherry topaz.', trust_score: 0.92, source: 'blm' },
+  { name: 'Petrified Forest (Rainbow Forest)', state: 'AZ', country: 'USA', lat: 34.9100, lng: -109.8068, land_type: 'public', minerals: ['Petrified Wood'], difficulty: 'easy', description: 'NPS — collecting prohibited inside park; legal sites adjacent.', rules: 'No collection inside park boundary.', trust_score: 0.99, source: 'nps' },
+  { name: 'Graves Mountain', state: 'GA', country: 'USA', lat: 33.5667, lng: -82.6500, land_type: 'private', minerals: ['Rutile', 'Lazulite', 'Pyrophyllite', 'Kyanite'], difficulty: 'moderate', description: 'Open during scheduled rockhound digs.', trust_score: 0.88, source: 'club' },
+  { name: 'Emerald Hollow Mine', state: 'NC', country: 'USA', lat: 35.9007, lng: -81.2484, land_type: 'private', minerals: ['Emerald', 'Hiddenite', 'Aquamarine'], difficulty: 'easy', description: 'Pay-to-dig, sluicing & creeking allowed.', trust_score: 0.9, source: 'commercial' },
+  { name: 'Mount Antero', state: 'CO', country: 'USA', lat: 38.6741, lng: -106.2467, land_type: 'forest_service', minerals: ['Aquamarine', 'Smoky Quartz', 'Phenakite'], difficulty: 'expert', description: 'High alpine — 14k ft. Casual collecting allowed on USFS.', trust_score: 0.87, source: 'usfs' },
+  { name: 'Ellis Jasper Pit', state: 'OR', country: 'USA', lat: 42.4500, lng: -118.5000, land_type: 'blm', minerals: ['Jasper', 'Agate'], difficulty: 'moderate', description: 'Owyhee region BLM lands.', trust_score: 0.82, source: 'blm' },
+  { name: 'Royal Peacock Opal Mine', state: 'NV', country: 'USA', lat: 41.6850, lng: -118.7256, land_type: 'private', minerals: ['Black Opal', 'Fire Opal'], difficulty: 'moderate', description: 'Virgin Valley fee-dig opal mine.', trust_score: 0.91, source: 'commercial' },
+  { name: 'Wegner Quartz Crystal Mines', state: 'AR', country: 'USA', lat: 34.5667, lng: -93.0833, land_type: 'private', minerals: ['Quartz', 'Calcite'], difficulty: 'easy', description: 'Hot Springs region — clear quartz clusters.', trust_score: 0.93, source: 'commercial' },
+  { name: 'Lake Superior Agate Beach', state: 'MN', country: 'USA', lat: 46.9000, lng: -91.5000, land_type: 'public', minerals: ['Lake Superior Agate'], difficulty: 'easy', description: 'Beach combing along North Shore.', trust_score: 0.85, source: 'state_dnr' },
+  { name: 'Garnet Hill Recreation Area', state: 'NV', country: 'USA', lat: 39.2603, lng: -114.9631, land_type: 'blm', minerals: ['Almandine Garnet'], difficulty: 'moderate', description: 'BLM rec area, collecting permitted.', trust_score: 0.94, source: 'blm' },
+  { name: 'Hogg Mine', state: 'GA', country: 'USA', lat: 33.1833, lng: -84.5667, land_type: 'private', minerals: ['Beryl', 'Aquamarine', 'Tourmaline'], difficulty: 'moderate', description: 'Pegmatite mine open on dig days.', trust_score: 0.86, source: 'club' },
+  { name: 'Diamond Hill Mine', state: 'SC', country: 'USA', lat: 34.4500, lng: -82.4500, land_type: 'private', minerals: ['Quartz', 'Smoky Quartz', 'Amethyst'], difficulty: 'easy', description: 'Public-access quartz mine.', trust_score: 0.89, source: 'commercial' },
+  { name: 'Tonopah Turquoise Area', state: 'NV', country: 'USA', lat: 38.0667, lng: -117.2300, land_type: 'private', minerals: ['Turquoise'], difficulty: 'hard', description: 'Multiple historic claim mines; permission required.', trust_score: 0.78, source: 'claim' },
+];
 
 export const clearAllHotspots = async (client = base44, confirmFn = (msg) => typeof window !== 'undefined' && window.confirm ? window.confirm(msg) : true) => {
   if (!confirmFn('Delete all hotspots?')) return false;
@@ -36,15 +53,9 @@ export default function Admin() {
 
   useEffect(() => { refresh(); }, []);
 
-  const [seedCount, setSeedCount] = useState(null);
-  useEffect(() => {
-    if (user?.role !== 'admin') return;
-    base44.functions.invoke('seedAdminHotspots', { dry_run: true }).then((r) => setSeedCount(r.data.count));
-  }, [user]);
-
   const seedHotspots = async () => {
     setSeeding(true);
-    await base44.functions.invoke('seedAdminHotspots', {});
+    await base44.entities.Hotspot.bulkCreate(SEED_HOTSPOTS);
     await refresh();
     setSeeding(false);
   };
@@ -107,7 +118,7 @@ export default function Admin() {
               <div>
                 <div className="text-white font-medium">Seed Hotspot Database</div>
                 <div className="text-xs text-hud-cyan/60">
-                  Inserts {seedCount ?? '…'} curated US rockhounding sites with land-type & trust scores
+                  Inserts {SEED_HOTSPOTS.length} curated US rockhounding sites with land-type & trust scores
                 </div>
               </div>
               <Button

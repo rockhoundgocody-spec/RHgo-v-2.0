@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { secrets } from 'base44:runtime';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * Publishes a single hotspot to the app's connected Instagram Business feed.
@@ -135,6 +134,7 @@ export default async function(req) {
       image_source: image_url ? 'hotspot_photo' : 'static_map',
     });
   } catch (error) {
-    return safeError('publishHotspotToInstagram', error);
+    console.error('publishHotspotToInstagram error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

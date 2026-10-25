@@ -1,28 +1,22 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { voiceErrorMessage } from '@/lib/voiceErrors';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
-// Shared TTS playback: only one Clover voice may own the speaker at a time.
-// Falls back to browser TTS on backend failure.
+// Google Cloud TTS via synthesizeSpeech backend → Web Audio analyser for
+// amplitude/spectrum. Falls back to browser TTS on backend failure.
 // ─────────────────────────────────────────────────────────────────────────────
-let activeSpeechStop = null;
-
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false);
 
   const audioCtxRef   = useRef(null);
   const sourceRef     = useRef(null);
-  const audioElRef    = useRef(null);
   const amplitudeRef  = useRef(0);
   const bassRef       = useRef(0);
   const midRef        = useRef(0);
   const trebleRef     = useRef(0);
   const rafRef        = useRef(null);
   const analyserRef   = useRef(null);
-  const requestRef = useRef(0);
-  const fallbackCleanupRef = useRef(null);
 
   const startAmpLoop = useCallback((analyser) => {
     analyserRef.current = analyser;
@@ -45,10 +39,10 @@ export function useSpeechSynthesis() {
       const t   = trebleSum / ((len - midEnd) * 255);
       const amp = b * 0.5 + m * 0.35 + t * 0.15;
 
-      bassRef.current      += (b   - bassRef.current)      * 0.28;
-      midRef.current       += (m   - midRef.current)       * 0.28;
-      trebleRef.current    += (t   - trebleRef.current)    * 0.28;
-      amplitudeRef.current += (amp - amplitudeRef.current) * 0.24;
+      bassRef.current      += (b   - bassRef.current)      * 0.15;
+      midRef.current       += (m   - midRef.current)       * 0.15;
+      trebleRef.current    += (t   - trebleRef.current)    * 0.15;
+      amplitudeRef.current += (amp - amplitudeRef.current) * 0.12;
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -67,133 +61,83 @@ export function useSpeechSynthesis() {
     []
   );
 
-  const stop = useCallback(() => {
-    // Invalidate pending synthesis/download/decode before stopping current audio.
-    requestRef.current += 1;
-    fallbackCleanupRef.current?.();
-    fallbackCleanupRef.current = null;
-    const source = sourceRef.current;
-    sourceRef.current = null;
-    if (source) {
-      source.onended = null;
-      try { source.stop(); } catch {}
-      source.disconnect();
-    }
-    if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
-    // An unmounting, inactive hook must not cancel another Clover surface.
-    if (activeSpeechStop === stop) {
-      activeSpeechStop = null;
-      window.speechSynthesis?.cancel();
-    }
-    stopAmpLoop();
-    setSpeaking(false);
-  }, [stopAmpLoop]);
-
   const speak = useCallback(async (text) => {
     if (!text) return;
-    stop();
-    activeSpeechStop?.();
-    activeSpeechStop = stop;
-    const request = requestRef.current;
-    const isCurrent = () => requestRef.current === request && activeSpeechStop === stop;
+
+    // Stop anything already playing
+    try {
+      if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; }
+      window.speechSynthesis?.cancel();
+    } catch {}
+    stopAmpLoop();
+
     setSpeaking(true);
 
-    let voiceConfig = { voice: 'honey', rate: 1.0, pitch: 1.0, volume: 0.95 };
+    let voiceConfig = { voice: 'honey', rate: 0.95, pitch: 1.0, volume: 0.95 };
     try {
       const stored = localStorage.getItem('clover_voice');
       if (stored) voiceConfig = { ...voiceConfig, ...JSON.parse(stored) };
     } catch {}
 
     try {
-      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
-      if (!isCurrent()) return;
-      const res = await base44.functions.invoke('synthesizeSpeech', {
-        text:  String(text).slice(0, 800),
-        voice: voiceConfig.voice || 'honey',
-        rate: voiceConfig.rate ?? 1,
-        guest_device_id: getOrCreateGuestId(),
-      });
-
-      if (!isCurrent()) return;
-      const audioUrl = res?.data?.audioUrl;
-      if (!audioUrl) throw new Error('No audio URL returned');
-
-      // Use the Web Audio API (BufferSource), NOT an <audio> element.
-      // HTMLMediaElement.play() is blocked by autoplay policy when called
-      // after async calls — the user gesture has "expired". But an
-      // AudioContext unlocked in the user gesture (via unlock()) stays
-      // running, so source.start(0) works without another gesture.
+      // Create/resume the AudioContext FIRST — on mobile it may only be
+      // unlocked while the originating user gesture is still fresh.
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
-      const playCtx = audioCtxRef.current;
-      // Fire-and-forget resume — do NOT await. If the context was unlocked
-      // in unlock() (user gesture), it's already running. If it's suspended,
-      // await resume() here would hang forever (no gesture) and block the
-      // entire function. Just try to resume and move on.
-      if (playCtx.state === 'suspended') { try { playCtx.resume().catch(() => {}); } catch {} }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
 
-      // Fetch + decode with a timeout so a hung decode can't freeze playback.
+      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
+      const res = await base44.functions.invoke('synthesizeSpeech', {
+        text:  String(text).slice(0, 800),
+        voice: voiceConfig.voice || 'honey',
+        guest_device_id: getOrCreateGuestId(),
+      });
+
+      const audioUrl = res?.data?.audioUrl;
+      if (!audioUrl) throw new Error('No audio URL returned');
+
       const audioRes = await fetch(audioUrl);
-      if (!isCurrent()) return;
-      if (!audioRes.ok) throw new Error('Audio fetch failed: ' + audioRes.status);
+      if (!audioRes.ok) throw new Error('Audio fetch failed');
       const arrayBuf = await audioRes.arrayBuffer();
-      if (!isCurrent()) return;
 
-      const decoded = await Promise.race([
-        playCtx.decodeAudioData(arrayBuf.slice(0)),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('decode timeout')), 8000)),
-      ]);
-      if (!isCurrent()) return;
-      if (!decoded || !decoded.duration) throw new Error('decode failed');
+      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
+      const audioBuffer = await ctx.decodeAudioData(arrayBuf);
 
-      const analyser = playCtx.createAnalyser();
+      const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
       analyser.smoothingTimeConstant = 0.55;
 
-      const src = playCtx.createBufferSource();
-      src.buffer = decoded;
-      src.playbackRate.value = 1.0;
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      // Play at the engine's natural pace — slowing playback pitch-shifts the
+      // voice down and makes it sound robotic/computerized.
+      source.playbackRate.value = 1.0;
 
-      const gainNode = playCtx.createGain();
+      const gainNode = ctx.createGain();
       gainNode.gain.value = voiceConfig.volume ?? 0.95;
 
-      src.connect(analyser);
+      source.connect(analyser);
       analyser.connect(gainNode);
-      gainNode.connect(playCtx.destination);
-      sourceRef.current = src;
+      gainNode.connect(ctx.destination);
+      sourceRef.current = source;
 
       startAmpLoop(analyser);
 
-      src.onended = () => {
-        if (!isCurrent() || sourceRef.current !== src) return;
-        src.disconnect();
+      source.onended = () => {
         stopAmpLoop();
         sourceRef.current = null;
         setSpeaking(false);
       };
 
-      // If the context is still suspended here, source.start(0) would
-      // schedule silently with no audio. Fall back to browser TTS instead.
-      if (playCtx.state !== 'running') throw new Error('AudioContext not running');
-      src.start(0);
+      source.start(0);
     } catch (err) {
-      if (!isCurrent()) return;
       console.warn('TTS backend failed, falling back to browser:', err);
-      const source = sourceRef.current;
-      sourceRef.current = null;
-      if (source) { source.onended = null; try { source.stop(); } catch {} source.disconnect(); }
       stopAmpLoop();
-      fallbackCleanupRef.current = _browserFallback(
-        text,
-        setSpeaking,
-        stopAmpLoop,
-        voiceConfig,
-        isCurrent,
-        { amplitudeRef, bassRef, midRef, trebleRef }
-      );
+      _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig);
     }
-  }, [startAmpLoop, stopAmpLoop, stop]);
+  }, [startAmpLoop, stopAmpLoop]);
 
   // Warm up the AudioContext from within a user gesture — mobile browsers
   // keep audio locked until a gesture creates/resumes the context. Call this
@@ -209,67 +153,44 @@ export function useSpeechSynthesis() {
     } catch {}
   }, []);
 
+  const stop = useCallback(() => {
+    try { if (sourceRef.current) { sourceRef.current.stop(); sourceRef.current = null; } } catch {}
+    window.speechSynthesis?.cancel();
+    stopAmpLoop();
+    setSpeaking(false);
+  }, [stopAmpLoop]);
 
   useEffect(() => () => {
     stop();
     const ctx = audioCtxRef.current;
     if (ctx && ctx.state !== 'closed') { try { ctx.close().catch(() => {}); } catch {} }
     audioCtxRef.current = null;
-    if (audioElRef.current) { try { audioElRef.current.pause(); } catch {} audioElRef.current = null; }
   }, [stop]);
 
   return { speak, stop, speaking, supported: true, getAmplitude, getSpectrum, unlock };
 }
 
-function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent, refs = {}) {
+function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig = {}) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
-  let started = false;
-  let timer;
-  let prosodyRaf = null;
-  const stopProsody = () => {
-    if (prosodyRaf) { cancelAnimationFrame(prosodyRaf); prosodyRaf = null; }
-  };
-  const startProsody = () => {
-    stopProsody();
-    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const step = () => {
-      if (!isCurrent()) { stopProsody(); return; }
-      const elapsed = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) * 0.001;
-      const b = 0.28 + Math.abs(Math.sin(elapsed * 6.2)) * 0.38;
-      const m = 0.22 + Math.abs(Math.sin(elapsed * 9.5 + 0.9)) * 0.34;
-      const tr = 0.14 + Math.abs(Math.cos(elapsed * 13.1)) * 0.25;
-      if (refs.bassRef) refs.bassRef.current = b;
-      if (refs.midRef) refs.midRef.current = m;
-      if (refs.trebleRef) refs.trebleRef.current = tr;
-      if (refs.amplitudeRef) refs.amplitudeRef.current = b * 0.5 + m * 0.35 + tr * 0.15;
-      prosodyRaf = requestAnimationFrame(step);
-    };
-    prosodyRaf = requestAnimationFrame(step);
-  };
-  const cleanup = () => {
-    clearTimeout(timer);
-    stopProsody();
-    window.speechSynthesis.removeEventListener('voiceschanged', _speak);
-  };
+
   const _speak = () => {
-    if (started || !isCurrent()) return;
-    started = true;
-    clearTimeout(timer);
-    window.speechSynthesis.removeEventListener('voiceschanged', _speak);
     const utter    = new SpeechSynthesisUtterance(String(text));
     utter.lang     = 'en-US';
-    utter.rate     = voiceConfig.rate || 1.0;
-    utter.pitch    = voiceConfig.pitch || 1.0;
+    utter.rate     = voiceConfig.rate || 0.96;
+    utter.pitch    = voiceConfig.pitch || 1.02;
     utter.volume   = voiceConfig.volume ?? 1.0;
     const voices   = window.speechSynthesis.getVoices();
-    // Use only an explicitly American device voice; never substitute a UK/Irish voice.
-    const american = voices.filter((v) => /^en[-_]US$/i.test(v.lang) && !/british|irish|en[-_]GB|en[-_]IE/i.test(v.name));
-    const best = american.find((v) => /samantha|ava|zoe|allison|aria|jenny|nicky|siri|google us english|natural|female/i.test(v.name)) || american[0];
-    if (!best) { setSpeaking(false); stopProsody(); stopAmpLoop(); return; }
-    utter.voice = best;
-    utter.onstart  = () => { if (isCurrent()) { setSpeaking(true); startProsody(); } };
-    utter.onend    = () => { stopProsody(); if (isCurrent()) { setSpeaking(false); stopAmpLoop(); } };
-    utter.onerror  = (e) => { stopProsody(); if (isCurrent() && e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
+    // Prioritize Irish-American female voice (en-IE / Moira), smooth warm natural female voices, and avoid British (en-GB).
+    const isNotBritish = (v) => !/en[-_]GB|british|uk\s*english/i.test(v.lang + ' ' + v.name);
+    const best     = voices.find((v) => isNotBritish(v) && /en[-_]IE|irish|moira|orla|niamh/i.test(v.lang + ' ' + v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /samantha|karen|victoria|ava|zoe|allison|female/i.test(v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang))
+                  || voices.find((v) => isNotBritish(v))
+                  || voices[0];
+    if (best) utter.voice = best;
+    utter.onstart  = () => setSpeaking(true);
+    utter.onend    = () => { setSpeaking(false); stopAmpLoop(); };
+    utter.onerror  = (e) => { if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   };
@@ -278,10 +199,14 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
   if (voices.length > 0) {
     _speak();
   } else {
-    window.speechSynthesis.addEventListener('voiceschanged', _speak);
-    timer = setTimeout(_speak, 500);
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      _speak();
+    };
+    setTimeout(() => {
+      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) _speak();
+    }, 500);
   }
-  return cleanup;
 }
 
 
@@ -293,94 +218,135 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
 // - Silence timer only fires final stop when speech goes quiet
 // - confidence gate is lenient (Chrome often reports 0)
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD   = 0.12;
-const MIN_TRANSCRIPT_CHARS   = 2;
-const SILENCE_TIMEOUT_MS     = 2800;
-const ACTIVE_SPEECH_MS       = 4200;
-const POST_SPEECH_SETTLE_MS  = 850;
+const CONFIDENCE_THRESHOLD = 0.12;
+const MIN_TRANSCRIPT_CHARS = 2;
+const MIN_WORD_COUNT       = 1;
+const SILENCE_TIMEOUT_MS   = 2800;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
-  const [error, setError] = useState('');
-  const callbacks = useRef({ onResult, onInterim });
-  callbacks.current = { onResult, onInterim };
-  const recRef = useRef(null);
-  const timerRef = useRef(null);
-  const settleTimerRef = useRef(null);
-  const SR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
-  const discard = useCallback(() => {
-    clearTimeout(timerRef.current);
-    clearTimeout(settleTimerRef.current);
-    const rec = recRef.current; recRef.current = null;
-    if (rec) { rec.onresult = rec.onend = rec.onerror = null; try { rec.abort(); } catch {} }
+  const onResultRef  = useRef(onResult);
+  const onInterimRef = useRef(onInterim);
+  onResultRef.current  = onResult;
+  onInterimRef.current = onInterim;
+
+  const recRef       = useRef(null);
+  const silenceTimer = useRef(null);
+  const deadRef      = useRef(false);
+  const gotFinalRef  = useRef(false);
+  const blockedRef   = useRef(false); // fatal error (mic denied) — stop restart loops
+
+  const SR = typeof window !== 'undefined'
+    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+    : null;
+  const supported = !!SR;
+
+  const _clearTimer = () => { clearTimeout(silenceTimer.current); silenceTimer.current = null; };
+
+  const _resetSilenceTimer = useCallback((rec) => {
+    _clearTimer();
+    silenceTimer.current = setTimeout(() => {
+      try { rec?.stop(); } catch {}
+    }, SILENCE_TIMEOUT_MS);
   }, []);
-  const stop = useCallback(() => {
-    discard(); setListening(false); callbacks.current.onInterim?.('');
-  }, [discard]);
-  const start = useCallback(() => {
-    discard(); setError('');
-    if (!SR) { setError('Voice input is unavailable in this browser.'); return; }
-    const rec = new SR(); recRef.current = rec;
-    rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3; rec.lang = 'en-US';
-    let finalTranscript = '', interim = '', delivered = false;
-    const current = () => recRef.current === rec;
-    const finish = () => {
-      clearTimeout(timerRef.current);
-      clearTimeout(settleTimerRef.current);
+
+  const _killRec = useCallback(() => {
+    _clearTimer();
+    if (recRef.current) {
+      try { recRef.current.abort(); } catch {}
       recRef.current = null;
-      setListening(false);
-      callbacks.current.onInterim?.('');
-    };
-    const deliver = (text) => {
-      if (!current() || delivered) return;
-      const clean = text.trim();
-      if (clean.length < MIN_TRANSCRIPT_CHARS) return;
-      delivered = true;
-      finish();
-      try { rec.stop(); } catch {}
-      callbacks.current.onResult?.(clean);
-    };
-    const resetTimer = (ms = SILENCE_TIMEOUT_MS) => {
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => { if (current()) rec.stop(); }, ms);
-    };
-    rec.onresult = e => {
-      if (!current() || delivered) return;
-      let finalChunk = '', confidence = 1; interim = '';
-      for (let i = 0; i < e.results.length; i++) {
-        const result = e.results[i];
-        const best = Array.from(result).reduce((a, b) => (b.confidence || 0) > (a.confidence || 0) ? b : a, result[0]);
-        if (result.isFinal) { finalChunk += ` ${best.transcript}`; confidence = Math.min(confidence, best.confidence ?? 0); }
-        else interim += ` ${best.transcript}`;
+    }
+  }, []);
+
+  const start = useCallback(() => {
+    if (!SR || blockedRef.current) return;
+    _killRec();
+    deadRef.current     = false;
+    gotFinalRef.current = false;
+    setListening(true);
+
+    const rec            = new SR();
+    rec.continuous       = true;
+    rec.interimResults   = true;
+    rec.maxAlternatives  = 3;
+    rec.lang             = 'en-US';
+    recRef.current       = rec;
+
+    rec.onresult = (e) => {
+      let interim   = '';
+      let finalText = '';
+      let finalConf = 1;
+
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        let best = r[0];
+        for (let a = 1; a < r.length; a++) {
+          if ((r[a].confidence || 0) > (best.confidence || 0)) best = r[a];
+        }
+        if (r.isFinal) {
+          finalText += best.transcript;
+          finalConf  = Math.min(finalConf, best.confidence ?? 0);
+        } else {
+          interim += best.transcript;
+        }
       }
-      finalTranscript = finalChunk.trim();
-      const livePreview = `${finalTranscript} ${interim.trim()}`.trim();
-      if (livePreview) resetTimer(ACTIVE_SPEECH_MS);
-      callbacks.current.onInterim?.(interim.trim() || finalTranscript);
-      clearTimeout(settleTimerRef.current);
-      if (finalTranscript.length < MIN_TRANSCRIPT_CHARS || (confidence > 0 && confidence < CONFIDENCE_THRESHOLD && finalTranscript.length < 8)) return;
-      // Wait a natural conversational pause after audio processing before firing response generation
-      settleTimerRef.current = setTimeout(() => {
-        deliver(`${finalTranscript} ${interim.trim()}`.trim());
-      }, POST_SPEECH_SETTLE_MS);
+
+      if (interim || finalText) _resetSilenceTimer(rec);
+
+      if (interim && onInterimRef.current) onInterimRef.current(interim);
+
+      if (finalText) {
+        const clean     = finalText.trim();
+        const wordCount = clean.split(/\s+/).filter(Boolean).length;
+        const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
+        const tooFew    = wordCount < MIN_WORD_COUNT;
+        const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
+
+        onInterimRef.current?.('');
+        gotFinalRef.current = true;
+
+        if (!tooShort && !tooFew && !isNoise) {
+          deadRef.current = true;
+          try { rec.stop(); } catch {}
+          onResultRef.current?.(clean);
+        }
+      }
     };
+
     rec.onend = () => {
-      if (!current()) return;
-      const buffered = `${finalTranscript} ${interim.trim()}`.trim();
-      if (!delivered && buffered.length >= MIN_TRANSCRIPT_CHARS) {
-        deliver(buffered);
-        return;
+      _clearTimer();
+      recRef.current = null;
+      if (!deadRef.current) setListening(false);
+    };
+
+    rec.onerror = (e) => {
+      _clearTimer();
+      recRef.current = null;
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
+        blockedRef.current = true; // permission/device failure — don't auto-restart
       }
-      finish();
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        setListening(false);
+      }
     };
-    rec.onerror = e => {
-      if (!current()) return;
-      finish();
-      if (!['no-speech', 'aborted'].includes(e.error)) setError(voiceErrorMessage(e.error));
-    };
-    try { setListening(true); rec.start(); resetTimer(); }
-    catch (e) { finish(); setError(voiceErrorMessage(e?.name)); }
-  }, [SR, discard]);
-  useEffect(() => discard, [discard]);
-  return { start, stop, listening, supported: !!SR, error };
+
+    try {
+      rec.start();
+      // Initial silence timer — resets on any speech activity
+      _resetSilenceTimer(rec);
+    } catch {
+      setListening(false);
+      recRef.current = null;
+    }
+  }, [SR, _killRec, _resetSilenceTimer]);
+
+  const stop = useCallback(() => {
+    deadRef.current = true;
+    _killRec();
+    setListening(false);
+  }, [_killRec]);
+
+  useEffect(() => () => { deadRef.current = true; _killRec(); }, [_killRec]);
+
+  return { start, stop, listening, supported };
 }

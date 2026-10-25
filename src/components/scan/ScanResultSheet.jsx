@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, FlaskConical, Save, MessageCircle, RotateCcw, Leaf, ShoppingBag, GitCompareArrows, ShieldCheck } from 'lucide-react';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
-import ReportEvidenceNote from '@/components/scan/ReportEvidenceNote';
-import GuestReportContinuation from '@/components/scan/GuestReportContinuation';
 
 const CONFIDENCE_BAND = (c) => {
   if (c >= 0.85) return { label: 'high', color: '#9FE8D0' };
@@ -20,7 +18,7 @@ export default function ScanResultSheet({
   open, result, imageUrl, saved,
   onKeep, onLeave, onObserve, onAsk, onRetry, onClose,
   provenance, onProvenanceChange, locationExhausted,
-  foundLocation, onFoundLocationChange, isGuest = false,
+  foundLocation, onFoundLocationChange,
 }) {
   const navigate = useNavigate();
   const [testsOpen, setTestsOpen] = useState(false);
@@ -203,8 +201,6 @@ export default function ScanResultSheet({
                   </button>
                 )}
 
-                <ReportEvidenceNote result={result} />
-                {isGuest && <div className="mb-4"><GuestReportContinuation /></div>}
                 {/* Field Report card — AI-filled, user-editable */}
                 <div className="mb-4">
                   <div className="text-white/35 text-[11px] mb-2">Your eye still checks</div>

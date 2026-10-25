@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef } from 'react';
  * phone speaker bleeds into the mic — a low threshold would make Clover
  * interrupt herself on her own voice.
  */
-const RMS_THRESHOLD = 0.20;
-const SUSTAIN_MS = 450;
+const RMS_THRESHOLD = 0.14;
+const SUSTAIN_MS = 320;
 
 export default function useBargeIn(onBargeIn) {
   const cbRef = useRef(onBargeIn);
@@ -19,10 +19,8 @@ export default function useBargeIn(onBargeIn) {
   const ctxRef = useRef(null);
   const rafRef = useRef(null);
   const runningRef = useRef(false);
-  const generation = useRef(0);
 
   const stop = useCallback(() => {
-    generation.current += 1;
     runningRef.current = false;
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     if (streamRef.current) {
@@ -40,7 +38,6 @@ export default function useBargeIn(onBargeIn) {
     if (runningRef.current) return;
     if (!navigator.mediaDevices?.getUserMedia) return;
     runningRef.current = true;
-    const token = ++generation.current;
 
     let stream;
     try {
@@ -48,18 +45,16 @@ export default function useBargeIn(onBargeIn) {
         audio: { echoCancellation: true, noiseSuppression: true },
       });
     } catch {
-      if (token === generation.current) runningRef.current = false;
+      runningRef.current = false;
       return;
     }
-    if (token !== generation.current || !runningRef.current) {
+    if (!runningRef.current) {
       stream.getTracks().forEach((t) => t.stop());
       return;
     }
     streamRef.current = stream;
 
     const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) { stop(); return; }
-    try {
     const ctx = new Ctx();
     ctxRef.current = ctx;
     const analyser = ctx.createAnalyser();
@@ -91,7 +86,6 @@ export default function useBargeIn(onBargeIn) {
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
-    } catch { stop(); }
   }, [stop]);
 
   useEffect(() => () => stop(), [stop]);

@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { logError, safeError } from '../../shared/httpErrors.ts';
 
 /**
  * seedSpecimenImages — searches the web for wet + dry raw field photos
@@ -72,18 +71,18 @@ Deno.serve(async (req) => {
               },
             },
           });
-          return { job, urls: res?.image_urls || [], failure: null };
+          return { job, urls: res?.image_urls || [], error: null };
         } catch (e) {
-          return { job, urls: [], failure: `search failed (ref ${logError('seedSpecimenImages', e)})` };
+          return { job, urls: [], error: e.message };
         }
       })
     );
 
     // Persist results — creates are fast, keep sequential to avoid write spikes.
     const results = { seeded: 0, skipped: minerals.length - toProcess.length, errors: [] };
-    for (const { job, urls, failure } of searchResults) {
-      if (failure) {
-        results.errors.push(`${job.name} (${job.condition}): ${failure}`);
+    for (const { job, urls, error } of searchResults) {
+      if (error) {
+        results.errors.push(`${job.name} (${job.condition}): ${error}`);
         continue;
       }
       const isWet = job.condition.includes('wet');
@@ -101,13 +100,13 @@ Deno.serve(async (req) => {
           });
           results.seeded++;
         } catch (e) {
-          results.errors.push(`${job.name} (${job.condition}) create failed (ref ${logError('seedSpecimenImages', e)})`);
+          results.errors.push(`${job.name} (${job.condition}) create: ${e.message}`);
         }
       }
     }
 
     return Response.json({ success: true, ...results, total_minerals: minerals.length });
   } catch (error) {
-    return safeError('seedSpecimenImages', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -10,7 +10,6 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 import { exportToCsv } from '@/lib/specimenExport';
-import PendingSyncBadge from '@/components/collection/PendingSyncBadge.jsx';
 
 const RARITY_CONFIG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.35)',  gradient: 'from-slate-900 to-slate-800',   border: 'border-white/10' },
@@ -225,7 +224,6 @@ export default function SpecimenDetail() {
               </span>
             )}
           </div>
-          <PendingSyncBadge specimenId={specimen.id} />
         </div>
 
         <FoundLocationPicker

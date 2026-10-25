@@ -3,7 +3,6 @@
 // result. While null, the app falls back to the existing Gemini path.
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { safeError } from '../../shared/httpErrors.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -29,6 +28,6 @@ Deno.serve(async (req) => {
     const latest = await base44.asServiceRole.entities.MLModel.list('-released_at', 1);
     return Response.json({ model: latest?.[0] || null });
   } catch (error) {
-    return safeError('getLatestModel', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
