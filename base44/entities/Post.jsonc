@@ -1,7 +1,7 @@
 {
   "name": "Post",
   "type": "object",
-  "description": "Social feed post \u2014 find share, photo, or text. Public read; owner edits/deletes.",
+  "description": "Social feed post. Raw reads are owner/admin only; the public feed is served email-free by the listPosts function.",
   "properties": {
     "owner_email": {
       "type": "string"
@@ -71,7 +71,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "email": {
+          "user_id": {
             "type": "string"
           },
           "type": {
@@ -85,7 +85,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "email": {
+          "user_id": {
             "type": "string"
           },
           "name": {
@@ -123,7 +123,18 @@
         }
       ]
     },
-    "read": {},
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {

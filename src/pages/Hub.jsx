@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
+import { fetchHotspots } from '@/lib/hotspotApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ScanLine, MapPin, Compass, Flame } from 'lucide-react';
@@ -57,7 +58,7 @@ export default function Hub() {
       }
     })();
 
-    base44.entities.Hotspot.list('-trust_score', 80)
+    fetchHotspots({ limit: 80 })
       .then((h) => { if (!cancelled) setHotspots(h || []); })
       .catch(() => {});
 
@@ -118,7 +119,13 @@ export default function Hub() {
   const remaining = xpToNext(totalXp);
 
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
+    <div
+      className="relative min-h-screen flex flex-col"
+      style={{
+        background:
+          'radial-gradient(ellipse 85% 50% at 50% 8%, hsla(168, 82%, 42%, 0.16) 0%, hsla(275, 78%, 45%, 0.12) 48%, transparent 78%), linear-gradient(180deg, #0d1322 0%, #0a0d18 52%, #070910 100%)',
+      }}
+    >
       <HubAtmosphere />
       <NewUserTour />
       <header className="relative z-10 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),20px)]">

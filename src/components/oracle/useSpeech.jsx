@@ -45,10 +45,10 @@ export function useSpeechSynthesis() {
       const t   = trebleSum / ((len - midEnd) * 255);
       const amp = b * 0.5 + m * 0.35 + t * 0.15;
 
-      bassRef.current      += (b   - bassRef.current)      * 0.15;
-      midRef.current       += (m   - midRef.current)       * 0.15;
-      trebleRef.current    += (t   - trebleRef.current)    * 0.15;
-      amplitudeRef.current += (amp - amplitudeRef.current) * 0.12;
+      bassRef.current      += (b   - bassRef.current)      * 0.28;
+      midRef.current       += (m   - midRef.current)       * 0.28;
+      trebleRef.current    += (t   - trebleRef.current)    * 0.28;
+      amplitudeRef.current += (amp - amplitudeRef.current) * 0.24;
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -293,9 +293,11 @@ function _browserFallback(text, setSpeaking, stopAmpLoop, voiceConfig, isCurrent
 // - Silence timer only fires final stop when speech goes quiet
 // - confidence gate is lenient (Chrome often reports 0)
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.12;
-const MIN_TRANSCRIPT_CHARS = 2;
-const SILENCE_TIMEOUT_MS   = 2800;
+const CONFIDENCE_THRESHOLD   = 0.12;
+const MIN_TRANSCRIPT_CHARS   = 2;
+const SILENCE_TIMEOUT_MS     = 2800;
+const ACTIVE_SPEECH_MS       = 4200;
+const POST_SPEECH_SETTLE_MS  = 850;
 
 export function useSpeechRecognition({ onResult, onInterim } = {}) {
   const [listening, setListening] = useState(false);
@@ -304,9 +306,11 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
   callbacks.current = { onResult, onInterim };
   const recRef = useRef(null);
   const timerRef = useRef(null);
+  const settleTimerRef = useRef(null);
   const SR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
   const discard = useCallback(() => {
     clearTimeout(timerRef.current);
+    clearTimeout(settleTimerRef.current);
     const rec = recRef.current; recRef.current = null;
     if (rec) { rec.onresult = rec.onend = rec.onerror = null; try { rec.abort(); } catch {} }
   }, []);
@@ -318,29 +322,56 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
     if (!SR) { setError('Voice input is unavailable in this browser.'); return; }
     const rec = new SR(); recRef.current = rec;
     rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3; rec.lang = 'en-US';
-    let interim = '', delivered = false;
+    let finalTranscript = '', interim = '', delivered = false;
     const current = () => recRef.current === rec;
-    const finish = () => { clearTimeout(timerRef.current); recRef.current = null; setListening(false); callbacks.current.onInterim?.(''); };
-    const resetTimer = () => { clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (current()) rec.stop(); }, SILENCE_TIMEOUT_MS); };
+    const finish = () => {
+      clearTimeout(timerRef.current);
+      clearTimeout(settleTimerRef.current);
+      recRef.current = null;
+      setListening(false);
+      callbacks.current.onInterim?.('');
+    };
+    const deliver = (text) => {
+      if (!current() || delivered) return;
+      const clean = text.trim();
+      if (clean.length < MIN_TRANSCRIPT_CHARS) return;
+      delivered = true;
+      finish();
+      try { rec.stop(); } catch {}
+      callbacks.current.onResult?.(clean);
+    };
+    const resetTimer = (ms = SILENCE_TIMEOUT_MS) => {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => { if (current()) rec.stop(); }, ms);
+    };
     rec.onresult = e => {
       if (!current() || delivered) return;
-      let finalText = '', confidence = 1; interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      let finalChunk = '', confidence = 1; interim = '';
+      for (let i = 0; i < e.results.length; i++) {
         const result = e.results[i];
         const best = Array.from(result).reduce((a, b) => (b.confidence || 0) > (a.confidence || 0) ? b : a, result[0]);
-        if (result.isFinal) { finalText += ` ${best.transcript}`; confidence = Math.min(confidence, best.confidence ?? 0); }
+        if (result.isFinal) { finalChunk += ` ${best.transcript}`; confidence = Math.min(confidence, best.confidence ?? 0); }
         else interim += ` ${best.transcript}`;
       }
-      if (interim || finalText) resetTimer();
-      callbacks.current.onInterim?.(interim.trim());
-      const clean = finalText.trim();
-      if (clean.length < MIN_TRANSCRIPT_CHARS || (confidence > 0 && confidence < CONFIDENCE_THRESHOLD && clean.length < 8)) return;
-      delivered = true; finish(); rec.stop(); callbacks.current.onResult?.(clean);
+      finalTranscript = finalChunk.trim();
+      const livePreview = `${finalTranscript} ${interim.trim()}`.trim();
+      if (livePreview) resetTimer(ACTIVE_SPEECH_MS);
+      callbacks.current.onInterim?.(interim.trim() || finalTranscript);
+      clearTimeout(settleTimerRef.current);
+      if (finalTranscript.length < MIN_TRANSCRIPT_CHARS || (confidence > 0 && confidence < CONFIDENCE_THRESHOLD && finalTranscript.length < 8)) return;
+      // Wait a natural conversational pause after audio processing before firing response generation
+      settleTimerRef.current = setTimeout(() => {
+        deliver(`${finalTranscript} ${interim.trim()}`.trim());
+      }, POST_SPEECH_SETTLE_MS);
     };
     rec.onend = () => {
       if (!current()) return;
-      const buffered = interim.trim(); finish();
-      if (!delivered && buffered.length >= MIN_TRANSCRIPT_CHARS) { delivered = true; callbacks.current.onResult?.(buffered); }
+      const buffered = `${finalTranscript} ${interim.trim()}`.trim();
+      if (!delivered && buffered.length >= MIN_TRANSCRIPT_CHARS) {
+        deliver(buffered);
+        return;
+      }
+      finish();
     };
     rec.onerror = e => {
       if (!current()) return;

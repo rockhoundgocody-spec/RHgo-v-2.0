@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { safeError } from '../../shared/httpErrors.ts';
+import { canSeeExactHotspots, coarsenHotspot } from '../../shared/hotspotPrecision.ts';
 
 // Generates a random coordinate within `radiusMiles` of a given lat/lng,
 // then finds the nearest hotspot to that random point.
@@ -23,7 +24,8 @@ Deno.serve(async (req) => {
     const randomLng = lng + r * Math.sin(angle) / Math.cos(lat * Math.PI / 180);
 
     // Find all hotspots and pick the nearest one to the random point
-    const hotspots = await base44.asServiceRole.entities.Hotspot.list();
+    const exact = await canSeeExactHotspots(base44, user);
+    const hotspots = (await base44.asServiceRole.entities.Hotspot.list()).map(h => exact ? h : coarsenHotspot(h));
 
     let nearestHotspot = null;
     let nearestDist = Infinity;

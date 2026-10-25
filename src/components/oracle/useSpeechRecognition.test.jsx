@@ -49,4 +49,22 @@ describe('Native Clover microphone', () => {
     act(() => { hook.result.current.start(); oldError({ error: 'not-allowed' }); });
     expect(hook.result.current.listening).toBe(true); expect(hook.result.current.error).toBe('');
   });
+  it('waits a conversational settle delay after a final segment so mid-sentence pauses do not cut off speech', () => {
+    const onResult = vi.fn(), onInterim = vi.fn();
+    const hook = renderHook(() => useSpeechRecognition({ onResult, onInterim }));
+    act(() => hook.result.current.start());
+    const rec = recognizers[0];
+    act(() => rec.onresult(resultEvent('I found a crystal', true)));
+    expect(onResult).not.toHaveBeenCalled();
+    expect(onInterim).toHaveBeenCalledWith('I found a crystal');
+    act(() => {
+      vi.advanceTimersByTime(400);
+      const r1 = [{ transcript: 'I found a crystal', confidence: 0.9 }]; r1.isFinal = true;
+      const r2 = [{ transcript: 'near Topaz Mountain', confidence: 0.9 }]; r2.isFinal = true;
+      rec.onresult({ resultIndex: 1, results: [r1, r2] });
+    });
+    expect(onResult).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(900));
+    expect(onResult).toHaveBeenCalledExactlyOnceWith('I found a crystal near Topaz Mountain');
+  });
 });
