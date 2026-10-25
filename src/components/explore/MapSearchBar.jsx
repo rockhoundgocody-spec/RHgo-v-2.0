@@ -3,13 +3,15 @@
  * Shows a dropdown of matching results; selecting one flies the map
  * to that hotspot and opens its detail sheet.
  */
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { Search, X, MapPin } from 'lucide-react';
 
 export default function MapSearchBar({ hotspots, onSelect }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef(null);
+  const listboxId = useId();
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -22,6 +24,10 @@ export default function MapSearchBar({ hotspots, onSelect }) {
       )
       .slice(0, 6);
   }, [query, hotspots]);
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [query]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -37,7 +43,32 @@ export default function MapSearchBar({ hotspots, onSelect }) {
     onSelect(h);
     setQuery('');
     setFocused(false);
+    setActiveIndex(-1);
   };
+
+  const handleKeyDown = (e) => {
+    if (!focused || results.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === 'Enter') {
+      if (activeIndex >= 0 && activeIndex < results.length) {
+        e.preventDefault();
+        handleSelect(results[activeIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setFocused(false);
+      setActiveIndex(-1);
+    }
+  };
+
+  const isDropdownOpen = focused && query.trim() && results.length > 0;
+  const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -52,22 +83,35 @@ export default function MapSearchBar({ hotspots, onSelect }) {
       >
         <Search size={15} className="text-white/40 shrink-0" />
         <input
+          role="combobox"
+          aria-expanded={isDropdownOpen}
+          aria-autocomplete="list"
+          aria-controls={isDropdownOpen ? listboxId : undefined}
+          aria-activedescendant={activeOptionId}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search hotspots, minerals, states…"
           aria-label="Search hotspots, minerals, states"
           className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ml-2"
         />
         {query && (
-          <button onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
+          <button
+            onClick={() => { setQuery(''); setActiveIndex(-1); }}
+            aria-label="Clear search"
+            className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
+          >
             <X size={14} />
           </button>
         )}
       </div>
 
-      {query.trim() && results.length > 0 && (
+      {isDropdownOpen && (
         <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Search results"
           className="absolute top-full mt-1.5 left-0 right-0 rounded-2xl overflow-hidden z-[1001]"
           style={{
             background: 'hsla(240,30%,8%,.97)',
@@ -76,21 +120,31 @@ export default function MapSearchBar({ hotspots, onSelect }) {
             boxShadow: '0 12px 40px hsla(240,50%,5%,.6)',
           }}
         >
-          {results.map(h => (
-            <button
-              key={h.id}
-              onClick={() => handleSelect(h)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
-            >
-              <MapPin size={13} className="text-amethyst-glow shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
-                <div className="text-[10px] text-white/40 truncate">
-                  {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+          {results.map((h, index) => {
+            const optionId = `${listboxId}-option-${index}`;
+            const isSelected = activeIndex === index;
+            return (
+              <button
+                key={h.id}
+                id={optionId}
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => handleSelect(h)}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10 ${
+                  isSelected ? 'bg-white/10' : 'hover:bg-white/5'
+                }`}
+              >
+                <MapPin size={13} className="text-amethyst-glow shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
+                  <div className="text-[10px] text-white/40 truncate">
+                    {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
