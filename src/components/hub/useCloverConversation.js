@@ -202,7 +202,7 @@ export default function useCloverConversation({ companion, todaysSpecimens = 0, 
       } else {
         beginListening();
       }
-    }, 500);
+    }, 900);
     return () => clearTimeout(t);
   }, [phase, voiceListening, voiceError, beginListening]);
 

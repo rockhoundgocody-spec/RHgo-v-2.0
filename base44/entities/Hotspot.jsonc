@@ -1,6 +1,7 @@
 {
   "name": "Hotspot",
   "type": "object",
+  "description": "Collecting site. Raw reads are admin-only; users get hotspots through the getHotspots function (exact coordinates for paid, non-Stealth users; ~1 km otherwise).",
   "properties": {
     "name": {
       "type": "string"
@@ -123,7 +124,11 @@
         "role": "admin"
       }
     },
-    "read": {},
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
     "update": {
       "user_condition": {
         "role": "admin"

@@ -77,7 +77,7 @@ export default function useRecorderTranscription({ onResult, onInterim } = {}) {
         if (!current() || rec.state !== 'recording') return;
         analyser.getByteTimeDomainData(buf);
         const rms = Math.sqrt(buf.reduce((sum, v) => sum + ((v - 128) / 128) ** 2, 0) / buf.length);
-        if (rms > 0.028) { spoke = true; lastVoice = Date.now(); }
+        if (rms > 0.022) { spoke = true; lastVoice = Date.now(); }
         if (spoke && Date.now() - lastVoice > 1800) { rec.stop(); return; }
         r.frame = requestAnimationFrame(tick);
       };
