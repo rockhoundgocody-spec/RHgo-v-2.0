@@ -23,21 +23,94 @@ function getAudioContext() {
  * Plays an ethereal crystal singing bowl harmonic chord.
  * Frequencies correspond to harmonic solfeggio / crystal healing ratios (432Hz, 528Hz, 639Hz, 741Hz, 852Hz).
  */
-export function playOrbChime(_frequency = 528, _duration = 1.6) {
+export function playOrbChime(frequency = 528, duration = 1.6) {
   try {
-    // Silenced: keep audio context warm on gesture without playing bell/ring tones.
-    getAudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const osc3 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    // Fundamental tone (pure sine wave)
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(frequency, now);
+
+    // Harmonic overtone: Perfect fifth (1.5x) with subtle vibrato
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(frequency * 1.5, now);
+
+    // Shimmer octave (2.0x) soft triangle
+    osc3.type = 'triangle';
+    osc3.frequency.setValueAtTime(frequency * 2.0, now);
+
+    // Bell-like exponential envelope
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.14, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    osc3.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc3.start(now);
+
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+    osc3.stop(now + duration);
   } catch {
     // Audio contexts can fail gracefully on un-interacted browsers
   }
 }
 
 /**
- * Silent gesture hook (chime/noise disabled for clean voice interactions).
+ * Plays a soft breath acknowledgment — a low-amplitude filtered noise swell
+ * that sounds like Clover turning toward you and taking a breath, not a bell.
+ * Used on the Hub orb tap instead of the crystal chime.
  */
-export function playOrbBreath(_duration = 0.5) {
+export function playOrbBreath(duration = 0.5) {
   try {
-    getAudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    // Pink-ish noise: filtered random
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.02 * white) / 1.02;
+      data[i] = lastOut * 3.5;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Low-pass filter — warm, breathy
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + duration);
+    filter.Q.value = 0.7;
+
+    // Gentle swell envelope
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.06, now + duration * 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + duration);
   } catch {
     // Graceful failure on un-interacted browsers
   }

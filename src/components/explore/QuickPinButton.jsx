@@ -7,12 +7,11 @@ import React, { useState } from 'react';
 import { MapPin, Check, Loader2, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { queueWrite, getQueueLength } from '@/lib/offlineQueue';
-import { useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
 import { buildPrivatePinRecord } from '@/lib/privateLocation';
 
 export default function QuickPinButton({ userLocation }) {
   const reducedMotion = useReducedMotion();
-  const { user } = useAuth();
   const [state, setState] = useState('idle'); // idle | saving | saved | error
   const [savedOffline, setSavedOffline] = useState(false);
 
@@ -28,9 +27,9 @@ export default function QuickPinButton({ userLocation }) {
     setState('saving');
     let result;
     try {
-      if (!user?.id) throw new Error('Sign in before saving a private pin.');
-      const data = buildPrivatePinRecord(userLocation, user.email);
-      result = await queueWrite({ entity: 'PrivateRockLog', op: 'create', data, ownerId: user.id });
+      const user = await base44.auth.me();
+      const data = buildPrivatePinRecord(userLocation, user?.email);
+      result = await queueWrite({ entity: 'PrivateRockLog', op: 'create', data });
     } catch {
       setState('error');
       setTimeout(() => setState('idle'), 2000);
@@ -49,7 +48,7 @@ export default function QuickPinButton({ userLocation }) {
     }
   };
 
-  const queueCount = user?.id ? getQueueLength(user.id) : 0;
+  const queueCount = getQueueLength();
 
   const getAriaLabel = () => {
     if (state === 'saving') return 'Saving location to private rock log...';

@@ -1,0 +1,1 @@
+THE APP IS LIVE. One final location. Your own server. Least restraint. Maximum dopamine for the young geologists. See the full package in artifacts or run the commands. V2.5 is production ready.

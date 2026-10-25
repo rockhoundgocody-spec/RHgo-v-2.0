@@ -6,10 +6,8 @@ import {
   persistLastGps,
   readLastGps,
   watchGps,
-  hasNearbyHotspots,
   rankHotspots,
   escapeHtml,
-  evaluateGpsAccuracy,
 } from './geo';
 
 describe('geo library', () => {
@@ -184,34 +182,6 @@ describe('geo library', () => {
     });
   });
 
-  describe('hasNearbyHotspots', () => {
-    const mockHotspots = [
-      { id: '1', lat: 45.5, lng: -122.6 }, // 0 mi from user
-      { id: '2', lat: 46.5, lng: -122.6 }, // ~69 mi from user
-      { id: '3', lat: 48.0, lng: -122.6 }, // ~172 mi from user
-    ];
-
-    it('returns true when userLocation is null or undefined', () => {
-      expect(hasNearbyHotspots(mockHotspots, null)).toBe(true);
-      expect(hasNearbyHotspots(mockHotspots, undefined)).toBe(true);
-    });
-
-    it('returns true when hotspots is not an array', () => {
-      expect(hasNearbyHotspots(null, { lat: 45.5, lng: -122.6 })).toBe(true);
-    });
-
-    it('returns true if any hotspot is within maxRadiusMi', () => {
-      const userLocation = { lat: 45.5, lng: -122.6 };
-      expect(hasNearbyHotspots(mockHotspots, userLocation, 75)).toBe(true);
-    });
-
-    it('returns false if all hotspots are beyond maxRadiusMi', () => {
-      const userLocation = { lat: 45.5, lng: -122.6 };
-      const farHotspots = [{ id: '3', lat: 48.0, lng: -122.6 }]; // ~172 mi away
-      expect(hasNearbyHotspots(farHotspots, userLocation, 75)).toBe(false);
-    });
-  });
-
   describe('rankHotspots', () => {
     const mockHotspots = [
       { id: '1', lat: 45.5, lng: -122.6, land_type: 'public', minerals: ['Agate', 'Jasper'], trust_score: 0.9 },
@@ -253,26 +223,6 @@ describe('geo library', () => {
       expect(escapeHtml(null)).toBe('');
       expect(escapeHtml(undefined)).toBe('');
       expect(escapeHtml('')).toBe('');
-    });
-  });
-
-  describe('evaluateGpsAccuracy', () => {
-    it('rejects zero, negative, or >5km accuracy fixes', () => {
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 0 }).usable).toBe(false);
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: -10 }).usable).toBe(false);
-      expect(evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 8000 }).usable).toBe(false);
-    });
-
-    it('marks <=150m accuracy as exact and 151-5000m as approximate', () => {
-      const exact = evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 25 });
-      expect(exact.usable).toBe(true);
-      expect(exact.isExact).toBe(true);
-      expect(exact.recommendedPrivacy).toBe('exact');
-
-      const approx = evaluateGpsAccuracy({ latitude: 45, longitude: -85, accuracy: 600 });
-      expect(approx.usable).toBe(true);
-      expect(approx.isExact).toBe(false);
-      expect(approx.recommendedPrivacy).toBe('approximate');
     });
   });
 });

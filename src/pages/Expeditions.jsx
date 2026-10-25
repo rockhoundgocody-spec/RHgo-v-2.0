@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { fetchHotspots } from '@/lib/hotspotApi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Users, Gem, Plus, ChevronRight, Map as MapIcon, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -32,7 +31,7 @@ export default function Expeditions() {
 
   const { data: hotspots = [] } = useQuery({
     queryKey: ['expeditionMapHotspots'],
-    queryFn: () => fetchHotspots({ sort: '-created_date', limit: 200 }),
+    queryFn: () => base44.entities.Hotspot.filter({}, '-created_date', 200),
     enabled: viewMode === 'map',
   });
 

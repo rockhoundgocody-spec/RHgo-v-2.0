@@ -19,7 +19,7 @@ export const INTENTS = Object.freeze({
   UNKNOWN: "unknown",
 });
 
-const WAKE_RE = /^(hey\s+)?clover\b[,.]?\s*/i;
+const WAKE_RE = /^(hey\s+)?clover[,.]?\s*/i;
 
 export function stripWake(raw) {
   const text = String(raw || "").trim();
@@ -34,9 +34,8 @@ export function parseCloverCommand(raw, state = {}) {
   const q = rest.toLowerCase();
 
   if (!rest) return pack(INTENTS.WAKE, woke, rest, { reply: "Here." });
-  if (/\b(don['’]?t|do not|never)\b/.test(q)) return pack(INTENTS.ASK, woke, rest, { reply: null, useVault: true });
 
-  if (/^(?:please\s+)?(?:stand\s*down|stop listening|go idle)[.!?]*$/.test(q)) {
+  if (/stand\s*down|stop listening|go idle/.test(q)) {
     return pack(INTENTS.STAND_DOWN, woke, rest, { reply: "Standing down." });
   }
 
@@ -90,13 +89,13 @@ export function parseCloverCommand(raw, state = {}) {
   if (/\b(invoice|coa|listing|write the (ebay|ig|instagram) listing)\b/.test(q)) {
     return pack(INTENTS.PAPERWORK, woke, rest, {
       kind: /\binvoice\b/.test(q) ? "invoice" : /\bcoa\b/.test(q) ? "coa" : "listing",
-      reply: "Opening the marketplace. Nothing has been drafted or published yet.",
+      reply: "Drafting from the vault card.",
     });
   }
 
   if (/\btelegram\b/.test(q)) {
     return pack(INTENTS.TELEGRAM, woke, rest, {
-      reply: "I can't send Telegram messages here. We can keep talking in the app.",
+      reply: "Telegram bridge is stubbed. Use Clover here.",
     });
   }
 
@@ -133,7 +132,6 @@ function pack(intent, woke, rest, extra) {
 }
 
 function matchBrain(q) {
-  if (!/^(?:please\s+)?(?:switch|use|change|select)\b/.test(q)) return null;
   if (/gpt[\s-]*6|astra/.test(q)) return "gpt-6-astra";
   if (/\bclaude\b/.test(q)) return "claude";
   if (/\bgrok\b/.test(q) && /switch|brain|use/.test(q)) return "grok";
@@ -153,8 +151,6 @@ function labelBrain(id) {
 
 export function routeForTarget(target) {
   const t = String(target || "").toLowerCase();
-  if (/^(?:my |the )?(?:collection|collections|geodex)$/.test(t)) return "/collection";
-  if (/^(?:my |the )?(?:scanner|scan|camera)$/.test(t)) return "/scan";
   if (/invoice|listing|coa/.test(t)) return "/market";
   if (/\b(map|hotspots?)\b/.test(t)) return "/explore";
   if (/trip|itinerary|expedition/.test(t)) return "/expeditions";

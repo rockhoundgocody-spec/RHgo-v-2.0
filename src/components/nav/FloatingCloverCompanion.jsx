@@ -88,12 +88,9 @@ export default function FloatingCloverCompanion() {
                 setExpanded(false);
                 clover.end();
               }}
-              onHunt={clover.requestHuntSuggestions}
-              huntLoading={clover.huntLoading}
-              suggestions={clover.huntSuggestions}
-              onDismissSuggestions={clover.dismissHuntSuggestions}
+              onHunt={() => {}}
+              huntLoading={false}
               voiceSupported={clover.voiceSupported}
-              voiceError={clover.voiceError}
               onSend={clover.send}
               onListen={clover.nudge}
             />
@@ -108,7 +105,7 @@ export default function FloatingCloverCompanion() {
         onClick={handleOrbClick}
         aria-expanded={expanded}
         aria-controls="clover-voice-panel"
-        aria-label={expanded ? 'Resume talking to Clover' : 'Talk to Clover'}
+        aria-label={expanded ? 'Close Clover Voice' : 'Talk to Clover'}
         className="pointer-events-auto relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         style={{
           boxShadow: '0 0 24px hsla(270,90%,60%,0.45), 0 0 10px hsla(190,100%,50%,0.3)',

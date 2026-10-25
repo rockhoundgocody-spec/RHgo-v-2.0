@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * guestScanGate — must succeed before a guest InvokeLLM / identify.
@@ -21,7 +20,7 @@ Deno.serve(async (req) => {
       base44 as never,
       body?.guest_device_id,
       'identify',
-      { consume: action !== 'check', req },
+      { consume: action !== 'check' },
     );
 
     if (!result.ok) {
@@ -38,6 +37,6 @@ Deno.serve(async (req) => {
       resetAt: result.resetAt,
     });
   } catch (error) {
-    return safeError('guestScanGate', error);
+    return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 });

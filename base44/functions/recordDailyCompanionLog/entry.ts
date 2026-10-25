@@ -14,7 +14,6 @@ import {
   firstByOwner,
   writeLogsInBatches,
 } from './operations.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -110,6 +109,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ ok: true, written, failed: 0, date });
   } catch (error) {
-    return safeError('recordDailyCompanionLog', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

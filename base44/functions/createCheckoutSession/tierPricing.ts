@@ -1,14 +1,41 @@
+type EnvReader = (name: string) => string | undefined;
+
 /**
- * Checkout side of the plan catalog. The client names a plan (the ids on the
+ * Server-owned plan catalog. The client names a plan (the ids on the
  * Pricing page); the server alone decides which Stripe price that plan
  * costs and which entitlement it grants. A client can never pick the
- * price or the entitlement. Plans whose price is unset report
- * `plan_unconfigured` instead of charging the wrong amount.
+ * price or the entitlement.
+ *
+ * Each plan's Stripe price id lives in a server env var. Plans whose var is
+ * unset report `plan_unconfigured` instead of charging the wrong amount.
  */
-import { PLAN_CONFIG, priceIdForPlan, type Entitlement, type EnvReader } from '../../shared/planCatalog.ts';
+export type Entitlement = 'field_pro' | 'family';
+export type PlanConfig = {
+  entitlement: Entitlement;
+  env: string;
+  /** Legacy default used only when the env var is unset. */
+  fallback?: string;
+  /** Length of a one-time pass, when the configured price is not recurring. */
+  passDays?: number;
+};
 
-export { PLAN_CONFIG };
-export type { Entitlement, PlanConfig } from '../../shared/planCatalog.ts';
+export const PLAN_CONFIG: Record<string, PlanConfig> = {
+  season: { entitlement: 'field_pro', env: 'STRIPE_SEASON_PRICE_ID', passDays: 30 },
+  hound: { entitlement: 'field_pro', env: 'STRIPE_HOUND_PRICE_ID' },
+  steward: { entitlement: 'field_pro', env: 'STRIPE_STEWARD_PRICE_ID' },
+  club: { entitlement: 'family', env: 'STRIPE_CLUB_PRICE_ID' },
+  // Legacy plan ids still sent by older clients.
+  field_pro: {
+    entitlement: 'field_pro',
+    env: 'STRIPE_FIELD_PRO_MONTHLY_PRICE_ID',
+    fallback: 'price_1TpKQgIUhJzYk2OCgomTVSTb',
+  },
+  family: {
+    entitlement: 'family',
+    env: 'STRIPE_FAMILY_MONTHLY_PRICE_ID',
+    fallback: 'price_1TpKQgIUhJzYk2OCw8PJzY0U',
+  },
+};
 
 export type ResolvedPrice =
   | { ok: true; priceId: string; plan: string; entitlement: Entitlement; passDays: number | null }
@@ -24,7 +51,7 @@ export function resolveCheckoutPrice(
   }
 
   const config = PLAN_CONFIG[tier];
-  const priceId = priceIdForPlan(tier, readEnv);
+  const priceId = readEnv(config.env)?.trim() || config.fallback || '';
   if (!priceId) {
     return { ok: false, error: `The ${tier} plan is not available yet`, code: 'plan_unconfigured' };
   }

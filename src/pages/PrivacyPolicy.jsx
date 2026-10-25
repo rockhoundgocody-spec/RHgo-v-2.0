@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, MapPin, Camera, Smartphone, Users, Baby, Trash2, Mail, Video } from 'lucide-react';
+import { Shield, MapPin, Camera, Smartphone, Users, Baby, Trash2, Mail } from 'lucide-react';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import { useSeoMeta } from '@/lib/useSeoMeta';
 
@@ -60,16 +60,6 @@ const SECTIONS = [
       'To improve identification accuracy and feature quality through aggregated, anonymized analytics.',
       'To send optional service communications such as streak reminders and weekly summaries (you can control these in Settings).',
       'We never sell your personal data to third parties.',
-    ],
-  },
-  {
-    icon: Video,
-    title: 'Session Recording',
-    body: [
-      'What is recorded: with your permission, we may record how you move through the app (page views, taps, scrolls, and screen layout) so we can find broken screens and confusing steps.',
-      'Inputs are masked: text you type into fields (including names, emails, notes, messages, and payment details) is masked and never captured in recordings. We do not record your camera, microphone, or exact GPS location.',
-      'When it is off: session recording never runs for child accounts (anyone who chose the under-13 path at sign-up), and never runs until you accept analytics cookies in the cookie banner.',
-      'How to opt out: choose Decline in the cookie banner. If you already accepted, clear this site\u2019s data in your browser settings and choose Decline when the banner reappears. Recording stops from your next visit.',
     ],
   },
   {

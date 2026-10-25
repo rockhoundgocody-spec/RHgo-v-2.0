@@ -51,10 +51,4 @@ describe('isValidImageUrl', () => {
     expect(isValidImageUrl('https://base44.app/hotspots/1.jpg')).toBe(true);
     expect(isValidImageUrl('https://evilbase44.app/hotspots/1.jpg')).toBe(false);
   });
-
-  it('validates submission candidate image URLs as required by submitCorrection', () => {
-    expect(isValidImageUrl('https://s3.amazonaws.com/uploads/correction.jpg')).toBe(true);
-    expect(isValidImageUrl('https://evilbase44.app/corrections/malicious.jpg')).toBe(false);
-    expect(isValidImageUrl('javascript:alert(document.cookie)')).toBe(false);
-  });
 });

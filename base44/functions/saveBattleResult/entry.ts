@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { awardXPServerSide } from '../../shared/awardXP.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 // Fixed server-side reward — never trust client-supplied xp_awarded
 const BATTLE_WIN_XP = 50;
@@ -33,6 +32,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ saved: true, ...xpResult });
   } catch (error) {
-    return safeError('saveBattleResult', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

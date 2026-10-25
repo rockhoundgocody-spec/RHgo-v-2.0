@@ -5,7 +5,7 @@
  * Body: { image_url, lat?, lng?, save?, share_to_map?, prefilled_result?,
  *         wet_dry?, beach_name?, post_storm?, season? }
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.53';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { handbookPromptBlock, applyHandbook } from '../../shared/operatingHandbook.ts';
 import { computeContextIntegrity } from '../../shared/contextIntegrity.ts';
@@ -19,7 +19,6 @@ import {
 } from '../../shared/locationSubmission.ts';
 import { enforceGuestRate } from '../../shared/guestRateLimit.ts';
 import { checkMemberScanQuota, recordScanReceipt, findTrustedReceipt } from '../../shared/scanQuota.ts';
-import { safeError } from '../../shared/httpErrors.ts';
 
 // ── Agate subtypology prompt enrichment (inline — Deno has no local imports) ─
 const AGATE_PROMPT_BLOCK = `AGATE SUBTYPOLOGY: When the specimen is an agate or chalcedony, identify the SPECIFIC variety — not just "agate." Key varieties and their diagnostic features:
@@ -150,14 +149,14 @@ async function submitLocationForReview(
   return base44.asServiceRole.entities.LocationSubmission.create(data);
 }
 
-export default async function(req: Request): Promise<Response> {
+Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch(() => null);
 
     const body = await req.json();
     const {
-      image_url: raw_image_url, image_base64 = null, specimen_id, lat, lng,
+      image_url, specimen_id, lat, lng,
       save = false, share_to_map = false, geo_privacy = 'private',
       prefilled_result = null,
       wet_dry = null,
@@ -167,14 +166,13 @@ export default async function(req: Request): Promise<Response> {
       disposition = null,
       guest_device_id = null,
     } = body;
-    let image_url = raw_image_url;
 
     const isGuest = !user?.email;
     if (isGuest) {
       if (save || share_to_map) {
         return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
       }
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true, req });
+      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
       if (!gate.ok) {
         return Response.json(
           { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
@@ -211,19 +209,6 @@ export default async function(req: Request): Promise<Response> {
       });
     }
 
-    if (!image_url && typeof image_base64 === 'string' && image_base64.length > 0) {
-      const cleaned = image_base64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
-      if (cleaned.length > 7_000_000) {
-        return Response.json({ error: 'Photo exceeds maximum upload size (5 MB)' }, { status: 413 });
-      }
-      const binary = atob(cleaned);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const file = new File([bytes], 'specimen.jpg', { type: 'image/jpeg' });
-      const uploaded = await base44.asServiceRole.integrations.Core.UploadPublicFile({ file });
-      image_url = uploaded?.file_url || null;
-    }
-
     if (!image_url) return Response.json({ error: 'image_url is required' }, { status: 400 });
 
     if (!isValidImageUrl(image_url)) {
@@ -238,9 +223,7 @@ export default async function(req: Request): Promise<Response> {
     const hasValidCoords = lat != null && lng != null && typeof lat !== 'boolean' && typeof lng !== 'boolean' && Number.isFinite(numLat) && Number.isFinite(numLng) && numLat >= -90 && numLat <= 90 && numLng >= -180 && numLng <= 180;
     if (hasValidCoords) {
       try {
-        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`, {
-          signal: AbortSignal.timeout(4000),
-        });
+        const geoRes = await fetch(`https://macrostrat.org/api/v2/geologic_units/map?lat=${numLat}&lng=${numLng}`);
         if (geoRes.ok) {
           const geoJson = await geoRes.json();
           const units = geoJson?.success?.data || [];
@@ -284,11 +267,7 @@ export default async function(req: Request): Promise<Response> {
       );
       const lessons = corrections
         .filter((c) => c.user_label && c.predicted_label && c.user_label !== c.predicted_label)
-        // Labels only (no free-text notes), stripped to plain mineral-name characters.
-        .map((c) => {
-          const clean = (s: unknown) => String(s).replace(/[^\p{L}\p{N} ()'-]/gu, '').slice(0, 60).trim();
-          return `"${clean(c.predicted_label)}" was actually "${clean(c.user_label)}"`;
-        });
+        .map((c) => `previously misidentified "${c.user_label}" as "${c.predicted_label}"${c.user_notes ? ` — ${c.user_notes}` : ''}`);
       if (lessons.length) {
         learnedContext = ' LEARNED CORRECTIONS (verified user feedback — weigh these as priors and avoid repeating them): ' +
           lessons.join('; ') + '.';
@@ -319,7 +298,7 @@ export default async function(req: Request): Promise<Response> {
     let identification = prefilled_result;
     const ranIdentification = !identification;
     if (!identification) {
-      identification = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      identification = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
         prompt:
           'You are an expert field geologist and mineralogist analyzing a specimen photo. ' +
@@ -513,7 +492,6 @@ export default async function(req: Request): Promise<Response> {
     return Response.json({
       success: true,
       identification,
-      uploaded_image_url: image_url,
       saved_specimen_id: savedSpecimen?.id || null,
       location_submission: locationSubmission,
       hotspot_contribution: null,
@@ -526,6 +504,6 @@ export default async function(req: Request): Promise<Response> {
       meta: { model: 'gemini_3_flash', timestamp: new Date().toISOString() },
     });
   } catch (error) {
-    return safeError('identifySpecimen', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
-}
+});

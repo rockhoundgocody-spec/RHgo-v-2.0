@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { safeError } from '../../shared/httpErrors.ts';
 
 /**
  * Maps key endpoint — auth-gated.
@@ -18,6 +17,6 @@ Deno.serve(async (req) => {
     const key = Deno.env.get('GOOGLE_MAPS_API_KEY') || Deno.env.get('google_maps') || null;
     return Response.json({ ok: !!key, key });
   } catch (error) {
-    return safeError('getMapsKey', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

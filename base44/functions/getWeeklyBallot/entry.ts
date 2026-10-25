@@ -1,6 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import { weekKey, weekRange } from "../../shared/weekKey.ts";
-import { safeError } from "../../shared/httpErrors.ts";
 
 const RARITY_RANK: Record<string, number> = {
   legendary: 4,
@@ -24,7 +23,7 @@ export default async function (req: Request): Promise<Response> {
     const wk = weekKey(now);
     const { start, end } = weekRange(now);
 
-    const posts = await base44.asServiceRole.entities.Post.filter({ post_type: "find_share" });
+    const posts = await base44.entities.Post.filter({ post_type: "find_share" });
     const eligible = posts.filter((p) => {
       if (!p.created_date) return false;
       const at = new Date(p.created_date);
@@ -63,7 +62,7 @@ export default async function (req: Request): Promise<Response> {
       image_url: p.image_url,
       rarity: p.rarity,
       body: p.body,
-      author_name: p.author_name || "Rockhound",
+      author_name: p.author_name || (p.owner_email || "").split("@")[0] || "unknown",
       location_label: p.location_label,
       votes: tally[p.id] || 0,
     }));
@@ -85,6 +84,6 @@ export default async function (req: Request): Promise<Response> {
       total_votes: votes.length,
     });
   } catch (error) {
-    return safeError('getWeeklyBallot', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

@@ -24,8 +24,6 @@ export default function WebGPUOpalShader({
   const [ready, setReady] = useState(false);
   ampRef.current = getAmplitude;
   specRef.current = getSpectrum;
-  const settingsRef = useRef({ intensity, speed, hueShift, onUnsupported });
-  settingsRef.current = { intensity, speed, hueShift, onUnsupported };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -37,23 +35,12 @@ export default function WebGPUOpalShader({
 
     let renderer, scene, camera, mesh, raf, ro;
     let disposed = false;
-    let initialized = false;
-    let rendering = false;
-    let released = false;
-    const release = () => {
-      if (!initialized || rendering || released) return;
-      released = true;
-      mesh?.geometry.dispose();
-      mesh?.material.dispose();
-      renderer.dispose();
-    };
 
     const init = async () => {
       try {
         renderer = new THREE.WebGPURenderer({ alpha: true, antialias: true });
         await renderer.init();
-        initialized = true;
-        if (disposed) { release(); return; }
+        if (disposed) { renderer.dispose(); return; }
 
         const w = mount.clientWidth || 300;
         const h = mount.clientHeight || 300;
@@ -174,11 +161,8 @@ export default function WebGPUOpalShader({
         scene.add(mesh);
         setReady(true);
 
-        const tick = async () => {
+        const tick = () => {
           if (disposed) return;
-          uIntensity.value = settingsRef.current.intensity;
-          uHueShift.value = settingsRef.current.hueShift;
-          uSpeed.value = settingsRef.current.speed;
           const amp = ampRef.current ? ampRef.current() || 0 : 0;
           const sp = specRef.current
             ? specRef.current()
@@ -187,20 +171,8 @@ export default function WebGPUOpalShader({
           uBass.value = sp.bass || 0;
           uMid.value = sp.mid || 0;
           uTreble.value = sp.treble || 0;
-          rendering = true;
-          try {
-            await renderer.renderAsync(scene, camera);
-          } catch (error) {
-            if (!disposed) {
-              console.warn('[WebGPUOpalShader] rendering unavailable; using WebGL', error);
-              settingsRef.current.onUnsupported?.();
-            }
-            disposed = true;
-          } finally {
-            rendering = false;
-            if (disposed) release();
-          }
-          if (!disposed) raf = requestAnimationFrame(tick);
+          renderer.renderAsync(scene, camera);
+          raf = requestAnimationFrame(tick);
         };
         tick();
 
@@ -211,9 +183,7 @@ export default function WebGPUOpalShader({
         ro.observe(mount);
       } catch (err) {
         console.warn('[WebGPUOpalShader] init failed, falling back', err);
-        if (!disposed) settingsRef.current.onUnsupported?.();
-        disposed = true;
-        release();
+        onUnsupported?.();
       }
     };
 
@@ -227,11 +197,11 @@ export default function WebGPUOpalShader({
         if (renderer.domElement?.parentNode === mount) {
           mount.removeChild(renderer.domElement);
         }
-        release();
+        renderer.dispose();
       }
     };
 
-  }, []);
+  }, [intensity, speed, hueShift]);
 
   return (
     <div

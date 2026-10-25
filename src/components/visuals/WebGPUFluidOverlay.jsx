@@ -25,8 +25,6 @@ export default function WebGPUFluidOverlay({
   const [ready, setReady] = useState(false);
   ampRef.current = getAmplitude;
   specRef.current = getSpectrum;
-  const settingsRef = useRef({ intensity, onUnsupported });
-  settingsRef.current = { intensity, onUnsupported };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -38,26 +36,12 @@ export default function WebGPUFluidOverlay({
 
     let renderer, scene, camera, mesh, raf, ro;
     let disposed = false;
-    let initialized = false;
-    let rendering = false;
-    let released = false;
-    let fieldA, fieldB;
-    const release = () => {
-      if (!initialized || rendering || released) return;
-      released = true;
-      mesh?.geometry.dispose();
-      mesh?.material.dispose();
-      fieldA?.dispose();
-      fieldB?.dispose();
-      renderer.dispose();
-    };
 
     const init = async () => {
       try {
         renderer = new THREE.WebGPURenderer({ alpha: true, antialias: true });
         await renderer.init();
-        initialized = true;
-        if (disposed) { release(); return; }
+        if (disposed) { renderer.dispose(); return; }
 
         const w = mount.clientWidth || 300;
         const h = mount.clientHeight || 300;
@@ -70,8 +54,8 @@ export default function WebGPUFluidOverlay({
         camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         // Two storage textures for true ping-pong
-        fieldA = new THREE.StorageTexture(resolution, resolution);
-        fieldB = new THREE.StorageTexture(resolution, resolution);
+        const fieldA = new THREE.StorageTexture(resolution, resolution);
+        const fieldB = new THREE.StorageTexture(resolution, resolution);
         fieldA.type = THREE.FloatType;
         fieldB.type = THREE.FloatType;
 
@@ -80,7 +64,7 @@ export default function WebGPUFluidOverlay({
         const uMid = uniform(0);
         const uTreble = uniform(0);
         const uIntensity = uniform(intensity);
-        const uRes = uniform(resolution);
+        const uRes = uniform(float(resolution));
 
         // Build a step kernel that reads from `src` and writes to `dst`.
         const buildStep = (src, dst) => Fn(() => {
@@ -192,24 +176,16 @@ export default function WebGPUFluidOverlay({
           uMid.value = sp.mid || 0;
           uTreble.value = sp.treble || 0;
 
-          uIntensity.value = settingsRef.current.intensity;
-          rendering = true;
-          try {
-            await renderer.computeAsync(writeToB ? stepAtoB : stepBtoA);
-            uReadFromB.value = writeToB ? 1 : 0;
-            if (!disposed) await renderer.renderAsync(scene, camera);
-            writeToB = !writeToB;
-          } catch (error) {
-            if (!disposed) {
-              console.warn('[WebGPUFluidOverlay] compute unavailable; using WebGL', error);
-              settingsRef.current.onUnsupported?.();
-            }
-            disposed = true;
-          } finally {
-            rendering = false;
-            if (disposed) release();
+          if (writeToB) {
+            await renderer.computeAsync(stepAtoB);
+            uReadFromB.value = 1;
+          } else {
+            await renderer.computeAsync(stepBtoA);
+            uReadFromB.value = 0;
           }
-          if (!disposed) raf = requestAnimationFrame(tick);
+          await renderer.renderAsync(scene, camera);
+          writeToB = !writeToB;
+          raf = requestAnimationFrame(tick);
         };
         tick();
 
@@ -220,9 +196,7 @@ export default function WebGPUFluidOverlay({
         ro.observe(mount);
       } catch (err) {
         console.warn('[WebGPUFluidOverlay] init failed', err);
-        if (!disposed) settingsRef.current.onUnsupported?.();
-        disposed = true;
-        release();
+        onUnsupported?.();
       }
     };
 
@@ -236,11 +210,11 @@ export default function WebGPUFluidOverlay({
         if (renderer.domElement?.parentNode === mount) {
           mount.removeChild(renderer.domElement);
         }
-        release();
+        renderer.dispose();
       }
     };
 
-  }, [resolution]);
+  }, [resolution, intensity]);
 
   return (
     <div

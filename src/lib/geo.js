@@ -3,41 +3,6 @@ const EARTH_MI = 3958.8;
 const noop = () => {};
 
 export const PUBLIC_LAND = new Set(['public', 'blm', 'forest_service', 'state_park']);
-export const MAX_EXACT_GPS_ACCURACY_M = 150;
-export const MAX_USABLE_GPS_ACCURACY_M = 5000;
-
-/**
- * Evaluates a geolocation fix's accuracy in meters.
- * Rejects zero/negative accuracy or coarse cell-tower/IP fixes (>5 km),
- * and downgrades fixes looser than 150 m from 'exact' to 'approximate'.
- */
-export function evaluateGpsAccuracy(coords) {
-  if (!coords) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  const lat = coords.latitude ?? coords.lat;
-  const lng = coords.longitude ?? coords.lng;
-  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    return { usable: false, isExact: false, accuracy: null, recommendedPrivacy: 'private' };
-  }
-  const rawAcc = coords.accuracy;
-  if (rawAcc == null) {
-    return { usable: true, isExact: false, accuracy: null, recommendedPrivacy: 'approximate' };
-  }
-  if (typeof rawAcc !== 'number' || !Number.isFinite(rawAcc) || rawAcc <= 0 || rawAcc > MAX_USABLE_GPS_ACCURACY_M) {
-    return { usable: false, isExact: false, accuracy: Number.isFinite(rawAcc) ? rawAcc : null, recommendedPrivacy: 'private' };
-  }
-  const isExact = rawAcc <= MAX_EXACT_GPS_ACCURACY_M;
-  return {
-    usable: true,
-    isExact,
-    accuracy: Math.round(rawAcc),
-    recommendedPrivacy: isExact ? 'exact' : 'approximate',
-  };
-}
 
 export function haversineMi(a, b) {
   if (!a || !b || a.lat == null || b.lat == null || a.lng == null || b.lng == null) return null;
@@ -89,8 +54,6 @@ export function watchGps(onFix) {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       if (cancelled) return;
-      const gate = evaluateGpsAccuracy(pos.coords);
-      if (!gate.usable) return;
       const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       persistLastGps(coords);
       onFix(coords);
@@ -102,33 +65,9 @@ export function watchGps(onFix) {
 }
 
 /**
- * Fast boolean check to see if any hotspot is within `maxRadiusMi` miles of `userLocation`.
- * Performance Optimization: Uses an early-exit linear loop with direct `haversineMi` distance checks
- * to avoid full array mapping, gap counting, and O(N log N) sorting overhead (>1000x faster than `rankHotspots`).
- * @param {any[]} hotspots
- * @param {{ lat: number, lng: number } | null | undefined} userLocation
- * @param {number} [maxRadiusMi]
- */
-export function hasNearbyHotspots(hotspots, userLocation, maxRadiusMi = 75) {
-  if (!userLocation || !Array.isArray(hotspots)) return true;
-  for (let i = 0; i < hotspots.length; i++) {
-    const h = hotspots[i];
-    if (typeof h.lat === 'number' && typeof h.lng === 'number') {
-      const dist = haversineMi(userLocation, h);
-      if (dist != null && dist <= maxRadiusMi) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Rank sites for a hunter: closer + public land + collection gaps + trust.
- * @param {any[]} hotspots
- * @param {{ userLocation?: { lat: number, lng: number } | null, collectedMinerals?: Set<string> | string[] }} [options]
  */
-export function rankHotspots(hotspots, { userLocation = null, collectedMinerals = new Set() } = {}) {
+export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
   const collected = collectedMinerals instanceof Set
     ? collectedMinerals
     : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
