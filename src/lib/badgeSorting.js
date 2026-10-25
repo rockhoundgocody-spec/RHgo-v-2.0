@@ -1,24 +1,40 @@
 export function sortBadgesForDisplay(badges, earnedCodes, rarityFilter, rarityOrder, sortMode = 'rarity', earnedRecords = {}) {
-  const rarityRank = Object.fromEntries(rarityOrder.map((rarity, index) => [rarity, index]));
+  if (!badges || !badges.length) return [];
+
+  const rarityRank = Object.fromEntries((rarityOrder || []).map((rarity, index) => [rarity, index]));
   const filtered = rarityFilter === 'all'
     ? badges
     : badges.filter((badge) => badge.rarity === rarityFilter);
 
-  const earnedFirst = (a, b) => (earnedCodes.has(a.code) ? 0 : 1) - (earnedCodes.has(b.code) ? 0 : 1);
+  // Decorate-Sort-Undecorate (Schwartzian transform):
+  // Decorate items in a single O(N) mapping pass with precomputed primitive keys
+  // to avoid O(N log N) repeated Set lookups, object indexing, and locale/date string comparisons in .sort().
+  const decorated = filtered.map((badge) => ({
+    badge,
+    earnedGroup: earnedCodes?.has(badge.code) ? 0 : 1,
+    rarityVal: rarityRank[badge.rarity] ?? -1,
+    title: badge.title || '',
+    earnedAt: earnedRecords?.[badge.code]?.earned_at || '',
+  }));
 
   if (sortMode === 'name') {
-    return [...filtered].sort((a, b) => earnedFirst(a, b) || a.title.localeCompare(b.title));
-  }
-  if (sortMode === 'date') {
-    return [...filtered].sort((a, b) => {
-      const e = earnedFirst(a, b);
-      if (e) return e;
-      const ad = earnedRecords[a.code]?.earned_at || '';
-      const bd = earnedRecords[b.code]?.earned_at || '';
-      // most-recently-earned first; unearned fall after (handled by earnedFirst)
-      return bd.localeCompare(ad);
+    decorated.sort((a, b) => {
+      if (a.earnedGroup !== b.earnedGroup) return a.earnedGroup - b.earnedGroup;
+      return a.title.localeCompare(b.title);
+    });
+  } else if (sortMode === 'date') {
+    decorated.sort((a, b) => {
+      if (a.earnedGroup !== b.earnedGroup) return a.earnedGroup - b.earnedGroup;
+      if (a.earnedAt !== b.earnedAt) return b.earnedAt > a.earnedAt ? 1 : -1;
+      return 0;
+    });
+  } else {
+    // rarity (default) — highest rarity first within earned/locked groups
+    decorated.sort((a, b) => {
+      if (a.earnedGroup !== b.earnedGroup) return a.earnedGroup - b.earnedGroup;
+      return b.rarityVal - a.rarityVal;
     });
   }
-  // rarity (default) — highest rarity first within earned/locked groups
-  return [...filtered].sort((a, b) => earnedFirst(a, b) || (rarityRank[b.rarity] ?? -1) - (rarityRank[a.rarity] ?? -1));
+
+  return decorated.map((d) => d.badge);
 }
