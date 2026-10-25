@@ -1,12 +1,12 @@
 /**
  * HelpTip — small ? icon that shows a Clover-written pop-up on tap.
- * Usage: <HelpTip tip="What this feature does" />
+ * Usage: <HelpTip tip="What this feature does" topic="Feature Name" />
  */
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
-export default function HelpTip({ tip, size = 13 }) {
+export default function HelpTip({ tip, topic, size = 13 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const tooltipId = useId();
@@ -28,13 +28,22 @@ export default function HelpTip({ tip, size = 13 }) {
     };
   }, [open]);
 
+  const ariaLabel = open
+    ? (topic ? `Close help for ${topic}` : 'Close help')
+    : (topic ? `Help for ${topic}` : 'Help');
+
+  const tooltipTitle = open
+    ? (topic ? `Close help for ${topic}` : 'Close help tooltip')
+    : (topic ? `Show help for ${topic}` : 'Show help tooltip');
+
   return (
     <span ref={ref} className="relative inline-flex items-center" style={{ verticalAlign: 'middle' }}>
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(v => !v); }}
         className="ml-1 text-white/30 hover:text-amethyst transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
-        aria-label="Help"
+        aria-label={ariaLabel}
+        title={tooltipTitle}
         aria-expanded={open}
         aria-controls={tooltipId}
         aria-describedby={open ? tooltipId : undefined}
@@ -48,6 +57,7 @@ export default function HelpTip({ tip, size = 13 }) {
           <motion.div
             id={tooltipId}
             role="tooltip"
+            aria-live="polite"
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.93 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.95 }}
