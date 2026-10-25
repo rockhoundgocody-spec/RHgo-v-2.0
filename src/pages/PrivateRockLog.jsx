@@ -49,7 +49,7 @@ export default function PrivateRockLog() {
           <div className="flex items-center gap-2">
             <Lock size={14} className="text-amethyst" />
             <h1 className="text-white font-bold text-lg">Private Rock Log</h1>
-            <HelpTip tip="Your personal stash — exact GPS, photos, and notes saved only for your eyes. No other user can see these finds." />
+            <HelpTip topic="Private Rock Log" tip="Your personal stash — exact GPS, photos, and notes saved only for your eyes. No other user can see these finds." />
           </div>
           <p className="text-white/35 text-[11px] mt-0.5">Only visible to you · {logs.length} finds logged</p>
         </div>
