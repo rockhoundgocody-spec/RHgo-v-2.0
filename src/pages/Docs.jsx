@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import HudFrame from '@/components/visuals/HudFrame.jsx';
 import { FileCode2, Database, Network, Cpu, Shield } from 'lucide-react';
+import HelpTip from '@/components/hub/HelpTip.jsx';
 import { cn } from '@/lib/utils';
 import { useSeoRobots } from '@/lib/useSeoRobots';
 import {
@@ -129,7 +130,10 @@ export default function Docs() {
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-hud glow-hud tracking-wider">ARCHITECTURE DOCS</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-hud glow-hud tracking-wider">ARCHITECTURE DOCS</h1>
+          <HelpTip topic="Architecture Docs" tip="Technical specifications and build manual for the RockHound-GO platform." />
+        </div>
         <p className="text-hud-cyan/60 text-xs uppercase tracking-[0.3em] mt-2">
           Technical specification / build manual
         </p>
