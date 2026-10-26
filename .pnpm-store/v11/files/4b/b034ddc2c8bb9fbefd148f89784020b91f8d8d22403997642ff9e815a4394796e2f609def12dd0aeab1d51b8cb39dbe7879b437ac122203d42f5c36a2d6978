@@ -1,0 +1,44 @@
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+import { version as viteVersion } from "vite";
+
+// Vite 8 pre-bundles deps with Rolldown instead of esbuild and deprecates
+// `optimizeDeps.esbuildOptions`.
+export const isVite8OrLater = Number(viteVersion.split(".")[0]) >= 8;
+
+/**
+ * The package that owns an optimizeDeps entry. Deep entries like
+ * `react-dom/client` are separate entries to Vite's optimizer but are declared
+ * in package.json only under their owning package.
+ */
+function owningPackage(entry: string): string {
+  const segments = entry.split("/");
+  return entry.startsWith("@")
+    ? segments.slice(0, 2).join("/")
+    : segments[0] ?? entry;
+}
+
+export function filterPackagesInProject(
+  packages: string[],
+  root: string
+): string[] {
+  try {
+    const packageJsonPath = join(root, "package.json");
+    if (!existsSync(packageJsonPath)) {
+      return [];
+    }
+
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+    const allDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+      ...packageJson.peerDependencies,
+    };
+
+    return packages.filter((pkg) => owningPackage(pkg) in allDeps);
+  } catch (error) {
+    console.warn("Failed to read project package.json:", error);
+    return [];
+  }
+}
+
