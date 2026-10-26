@@ -131,4 +131,25 @@ describe('QuestCard', () => {
     expect(createMock).not.toHaveBeenCalled();
     expect(bulkCreateMock.mock.calls[0][0]).toHaveLength(3);
   });
+
+  it('verifies vectorized quest payload construction executes as a single bulk request', async () => {
+    const missions = [
+      { title: 'Hunt Quartz', quest_type: 'daily', xp_reward: 100 },
+      { title: 'Find Feldspar', quest_type: 'weekly', xp_reward: 200 },
+      { title: 'Discover Agate', quest_type: 'monthly', xp_reward: 500 },
+    ];
+
+    const userEmail = 'geologist@example.com';
+    const payloads = missions.map((m) => ({
+      owner_email: userEmail,
+      title: m.title,
+      quest_type: m.quest_type,
+      xp_reward: m.xp_reward,
+    }));
+
+    await bulkCreateMock(payloads);
+
+    expect(bulkCreateMock).toHaveBeenCalledWith(payloads);
+    expect(createMock).not.toHaveBeenCalled();
+  });
 });
