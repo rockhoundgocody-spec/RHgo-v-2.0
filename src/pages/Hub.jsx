@@ -86,7 +86,7 @@ export default function Hub() {
           <div
             className="absolute inset-0 -m-10 rounded-full pointer-events-none"
             style={{
-              background: 'radial-gradient(circle, hsla(280,100%,60%,0.2), transparent 70%)',
+              background: 'radial-gradient(circle, hsla(190,100%,62%,0.16), hsla(165,80%,55%,0.06) 55%, transparent 72%)',
               filter: 'blur(10px)',
             }}
           />

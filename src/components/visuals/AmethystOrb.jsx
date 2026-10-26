@@ -387,13 +387,13 @@ export default function AmethystOrb({
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
             background:
-              'radial-gradient(circle, #0a0a14 0%, #0a0a14 30%, rgba(10,10,20,0.55) 38%, transparent 47%)',
+              'radial-gradient(circle, #0a0a14 0%, #0a0a14 12%, rgba(10,10,20,0.45) 19%, transparent 26%)',
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
-            background: `radial-gradient(circle, transparent 40%, ${cfg.haloBase} 46%, ${cfg.auraBase} 52%, transparent 60%)`,
+            background: `radial-gradient(circle, transparent 24%, ${cfg.haloBase} 31%, ${cfg.auraBase} 37%, transparent 45%)`,
             mixBlendMode: 'screen',
           }}
         />
@@ -402,6 +402,20 @@ export default function AmethystOrb({
           style={{
             background: `conic-gradient(from 0deg, transparent 0deg, ${cfg.haloBase} 30deg, transparent 60deg, ${cfg.auraBase} 120deg, transparent 150deg, ${cfg.haloBase} 240deg, transparent 270deg, ${cfg.auraBase} 330deg, transparent 360deg)`,
             mixBlendMode: 'screen',
+          }}
+        />
+
+        {/* CONCAVE WELL — she reads as set into the glass, not stuck on it:
+            shadow pools at the top inner edge, light catches the bottom rim,
+            and a hairline lip traces the edge. Painted above every orb layer
+            so the recess lands over the shader, never behind it. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            background:
+              'linear-gradient(to bottom, hsla(250,70%,2%,0.42) 0%, hsla(250,70%,3%,0.12) 24%, transparent 44%, transparent 76%, hsla(190,95%,80%,0.12) 100%)',
+            boxShadow: 'inset 0 16px 28px -14px hsla(250,70%,2%,0.9), inset 0 -14px 24px -16px hsla(190,95%,82%,0.55), inset 0 0 0 1px hsla(0,0%,100%,0.06)',
           }}
         />
 
