@@ -107,8 +107,8 @@ describe('cloverWake', () => {
   });
 
   describe('isWakeEnabled & setWakeEnabled', () => {
-    it('defaults to false when localStorage is empty', () => {
-      expect(isWakeEnabled()).toBe(false);
+    it('defaults to on when localStorage is empty', () => {
+      expect(isWakeEnabled()).toBe(true);
     });
 
     it('sets and gets enabled state via localStorage and emits event', () => {
@@ -136,7 +136,8 @@ describe('cloverWake', () => {
         throw new Error('Storage disabled');
       });
 
-      expect(isWakeEnabled()).toBe(false);
+      // Storage unavailable: the wake word still defaults to on.
+      expect(isWakeEnabled()).toBe(true);
       expect(() => setWakeEnabled(true)).not.toThrow();
 
       getItemSpy.mockRestore();

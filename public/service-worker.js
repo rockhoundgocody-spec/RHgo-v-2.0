@@ -90,3 +90,19 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+/**
+ * Status-bar notifications: tapping one brings the app to the front, opening it
+ * if it was closed out.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const root = new URL('/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((client) => client.url.startsWith(self.location.origin));
+      if (open) return open.focus();
+      return self.clients.openWindow(root);
+    })
+  );
+});

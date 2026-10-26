@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import useOfflineHotspots from '@/lib/useOfflineHotspots';
+import { alertWhenAway } from '@/lib/fieldAlerts';
 
 // Haversine distance in meters
 function distanceMeters(a, b) {
@@ -73,24 +74,19 @@ export default function useHotspotProximity({ enabled = true } = {}) {
           const payload = { hotspot: closest, distance_m: Math.round(closestDist) };
           setNearby(payload);
 
-          // Fire a browser push notification (with cooldown per hotspot)
+          // Status-bar alert only, with a cooldown per hotspot: with the app in
+          // front of the user the proximity banner already covers this.
           const now = Date.now();
           const last = lastNotifiedRef.current[closest.id] || 0;
-          if (
-            typeof Notification !== 'undefined' &&
-            Notification.permission === 'granted' &&
-            now - last > NOTIFY_COOLDOWN_MS
-          ) {
-            try {
-              new Notification('🪨 RockHound nearby!', {
-                body: `${closest.name} is ${Math.round(closestDist)}m away. Tap to explore.`,
-                tag: `hotspot-${closest.id}`,
-                icon: '/favicon.ico',
-              });
-              lastNotifiedRef.current[closest.id] = now;
-            } catch {
-              /* noop */
-            }
+          if (now - last > NOTIFY_COOLDOWN_MS) {
+            void alertWhenAway({
+              title: 'RockHound nearby',
+              body: `${closest.name} is ${Math.round(closestDist)}m away.`,
+              tag: `hotspot-${closest.id}`,
+              variant: 'hotspot',
+            }).then((shown) => {
+              if (shown) lastNotifiedRef.current[closest.id] = now;
+            });
           }
         } else {
           setNearby(null);
