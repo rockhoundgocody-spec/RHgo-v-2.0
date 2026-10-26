@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { sendPushToEmail } from '../../shared/webPush.ts';
 
 /**
  * promoteVerifiedSpecimen — entity automation handler.
@@ -126,6 +127,15 @@ Deno.serve(async (req) => {
     );
 
     await base44.asServiceRole.entities.Companion.update(companion.id, { xp, level });
+
+    // Reward alert: the approved find and the XP it earned.
+    await sendPushToEmail(base44, ownerEmail, {
+      category: 'rewards',
+      title: 'Find approved',
+      body: `${specimen.mineral_name} is verified — +${xpAward} XP${leveledUp ? `, Clover reached level ${level}` : ''}.`,
+      tag: `verify-${event.entity_id}`,
+      url: '/collection',
+    }).catch(() => {});
 
     return Response.json({
       created: true,

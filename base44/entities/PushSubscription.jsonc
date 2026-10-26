@@ -1,0 +1,97 @@
+{
+  "name": "PushSubscription",
+  "type": "object",
+  "description": "One device's Web Push subscription. Used to reach a user's status bar with alerts while the app is closed; the sender reads these with the service role, owners manage their own devices.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the rockhound this device belongs to"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "Push service endpoint URL issued to this device"
+    },
+    "p256dh": {
+      "type": "string",
+      "description": "Device public key (base64url) used to encrypt the alert"
+    },
+    "auth": {
+      "type": "string",
+      "description": "Device auth secret (base64url) used to derive the encryption key"
+    },
+    "device_label": {
+      "type": "string",
+      "description": "Human label for the device, e.g. 'iPhone' or 'Android'"
+    },
+    "categories": {
+      "type": "object",
+      "description": "Which alert groups this device accepts",
+      "properties": {
+        "community": {
+          "type": "boolean",
+          "default": true
+        },
+        "missions": {
+          "type": "boolean",
+          "default": true
+        },
+        "rewards": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "last_alert_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this device last received an alert"
+    }
+  },
+  "required": [
+    "owner_email",
+    "endpoint",
+    "p256dh",
+    "auth"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
