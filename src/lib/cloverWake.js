@@ -72,13 +72,44 @@ export function matchesWakeWord(text) {
 }
 
 // ── Enabled flag ────────────────────────────────────────────────────────────
+// On by default — hands-free "Hey Clover" is the point of the field kit. Only an
+// explicit off (the Settings toggle, or a mic the browser blocked) stops her.
 export function isWakeEnabled() {
-  try { return localStorage.getItem(ENABLED_KEY) === '1'; } catch { return false; }
+  try { return localStorage.getItem(ENABLED_KEY) !== '0'; } catch { return true; }
 }
 
 export function setWakeEnabled(on) {
   try { localStorage.setItem(ENABLED_KEY, on ? '1' : '0'); } catch { /* private mode */ }
   emit('enabled', on);
+}
+
+// ── How her ears decide (Settings → "Hey Clover") ───────────────────────────
+const NOISE_KEY = 'clover_noise_gate';
+const VOICE_LOCK_KEY = 'clover_voice_lock';
+
+function readFlag(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v === null ? fallback : v === '1';
+  } catch { return fallback; }
+}
+
+function writeFlag(key, on) {
+  try { localStorage.setItem(key, on ? '1' : '0'); } catch { /* private mode */ }
+}
+
+/** Reject wakes that are only background noise rather than a spoken phrase. */
+export function isNoiseGateEnabled() { return readFlag(NOISE_KEY, true); }
+export function setNoiseGateEnabled(on) {
+  writeFlag(NOISE_KEY, on);
+  emit('ears', { noiseGate: !!on, voiceLock: isVoiceLockEnabled() });
+}
+
+/** Reject wakes spoken in a voice other than the enrolled one. */
+export function isVoiceLockEnabled() { return readFlag(VOICE_LOCK_KEY, true); }
+export function setVoiceLockEnabled(on) {
+  writeFlag(VOICE_LOCK_KEY, on);
+  emit('ears', { noiseGate: isNoiseGateEnabled(), voiceLock: !!on });
 }
 
 // ── Busy tracking: pause the wake listener while Clover talks/listens ─────
@@ -110,4 +141,12 @@ export function emitWake() {
 }
 export function emitDenied() {
   emit('denied');
+}
+/** An utterance was understood and acted on — drives the confirmation popup. */
+export function emitCommand(text, kind = 'command') {
+  emit('command', { text, kind });
+}
+/** A wake was heard but turned away: background noise, or another voice. */
+export function emitBlocked(reason) {
+  emit('blocked', { reason });
 }

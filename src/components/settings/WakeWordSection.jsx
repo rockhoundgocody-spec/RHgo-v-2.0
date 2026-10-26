@@ -3,6 +3,7 @@ import { Ear } from 'lucide-react';
 import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import SectionHeader from './SectionHeader.jsx';
 import { isWakeEnabled, on, setWakeEnabled } from '@/lib/cloverWake';
+import CloverEarsCard from './CloverEarsCard.jsx';
 
 const supported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
@@ -20,6 +21,7 @@ export default function WakeWordSection() {
   };
 
   return (
+    <>
     <div className="mb-6">
       <GlassPanel className="p-4">
         <SectionHeader
@@ -54,5 +56,7 @@ export default function WakeWordSection() {
         </div>
       </GlassPanel>
     </div>
+    <CloverEarsCard />
+    </>
   );
 }

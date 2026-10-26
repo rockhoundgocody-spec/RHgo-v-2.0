@@ -3,6 +3,7 @@
  * in a hands-free loop. Visual state follows listening / thinking / speaking.
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { Check } from 'lucide-react';
 const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
@@ -28,6 +29,7 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
   const clover = useCloverConversation({ companion, recentFinds });
 
   const [wakePulse, setWakePulse] = useState(false);
+  const [commandPulse, setCommandPulse] = useState(false);
   const startRef = useRef(clover.start);
   startRef.current = clover.start;
   useEffect(() => on('wake', () => {
@@ -35,6 +37,12 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
     setTimeout(() => setWakePulse(false), 900);
     triggerOrbHaptic('pulse');
     startRef.current(OPENERS[Math.floor(Math.random() * OPENERS.length)]);
+  }), []);
+
+  // Confirmation flash the moment a spoken command lands and she acts on it.
+  useEffect(() => on('command', () => {
+    setCommandPulse(true);
+    setTimeout(() => setCommandPulse(false), 1400);
   }), []);
 
   const luckyMineral = getLuckyMineralOfTheDay();
@@ -120,6 +128,21 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples((rs) => rs.filter((rp) => rp.id !== r.id))} />
           ))}
+          {commandPulse && (
+            <>
+              <span
+                className="absolute inset-0 rounded-full pointer-events-none animate-ping"
+                style={{ border: '2px solid #F2C14E', boxShadow: '0 0 26px #F2C14E66' }}
+              />
+              <span
+                className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center pointer-events-none"
+                style={{ background: '#9FE8D0', color: '#0a0a14', boxShadow: '0 0 14px #9FE8D088' }}
+                aria-hidden
+              >
+                <Check size={13} strokeWidth={3} />
+              </span>
+            </>
+          )}
         </div>
 
         <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-white/35">

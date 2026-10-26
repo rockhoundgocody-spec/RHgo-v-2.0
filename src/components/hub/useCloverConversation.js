@@ -6,7 +6,7 @@ import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
 import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
-import { setCloverBusy, emit } from '@/lib/cloverWake';
+import { setCloverBusy, emit, emitCommand } from '@/lib/cloverWake';
 import { rejectionLine } from '@/lib/cloverVoice';
 
 const MAX_QUIET_TURNS = 3;
@@ -115,6 +115,7 @@ export default function useCloverConversation({
       historyRef.current = [...historyRef.current, { role: 'assistant', content: local.reply }].slice(-HISTORY_TURNS);
       setMessages((prev) => [...prev, { role: 'assistant', content: local.reply }]);
       say(local.reply);
+      emitCommand(text); // routed and acted on — confirm it on screen
       if (local.endSession) {
         setTimeout(() => {
           activeRef.current = false;
@@ -162,6 +163,7 @@ export default function useCloverConversation({
             transcript: data.find_details, create: true,
           });
           onFindLogged?.(data.find_details.split(' ').slice(0, 3).join(' '));
+          emitCommand(text, 'logged');
         } catch {}
       }
     } catch (err) {
