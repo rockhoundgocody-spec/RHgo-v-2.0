@@ -76,25 +76,33 @@ describe('cloverWake', () => {
       expect(matchesWakeWord('hey clo')).toBe(true);
     });
 
-    it('matches phonetic variants via regex', () => {
-      expect(matchesWakeWord('clever')).toBe(true);
-      expect(matchesWakeWord('glover')).toBe(true);
-      expect(matchesWakeWord('klovr')).toBe(true);
-      expect(matchesWakeWord('claver')).toBe(true);
+    it('matches phonetic variants once a greeting leads into them', () => {
+      expect(matchesWakeWord('hey clever')).toBe(true);
+      expect(matchesWakeWord('ok glover')).toBe(true);
+      expect(matchesWakeWord('hey klovr')).toBe(true);
+      expect(matchesWakeWord('hullo claver')).toBe(true);
+      expect(matchesWakeWord('hey there clover')).toBe(true);
     });
 
     it('matches fuzzy single words via Levenshtein distance', () => {
-      expect(matchesWakeWord('clovr')).toBe(true);
-      expect(matchesWakeWord('cloverr')).toBe(true);
-    });
-
-    it('matches fuzzy phrase pairs via Levenshtein distance', () => {
       expect(matchesWakeWord('hey clovr')).toBe(true);
+      expect(matchesWakeWord('hey cloverr')).toBe(true);
+      expect(matchesWakeWord('heyclover')).toBe(true);
     });
 
     it('matches split recognitions like "clo ver" or "clove er"', () => {
-      expect(matchesWakeWord('clo ver')).toBe(true);
-      expect(matchesWakeWord('clove er')).toBe(true);
+      expect(matchesWakeWord('hey clo ver')).toBe(true);
+      expect(matchesWakeWord('hey clove er')).toBe(true);
+    });
+
+    it('ignores the bare name and bare near-misses', () => {
+      expect(matchesWakeWord('clover')).toBe(false);
+      expect(matchesWakeWord('clever')).toBe(false);
+      expect(matchesWakeWord('glover')).toBe(false);
+      expect(matchesWakeWord('clovr')).toBe(false);
+      expect(matchesWakeWord('clo ver')).toBe(false);
+      expect(matchesWakeWord('where is the clover')).toBe(false);
+      expect(matchesWakeWord('hey that s clever')).toBe(false);
     });
   });
 

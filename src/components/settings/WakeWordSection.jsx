@@ -26,7 +26,7 @@ export default function WakeWordSection() {
           icon={Ear}
           iconColor="text-[#9FE8D0]"
           title='"Hey Clover" wake word'
-          subtitle="Say Hey Clover, Hi Clover, OK Clover, or just Clover. Accents and near-miss pronunciations work too."
+          subtitle="Say the whole phrase: Hey Clover. Hi, OK and Hello Clover work too, and near-miss pronunciations still land."
         />
         <div className="ml-9 flex items-center justify-between gap-3">
           <p className="text-[11px] text-white/40 leading-relaxed">
