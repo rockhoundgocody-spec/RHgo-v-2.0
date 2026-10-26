@@ -9,8 +9,7 @@ import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
 import useCloverConversation from './useCloverConversation.js';
-import { playOrbChime, playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
-import { Zap } from 'lucide-react';
+import { playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { on } from '@/lib/cloverWake';
 
 const OPENERS = [
@@ -20,13 +19,13 @@ const OPENERS = [
   "I'm listening. What did you find?",
 ];
 
-export default function HeroOrb({ companion, size = 148 }) {
+export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
   const [ripples, setRipples] = useState([]);
   const [abilitiesModal, setAbilitiesModal] = useState(null);
   const [customOrbState, setCustomOrbState] = useState(null);
   const containerRef = useRef(null);
   const { getInteraction, injectTap } = useLiquidInteraction();
-  const clover = useCloverConversation({ companion });
+  const clover = useCloverConversation({ companion, recentFinds });
 
   const [wakePulse, setWakePulse] = useState(false);
   const startRef = useRef(clover.start);
@@ -137,39 +136,24 @@ export default function HeroOrb({ companion, size = 148 }) {
               phase={clover.phase}
               messages={clover.messages}
               interim={clover.interim}
+              muted={clover.muted}
+              onToggleMute={clover.toggleMute}
+              onStop={clover.end}
               onClose={clover.end}
               onHunt={() => {}}
               huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
               onListen={clover.nudge}
+              getWaveBars={clover.getWaveBars}
+              onOpenAbilities={() => {
+                triggerOrbHaptic('pulse');
+                setAbilitiesModal('resonance');
+              }}
+              resonanceClaimed={isResonanceClaimed}
             />
           </div>
         )}
-
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <button
-            onClick={() => {
-              playOrbChime(639, 2.0);
-              triggerOrbHaptic('pulse');
-              setAbilitiesModal('resonance');
-            }}
-            className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
-            style={{
-              background: isResonanceClaimed
-                ? 'hsla(45,70%,20%,0.3)'
-                : 'linear-gradient(135deg, hsla(45,100%,50%,0.35), hsla(28,95%,45%,0.35))',
-              border: isResonanceClaimed
-                ? '1px solid hsla(45,60%,50%,0.3)'
-                : '1px solid hsla(45,100%,60%,0.5)',
-              color: isResonanceClaimed ? 'hsl(45,80%,75%)' : '#fef08a',
-            }}
-            title="Daily Geode Resonance"
-          >
-            <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
-            <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Challenge'}</span>
-          </button>
-        </div>
       </div>
 
       <OrbAbilitiesModal

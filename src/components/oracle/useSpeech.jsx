@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import { assessTranscript } from '@/lib/cloverVoice';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
@@ -216,19 +217,20 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
 // - interimResults = true  → show partial text so user knows they're heard
 // - Silence timer resets on EVERY interim result (user is still speaking)
 // - Silence timer only fires final stop when speech goes quiet
-// - confidence gate is lenient (Chrome often reports 0)
+// - Final transcripts go through the cloverVoice confidence gate: an utterance
+//   the engine scored below the floor is refused (onRejected) rather than acted
+//   on, and field words the engine mis-heard are repaired first
 // ─────────────────────────────────────────────────────────────────────────────
-const CONFIDENCE_THRESHOLD = 0.12;
-const MIN_TRANSCRIPT_CHARS = 2;
-const MIN_WORD_COUNT       = 1;
-const SILENCE_TIMEOUT_MS   = 2800;
+const SILENCE_TIMEOUT_MS = 2800;
 
-export function useSpeechRecognition({ onResult, onInterim } = {}) {
+export function useSpeechRecognition({ onResult, onInterim, onRejected } = {}) {
   const [listening, setListening] = useState(false);
-  const onResultRef  = useRef(onResult);
-  const onInterimRef = useRef(onInterim);
-  onResultRef.current  = onResult;
-  onInterimRef.current = onInterim;
+  const onResultRef   = useRef(onResult);
+  const onInterimRef  = useRef(onInterim);
+  const onRejectedRef = useRef(onRejected);
+  onResultRef.current   = onResult;
+  onInterimRef.current  = onInterim;
+  onRejectedRef.current = onRejected;
 
   const recRef       = useRef(null);
   const silenceTimer = useRef(null);
@@ -275,7 +277,7 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
     rec.onresult = (e) => {
       let interim   = '';
       let finalText = '';
-      let finalConf = 1;
+      let finalConf = null; // null = the engine reported no score at all
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
@@ -285,7 +287,10 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
         }
         if (r.isFinal) {
           finalText += best.transcript;
-          finalConf  = Math.min(finalConf, best.confidence ?? 0);
+          const score = Number(best.confidence);
+          if (Number.isFinite(score) && score > 0) {
+            finalConf = finalConf == null ? score : Math.min(finalConf, score);
+          }
         } else {
           interim += best.transcript;
         }
@@ -293,23 +298,33 @@ export function useSpeechRecognition({ onResult, onInterim } = {}) {
 
       if (interim || finalText) _resetSilenceTimer(rec);
 
-      if (interim && onInterimRef.current) onInterimRef.current(interim);
+      // Interim text is shown raw: it changes many times a second, and running
+      // the repair patterns on every partial would cost frames for no gain.
+      if (interim && onInterimRef.current) {
+        onInterimRef.current(String(interim).replace(/\s+/g, ' ').trim());
+      }
 
       if (finalText) {
-        const clean     = finalText.trim();
-        const wordCount = clean.split(/\s+/).filter(Boolean).length;
-        const tooShort  = clean.length < MIN_TRANSCRIPT_CHARS;
-        const tooFew    = wordCount < MIN_WORD_COUNT;
-        const isNoise   = Number.isFinite(finalConf) && finalConf > 0 && finalConf < CONFIDENCE_THRESHOLD && clean.length < 8;
-
+        // The confidence gate lives in cloverVoice, which also repairs the
+        // field words the engine mis-hears before anything acts on the text.
+        const verdict = assessTranscript(finalText, finalConf);
         onInterimRef.current?.('');
         gotFinalRef.current = true;
 
-        if (!tooShort && !tooFew && !isNoise) {
+        if (verdict.ok) {
           deadRef.current = true;
           try { rec.stop(); } catch {}
-          onResultRef.current?.(clean);
+          onResultRef.current?.(verdict.text, {
+            confidence: verdict.confidence,
+            soft: verdict.soft,
+            reason: verdict.reason,
+          });
+        } else if (verdict.reason !== 'empty') {
+          deadRef.current = true;
+          try { rec.stop(); } catch {}
+          onRejectedRef.current?.(verdict.reason);
         }
+        // 'empty' — a cough, a door, wind. Keep listening instead of answering noise.
       }
     };
 

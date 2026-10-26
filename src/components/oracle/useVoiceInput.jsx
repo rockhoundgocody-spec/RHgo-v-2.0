@@ -1,37 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useSpeechRecognition } from './useSpeech';
+import useMicLevel from '@/lib/useMicLevel';
+import { createBarSampler } from '@/lib/micBars';
+import { assessTranscript } from '@/lib/cloverVoice';
 
 /**
- * useVoiceInput — unified voice input for the orb.
+ * useVoiceInput — unified voice input for Clover's ears.
  * Uses native SpeechRecognition where available (Chrome/Android).
  * Falls back to MediaRecorder + Whisper transcription on browsers
  * without SpeechRecognition (iOS Safari / PWA).
- * Same interface as useSpeechRecognition: { start, stop, listening, supported }.
+ *
+ * Interface: { start, stop, listening, supported, getBars }.
+ * getBars(out) fills the live input levels the waveform draws — real mic data
+ * on both paths, and zeros (never a crash) when the mic can't be opened.
+ * onResult(text, meta) carries the engine's confidence for that utterance.
  */
 
 const SILENCE_STOP_MS = 1800;  // stop after this much quiet following speech
 const MAX_RECORD_MS   = 16000; // hard cap per recording
 const VOICE_RMS       = 0.028; // speech detection threshold
 
-function useRecorderTranscription({ onResult, onInterim } = {}) {
+function useRecorderTranscription({ onResult, onInterim, onRejected } = {}) {
   const [listening, setListening] = useState(false);
 
-  const onResultRef  = useRef(onResult);
-  const onInterimRef = useRef(onInterim);
-  onResultRef.current  = onResult;
-  onInterimRef.current = onInterim;
+  const onResultRef   = useRef(onResult);
+  const onInterimRef  = useRef(onInterim);
+  const onRejectedRef = useRef(onRejected);
+  onResultRef.current   = onResult;
+  onInterimRef.current  = onInterim;
+  onRejectedRef.current = onRejected;
 
   const recRef       = useRef(null);
   const streamRef    = useRef(null);
   const ctxRef       = useRef(null);
+  const analyserRef  = useRef(null);
+  const samplerRef   = useRef(null);
   const rafRef       = useRef(null);
   const deadRef      = useRef(false);
   const runningRef   = useRef(false);
 
+  if (!samplerRef.current) samplerRef.current = createBarSampler();
+
+  const getBars = useCallback((out) => samplerRef.current.sample(analyserRef.current, out), []);
+
   const cleanup = useCallback(() => {
     runningRef.current = false;
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    analyserRef.current = null;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
@@ -86,13 +102,16 @@ function useRecorderTranscription({ onResult, onInterim } = {}) {
     const chunks = [];
     rec.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
 
-    // Silence detection — auto-stop once the user has spoken and gone quiet
+    // Silence detection — auto-stop once the user has spoken and gone quiet.
+    // The same analyser feeds the waveform, so no second mic stream is opened.
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
     ctxRef.current = ctx;
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.6;
     ctx.createMediaStreamSource(stream).connect(analyser);
+    analyserRef.current = analyser;
     const buf = new Uint8Array(analyser.frequencyBinCount);
 
     const startedAt = Date.now();
@@ -135,9 +154,17 @@ function useRecorderTranscription({ onResult, onInterim } = {}) {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         const transcript = await base44.integrations.Core.TranscribeAudio({ audio_url: file_url });
         onInterimRef.current?.('');
-        const clean = String(transcript || '').trim();
         setListening(false);
-        if (clean.length >= 2 && !deadRef.current) onResultRef.current?.(clean);
+        if (deadRef.current) return;
+
+        // Whisper reports no confidence, so the gate here is shape only — the
+        // same cleanup still repairs mis-heard field words.
+        const verdict = assessTranscript(transcript, null);
+        if (verdict.ok) {
+          onResultRef.current?.(verdict.text, { confidence: null, soft: false, reason: 'ok' });
+        } else if (verdict.reason !== 'empty') {
+          onRejectedRef.current?.(verdict.reason);
+        }
       } catch {
         onInterimRef.current?.('');
         setListening(false);
@@ -156,7 +183,7 @@ function useRecorderTranscription({ onResult, onInterim } = {}) {
     typeof MediaRecorder !== 'undefined' &&
     !!navigator.mediaDevices?.getUserMedia;
 
-  return { start, stop, listening, supported };
+  return { start, stop, listening, supported, getBars };
 }
 
 export default function useVoiceInput(opts) {
@@ -167,5 +194,24 @@ export default function useVoiceInput(opts) {
   const sr       = useSpeechRecognition(opts);
   const recorder = useRecorderTranscription(opts);
 
-  return srSupported ? sr : recorder;
+  // The recognizer gives no levels of its own, so a meter stream runs only
+  // while it is actually listening — short-lived, and it degrades to silence.
+  const meter = useMicLevel(srSupported && sr.listening);
+
+  if (srSupported) {
+    return {
+      start: sr.start,
+      stop: sr.stop,
+      listening: sr.listening,
+      supported: true,
+      getBars: meter.getBars,
+    };
+  }
+  return {
+    start: recorder.start,
+    stop: recorder.stop,
+    listening: recorder.listening,
+    supported: recorder.supported,
+    getBars: recorder.getBars,
+  };
 }

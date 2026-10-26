@@ -1,17 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, X, Target, Gem, Mic, Keyboard, ChevronDown, ChevronUp, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
+import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
-
-const PHASE_TEXT = {
-  thinking:  'thinking…',
-  speaking:  'talking — just jump in any time',
-  listening: 'listening',
-  resting:   'here whenever you are — tap to talk',
-  idle:      '',
-};
+import CloverVoiceControls from './CloverVoiceControls.jsx';
 
 /**
  * CloverVoicePanel — the conversation surface. Voice-first: no text box unless
@@ -20,6 +13,7 @@ const PHASE_TEXT = {
 export default function CloverVoicePanel({
   phase, messages, interim, onClose, onHunt, huntLoading,
   suggestions, onDismissSuggestions, voiceSupported, onSend, onListen,
+  muted, onToggleMute, onStop, getWaveBars, onOpenAbilities, resonanceClaimed,
 }) {
   const transcriptRef = useRef(null);
   const [draft, setDraft] = useState('');
@@ -55,26 +49,16 @@ export default function CloverVoicePanel({
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/8">
         <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide flex items-center gap-1.5">
           Clover 🍀 {isKid && <span className="text-[9px] text-amber-300 font-bold">(Explorer Buddy)</span>}
-          {phase === 'listening' && (
-            <span className="flex items-center gap-1 text-[9px] font-normal text-hud-cyan">
-              <Mic size={9} className="animate-pulse" /> listening
-            </span>
-          )}
         </span>
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={onHunt}
-            disabled={huntLoading}
-            className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
-            aria-label="Get hunt suggestions"
-          >
-            {huntLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
-            <span>Hunt</span>
-          </button>
-          <button onClick={onClose} aria-label="End conversation" className="text-white/25 hover:text-white/60 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50">
-            <X size={14} />
-          </button>
-        </div>
+        <button
+          onClick={onHunt}
+          disabled={huntLoading}
+          className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+          aria-label="Get hunt suggestions"
+        >
+          {huntLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
+          <span>Hunt</span>
+        </button>
       </div>
 
       {/* Transcript */}
@@ -202,14 +186,16 @@ export default function CloverVoicePanel({
       </div>
 
       <div className="px-3 py-2 border-t border-white/8 space-y-2">
-        <button
-          type="button"
-          onClick={() => onListen?.()}
-          className="w-full flex items-center justify-center gap-1.5 text-[10px] text-white/45 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
-        >
-          <VoiceDots active={phase === 'listening'} />
-          <span>{PHASE_TEXT[phase] || 'tap to talk'}</span>
-        </button>
+        <CloverVoiceControls
+          phase={phase}
+          muted={muted}
+          onToggleMute={onToggleMute}
+          onStop={onStop || onClose}
+          onListen={onListen}
+          getWaveBars={getWaveBars}
+          onOpenAbilities={onOpenAbilities}
+          resonanceClaimed={resonanceClaimed}
+        />
         <div className="flex items-center gap-2">
           <Keyboard size={12} className="text-white/25 shrink-0" />
           <input
@@ -256,23 +242,5 @@ function SourceChips({ sources }) {
         </Link>
       )}
     </div>
-  );
-}
-
-function VoiceDots({ active }) {
-  return (
-    <span className="flex items-center gap-0.5">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="block rounded-full"
-          style={{
-            width: 3, height: 3,
-            background: active ? 'hsl(195,100%,75%)' : 'hsla(0,0%,100%,0.2)',
-            animation: active ? `pp-breath 1s ease-in-out ${i * 0.15}s infinite` : 'none',
-          }}
-        />
-      ))}
-    </span>
   );
 }
