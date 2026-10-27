@@ -141,7 +141,17 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
                 getSpectrum={clover.getSpectrum}
               />
             </React.Suspense>
+            {/* Physical depth: recessed seat, core shadow, curved specular, bounce light */}
+            <div className="absolute rounded-full pointer-events-none" style={{
+              width: size * .8, height: size * .8,
+              boxShadow: '0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.18), 0 10px 22px rgba(0,0,0,.6), inset 0 -14px 26px rgba(0,0,0,.55)',
+              background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 9%, transparent 22%), radial-gradient(circle at 60% 82%, rgba(255,190,90,.22) 0%, transparent 30%), radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%)',
+            }} />
           </div>
+          <div className="absolute left-1/2 -translate-x-1/2 rounded-full pointer-events-none" style={{
+            bottom: -size * .08, width: size * .7, height: size * .1,
+            background: 'radial-gradient(ellipse, rgba(0,0,0,.6) 0%, transparent 70%)', filter: 'blur(4px)',
+          }} />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples((rs) => rs.filter((rp) => rp.id !== r.id))} />
           ))}
