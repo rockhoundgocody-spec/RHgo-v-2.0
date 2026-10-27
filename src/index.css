@@ -44,6 +44,10 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 245 15% 20%;
     --sidebar-ring: 275 80% 70%;
+    /* One liquid tempo — shared by the Hub backdrop and Clover's mercury skin
+       (mirrored in src/lib/liquidFlow.js). */
+    --rhgo-flow-duration: 16s;
+    --rhgo-flow-angle: 34deg;
   }
 
   .dark {
@@ -272,8 +276,9 @@
   }
 
   @keyframes hub-aurora-shift {
-    0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.05); opacity: 0.55; }
-    50% { transform: translate3d(8%, 6%, 0) scale(1.12); opacity: 0.85; }
+    /* Travels the shared 34° liquid diagonal (--rhgo-flow-angle) */
+    0%, 100% { transform: translate3d(-6%, -4.05%, 0) scale(1.05); opacity: 0.55; }
+    50% { transform: translate3d(8%, 5.4%, 0) scale(1.12); opacity: 0.85; }
   }
   .hub-aurora {
     position: absolute;
@@ -283,7 +288,32 @@
       radial-gradient(ellipse 45% 35% at 85% 18%, hsla(190, 100%, 50%, 0.18), transparent 62%),
       radial-gradient(ellipse 40% 30% at 50% 0%, hsla(330, 90%, 50%, 0.12), transparent 70%);
     filter: blur(28px);
-    animation: hub-aurora-shift 16s ease-in-out infinite;
+    animation: hub-aurora-shift var(--rhgo-flow-duration) ease-in-out infinite;
+  }
+  /* Flowing iridescent sheet — the room's liquid surface. Two counter-phase
+     layers of blurred light travel the same diagonal on the shared tempo, so
+     the backdrop never sits still and never repeats one composition. */
+  @keyframes hub-liquid-flow {
+    0%, 100% { transform: translate3d(-8%, -5.4%, 0) scale(1.06); opacity: 0.7; }
+    50%      { transform: translate3d(9%, 6.1%, 0) scale(1.14); opacity: 1; }
+  }
+  .hub-iridescent {
+    position: absolute;
+    inset: -25% -15% 10%;
+    background:
+      radial-gradient(ellipse 48% 40% at 28% 22%, hsla(190, 100%, 58%, 0.20), transparent 62%),
+      radial-gradient(ellipse 42% 36% at 76% 52%, hsla(330, 90%, 62%, 0.16), transparent 66%),
+      radial-gradient(ellipse 36% 30% at 46% 84%, hsla(45, 100%, 62%, 0.13), transparent 68%);
+    filter: blur(36px);
+    animation: hub-liquid-flow var(--rhgo-flow-duration) ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+  .hub-iridescent-b {
+    inset: -12% -22% 4%;
+    animation-delay: calc(var(--rhgo-flow-duration) / -2);
+    background:
+      radial-gradient(ellipse 44% 34% at 62% 18%, hsla(275, 90%, 62%, 0.18), transparent 64%),
+      radial-gradient(ellipse 38% 32% at 18% 68%, hsla(168, 90%, 55%, 0.14), transparent 66%);
   }
   .hub-grid {
     position: absolute;
@@ -345,7 +375,7 @@
   .hub-aurora-secondary {
     inset: 10% -15% 0;
     opacity: 0.55;
-    animation-duration: 22s;
+    animation-duration: var(--rhgo-flow-duration);
     animation-direction: reverse;
     background:
       radial-gradient(ellipse 40% 30% at 70% 30%, hsla(160, 90%, 45%, 0.16), transparent 65%),
@@ -387,6 +417,7 @@
   @media (prefers-reduced-motion: reduce) {
     .hub-aurora,
     .hub-aurora-secondary,
+    .hub-iridescent,
     .clover-listen-ring,
     .animate-orb-ring,
     .animate-amethyst-pulse,

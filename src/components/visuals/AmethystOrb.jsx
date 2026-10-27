@@ -4,6 +4,7 @@ import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
+import { flowAt, FLOW_ANGLE_DEG } from '@/lib/liquidFlow';
 
 /**
  * Clover — her visual form. A prismatic shell of iridescent liquid glass
@@ -203,24 +204,22 @@ export default function AmethystOrb({
       }
 
       // ── Liquid-mercury skin ──────────────────────────────────────────
-      // Two layers of molten silver flow across the shell: a slow swirl and a
-      // travelling sheen band. The voice level drives both — louder speech
-      // brightens, widens and quickens the flow, so the pulse tracks the audio.
-      const swirl = reduceMotion ? 0 : t * 11 + lvl * 22;
+      // She rides the room's own current: the same diagonal surge the Hub
+      // backdrop flows on (src/lib/liquidFlow.js), so shell and backdrop read
+      // as one liquid. Voice level brightens, widens and quickens the flow.
+      const flow = flowAt(t);
+      const swirl = reduceMotion ? 0 : flow.x * 16 + lvl * 22;
       if (mercuryRef.current) {
         mercuryRef.current.style.opacity = String(0.3 + lvl * 0.5);
         mercuryRef.current.style.transform = reduceMotion
           ? 'none'
-          : `rotate(${swirl}deg) scale(${1.02 + lvl * 0.06})`;
+          : `rotate(${swirl}deg) scale(${1.02 + flow.swell * 0.035 + lvl * 0.06})`;
       }
       if (sheenRef.current) {
-        // A band that sweeps across her surface, always in motion, breathing with the voice
-        const sweep = reduceMotion ? 0 : ((t * 0.28) % 1) * 2 - 1;
-        const drift = reduceMotion ? 0 : Math.sin(t * 0.9) * 0.06;
         sheenRef.current.style.opacity = String(0.2 + lvl * 0.62);
         sheenRef.current.style.transform = reduceMotion
           ? `scale(${1 + lvl * 0.12})`
-          : `translate(${sweep * size * 0.85}px, ${drift * size}px) scale(${1 + lvl * 0.22}, ${1 + lvl * 0.45})`;
+          : `translate(${flow.x * size * 0.35}px, ${flow.y * size * 0.35}px) scale(${1 + flow.swell * 0.05 + lvl * 0.22}, ${1 + lvl * 0.45})`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -346,7 +345,9 @@ export default function AmethystOrb({
             mixBlendMode: 'screen',
             opacity: 0.28,
             willChange: 'transform, opacity',
-            background: 'linear-gradient(104deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)',
+            // Band lies across the flow diagonal, so it sweeps along the same
+            // travel line as the dashboard backdrop.
+            background: `linear-gradient(${90 + FLOW_ANGLE_DEG}deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)`,
             WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
             maskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
           }}
