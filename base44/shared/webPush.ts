@@ -11,6 +11,54 @@
  * break the flow that triggered it.
  */
 
+export interface PushSubscriptionInfo {
+  id?: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  categories?: Record<string, boolean>;
+}
+
+export interface PushPayload {
+  title: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+}
+
+export interface VapidKeys {
+  publicKey: string;
+  privateKey: string;
+}
+
+export interface PushAlert {
+  title: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+  category?: string;
+}
+
+export interface PushResult {
+  delivered: number;
+  failed: number;
+  skipped?: string;
+  devices?: number;
+  error?: string;
+}
+
+export interface Base44Client {
+  asServiceRole: {
+    entities: {
+      PushSubscription: {
+        filter(query: Record<string, unknown>): Promise<PushSubscriptionInfo[]>;
+        update(id: string, data: Record<string, unknown>): Promise<unknown>;
+        delete(id: string): Promise<unknown>;
+      };
+    };
+  };
+}
+
 const encoder = new TextEncoder();
 
 function b64urlToBytes(value: string): Uint8Array {
@@ -59,7 +107,7 @@ async function hkdf(salt: Uint8Array, input: Uint8Array, info: Uint8Array, lengt
 }
 
 /** Encrypts one alert for one device (RFC 8291, aes128gcm). */
-export async function encryptPayload(subscription: any, payloadText: string): Promise<Uint8Array> {
+export async function encryptPayload(subscription: PushSubscriptionInfo, payloadText: string): Promise<Uint8Array> {
   const devicePublic = b64urlToBytes(subscription.p256dh);
   const authSecret = b64urlToBytes(subscription.auth);
 
@@ -119,7 +167,7 @@ export async function vapidAuthorization(endpoint: string, publicKey: string, pr
 }
 
 /** Posts one encrypted alert to a device's push service. */
-export async function deliverPush(subscription: any, payload: any, keys: any): Promise<Response> {
+export async function deliverPush(subscription: PushSubscriptionInfo, payload: PushPayload, keys: VapidKeys): Promise<Response> {
   const body = await encryptPayload(subscription, JSON.stringify(payload));
   return fetch(subscription.endpoint, {
     method: 'POST',
@@ -141,7 +189,7 @@ export async function deliverPush(subscription: any, payload: any, keys: any): P
  * categories (used by the test alert). Devices the push service reports as
  * gone (404/410) are removed.
  */
-export async function sendPushToEmail(base44: any, email: string, alert: any): Promise<any> {
+export async function sendPushToEmail(base44: Base44Client, email: string, alert: PushAlert): Promise<PushResult> {
   try {
     if (!email) return { delivered: 0, failed: 0 };
 
@@ -151,7 +199,7 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
 
     const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter({ owner_email: email });
     const targets = (subscriptions || []).filter(
-      (subscription: any) => !alert.category || subscription.categories?.[alert.category] !== false,
+      (subscription: PushSubscriptionInfo) => !alert.category || subscription.categories?.[alert.category] !== false,
     );
 
     let delivered = 0;
@@ -172,14 +220,16 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
 
         if (response.ok) {
           delivered += 1;
-          await base44.asServiceRole.entities.PushSubscription.update(subscription.id, {
-            last_alert_at: new Date().toISOString(),
-          }).catch(() => {});
+          if (subscription.id) {
+            await base44.asServiceRole.entities.PushSubscription.update(subscription.id, {
+              last_alert_at: new Date().toISOString(),
+            }).catch(() => {});
+          }
           continue;
         }
 
         failed += 1;
-        if (response.status === 404 || response.status === 410) {
+        if ((response.status === 404 || response.status === 410) && subscription.id) {
           await base44.asServiceRole.entities.PushSubscription.delete(subscription.id).catch(() => {});
         }
       } catch {
@@ -188,7 +238,8 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
     }
 
     return { delivered, failed, devices: targets.length };
-  } catch (error: any) {
-    return { delivered: 0, failed: 0, error: String(error?.message || error) };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    return { delivered: 0, failed: 0, error: errMessage };
   }
 }
