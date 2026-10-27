@@ -105,7 +105,7 @@ export default function Hub() {
               filter: 'blur(10px)',
             }}
           />
-          <HeroOrb companion={companion} recentFinds={recentFinds} size={isDesktop ? 420 : 232} />
+          <HeroOrb companion={companion} recentFinds={recentFinds} size={isDesktop ? 340 : 232} />
         </div></div>
 
       </div>

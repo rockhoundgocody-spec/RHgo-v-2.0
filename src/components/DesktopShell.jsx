@@ -42,7 +42,6 @@ export default function DesktopShell({ children }) {
 
       <div className="rhgo-desktop-workspace">
         <section className="rhgo-desktop-panel intel" aria-hidden>
-          <div className="orb-wrap"><div className="orb" /></div>
           <LandingSideHud side="left" />
         </section>
 
