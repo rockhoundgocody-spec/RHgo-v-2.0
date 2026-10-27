@@ -7,6 +7,8 @@ import { useSeoMeta } from '@/lib/useSeoMeta';
 import SeoJsonLd from '@/components/SeoJsonLd.jsx';
 import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
 import GrokBotBadge from '@/components/GrokBotBadge.jsx';
+import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
+import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
 
 const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/e29b0b8c6_generated_image.png';
 
@@ -29,12 +31,15 @@ export default function Landing() {
 
       {/* Geodesic orb background — drifting glowing spheres */}
       <GeodesicOrbBackground />
+      <HudGridBackdrop />
 
+      <div className="flex-1 w-full flex items-center justify-center gap-10 xl:gap-16 lg:px-10">
+      <LandingSideHud side="left" />
       {/* ── HERO ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md lg:max-w-xl relative z-10">
 
         {/* One photo of a real find */}
-        <div className="relative w-full max-w-xs mb-8">
+        <div className="relative w-full max-w-xs lg:max-w-lg mb-8">
           <div className="relative rounded-2xl overflow-hidden"
             style={{ boxShadow: '0 0 60px -10px rgba(159,232,208,0.15), 0 20px 60px -20px rgba(0,0,0,0.8)' }}>
             <img src={HERO_IMG} alt="Amethyst crystal specimen" className="w-full h-auto block" />
@@ -45,7 +50,7 @@ export default function Landing() {
         </div>
 
         {/* One line */}
-        <h1 className="text-white font-black text-[28px] leading-[1.1] text-center mb-2"
+        <h1 className="text-white font-black text-[28px] lg:text-5xl leading-[1.1] text-center mb-2"
           style={{ letterSpacing: '-0.02em' }}>
           Photograph it.<br />
           <span style={{ color: '#9FE8D0' }}>Get a field report.</span>
@@ -102,6 +107,8 @@ export default function Landing() {
             <Link to="/terms" className="hover:text-white/60 transition">Terms</Link>
           </div>
         </div>
+      </div>
+      <LandingSideHud side="right" />
       </div>
 
       {/* ── TINY FOOTER ── */}
