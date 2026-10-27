@@ -5,6 +5,20 @@ import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
+import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
+import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
+
+function useIsDesktop() {
+  const q = '(min-width: 1024px)';
+  const [d, setD] = useState(() => window.matchMedia(q).matches);
+  useEffect(() => {
+    const m = window.matchMedia(q);
+    const on = () => setD(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+  return d;
+}
 
 /**
  * Hub — the home screen, and nothing but Clover.
@@ -16,6 +30,7 @@ import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
  */
 export default function Hub() {
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
   const [user, setUser] = useState(null);
   const [companion, setCompanion] = useState(null);
   const [recentFinds, setRecentFinds] = useState([]);
@@ -80,9 +95,11 @@ export default function Hub() {
       style={{ background: '#0a0a14' }}
     >
       <HubAtmosphere />
+      <HudGridBackdrop />
 
-      <div className="relative z-10 w-full flex flex-col items-center px-4">
-        <div className="relative">
+      <div className="relative z-10 w-full flex items-center justify-center gap-10 xl:gap-16 px-4 lg:px-10">
+        <LandingSideHud side="left" />
+        <div className="relative flex-1 flex justify-center">
           <div
             className="absolute inset-0 -m-10 rounded-full pointer-events-none"
             style={{
@@ -90,8 +107,9 @@ export default function Hub() {
               filter: 'blur(10px)',
             }}
           />
-          <HeroOrb companion={companion} recentFinds={recentFinds} size={232} />
+          <HeroOrb companion={companion} recentFinds={recentFinds} size={isDesktop ? 420 : 232} />
         </div>
+        <LandingSideHud side="right" />
       </div>
     </div>
   );
