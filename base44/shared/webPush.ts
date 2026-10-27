@@ -58,8 +58,43 @@ async function hkdf(salt: Uint8Array, input: Uint8Array, info: Uint8Array, lengt
   return new Uint8Array(bits);
 }
 
+export interface PushSubscriptionRecord {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  categories?: Record<string, boolean>;
+  [key: string]: unknown;
+}
+
+export interface PushAlertPayload {
+  title: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+  category?: string;
+  [key: string]: unknown;
+}
+
+export interface VapidKeys {
+  publicKey: string;
+  privateKey: string;
+}
+
+export interface Base44ClientServiceRole {
+  asServiceRole: {
+    entities: {
+      PushSubscription: {
+        filter(query: Record<string, unknown>): Promise<PushSubscriptionRecord[]>;
+        update(id: string, data: Record<string, unknown>): Promise<unknown>;
+        delete(id: string): Promise<unknown>;
+      };
+    };
+  };
+}
+
 /** Encrypts one alert for one device (RFC 8291, aes128gcm). */
-export async function encryptPayload(subscription: any, payloadText: string): Promise<Uint8Array> {
+export async function encryptPayload(subscription: PushSubscriptionRecord, payloadText: string): Promise<Uint8Array> {
   const devicePublic = b64urlToBytes(subscription.p256dh);
   const authSecret = b64urlToBytes(subscription.auth);
 
@@ -119,7 +154,11 @@ export async function vapidAuthorization(endpoint: string, publicKey: string, pr
 }
 
 /** Posts one encrypted alert to a device's push service. */
-export async function deliverPush(subscription: any, payload: any, keys: any): Promise<Response> {
+export async function deliverPush(
+  subscription: PushSubscriptionRecord,
+  payload: PushAlertPayload,
+  keys: VapidKeys,
+): Promise<Response> {
   const body = await encryptPayload(subscription, JSON.stringify(payload));
   return fetch(subscription.endpoint, {
     method: 'POST',
@@ -141,17 +180,23 @@ export async function deliverPush(subscription: any, payload: any, keys: any): P
  * categories (used by the test alert). Devices the push service reports as
  * gone (404/410) are removed.
  */
-export async function sendPushToEmail(base44: any, email: string, alert: any): Promise<any> {
+export async function sendPushToEmail(
+  base44: Base44ClientServiceRole,
+  email: string,
+  alert: PushAlertPayload,
+): Promise<{ delivered: number; failed: number; devices?: number; skipped?: string; error?: string }> {
   try {
     if (!email) return { delivered: 0, failed: 0 };
 
-    const publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    const privateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    // @ts-ignore Deno global in edge functions
+    const publicKey = typeof Deno !== 'undefined' ? Deno.env.get('VAPID_PUBLIC_KEY') : undefined;
+    // @ts-ignore Deno global in edge functions
+    const privateKey = typeof Deno !== 'undefined' ? Deno.env.get('VAPID_PRIVATE_KEY') : undefined;
     if (!publicKey || !privateKey) return { delivered: 0, failed: 0, skipped: 'push keys not configured' };
 
     const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter({ owner_email: email });
     const targets = (subscriptions || []).filter(
-      (subscription: any) => !alert.category || subscription.categories?.[alert.category] !== false,
+      (subscription: PushSubscriptionRecord) => !alert.category || subscription.categories?.[alert.category] !== false,
     );
 
     let delivered = 0;
@@ -188,7 +233,8 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
     }
 
     return { delivered, failed, devices: targets.length };
-  } catch (error: any) {
-    return { delivered: 0, failed: 0, error: String(error?.message || error) };
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    return { delivered: 0, failed: 0, error: String(err?.message || error) };
   }
 }
