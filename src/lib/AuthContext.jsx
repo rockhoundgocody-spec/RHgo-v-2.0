@@ -69,6 +69,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    const run = ++authRunId;
+    const isCurrentRun = () => run === authRunId;
     setIsLoadingAuth(true);
     let settled = false;
     // Safety net only: if the session check truly never settles (hung network,
@@ -103,11 +105,15 @@ export const AuthProvider = ({ children }) => {
       } catch { /* localStorage may be blocked by privacy settings */ }
 
       const currentUser = await base44.auth.me();
+      // A check that began before the latest sign-in is answering about an older
+      // identity — drop its result instead of overwriting the fresh session.
+      if (!isCurrentRun()) return;
       setUser(currentUser);
       setIsAuthenticated(true);
       setAuthError((prev) => (prev?.type === 'user_not_registered' ? null : prev));
     } catch (error) {
       /* visitor is simply logged out */
+      if (!isCurrentRun()) return;
       setUser(null);
       setIsAuthenticated(false);
       // A signed-in account that isn't registered for this app is the one
@@ -118,8 +124,12 @@ export const AuthProvider = ({ children }) => {
     } finally {
       settled = true;
       clearTimeout(timer);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
+      // Only the newest check clears the loading gate; a superseded run must not
+      // flip it off while the fresh session is still resolving.
+      if (isCurrentRun()) {
+        setAuthChecked(true);
+        setIsLoadingAuth(false);
+      }
     }
   };
 
