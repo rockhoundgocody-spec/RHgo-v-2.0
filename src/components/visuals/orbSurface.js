@@ -25,6 +25,7 @@ export const fragmentShader = `
   uniform float uTime;
   uniform float uAmber;
   uniform float uEnergy;
+  uniform float uMercury;
   varying vec3 vPoint;
   varying vec3 vView;
   void main() {
@@ -50,15 +51,21 @@ export const fragmentShader = `
     color += amber * strip * .95 + amber * pool * (.12 + .12 * bands);
     color += frost * pow(bands, 18.0) * .17;
     color += tint * uEnergy * (.18 * rim + .22 * pool);
+    if (uMercury > .5) {
+      // Smooth chrome: no bands, just flowing reflections with an iridescent rim.
+      vec3 sheen = .5 + .5 * cos(6.2831 * (rim * .9 + flow * .12 + vec3(0., .33, .67)));
+      color = vec3(.05, .06, .07) + vec3(.75, .8, .85) * pow(.5 + .5 * flow, 3.0) * (.25 + diffuse * .6);
+      color += vec3(1.) * softbox * 1.1 + sheen * rim * .85 + amber * strip * .5;
+    }
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
 
-export default function createOrbSurface(amber = .4) {
+export default function createOrbSurface(amber = .4, mercury = false) {
   return new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uAmber: { value: amber }, uEnergy: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uAmber: { value: amber }, uEnergy: { value: 0 }, uMercury: { value: mercury ? 1 : 0 } },
     vertexShader, fragmentShader,
   });
 }

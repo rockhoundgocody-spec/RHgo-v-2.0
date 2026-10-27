@@ -5,7 +5,7 @@ const PLACEMENTS = [[.02, .17, 230, .25], [.88, .63, 150, .2], [.88, .34, 260, .
 
 // getLive (optional) returns { energy: 0-1, amber: 0-1 } so Clover's surface
 // reacts to listening / speaking while sharing the background's motion model.
-export default function createOrbScene(canvas, field, getLive) {
+export default function createOrbScene(canvas, field, getLive, mercury = false) {
   let energy = 0;
   const context = canvas.getContext('webgl2', { alpha: true, antialias: true, powerPreference: 'low-power' });
   if (!context) return null;
@@ -23,7 +23,7 @@ export default function createOrbScene(canvas, field, getLive) {
     uniforms: { strength: { value: .7 } },
   });
   const orbs = (field ? PLACEMENTS : [[.5, .44, 0, .55]]).map((placement, i) => {
-    const material = createOrbSurface(placement[3]);
+    const material = createOrbSurface(placement[3], mercury);
     const mesh = new THREE.Mesh(geometry, material);
     const shadow = new THREE.Mesh(shadowGeometry, shadowMaterial.clone());
     shadow.position.z = -100;

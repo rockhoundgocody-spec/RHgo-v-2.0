@@ -3,16 +3,16 @@ import createOrbScene from '@/components/visuals/orbScene';
 import attachOrbMotion from '@/components/visuals/orbMotion';
 import '@/components/visuals/liquidCrystalOrb.css';
 
-export default function LiquidCrystalOrb({ size = 144, field = false, getLive }) {
+export default function LiquidCrystalOrb({ size = 144, field = false, getLive, mercury = false }) {
   const host = useRef(null);
   const canvas = useRef(null);
   const live = useRef(getLive);
   live.current = getLive;
   useEffect(() => {
-    const scene = createOrbScene(canvas.current, field, () => live.current?.());
+    const scene = createOrbScene(canvas.current, field, () => live.current?.(), mercury);
     if (!scene) return;
     return attachOrbMotion(host.current, canvas.current, scene);
-  }, [field]);
+  }, [field, mercury]);
   return (
     <div ref={host} aria-hidden="true" data-orb-renderer="fallback"
       className={field ? 'liquid-crystal-scene liquid-crystal-field' : 'liquid-crystal-scene'}
