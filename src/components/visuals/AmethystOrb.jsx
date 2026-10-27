@@ -60,6 +60,8 @@ export default function AmethystOrb({
   const haloRef = useRef(null);
   const auraRef = useRef(null);
   const auraInnerRef = useRef(null);
+  const mercuryRef = useRef(null);
+  const sheenRef = useRef(null);
   const reduceMotion = useReducedMotion();
   const visible = usePageVisible();
 
@@ -88,6 +90,8 @@ export default function AmethystOrb({
       const spec = getSpectrum ? getSpectrum() : { bass: 0, mid: 0, treble: 0 };
       const bass = spec.bass || 0;
       const treble = spec.treble || 0;
+      // Live voice level — her mercury skin answers the voice itself, not just the state
+      const lvl = Math.min(1, Math.max(a * 1.7, bass * 0.6));
 
       // Lerp toward target state intensity for smooth transitions
       const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
@@ -174,7 +178,7 @@ export default function AmethystOrb({
       }
 
       // Halo + aura also ease for a cohesive liquid follow
-      const tHaloO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.22;
+      const tHaloO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.22 + lvl * 0.18;
       const tHaloS = 1 + idlePulse * 2 + a * 0.18 + bass * 0.1 + proxBoost * 0.06;
       const tAuraO = 0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2 + proxBoost * 0.3;
       const tAuraS = 1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06 + proxBoost * 0.04;
@@ -196,6 +200,27 @@ export default function AmethystOrb({
       }
       if (auraInnerRef.current) {
         auraInnerRef.current.style.opacity = String(p.auraIO);
+      }
+
+      // ── Liquid-mercury skin ──────────────────────────────────────────
+      // Two layers of molten silver flow across the shell: a slow swirl and a
+      // travelling sheen band. The voice level drives both — louder speech
+      // brightens, widens and quickens the flow, so the pulse tracks the audio.
+      const swirl = reduceMotion ? 0 : t * 11 + lvl * 22;
+      if (mercuryRef.current) {
+        mercuryRef.current.style.opacity = String(0.3 + lvl * 0.5);
+        mercuryRef.current.style.transform = reduceMotion
+          ? 'none'
+          : `rotate(${swirl}deg) scale(${1.02 + lvl * 0.06})`;
+      }
+      if (sheenRef.current) {
+        // A band that sweeps across her surface, always in motion, breathing with the voice
+        const sweep = reduceMotion ? 0 : ((t * 0.28) % 1) * 2 - 1;
+        const drift = reduceMotion ? 0 : Math.sin(t * 0.9) * 0.06;
+        sheenRef.current.style.opacity = String(0.2 + lvl * 0.62);
+        sheenRef.current.style.transform = reduceMotion
+          ? `scale(${1 + lvl * 0.12})`
+          : `translate(${sweep * size * 0.85}px, ${drift * size}px) scale(${1 + lvl * 0.22}, ${1 + lvl * 0.45})`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -296,6 +321,35 @@ export default function AmethystOrb({
           draggable={false}
           className="absolute inset-0 w-full h-full object-contain select-none"
           style={{ transform: 'scale(1.22)' }}
+        />
+
+        {/* LIQUID MERCURY SKIN — molten silver flowing across her shell.
+            Swirls endlessly; brightens, widens and quickens with the voice. */}
+        <div
+          ref={mercuryRef}
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            mixBlendMode: 'soft-light',
+            opacity: 0.3,
+            willChange: 'transform, opacity',
+            background: 'conic-gradient(from 200deg, transparent 0deg, hsla(0,0%,100%,0.85) 34deg, hsla(190,100%,88%,0.55) 62deg, transparent 108deg, hsla(285,70%,90%,0.45) 168deg, transparent 232deg, hsla(45,100%,88%,0.6) 296deg, transparent 360deg)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 60%, transparent 78%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 60%, transparent 78%)',
+          }}
+        />
+        <div
+          ref={sheenRef}
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            mixBlendMode: 'screen',
+            opacity: 0.28,
+            willChange: 'transform, opacity',
+            background: 'linear-gradient(104deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
+          }}
         />
 
         {/* Frost rim — the hairline edge that seats her in the glass */}
