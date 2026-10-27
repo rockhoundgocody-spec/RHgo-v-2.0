@@ -3,7 +3,10 @@ import createOrbSurface from '@/components/visuals/orbSurface';
 
 const PLACEMENTS = [[.02, .17, 230, .25], [.88, .63, 150, .2], [.88, .34, 260, .6], [.16, .84, 120, .85], [.83, .06, 150, .35]];
 
-export default function createOrbScene(canvas, field) {
+// getLive (optional) returns { energy: 0-1, amber: 0-1 } so Clover's surface
+// reacts to listening / speaking while sharing the background's motion model.
+export default function createOrbScene(canvas, field, getLive) {
+  let energy = 0;
   const context = canvas.getContext('webgl2', { alpha: true, antialias: true, powerPreference: 'low-power' });
   if (!context) return null;
   const renderer = new THREE.WebGLRenderer({ canvas, context, alpha: true, antialias: true });
@@ -38,10 +41,14 @@ export default function createOrbScene(canvas, field) {
     });
   }
   function draw(time, tilt, reduced) {
+    const live = getLive?.();
+    if (live) energy += ((live.energy || 0) - energy) * .12;
     orbs.forEach(o => {
       const t = reduced ? o.phase : time + o.phase;
       const lift = reduced ? 0 : Math.sin(t * .9) * o.radius * .12;
-      const breath = reduced ? 1 : 1 + .035 * Math.sin(t * 1.5);
+      const breath = reduced ? 1 : 1 + .035 * Math.sin(t * 1.5) + energy * (.05 + .03 * Math.sin(t * 7));
+      o.mesh.material.uniforms.uEnergy.value = energy;
+      if (live?.amber != null) o.mesh.material.uniforms.uAmber.value += (live.amber - o.mesh.material.uniforms.uAmber.value) * .06;
       o.mesh.scale.setScalar(o.radius * breath);
       o.mesh.position.set(o.x + tilt.x * o.radius * .13, o.y + lift - tilt.y * o.radius * .1, 0);
       o.mesh.rotation.set(.12 + tilt.y * .2 + (reduced ? 0 : Math.sin(t * .5) * .12), tilt.x * .35 + (reduced ? 0 : Math.sin(t * .6) * .24), -.12);

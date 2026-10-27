@@ -4,13 +4,14 @@ import * as THREE from 'three';
 // from the deformed surface normal, not painted onto a circular image.
 export const vertexShader = `
   uniform float uTime;
+  uniform float uEnergy;
   varying vec3 vPoint;
   varying vec3 vView;
   void main() {
     vec3 p = position;
     float wave = sin(p.y * 5.0 + uTime * 1.2) * sin(p.x * 4.0 - uTime * .8)
                + .45 * sin(p.z * 7.0 + p.y * 3.0 + uTime);
-    p *= 1.0 + .025 * wave;
+    p *= 1.0 + (.025 + .05 * uEnergy) * wave;
     float hollow = exp(-dot(p.xy, p.xy) * 5.5) * smoothstep(.1, .8, p.z);
     p.z -= .62 * hollow;
     vPoint = p;
@@ -23,6 +24,7 @@ export const vertexShader = `
 export const fragmentShader = `
   uniform float uTime;
   uniform float uAmber;
+  uniform float uEnergy;
   varying vec3 vPoint;
   varying vec3 vView;
   void main() {
@@ -47,6 +49,7 @@ export const fragmentShader = `
     color += tint * rim * .72 + vec3(.9, .98, 1.0) * softbox * .95;
     color += amber * strip * .95 + amber * pool * (.12 + .12 * bands);
     color += frost * pow(bands, 18.0) * .17;
+    color += tint * uEnergy * (.18 * rim + .22 * pool);
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -55,7 +58,7 @@ export const fragmentShader = `
 
 export default function createOrbSurface(amber = .4) {
   return new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uAmber: { value: amber } },
+    uniforms: { uTime: { value: 0 }, uAmber: { value: amber }, uEnergy: { value: 0 } },
     vertexShader, fragmentShader,
   });
 }

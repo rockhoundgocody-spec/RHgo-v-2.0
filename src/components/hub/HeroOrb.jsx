@@ -4,7 +4,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { Check } from 'lucide-react';
-const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
+import LiquidCrystalOrb from '@/components/visuals/LiquidCrystalOrb';
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
@@ -112,19 +112,17 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
               <span className="clover-listen-ring" style={{ animationDelay: '0.7s' }} />
             </>
           )}
-          <React.Suspense fallback={<div style={{ width: size, height: size }} />}>
-            <AmethystOrb
-              size={size}
-              orbState={orbState}
-              speaking={clover.phase === 'speaking'}
-              listening={clover.phase === 'listening'}
-              thinking={clover.phase === 'thinking'}
-              level={companion?.level || 1}
-              getInteraction={getInteraction}
-              getAmplitude={clover.getAmplitude}
-              getSpectrum={clover.getSpectrum}
-            />
-          </React.Suspense>
+          <LiquidCrystalOrb
+            size={size}
+            getLive={() => {
+              const amp = Math.min(1, Math.max(0, Number(clover.getAmplitude?.()) || 0));
+              const base = { listening: .45, speaking: .5, thinking: .3, blessing: .8 }[orbState] || 0;
+              return {
+                energy: Math.min(1, base + amp * .6),
+                amber: orbState === 'thinking' || orbState === 'blessing' ? .85 : orbState === 'listening' ? .25 : .55,
+              };
+            }}
+          />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples((rs) => rs.filter((rp) => rp.id !== r.id))} />
           ))}
