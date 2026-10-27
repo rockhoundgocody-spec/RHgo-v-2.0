@@ -63,14 +63,47 @@ export default function AmethystOrb({
   const auraInnerRef = useRef(null);
   const mercuryRef = useRef(null);
   const sheenRef = useRef(null);
+  const shadowRef = useRef(null);
+  // Phone tilt (-1 … 1 per axis) — she leans and drifts with the device
+  const tiltRef = useRef({ x: 0, y: 0 });
   const reduceMotion = useReducedMotion();
   const visible = usePageVisible();
+
+  // Phone tilt — she leans and drifts as the device turns, so she reads as a
+  // body floating inside the screen rather than a picture stuck onto it.
+  useEffect(() => {
+    if (reduceMotion) return;
+    const onOrient = (e) => {
+      if (e.gamma == null && e.beta == null) return;
+      tiltRef.current.x = Math.max(-1, Math.min(1, (e.gamma || 0) / 32));
+      tiltRef.current.y = Math.max(-1, Math.min(1, ((e.beta || 0) - 40) / 32));
+    };
+    const DOE = window.DeviceOrientationEvent;
+    let wantsGesture = false;
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      wantsGesture = true; // iOS needs a grant from a user gesture
+    } else if (DOE) {
+      window.addEventListener('deviceorientation', onOrient, true);
+    }
+    const askForTilt = async () => {
+      try {
+        if ((await DOE.requestPermission()) === 'granted') {
+          window.addEventListener('deviceorientation', onOrient, true);
+        }
+      } catch { /* declined — the pointer lean still applies */ }
+    };
+    if (wantsGesture) window.addEventListener('pointerdown', askForTilt, { once: true, passive: true });
+    return () => {
+      window.removeEventListener('deviceorientation', onOrient, true);
+      if (wantsGesture) window.removeEventListener('pointerdown', askForTilt);
+    };
+  }, [reduceMotion]);
 
   // Smooth state transitions — lerp current config toward target
   const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
   // Eased transform values — the orb glides toward its target pose each frame
   // instead of snapping, giving the liquid-metal its buttery follow-through.
-  const poseRef = useRef({ tx: 0, ty: 0, scale: 1, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
+  const poseRef = useRef({ tx: 0, ty: 0, scale: 1, rot: 0, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
 
   useEffect(() => {
     if (!visible) return;
@@ -101,9 +134,15 @@ export default function AmethystOrb({
       const { pulseScale, auraScale } = lerpedState.current;
 
       // Breathing speed varies by state
-      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.7;
-      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
-      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
+      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.85;
+      // Her breath is what the eye reads as alive — deep enough to see at rest
+      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.035 * pulseScale;
+      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.14 * auraScale;
+      // Levitation — she hovers above the surface instead of sitting on it
+      const bob = reduceMotion ? 0 : Math.sin(t * 0.55) * size * 0.022;
+      const bob01 = Math.sin(t * 0.55) * 0.5 + 0.5;
+      // Device tilt — she drifts and leans as the phone turns
+      const tilt = reduceMotion ? { x: 0, y: 0 } : tiltRef.current;
 
       // ── Liquid-metal interaction layer ──────────────────────────────
       // Always-on organic wobble (two offset sine waves) gives the orb a
@@ -159,8 +198,9 @@ export default function AmethystOrb({
       const velShimmer = ix ? ix.velocity * 0.025 : 0;
 
       // Target pose for this frame
-      const targetTx = leanX + wobX * size;
-      const targetTy = leanY + wobY * size + driftY;
+      const targetTx = leanX + wobX * size + tilt.x * size * 0.05;
+      const targetTy = leanY + wobY * size + driftY + bob + tilt.y * size * 0.035;
+      const targetRot = tilt.x * 2.5;
       const targetScale = scaleBase - squish + velShimmer;
       const targetScaleY = scaleBase - squish * 0.7 + velShimmer;
 
@@ -171,11 +211,17 @@ export default function AmethystOrb({
       p.tx += (targetTx - p.tx) * 0.18;
       p.ty += (targetTy - p.ty) * 0.18;
       p.scale += (targetScale - p.scale) * 0.22;
+      p.rot += (targetRot - p.rot) * 0.12;
       const pScaleY = p.scale + (targetScaleY - targetScale) * 0.5;
 
       if (wrapRef.current) {
         wrapRef.current.style.transform =
-          `translate(${p.tx}px, ${p.ty}px) scale(${p.scale}, ${pScaleY})`;
+          `translate(${p.tx}px, ${p.ty}px) rotate(${p.rot}deg) scale(${p.scale}, ${pScaleY})`;
+      }
+      // Ground shadow answers the float: higher up, smaller and softer
+      if (shadowRef.current) {
+        shadowRef.current.style.opacity = String(0.5 - bob01 * 0.2);
+        shadowRef.current.style.transform = `scaleX(${0.9 + (1 - bob01) * 0.16})`;
       }
 
       // Halo + aura also ease for a cohesive liquid follow
@@ -235,13 +281,25 @@ export default function AmethystOrb({
   return (
     <div
       ref={wrapRef}
-      className={cn(
-        'relative transition-transform isolate',
-        !getAmplitude && (effectiveState === 'speaking' ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
-        className
-      )}
+      className={cn('relative isolate', className)}
       style={{ width: size, height: size, willChange: 'transform' }}
     >
+      {/* Ground shadow — the contact patch that sells the float */}
+      <div
+        ref={shadowRef}
+        aria-hidden
+        className="pointer-events-none absolute rounded-[50%] blur-xl"
+        style={{
+          left: '16%',
+          right: '16%',
+          bottom: `-${Math.round(size * 0.18)}px`,
+          height: Math.round(size * 0.2),
+          background: 'radial-gradient(ellipse at 50% 50%, hsla(265,60%,3%,0.8) 0%, hsla(265,60%,5%,0.4) 52%, transparent 76%)',
+          opacity: 0.45,
+          willChange: 'transform, opacity',
+        }}
+      />
+
       {/* HOVERING AFTERGLOW — outer wide bloom, color shifts per state */}
       <div
         ref={auraRef}
@@ -308,7 +366,12 @@ export default function AmethystOrb({
 
       <div
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
-        style={{ boxShadow: cfg.boxShadow, background: '#FBFDFC' }}
+        style={{
+          // Concave bowl: dark along the top edge, under-lit along the bottom,
+          // so the shell reads as glass with real depth
+          boxShadow: `${cfg.boxShadow}, inset 0 ${Math.round(size * 0.11)}px ${Math.round(size * 0.18)}px -${Math.round(size * 0.1)}px hsla(210,75%,6%,0.62), inset 0 -${Math.round(size * 0.1)}px ${Math.round(size * 0.16)}px -${Math.round(size * 0.11)}px hsla(45,100%,84%,0.3)`,
+          background: '#FBFDFC',
+        }}
       >
         {/* Her form — the prismatic shell she wears: iridescent liquid glass
             over a molten amber core, cut from black volcanic glass. Held just
@@ -350,6 +413,24 @@ export default function AmethystOrb({
             background: `linear-gradient(${90 + FLOW_ANGLE_DEG}deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)`,
             WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
             maskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
+          }}
+        />
+
+        {/* Specular reflection — the screen's light landing on her glass */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            left: '21%',
+            top: '13%',
+            width: '34%',
+            height: '19%',
+            borderRadius: '9999px',
+            background: 'radial-gradient(ellipse at 50% 50%, hsla(0,0%,100%,0.85) 0%, hsla(190,100%,95%,0.45) 42%, transparent 74%)',
+            filter: 'blur(3px)',
+            transform: 'rotate(-26deg)',
+            mixBlendMode: 'screen',
+            opacity: 0.5,
           }}
         />
 
