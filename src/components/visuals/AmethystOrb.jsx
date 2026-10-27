@@ -1,39 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { lazyPart } from '@/lib/lazyPart';
-import SphereVolume from './SphereVolume.jsx';
 import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
 
 /**
- * Two-layer black opal orb:
- *   Layer 1 (main): Black opal core with iridescent liquid-gas fire
- *   Layer 2 (overlay): Low-opacity amethyst gas shell for depth + brand tint
+ * Clover — her visual form. A prismatic shell of iridescent liquid glass
+ * wrapped around a molten amber core, cut from black volcanic glass.
+ * The glow layers, growth rings and liquid motion around her are unchanged.
  */
-// CSS black-opal stand-in: shown while the WebGL/WebGPU shader chunk loads,
-// and permanently if it can't (offline, no GPU). Keeps Three.js (~0.5 MB)
-// out of the app's first download.
-function OpalFallback() {
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0"
-      style={{
-        background:
-          'radial-gradient(circle at 32% 30%, hsla(190,100%,62%,0.55) 0%, transparent 38%),' +
-          'radial-gradient(circle at 70% 62%, hsla(330,90%,62%,0.45) 0%, transparent 42%),' +
-          'radial-gradient(circle at 44% 76%, hsla(45,100%,62%,0.32) 0%, transparent 36%),' +
-          'radial-gradient(circle at 62% 28%, hsla(160,90%,55%,0.35) 0%, transparent 30%),' +
-          'radial-gradient(circle at 50% 50%, hsl(265 55% 11%) 0%, hsl(250 50% 4%) 100%)',
-      }}
-    />
-  );
-}
-const BlackOpalShader = lazyPart(() => import('./BlackOpalShader.jsx'), OpalFallback);
-const WebGPUOpalShader = lazyPart(() => import('./WebGPUOpalShader.jsx'), OpalFallback);
-const WebGPUFluidOverlay = lazyPart(() => import('./WebGPUFluidOverlay.jsx'));
+const CLOVER_SHELL_IMG =
+  'https://media.base44.com/images/public/69f35dd14650b54681c835ec/0d03d24e8_generated_9797e11b.png';
 
 // orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
 const STATE_CONFIG = {
@@ -84,11 +62,7 @@ export default function AmethystOrb({
   const auraInnerRef = useRef(null);
   const reduceMotion = useReducedMotion();
   const visible = usePageVisible();
-  // Try WebGPU first; fall back to WebGL shader if unsupported / init fails.
-  // Reduced-motion users get the lighter WebGL path AND no fluid overlay.
-  const [useWebGPU, setUseWebGPU] = useState(
-    typeof navigator !== 'undefined' && !!navigator.gpu && !detectInitialReduce()
-  );
+
   // Smooth state transitions — lerp current config toward target
   const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
   // Eased transform values — the orb glides toward its target pose each frame
@@ -310,122 +284,36 @@ export default function AmethystOrb({
 
       <div
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
-        style={{ boxShadow: cfg.boxShadow }}
+        style={{ boxShadow: cfg.boxShadow, background: '#FBFDFC' }}
       >
-        {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
-            WebGPU + TSL when available; WebGL fallback otherwise. */}
-        <div className="absolute inset-0">
-          {useWebGPU ? (
-            <WebGPUOpalShader
-              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
-              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
-              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-              onUnsupported={() => setUseWebGPU(false)}
-            />
-          ) : (
-            <BlackOpalShader
-              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
-              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
-              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-            />
-          )}
-        </div>
-
-        {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only).
-            Disabled entirely under reduced-motion or when speaking is off
-            on idle Hub view to save GPU. */}
-        {useWebGPU && !reduceMotion && speaking && (
-          <div className="absolute inset-0">
-            <WebGPUFluidOverlay
-              resolution={96}
-              intensity={1.4}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-              onUnsupported={() => setUseWebGPU(false)}
-            />
-          </div>
-        )}
-
-        {/* Multi-color mineral shimmer wash — bright cyan/teal/rose/gold instead of purple tint */}
-        <div
-          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30"
-          style={{
-            background:
-              'radial-gradient(circle at 35% 30%, hsla(43,47%,91%,0.22) 0%, hsla(283,38%,80%,0.18) 40%, hsla(165,43%,69%,0.16) 70%, hsla(43,47%,91%,0.10) 100%)',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-30"
-          style={{
-            background:
-              'radial-gradient(circle at 65% 70%, hsla(283,38%,80%,0.24) 0%, hsla(165,43%,69%,0.18) 35%, hsla(43,47%,91%,0.14) 60%, transparent 80%)',
-          }}
+        {/* Her form — the prismatic shell she wears: iridescent liquid glass
+            over a molten amber core, cut from black volcanic glass. Held just
+            inside the rim so the whole mineral silhouette stays visible at any
+            size. */}
+        <img
+          src={CLOVER_SHELL_IMG}
+          alt="Clover"
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-contain select-none"
+          style={{ transform: 'scale(1.22)' }}
         />
 
-        {/* Prismatic refraction ring & caustics */}
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full"
-          style={{
-            background: 'radial-gradient(circle, transparent 72%, hsla(43,47%,91%,0.35) 86%, hsla(283,38%,80%,0.3) 93%, hsla(165,43%,69%,0.4) 98%, transparent 100%)',
-            mixBlendMode: 'screen',
-          }}
-        />
-
-        {/* Volumetric sphere shading — pure CSS, no WebGL context */}
-        <SphereVolume />
-
-        {/* PHOTON-SPHERE RING — luminous annulus with dark center.
-            Keeps existing shader colors visible in the ring band and the
-            outer rim; the center is masked to the page background so the orb
-            reads as light orbiting a dark core. Drift/breathing motion is
-            untouched — these are pure pointer-events-none overlays. */}
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, #0a0a14 0%, #0a0a14 12%, rgba(10,10,20,0.45) 19%, transparent 26%)',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full"
-          style={{
-            background: `radial-gradient(circle, transparent 24%, ${cfg.haloBase} 31%, ${cfg.auraBase} 37%, transparent 45%)`,
-            mixBlendMode: 'screen',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full opacity-50"
-          style={{
-            background: `conic-gradient(from 0deg, transparent 0deg, ${cfg.haloBase} 30deg, transparent 60deg, ${cfg.auraBase} 120deg, transparent 150deg, ${cfg.haloBase} 240deg, transparent 270deg, ${cfg.auraBase} 330deg, transparent 360deg)`,
-            mixBlendMode: 'screen',
-          }}
-        />
-
-        {/* CONCAVE WELL — she reads as set into the glass, not stuck on it:
-            shadow pools at the top inner edge, light catches the bottom rim,
-            and a hairline lip traces the edge. Painted above every orb layer
-            so the recess lands over the shader, never behind it. */}
+        {/* Frost rim — the hairline edge that seats her in the glass */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
-            background:
-              'linear-gradient(to bottom, hsla(250,70%,2%,0.42) 0%, hsla(250,70%,3%,0.12) 24%, transparent 44%, transparent 76%, hsla(190,95%,80%,0.12) 100%)',
-            boxShadow: 'inset 0 16px 28px -14px hsla(250,70%,2%,0.9), inset 0 -14px 24px -16px hsla(190,95%,82%,0.55), inset 0 0 0 1px hsla(0,0%,100%,0.06)',
+            boxShadow: 'inset 0 0 0 1px hsla(0,0%,100%,0.55), inset 0 14px 26px -16px hsla(210,70%,12%,0.45)',
           }}
         />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <div className="text-white/95 font-semibold tracking-wider text-lg glow-amethyst">
+            <div className="font-semibold tracking-wider text-lg" style={{ color: '#0a0a14' }}>
               {label}
             </div>
             {sublabel && (
-              <div className="text-amethyst/80 text-xs uppercase tracking-[0.3em] mt-1">
+              <div className="text-xs uppercase tracking-[0.3em] mt-1" style={{ color: 'hsla(210,25%,28%,0.85)' }}>
                 {sublabel}
               </div>
             )}
@@ -434,12 +322,4 @@ export default function AmethystOrb({
       </div>
     </div>
   );
-}
-
-function detectInitialReduce() {
-  if (typeof window === 'undefined') return false;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
-  const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4;
-  const lowCores = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
-  return !!(lowMem || lowCores);
 }
