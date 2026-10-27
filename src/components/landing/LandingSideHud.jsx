@@ -41,7 +41,7 @@ function HudCard({ icon: Icon, title, body, delay }) {
 
 export default function LandingSideHud({ side }) {
   return (
-    <aside className="hidden lg:flex flex-col justify-center gap-5 w-72 xl:w-80 relative z-10">
+    <aside className="flex flex-col justify-center gap-4 w-full relative z-10">
       {SIDES[side].map((c, i) => <HudCard key={c.title} {...c} delay={i * .4 + (side === 'right' ? .2 : 0)} />)}
     </aside>
   );

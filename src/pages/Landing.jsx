@@ -7,7 +7,6 @@ import { useSeoMeta } from '@/lib/useSeoMeta';
 import SeoJsonLd from '@/components/SeoJsonLd.jsx';
 import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
 import GrokBotBadge from '@/components/GrokBotBadge.jsx';
-import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
 import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
 
 const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835ec/e29b0b8c6_generated_image.png';
@@ -34,7 +33,7 @@ export default function Landing() {
       <HudGridBackdrop />
 
       <div className="flex-1 w-full flex items-center justify-center gap-10 xl:gap-16 lg:px-10">
-      <LandingSideHud side="left" />
+
       {/* ── HERO ── */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md lg:max-w-xl relative z-10">
 
@@ -108,7 +107,7 @@ export default function Landing() {
           </div>
         </div>
       </div>
-      <LandingSideHud side="right" />
+
       </div>
 
       {/* ── TINY FOOTER ── */}

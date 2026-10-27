@@ -5,7 +5,6 @@ import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
-import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
 import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
 
 function useIsDesktop() {
@@ -98,8 +97,7 @@ export default function Hub() {
       <HudGridBackdrop />
 
       <div className="relative z-10 w-full flex items-center justify-center gap-10 xl:gap-16 px-4 lg:px-10">
-        <LandingSideHud side="left" />
-        <div className="relative flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center"><div className="relative">
           <div
             className="absolute inset-0 -m-10 rounded-full pointer-events-none"
             style={{
@@ -108,8 +106,8 @@ export default function Hub() {
             }}
           />
           <HeroOrb companion={companion} recentFinds={recentFinds} size={isDesktop ? 420 : 232} />
-        </div>
-        <LandingSideHud side="right" />
+        </div></div>
+
       </div>
     </div>
   );

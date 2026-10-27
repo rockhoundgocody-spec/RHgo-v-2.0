@@ -1,5 +1,6 @@
 import React from 'react';
 import DesktopDock from '@/components/nav/DesktopDock';
+import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
 
 /**
  * DesktopShell — "Gemological Observational Terminal"
@@ -42,13 +43,7 @@ export default function DesktopShell({ children }) {
       <div className="rhgo-desktop-workspace">
         <section className="rhgo-desktop-panel intel" aria-hidden>
           <div className="orb-wrap"><div className="orb" /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
+          <LandingSideHud side="left" />
         </section>
 
         <section className="rhgo-desktop-panel center">
@@ -56,15 +51,7 @@ export default function DesktopShell({ children }) {
         </section>
 
         <section className="rhgo-desktop-panel log" aria-hidden>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
+          <LandingSideHud side="right" />
         </section>
       </div>
 
