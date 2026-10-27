@@ -53,9 +53,17 @@ export const fragmentShader = `
     color += tint * uEnergy * (.18 * rim + .22 * pool);
     if (uMercury > .5) {
       // Smooth chrome: no bands, just flowing reflections with an iridescent rim.
-      vec3 sheen = .5 + .5 * cos(6.2831 * (rim * .9 + flow * .12 + vec3(0., .33, .67)));
-      color = vec3(.05, .06, .07) + vec3(.75, .8, .85) * pow(.5 + .5 * flow, 3.0) * (.25 + diffuse * .6);
-      color += vec3(1.) * softbox * 1.1 + sheen * rim * .85 + amber * strip * .5;
+      // Thin-film rainbow that travels around the whole orb with the flow.
+      float ang = atan(vPoint.y, vPoint.x) / 6.2831;
+      float film = ang + uTime * .07 + flow * .22 + dot(n, eye) * .6;
+      vec3 sheen = .5 + .5 * cos(6.2831 * (film + vec3(0., .33, .67)));
+      sheen = pow(sheen, vec3(1.6)) * 1.25;
+      float fres = .08 + .92 * pow(1.0 - max(dot(n, eye), 0.0), 3.0);
+      vec3 chrome = vec3(.04, .045, .055) + vec3(.8, .84, .9) * pow(.5 + .5 * flow, 4.0) * (.2 + diffuse * .7);
+      color = mix(chrome, chrome * .4 + sheen * .85, .55 + .35 * fres);
+      float hot = pow(max(dot(reflection, normalize(vec3(-.5, .7, 1.0))), 0.0), 70.0);
+      color += vec3(1.) * (softbox * 1.3 + hot * 2.2) + sheen * fres * .9 + amber * strip * .5;
+      color *= .55 + .45 * smoothstep(-.6, .6, n.y);
     }
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>

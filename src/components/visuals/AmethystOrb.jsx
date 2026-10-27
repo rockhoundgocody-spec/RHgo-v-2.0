@@ -385,6 +385,24 @@ export default function AmethystOrb({
           style={{ transform: 'scale(1.22)' }}
         />
 
+        {/* Amber spines — two counter-rotating sets, shaded like brushed gold */}
+        {[1, -1].map((dir) => (
+          <motion.div
+            key={dir}
+            aria-hidden
+            className="absolute inset-0 pointer-events-none rounded-full"
+            animate={reduceMotion ? undefined : { rotate: dir * 360 }}
+            transition={{ duration: dir > 0 ? 28 : 40, repeat: Infinity, ease: 'linear' }}
+            style={{
+              mixBlendMode: 'screen',
+              opacity: 0.55,
+              background: `repeating-conic-gradient(from ${dir > 0 ? 0 : 11}deg, transparent 0deg, hsla(40,100%,38%,0.5) 3deg, hsla(46,100%,72%,0.95) 5deg, hsla(50,100%,96%,1) 5.6deg, hsla(36,95%,30%,0.6) 7.5deg, transparent 10deg ${dir > 0 ? 22 : 30}deg)`,
+              WebkitMaskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
+              maskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
+            }}
+          />
+        ))}
+
         {/* LIQUID MERCURY SKIN — molten silver flowing across her shell.
             Swirls endlessly; brightens, widens and quickens with the voice. */}
         <div
