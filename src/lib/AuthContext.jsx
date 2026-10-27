@@ -7,6 +7,12 @@ import { appParams } from '@/lib/app-params';
 // continue as logged-out. A late result still applies when it arrives.
 const AUTH_CHECK_TIMEOUT_MS = 20000;
 
+// Every session check takes a run id. A check that began before a sign-in is
+// answering about an older identity, so its late 401 must not write state:
+// that stale rejection was signing freshly signed-in users straight back out
+// to the login screen. Only the newest run may report a result.
+let authRunId = 0;
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
