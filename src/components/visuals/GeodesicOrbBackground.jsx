@@ -104,8 +104,8 @@ export default function GeodesicOrbBackground() {
 
   const reduce = typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Calmed for reduced-motion devices, never frozen.
-  const pace = reduce ? 2.4 : 1;
+  // Calmed for reduced-motion devices, never frozen — and still clearly alive.
+  const pace = reduce ? 1.6 : 1;
 
   return (
     <div
