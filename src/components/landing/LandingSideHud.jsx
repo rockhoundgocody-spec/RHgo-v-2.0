@@ -21,7 +21,7 @@ function HudCard({ icon: Icon, title, body, delay }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: [0, -4, 0] }}
       transition={{ opacity: { duration: .6, delay }, y: { duration: 6, delay, repeat: Infinity, ease: 'easeInOut' } }}
-      className="relative overflow-hidden rounded-2xl p-5 backdrop-blur-md"
+      className="relative overflow-hidden rounded-2xl p-4 backdrop-blur-md shrink-0"
       style={{ background: 'hsla(240,30%,10%,0.55)', border: '1px solid rgba(159,232,208,0.18)', boxShadow: '0 20px 50px -25px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06)' }}
     >
       <motion.div aria-hidden className="absolute inset-x-0 h-px pointer-events-none"
@@ -41,7 +41,7 @@ function HudCard({ icon: Icon, title, body, delay }) {
 
 export default function LandingSideHud({ side }) {
   return (
-    <aside className="flex flex-col justify-center gap-4 w-full relative z-10">
+    <aside className="flex flex-col justify-center gap-3 w-full h-full relative z-10">
       {SIDES[side].map((c, i) => <HudCard key={c.title} {...c} delay={i * .4 + (side === 'right' ? .2 : 0)} />)}
     </aside>
   );

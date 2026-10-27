@@ -90,7 +90,7 @@ export default function Hub() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className={`relative ${isDesktop ? 'h-full min-h-0' : 'min-h-screen'} flex flex-col items-center justify-center overflow-hidden`}
       style={{ background: '#0a0a14' }}
     >
       <HubAtmosphere />
