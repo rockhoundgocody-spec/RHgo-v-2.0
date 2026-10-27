@@ -6,19 +6,32 @@ import React, { useEffect, useRef } from 'react';
  * Each orb reads as a glass sphere floating above the page rather than a flat
  * disc: a concave dark core, an inset shadow for depth, a light reflection on
  * the near surface, an under-lit rim, and a soft contact shadow beneath it.
- * A slow breath keeps them alive, and tilting the phone (or moving the pointer)
- * parallaxes and tilts the whole field, so the spheres sit inside the screen.
+ *
+ * The field is alive, not ambient: the glass breathes and wanders, a fast
+ * iridescent band sweeps each surface while a second band counter-swirls so the
+ * light reads as liquid rather than a spinning disc, sparkles fire constantly
+ * from three points on every sphere, and a blurred water-like aura swirls
+ * behind the glass. Tilting the phone (or moving the pointer) parallaxes the
+ * whole field.
  *
  * Pure CSS transforms + opacity — no canvas, no 3D libs.
- * Respects prefers-reduced-motion (static sphere, no breath, no drift, no tilt).
+ * With prefers-reduced-motion the field is calmed (motion slowed down, tilt
+ * off) rather than frozen, so the spheres always read as alive.
  */
 
 const ORBS = [
-  { size: 260, top: '6%',  left: '-14%', delay: 0,   duration: 9,  drift: 26, hue: 280, tilt: 1 },
-  { size: 150, top: '58%', left: '74%',  delay: 1.4, duration: 11, drift: 20, hue: 195, tilt: 0.7 },
-  { size: 300, top: '30%', left: '48%',  delay: 2.6, duration: 13, drift: 32, hue: 330, tilt: 1.15 },
-  { size: 120, top: '78%', left: '10%',  delay: 3.4, duration: 8,  drift: 18, hue: 45,  tilt: 0.5 },
-  { size: 190, top: '12%', left: '72%',  delay: 4.2, duration: 12, drift: 24, hue: 260, tilt: 0.9 },
+  { size: 260, top: '6%',  left: '-14%', delay: 0,   duration: 9,  drift: 34, hue: 280, tilt: 1,    sheen: 2.8, glint: 1.2 },
+  { size: 150, top: '58%', left: '74%',  delay: 1.4, duration: 11, drift: 26, hue: 195, tilt: 0.7,  sheen: 3.3, glint: 1.5 },
+  { size: 300, top: '30%', left: '48%',  delay: 2.6, duration: 13, drift: 42, hue: 330, tilt: 1.15, sheen: 2.4, glint: 1.0 },
+  { size: 120, top: '78%', left: '10%',  delay: 3.4, duration: 8,  drift: 24, hue: 45,  tilt: 0.5,  sheen: 3.6, glint: 1.7 },
+  { size: 190, top: '12%', left: '72%',  delay: 4.2, duration: 12, drift: 31, hue: 260, tilt: 0.9,  sheen: 3.0, glint: 1.3 },
+];
+
+// Three sparkle points per sphere, so glints fire almost continuously.
+const GLINTS = [
+  { left: '18%', top: '14%', w: 0.50, h: 0.30, rot: -28 },
+  { left: '60%', top: '42%', w: 0.28, h: 0.18, rot: 22 },
+  { left: '26%', top: '66%', w: 0.36, h: 0.20, rot: -12 },
 ];
 
 const MAX_TILT_X = 7;   // deg of 3D lean at full side tilt
@@ -91,6 +104,8 @@ export default function GeodesicOrbBackground() {
 
   const reduce = typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Calmed for reduced-motion devices, never frozen.
+  const pace = reduce ? 2.4 : 1;
 
   return (
     <div
@@ -109,6 +124,12 @@ export default function GeodesicOrbBackground() {
       {ORBS.map((orb, i) => {
         const r = orb.size / 2;
         const hue = orb.hue;
+        const g = orb.glint * pace;          // sparkle cycle
+        const lag = orb.delay * pace;        // stagger between spheres
+        const sheenSpeed = orb.sheen * pace; // one sweep across the surface
+        const auraSpeed = orb.duration * 0.8 * pace;
+        const pulse = orb.duration * 0.28 * pace;
+
         return (
           <div
             key={i}
@@ -124,7 +145,7 @@ export default function GeodesicOrbBackground() {
             }}
           >
             {/* Contact shadow — the sphere floats above the page, so the shadow
-                stays on the ground and breathes with it */}
+                stays on the ground and answers every rise and fall */}
             <div
               className="absolute left-1/2 rounded-full"
               style={{
@@ -134,17 +155,17 @@ export default function GeodesicOrbBackground() {
                 marginLeft: -(orb.size * 0.36),
                 background: `radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.22) 45%, transparent 72%)`,
                 filter: 'blur(7px)',
-                animation: reduce ? 'none' : `orb-shadow-${i} ${orb.duration * 0.42}s ease-in-out infinite`,
-                animationDelay: `${orb.delay}s`,
+                animation: `orb-shadow-${i} ${pulse}s ease-in-out infinite`,
+                animationDelay: `${lag}s`,
               }}
             />
 
-            {/* Drift — slow wander across the field */}
+            {/* Drift — a living wander across the field */}
             <div
               className="absolute inset-0"
               style={{
-                animation: reduce ? 'none' : `orb-drift-${i} ${orb.duration * 1.15}s ease-in-out infinite alternate`,
-                animationDelay: `${orb.delay}s`,
+                animation: `orb-drift-${i} ${orb.duration * 0.6 * pace}s ease-in-out infinite alternate`,
+                animationDelay: `${lag}s`,
               }}
             >
               {/* Tilt — the 3D lean that follows the phone */}
@@ -159,17 +180,46 @@ export default function GeodesicOrbBackground() {
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
-                    animation: reduce ? 'none' : `orb-breath-${i} ${orb.duration * 0.42}s ease-in-out infinite`,
-                    animationDelay: `${orb.delay}s`,
+                    animation: `orb-breath-${i} ${pulse}s ease-in-out infinite`,
+                    animationDelay: `${lag}s`,
                     willChange: 'transform, opacity',
                   }}
                 >
+                  {/* Water aura — blurred light swirling like liquid behind the glass */}
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      inset: `-${r * 0.34}px`,
+                      background: `
+                        radial-gradient(circle at 34% 32%, hsla(${hue},100%,80%,0.5) 0%, transparent 46%),
+                        radial-gradient(circle at 68% 70%, hsla(${(hue + 40) % 360},100%,78%,0.44) 0%, transparent 48%),
+                        radial-gradient(circle at 54% 18%, hsla(${(hue + 300) % 360},100%,82%,0.36) 0%, transparent 44%)
+                      `,
+                      filter: 'blur(12px)',
+                      mixBlendMode: 'screen',
+                      animation: `orb-aura-${i} ${auraSpeed}s ease-in-out infinite`,
+                      animationDelay: `${lag}s`,
+                      willChange: 'transform, opacity',
+                    }}
+                  />
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      inset: `-${r * 0.26}px`,
+                      background: `radial-gradient(circle at 46% 62%, hsla(${(hue + 320) % 360},100%,84%,0.42) 0%, hsla(${hue},100%,72%,0.24) 40%, transparent 68%)`,
+                      filter: 'blur(14px)',
+                      mixBlendMode: 'screen',
+                      animation: `orb-aura-${i} ${orb.duration * 1.15 * pace}s ease-in-out infinite reverse`,
+                      animationDelay: `${lag + 0.6}s`,
+                    }}
+                  />
+
                   {/* Ambient halo behind the glass */}
                   <div
                     className="absolute rounded-full"
                     style={{
                       inset: `-${r * 0.22}px`,
-                      background: `radial-gradient(circle at 50% 50%, hsla(${hue},95%,72%,0.30) 0%, hsla(${hue},90%,60%,0.16) 42%, transparent 70%)`,
+                      background: `radial-gradient(circle at 50% 50%, hsla(${hue},95%,74%,0.38) 0%, hsla(${hue},90%,62%,0.2) 42%, transparent 70%)`,
                       filter: 'blur(12px)',
                     }}
                   />
@@ -186,9 +236,9 @@ export default function GeodesicOrbBackground() {
                         `inset ${r * 0.10}px ${r * 0.12}px ${r * 0.26}px hsla(${hue},95%,86%,0.22)`,
                         `inset -${r * 0.16}px -${r * 0.18}px ${r * 0.34}px rgba(3,4,12,0.78)`,
                         `inset 0 0 ${r * 0.20}px hsla(${hue},90%,70%,0.18)`,
-                        `0 0 ${r * 0.55}px hsla(${hue},95%,68%,0.22)`,
+                        `0 0 ${r * 0.55}px hsla(${hue},95%,68%,0.26)`,
                       ].join(', '),
-                      border: `1px solid hsla(${hue},95%,80%,0.14)`,
+                      border: `1px solid hsla(${hue},95%,80%,0.16)`,
                     }}
                   />
 
@@ -196,38 +246,61 @@ export default function GeodesicOrbBackground() {
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
-                      background: `radial-gradient(ellipse at 50% 88%, hsla(${hue},100%,88%,0.42) 0%, transparent 46%)`,
+                      background: `radial-gradient(ellipse at 50% 88%, hsla(${hue},100%,88%,0.46) 0%, transparent 46%)`,
                       mixBlendMode: 'screen',
                     }}
                   />
 
-                  {/* Iridescent sheen orbiting the glass */}
+                  {/* Iridescent sheen — a fast band of light sweeping the surface */}
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
-                      background: `conic-gradient(from 0deg, transparent 0deg, hsla(${hue},100%,88%,0.42) 34deg, transparent 68deg, hsla(${(hue + 45) % 360},100%,86%,0.34) 132deg, transparent 168deg, hsla(${(hue + 300) % 360},100%,86%,0.38) 248deg, transparent 286deg, hsla(${hue},100%,88%,0.30) 336deg, transparent 360deg)`,
+                      background: `conic-gradient(from 0deg, transparent 0deg, hsla(${hue},100%,90%,0.52) 30deg, transparent 64deg, hsla(${(hue + 45) % 360},100%,88%,0.44) 126deg, transparent 160deg, hsla(${(hue + 300) % 360},100%,88%,0.48) 244deg, transparent 282deg, hsla(${hue},100%,90%,0.4) 332deg, transparent 360deg)`,
                       mixBlendMode: 'screen',
-                      opacity: 0.75,
-                      animation: reduce ? 'none' : `orb-sheen-${i} ${orb.duration * 0.9}s linear infinite`,
+                      opacity: 0.9,
+                      animation: `orb-sheen-${i} ${sheenSpeed}s linear infinite`,
+                      animationDelay: `${lag}s`,
                     }}
                   />
 
-                  {/* Specular reflection — the light source sitting on the glass */}
+                  {/* Counter-swirl — a second band running the other way, so the
+                      surface reads as liquid iridescence instead of a spinning disc */}
                   <div
-                    className="absolute"
+                    className="absolute inset-0 rounded-full"
                     style={{
-                      left: '22%',
-                      top: '16%',
-                      width: r * 0.46,
-                      height: r * 0.28,
-                      borderRadius: '9999px',
-                      background: `radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.85) 0%, hsla(${hue},100%,95%,0.45) 38%, transparent 74%)`,
-                      filter: 'blur(2.5px)',
-                      transform: 'rotate(-28deg)',
-                      animation: reduce ? 'none' : `orb-glint-${i} ${orb.duration * 0.3}s ease-in-out infinite`,
-                      animationDelay: `${orb.delay}s`,
+                      background: `conic-gradient(from 180deg, transparent 0deg, hsla(${(hue + 200) % 360},100%,88%,0.42) 44deg, transparent 96deg, hsla(${(hue + 80) % 360},100%,90%,0.36) 186deg, transparent 240deg, hsla(${hue},100%,86%,0.32) 318deg, transparent 360deg)`,
+                      mixBlendMode: 'screen',
+                      filter: 'blur(2px)',
+                      opacity: 0.72,
+                      animation: `orb-sheen-${i} ${sheenSpeed * 1.5}s linear infinite reverse`,
+                      animationDelay: `${lag + 0.4}s`,
                     }}
                   />
+
+                  {/* Sparkles — three points per sphere, firing one after another */}
+                  {GLINTS.map((sp, k) => (
+                    <div
+                      key={k}
+                      className="absolute"
+                      style={{
+                        left: sp.left,
+                        top: sp.top,
+                        width: r * sp.w,
+                        height: r * sp.h,
+                        transform: `rotate(${sp.rot}deg)`,
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: `radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.92) 0%, hsla(${hue},100%,95%,0.5) 40%, transparent 76%)`,
+                          filter: 'blur(2.5px)',
+                          animation: `orb-glint-${i} ${g}s ease-in-out infinite`,
+                          animationDelay: `${lag + (k * g) / 3}s`,
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -236,28 +309,37 @@ export default function GeodesicOrbBackground() {
       })}
 
       <style>{`
-        ${ORBS.map((orb, i) => `
+        ${ORBS.map((orb, i) => {
+          const r = orb.size / 2;
+          return `
           @keyframes orb-drift-${i} {
             0%   { transform: translate(-${orb.drift}px, ${orb.drift * 0.6}px); }
             100% { transform: translate(${orb.drift}px, -${orb.drift * 0.6}px); }
           }
           @keyframes orb-breath-${i} {
-            0%, 100% { transform: scale(0.95) translateY(1.6%); opacity: 0.8; }
-            50%      { transform: scale(1.055) translateY(-1.6%); opacity: 1; }
+            0%, 100% { transform: scale(0.94) translateY(2%); opacity: 0.78; }
+            50%      { transform: scale(1.08) translateY(-2%); opacity: 1; }
           }
           @keyframes orb-shadow-${i} {
-            0%, 100% { transform: scale(0.9); opacity: 0.42; }
-            50%      { transform: scale(1.08); opacity: 0.82; }
+            0%, 100% { transform: scale(0.88); opacity: 0.4; }
+            50%      { transform: scale(1.1); opacity: 0.85; }
           }
           @keyframes orb-sheen-${i} {
             0%   { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
           @keyframes orb-glint-${i} {
-            0%, 100% { opacity: 0.3; }
-            50%      { opacity: 1; }
+            0%, 100% { opacity: 0.12; transform: scale(0.7); }
+            50%      { opacity: 1; transform: scale(1.15); }
           }
-        `).join('')}
+          @keyframes orb-aura-${i} {
+            0%   { transform: translate(-${(r * 0.07).toFixed(1)}px, ${(r * 0.06).toFixed(1)}px) scale(0.94) rotate(0deg);   opacity: 0.72; }
+            33%  { transform: translate(${(r * 0.08).toFixed(1)}px, -${(r * 0.05).toFixed(1)}px) scale(1.08) rotate(120deg); opacity: 1; }
+            66%  { transform: translate(-${(r * 0.04).toFixed(1)}px, -${(r * 0.09).toFixed(1)}px) scale(1.02) rotate(240deg); opacity: 0.84; }
+            100% { transform: translate(-${(r * 0.07).toFixed(1)}px, ${(r * 0.06).toFixed(1)}px) scale(0.94) rotate(360deg);   opacity: 0.72; }
+          }
+        `;
+        }).join('')}
       `}</style>
     </div>
   );
