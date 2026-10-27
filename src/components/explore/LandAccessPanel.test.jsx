@@ -35,6 +35,19 @@ describe('LandAccessPanel', () => {
     expect(html).toContain('focus-visible:ring-hud-cyan/60');
   });
 
+  it('omits permit link when permit_url is invalid or uses javascript scheme', () => {
+    const hotspot = {
+      name: 'Malicious Peak',
+      access_status: 'restricted',
+      permit_required: true,
+      permit_url: 'javascript:alert(1)',
+    };
+    const html = renderToStaticMarkup(<LandAccessPanel hotspot={hotspot} />);
+    expect(html).toContain('Permit Required');
+    expect(html).not.toContain('href=');
+    expect(html).not.toContain('Get permit →');
+  });
+
   it('renders claim info and closed warnings when site is closed', () => {
     const hotspot = {
       name: 'Forbidden Hollow',
