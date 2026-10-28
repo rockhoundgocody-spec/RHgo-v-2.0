@@ -1,6 +1,6 @@
 import React from 'react';
 import DesktopDock from '@/components/nav/DesktopDock';
-import LandingSideHud from '@/components/landing/LandingSideHud.jsx';
+import IconRail from '@/components/hub/IconRail.jsx';
 
 /**
  * DesktopShell — "Gemological Observational Terminal"
@@ -41,16 +41,16 @@ export default function DesktopShell({ children }) {
       </div>
 
       <div className="rhgo-desktop-workspace">
-        <section className="rhgo-desktop-panel intel" aria-hidden>
-          <LandingSideHud side="left" />
+        <section className="rhgo-desktop-panel intel">
+          <IconRail side="left" />
         </section>
 
         <section className="rhgo-desktop-panel center">
           {children}
         </section>
 
-        <section className="rhgo-desktop-panel log" aria-hidden>
-          <LandingSideHud side="right" />
+        <section className="rhgo-desktop-panel log">
+          <IconRail side="right" />
         </section>
       </div>
 

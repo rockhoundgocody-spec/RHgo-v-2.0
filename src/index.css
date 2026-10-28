@@ -575,7 +575,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 280px;
+  grid-template-columns: 112px minmax(0, 1fr) 112px;
   gap: 18px;
   margin-top: 26px;
   overflow: hidden;
