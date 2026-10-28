@@ -9,25 +9,17 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout.jsx';
 import AdminRoute from '@/components/AdminRoute.jsx';
 import MobileOnlyGate from '@/components/MobileOnlyGate.jsx';
-const HomeGate = lazy(() => import('@/components/HomeGate.jsx'));
 import AnalyticsRouteListener from '@/components/AnalyticsRouteListener.jsx';
 import { prefetchWhenIdle } from '@/lib/lazyPart';
 import { isNativeApp } from '@/lib/isNativeApp';
 import { RouteSeo, SIGNED_IN_PATHS } from '@/lib/routeSeo';
 import CaseRedirect from '@/components/CaseRedirect.jsx';
-const CookieConsentBanner = lazy(() => import('@/components/CookieConsentBanner.jsx'));
-const Landing = lazy(() => import('@/pages/Landing'));
-
-const Login = lazy(() => import('@/pages/Login'));
-const Register = lazy(() => import('@/pages/Register'));
-const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
-
-const Onboarding = lazy(() => import('@/pages/Onboarding'));
-
 // After a redeploy, an old tab may request a chunk that no longer exists —
-// reload once to pick up the new build instead of crashing.
-const lazyWithReload = (factory, key) => lazy(() => factory().catch((err) => {
+// reload once to pick up the new build instead of crashing to a blank screen.
+const lazyWithReload = (factory, key = 'any') => lazy(() => factory().then((m) => {
+  sessionStorage.removeItem(`rhgo_chunk_reload_${key}`);
+  return m;
+}, (err) => {
   const flag = `rhgo_chunk_reload_${key}`;
   if (!sessionStorage.getItem(flag)) {
     sessionStorage.setItem(flag, '1');
@@ -36,47 +28,58 @@ const lazyWithReload = (factory, key) => lazy(() => factory().catch((err) => {
   }
   throw err;
 }));
+const HomeGate = lazyWithReload(() => import('@/components/HomeGate.jsx'));
+const CookieConsentBanner = lazyWithReload(() => import('@/components/CookieConsentBanner.jsx'));
+const Landing = lazyWithReload(() => import('@/pages/Landing'));
+
+const Login = lazyWithReload(() => import('@/pages/Login'));
+const Register = lazyWithReload(() => import('@/pages/Register'));
+const ForgotPassword = lazyWithReload(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazyWithReload(() => import('@/pages/ResetPassword'));
+
+const Onboarding = lazyWithReload(() => import('@/pages/Onboarding'));
+
 const Explore = lazyWithReload(() => import('@/pages/Explore.jsx'), 'explore');
-const Scan = lazy(() => import('@/pages/Scan'));
-const Collection = lazy(() => import('@/pages/Collection'));
-const Collections = lazy(() => import('@/pages/Collections'));
-const Community = lazy(() => import('@/pages/Community'));
-const Market = lazy(() => import('@/pages/Market'));
-const Expeditions = lazy(() => import('@/pages/Expeditions'));
-const ExpeditionDetail = lazy(() => import('@/pages/ExpeditionDetail'));
+const Scan = lazyWithReload(() => import('@/pages/Scan'));
+const Collection = lazyWithReload(() => import('@/pages/Collection'));
+const Collections = lazyWithReload(() => import('@/pages/Collections'));
+const Community = lazyWithReload(() => import('@/pages/Community'));
+const Market = lazyWithReload(() => import('@/pages/Market'));
+const Expeditions = lazyWithReload(() => import('@/pages/Expeditions'));
+const ExpeditionDetail = lazyWithReload(() => import('@/pages/ExpeditionDetail'));
 
-const Admin = lazy(() => import('@/pages/Admin'));
-const Docs = lazy(() => import('@/pages/Docs'));
-const DesignSystem = lazy(() => import('@/pages/DesignSystem'));
-const Profile = lazy(() => import('@/pages/Profile'));
-const Settings = lazy(() => import('@/pages/Settings'));
-const ArchitectureBoundaries = lazy(() => import('@/pages/ArchitectureBoundaries'));
+const Admin = lazyWithReload(() => import('@/pages/Admin'));
+const Docs = lazyWithReload(() => import('@/pages/Docs'));
+const DesignSystem = lazyWithReload(() => import('@/pages/DesignSystem'));
+const Profile = lazyWithReload(() => import('@/pages/Profile'));
+const Settings = lazyWithReload(() => import('@/pages/Settings'));
+const ArchitectureBoundaries = lazyWithReload(() => import('@/pages/ArchitectureBoundaries'));
 
-const SpecimenDetail = lazy(() => import('@/pages/SpecimenDetail'));
-const Compare = lazy(() => import('@/pages/Compare'));
-const Chronolith = lazy(() => import('@/pages/Chronolith'));
-const QuestDashboard = lazy(() => import('@/pages/QuestDashboard'));
-const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
-const Badges = lazy(() => import('@/pages/Badges.jsx'));
-const CompanionDashboard = lazy(() => import('@/pages/CompanionDashboard'));
-const PrivateRockLog = lazy(() => import('@/pages/PrivateRockLog'));
-const AgateGuide = lazy(() => import('@/pages/AgateGuide'));
-const Live = lazy(() => import('@/pages/Live'));
-const LiveStreamView = lazy(() => import('@/pages/LiveStreamView'));
-const FindOfTheWeek = lazy(() => import('@/pages/FindOfTheWeek'));
-const Clubs = lazy(() => import('@/pages/Clubs'));
-const VaultGalaxy = lazy(() => import('@/pages/VaultGalaxy'));
+const SpecimenDetail = lazyWithReload(() => import('@/pages/SpecimenDetail'));
+const Compare = lazyWithReload(() => import('@/pages/Compare'));
+const Chronolith = lazyWithReload(() => import('@/pages/Chronolith'));
+const QuestDashboard = lazyWithReload(() => import('@/pages/QuestDashboard'));
+const Leaderboard = lazyWithReload(() => import('@/pages/Leaderboard'));
+const Badges = lazyWithReload(() => import('@/pages/Badges.jsx'));
+const CompanionDashboard = lazyWithReload(() => import('@/pages/CompanionDashboard'));
+const PrivateRockLog = lazyWithReload(() => import('@/pages/PrivateRockLog'));
+const AgateGuide = lazyWithReload(() => import('@/pages/AgateGuide'));
+const Live = lazyWithReload(() => import('@/pages/Live'));
+const LiveStreamView = lazyWithReload(() => import('@/pages/LiveStreamView'));
+const FindOfTheWeek = lazyWithReload(() => import('@/pages/FindOfTheWeek'));
+const Clubs = lazyWithReload(() => import('@/pages/Clubs'));
+const VaultGalaxy = lazyWithReload(() => import('@/pages/VaultGalaxy'));
 
-const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
-const Connect = lazy(() => import('@/pages/Connect'));
-const About = lazy(() => import('@/pages/About'));
-const Paywall = lazy(() => import('@/pages/Paywall'));
-const Demo = lazy(() => import('@/pages/Demo'));
-const Contact = lazy(() => import('@/pages/Contact'));
+const OAuthConsent = lazyWithReload(() => import('@/pages/OAuthConsent'));
+const Connect = lazyWithReload(() => import('@/pages/Connect'));
+const About = lazyWithReload(() => import('@/pages/About'));
+const Paywall = lazyWithReload(() => import('@/pages/Paywall'));
+const Demo = lazyWithReload(() => import('@/pages/Demo'));
+const Contact = lazyWithReload(() => import('@/pages/Contact'));
 // Legacy purple /auth wall removed — redirect to canonical Login (Wave-1 audit).
-const Pricing = lazy(() => import('@/pages/Pricing'));
-const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
-const Terms = lazy(() => import('@/pages/Terms'));
+const Pricing = lazyWithReload(() => import('@/pages/Pricing'));
+const PrivacyPolicy = lazyWithReload(() => import('@/pages/PrivacyPolicy'));
+const Terms = lazyWithReload(() => import('@/pages/Terms'));
 
 const RouteFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#0a0a14' }}>
