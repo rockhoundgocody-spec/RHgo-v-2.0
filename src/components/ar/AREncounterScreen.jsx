@@ -108,6 +108,14 @@ export function EncounterTopBar({ spawn, theme, onDismiss }) {
 }
 
 export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme, spawn, reduceMotion }) {
+  const handleKeyDown = (e) => {
+    if (phase !== "encounter") return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleThrow();
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-center justify-center flex-1 z-10">
       <AnimatePresence mode="wait">
@@ -120,6 +128,7 @@ export function EncounterOrb({ phase, orbScale, handleThrow, handleSwipe, theme,
             className="relative cursor-pointer select-none rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-default"
             style={{ width: 160, height: 160 }}
             onClick={handleThrow}
+            onKeyDown={handleKeyDown}
             onTouchEnd={handleSwipe}
             aria-label={`Catch ${spawn.mineral_name}`}
           >
