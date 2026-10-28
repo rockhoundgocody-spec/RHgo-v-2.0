@@ -58,8 +58,36 @@ async function hkdf(salt: Uint8Array, input: Uint8Array, info: Uint8Array, lengt
   return new Uint8Array(bits);
 }
 
+export interface PushSubscriptionData {
+  id?: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  categories?: Record<string, boolean>;
+}
+
+export interface PushPayload {
+  title: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+}
+
+export interface VapidKeys {
+  publicKey: string;
+  privateKey: string;
+}
+
+export interface PushAlert {
+  title: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+  category?: string;
+}
+
 /** Encrypts one alert for one device (RFC 8291, aes128gcm). */
-export async function encryptPayload(subscription: any, payloadText: string): Promise<Uint8Array> {
+export async function encryptPayload(subscription: PushSubscriptionData, payloadText: string): Promise<Uint8Array> {
   const devicePublic = b64urlToBytes(subscription.p256dh);
   const authSecret = b64urlToBytes(subscription.auth);
 
@@ -119,7 +147,7 @@ export async function vapidAuthorization(endpoint: string, publicKey: string, pr
 }
 
 /** Posts one encrypted alert to a device's push service. */
-export async function deliverPush(subscription: any, payload: any, keys: any): Promise<Response> {
+export async function deliverPush(subscription: PushSubscriptionData, payload: PushPayload, keys: VapidKeys): Promise<Response> {
   const body = await encryptPayload(subscription, JSON.stringify(payload));
   return fetch(subscription.endpoint, {
     method: 'POST',
@@ -141,7 +169,11 @@ export async function deliverPush(subscription: any, payload: any, keys: any): P
  * categories (used by the test alert). Devices the push service reports as
  * gone (404/410) are removed.
  */
-export async function sendPushToEmail(base44: any, email: string, alert: any): Promise<any> {
+export async function sendPushToEmail(
+  base44: { asServiceRole: { entities: { PushSubscription: { filter: (q: Record<string, string>) => Promise<PushSubscriptionData[]>; update: (id: string, data: Record<string, unknown>) => Promise<unknown>; delete: (id: string) => Promise<unknown> } } } },
+  email: string,
+  alert: PushAlert,
+): Promise<{ delivered: number; failed: number; skipped?: string; devices?: number; error?: string }> {
   try {
     if (!email) return { delivered: 0, failed: 0 };
 
@@ -151,7 +183,7 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
 
     const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter({ owner_email: email });
     const targets = (subscriptions || []).filter(
-      (subscription: any) => !alert.category || subscription.categories?.[alert.category] !== false,
+      (subscription: PushSubscriptionData) => !alert.category || subscription.categories?.[alert.category] !== false,
     );
 
     let delivered = 0;
@@ -172,14 +204,16 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
 
         if (response.ok) {
           delivered += 1;
-          await base44.asServiceRole.entities.PushSubscription.update(subscription.id, {
-            last_alert_at: new Date().toISOString(),
-          }).catch(() => {});
+          if (subscription.id) {
+            await base44.asServiceRole.entities.PushSubscription.update(subscription.id, {
+              last_alert_at: new Date().toISOString(),
+            }).catch(() => {});
+          }
           continue;
         }
 
         failed += 1;
-        if (response.status === 404 || response.status === 410) {
+        if ((response.status === 404 || response.status === 410) && subscription.id) {
           await base44.asServiceRole.entities.PushSubscription.delete(subscription.id).catch(() => {});
         }
       } catch {
@@ -188,7 +222,8 @@ export async function sendPushToEmail(base44: any, email: string, alert: any): P
     }
 
     return { delivered, failed, devices: targets.length };
-  } catch (error: any) {
-    return { delivered: 0, failed: 0, error: String(error?.message || error) };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { delivered: 0, failed: 0, error: message };
   }
 }
