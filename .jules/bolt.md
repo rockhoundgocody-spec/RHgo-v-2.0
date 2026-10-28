@@ -16,3 +16,9 @@
 **Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for filtering). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
 
 **Action:** Avoid `flatMap` followed by `Set` deduplication and `.filter()` when building unique lists from nested arrays; filter directly during Set population in a single pass.
+
+## 2026-10-14 - Hoisting Global Entity Queries and Batching Bulk Creation in Multi-Tenant Loops
+
+**Learning:** In scheduled batch edge functions iterating over users (e.g. `weeklyFieldMissions`), fetching static entities like `Hotspot.list` inside the user loop creates N-1 redundant HTTP queries (e.g. 499 redundant calls for 500 users). Hoisting static entity queries outside the loop and fetching them concurrently alongside initial user listing via `Promise.all` completely eliminates redundant network calls. Combining this with `bulkCreate` for entity generation cuts total network round-trips per user batch dramatically.
+
+**Action:** Hoist static entity reads outside per-user loops in batch functions and combine entity creation calls into single `bulkCreate` payload requests.
