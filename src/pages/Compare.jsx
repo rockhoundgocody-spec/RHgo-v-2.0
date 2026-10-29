@@ -66,8 +66,10 @@ export default function Compare() {
         <p className="text-white/50 text-sm font-semibold">No specimen to compare</p>
         <p className="text-white/30 text-xs">Scan a rock first, then tap Compare.</p>
         <button
+          type="button"
           onClick={() => navigate('/scan')}
-          className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+          aria-label="Go to scanner"
+          className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
           style={{ background: 'linear-gradient(135deg, hsl(265,70%,48%), hsl(280,90%,60%))' }}
         >
           Go to Scanner
@@ -84,17 +86,25 @@ export default function Compare() {
       {/* Back nav */}
       <div className="sticky top-0 z-10 px-4 py-3 flex items-center gap-3"
         style={{ background: 'hsla(240,20%,4%,0.85)', backdropFilter: 'blur(12px)' }}>
-        <button onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-amethyst-glow hover:text-white transition"
-          aria-label="Go back">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-amethyst-glow hover:text-white transition focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none rounded-lg px-1 py-0.5"
+          aria-label="Go back to previous page"
+        >
           <ChevronLeft size={20} />
           <span className="text-sm font-medium">Back</span>
         </button>
         <div className="flex-1 text-center">
           <h1 className="text-sm font-black text-white tracking-tight">Compare</h1>
         </div>
-        <button onClick={() => navigate('/scan')}
-          className="flex items-center gap-1 text-white/50 hover:text-white transition text-xs">
+        <button
+          type="button"
+          onClick={() => navigate('/scan')}
+          className="flex items-center gap-1 text-white/50 hover:text-white transition text-xs focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none rounded-lg px-1 py-0.5"
+          aria-label="Start new rock scan"
+          title="Start new scan"
+        >
           <RotateCcw size={14} /> Scan
         </button>
       </div>
@@ -127,12 +137,18 @@ export default function Compare() {
 
         {/* Candidate selector chips */}
         {compareRows.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+          <div role="tablist" aria-label="Specimen candidate selection" className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
             {compareRows.map((row, i) => (
               <button
                 key={i}
+                type="button"
+                role="tab"
+                id={`candidate-tab-${i}`}
+                aria-selected={i === selectedIdx}
+                aria-controls="candidate-detail-panel"
+                aria-label={`Select candidate ${row.name}`}
                 onClick={() => setSelectedIdx(i)}
-                className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap"
+                className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
                 style={
                   i === selectedIdx
                     ? { background: 'hsla(280,80%,40%,0.3)', border: '1px solid hsla(280,80%,65%,0.5)', color: 'hsl(280,100%,88%)' }
@@ -149,6 +165,9 @@ export default function Compare() {
         {selected && (
           <motion.div
             key={selectedIdx}
+            id="candidate-detail-panel"
+            role="tabpanel"
+            aria-labelledby={`candidate-tab-${selectedIdx}`}
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             className="rounded-2xl p-4 space-y-3"
@@ -208,8 +227,12 @@ export default function Compare() {
               {compareRows.map((row, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => setSelectedIdx(i)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left"
+                  aria-pressed={i === selectedIdx}
+                  aria-label={`Compare ${row.name}`}
+                  title={`Select ${row.name}`}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left focus-visible:ring-2 focus-visible:ring-amethyst-glow/60 focus-visible:outline-none"
                   style={
                     i === selectedIdx
                       ? { background: 'hsla(280,80%,40%,0.15)', border: '1px solid hsla(280,80%,65%,0.4)' }
