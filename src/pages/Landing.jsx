@@ -10,6 +10,8 @@ import GrokBotBadge from '@/components/GrokBotBadge.jsx';
 import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
 import HeroPhoto from '@/components/landing/HeroPhoto.jsx';
 import { motion } from 'framer-motion';
+import LandingTopBar from '@/components/landing/LandingTopBar.jsx';
+import LandingFeatureStrip from '@/components/landing/LandingFeatureStrip.jsx';
 
 const EASE = [0.16, 1, 0.3, 1];
 const rise = (delay) => ({
@@ -28,7 +30,7 @@ const HERO_IMG = 'https://media.base44.com/images/public/69f35dd14650b54681c835e
 export default function Landing() {
   useSeoRobots(true);
   useSeoMeta(
-    'RockHound-GO — AI Rock & Mineral ID for Rockhounds',
+    'RockHound GO — AI Rock & Mineral ID for Rockhounds',
     'Identify rocks and minerals from a photo, check land status before you collect, and log every find in your Geo-DEX. The AI field kit for rockhounds.'
   );
 
@@ -40,6 +42,7 @@ export default function Landing() {
       {/* Geodesic orb background — drifting glowing spheres */}
       <GeodesicOrbBackground />
       <HudGridBackdrop />
+      <LandingTopBar />
 
       <div className="flex-1 w-full flex items-center justify-center gap-10 xl:gap-16 lg:px-10">
 
@@ -61,9 +64,11 @@ export default function Landing() {
           </motion.span>
         </h1>
 
-        <motion.p {...rise(0.9)} className="text-white/70 text-[13px] text-center mb-10 max-w-[260px] leading-relaxed">
+        <motion.p {...rise(0.9)} className="text-white/70 text-[13px] text-center mb-6 max-w-[260px] leading-relaxed">
           AI mineral ID, legal land access, and a collection worth keeping.
         </motion.p>
+
+        <LandingFeatureStrip />
 
         {/* Two buttons */}
         <motion.div {...rise(1.1)} className="w-full max-w-xs space-y-3">
