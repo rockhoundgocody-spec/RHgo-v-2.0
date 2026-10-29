@@ -13,6 +13,12 @@
 **Action:** Whenever chunking records for `bulkCreate` in Base44 edge functions, collect chunks into an array and execute them via `Promise.all` rather than sequential `await` inside a `for` loop.
 ## 2026-09-29 - Single-Pass Direct Set Filtering vs flatMap Array Allocations
 
-**Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for filtering). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
+**Learning:** Using `[...new Set(array.flatMap(fn))].filter(predicate)` creates intermediate array allocations for each sub-array, invokes closure callbacks for every element, and performs double iteration (once for flattening and once for flattening). Replacing `flatMap` with a single-pass loop that filters directly before `Set.add()` eliminates intermediate array allocations and closure overhead, yielding ~1.97x speedup (~49% time reduction).
 
 **Action:** Avoid `flatMap` followed by `Set` deduplication and `.filter()` when building unique lists from nested arrays; filter directly during Set population in a single pass.
+
+## 2026-10-29 - Early-Exit Linear Checks vs Full Ranking and Sorting
+
+**Learning:** Calling heavy list mapping, gap counting, and O(N log N) sorting functions (like `rankHotspots`) to compute simple boolean conditions (like `hasNearbyHotspots` checking `.some(dist <= 75)`) forces full array allocation and sorting on every render or location update. Replacing `rankHotspots(...).some(...)` with a linear `for` loop that calculates distance and exits immediately on the first match yields a >1500x speedup (3.38s vs 2.17ms for 10k passes).
+
+**Action:** Avoid executing heavy array transformation, multi-field scoring, or sorting pipelines when only checking a boolean existence condition or threshold. Use early-exiting linear loops instead.

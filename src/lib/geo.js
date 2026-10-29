@@ -70,7 +70,7 @@ export function watchGps(onFix) {
 export function rankHotspots(hotspots, { userLocation, collectedMinerals = new Set() } = {}) {
   const collected = collectedMinerals instanceof Set
     ? collectedMinerals
-    : new Set([...collectedMinerals].map((m) => String(m).toLowerCase()));
+    : new Set(Array.from(collectedMinerals || [], (m) => String(m).toLowerCase()));
 
   return (hotspots || [])
     .filter((h) => typeof h.lat === 'number' && typeof h.lng === 'number')
@@ -78,8 +78,17 @@ export function rankHotspots(hotspots, { userLocation, collectedMinerals = new S
       const distanceMi = userLocation ? haversineMi(userLocation, h) : null;
       const land = h.land_type || 'unknown';
       const publicBonus = PUBLIC_LAND.has(land) ? 18 : land === 'private' ? -12 : 0;
-      const minerals = h.minerals || [];
-      const gapCount = minerals.filter((m) => m && !collected.has(String(m).toLowerCase())).length;
+      const minerals = h.minerals;
+      // Performance Optimization: Direct counting loop avoids array allocations per hotspot.
+      let gapCount = 0;
+      if (minerals) {
+        for (let i = 0; i < minerals.length; i++) {
+          const m = minerals[i];
+          if (m && !collected.has(String(m).toLowerCase())) {
+            gapCount++;
+          }
+        }
+      }
       const trust = Number(h.trust_score) || 0.5;
       const distScore = distanceMi == null ? 0 : Math.max(0, 42 - distanceMi * 0.85);
       return {
