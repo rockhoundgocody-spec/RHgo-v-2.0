@@ -62,7 +62,7 @@ export default function DeleteAccountDialog({ onClose }) {
               </div>
             </div>
             <button type="button" onClick={onClose} aria-label="Close" className="rounded text-white/40 hover:text-white transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 
