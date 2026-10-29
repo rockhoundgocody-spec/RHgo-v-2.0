@@ -12,6 +12,7 @@ import HeroPhoto from '@/components/landing/HeroPhoto.jsx';
 import { motion } from 'framer-motion';
 import LandingTopBar from '@/components/landing/LandingTopBar.jsx';
 import LandingFeatureStrip from '@/components/landing/LandingFeatureStrip.jsx';
+import LandingHowItWorks from '@/components/landing/LandingHowItWorks.jsx';
 
 const EASE = [0.16, 1, 0.3, 1];
 const rise = (delay) => ({
@@ -121,6 +122,8 @@ export default function Landing() {
             <Link to="/terms" className="hover:text-white/60 transition">Terms</Link>
           </div>
         </motion.div>
+
+        <LandingHowItWorks />
       </div>
 
       </div>
