@@ -1,14 +1,21 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from '@base44/sdk';
 import { isValidImageUrl } from '../../shared/imageUrlValidation.ts';
 import { parseCoordinates } from '../../shared/geoValidation.ts';
 
-Deno.serve(async (req) => {
+export async function handleRunDeepAnalysisRequest(
+  req: Request,
+  opts?: {
+    createClientFromRequest?: typeof createClientFromRequest;
+    fetchImpl?: typeof fetch;
+  }
+): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const clientFactory = opts?.createClientFromRequest || createClientFromRequest;
+    const base44 = clientFactory(req);
+    const user = await base44.auth.me().catch(() => null);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { image_url, quick_result, lat, lng } = await req.json();
+    const { image_url, quick_result, lat, lng } = await req.json().catch(() => ({}));
 
     if (image_url && !isValidImageUrl(image_url)) {
       return Response.json({ error: 'image_url must be from a trusted storage domain' }, { status: 400 });
@@ -19,14 +26,17 @@ Deno.serve(async (req) => {
     const coords = parseCoordinates(lat, lng);
     if (coords) {
       try {
-        const geoResp = await fetch(
+        const fetchFn = opts?.fetchImpl || fetch;
+        const geoResp = await fetchFn(
           `https://macrostrat.org/api/v2/geologic_units/map?lat=${coords.lat}&lng=${coords.lng}&format=json`
         );
         const geoData = await geoResp.json();
         if (geoData?.success?.data?.length > 0) {
           const units = geoData.success.data
             .slice(0, 3)
-            .map((u) => `${u.name || u.mindat_name || 'unknown'} (${u.age_text || '?'})`)
+            .map((u: { name?: string; mindat_name?: string; age_text?: string }) =>
+              `${u.name || u.mindat_name || 'unknown'} (${u.age_text || '?'})`
+            )
             .join('; ');
           geologyContext = ` Local bedrock geology at this location: ${units}.`;
         }
@@ -100,7 +110,12 @@ Deno.serve(async (req) => {
 
     return Response.json({ deep_analysis: r });
   } catch (error) {
+    // Log exception details server-side; sanitize error message returned to caller
     console.error('runDeepAnalysis error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
+
+if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+  Deno.serve((req) => handleRunDeepAnalysisRequest(req));
+}
