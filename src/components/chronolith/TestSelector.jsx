@@ -18,7 +18,7 @@ function TestHeader({ testName, cat }) {
         className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: cat.bg || `${cat.color}20`, border: `1px solid ${cat.color}40` }}
       >
-        <Icon size={15} style={{ color: cat.color }} />
+        <Icon size={15} style={{ color: cat.color }} aria-hidden="true" />
       </div>
       <div className="flex-1">
         <div className="text-[8px] uppercase tracking-widest text-white/30">Optimal Next Test</div>
@@ -56,19 +56,19 @@ function TestMetrics({ cost, time, risk }) {
     <div className="grid grid-cols-3 gap-2 mb-3">
       <div className="px-2.5 py-2 rounded-lg" style={{ background: "hsla(220,40%,6%,0.6)" }}>
         <div className="text-[8px] uppercase tracking-widest text-white/30 flex items-center gap-1 mb-0.5">
-          <DollarSign size={8} /> Cost
+          <DollarSign size={8} aria-hidden="true" /> Cost
         </div>
         <div className="text-xs font-semibold text-white/80">{cost || "—"}</div>
       </div>
       <div className="px-2.5 py-2 rounded-lg" style={{ background: "hsla(220,40%,6%,0.6)" }}>
         <div className="text-[8px] uppercase tracking-widest text-white/30 flex items-center gap-1 mb-0.5">
-          <Clock size={8} /> Time
+          <Clock size={8} aria-hidden="true" /> Time
         </div>
         <div className="text-xs font-semibold text-white/80">{time || "—"}</div>
       </div>
       <div className="px-2.5 py-2 rounded-lg" style={{ background: "hsla(220,40%,6%,0.6)" }}>
         <div className="text-[8px] uppercase tracking-widest text-white/30 flex items-center gap-1 mb-0.5">
-          <Shield size={8} /> Risk
+          <Shield size={8} aria-hidden="true" /> Risk
         </div>
         <div className="text-xs font-semibold text-white/80">{risk || "—"}</div>
       </div>
@@ -142,16 +142,26 @@ export default function TestSelector({ nextTest, onEnterResult, loading }) {
 
       {/* Action */}
       <button
+        type="button"
         onClick={onEnterResult}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 py-3.5 text-sm font-bold transition active:scale-[0.98] disabled:opacity-50"
+        aria-busy={loading}
+        aria-label={loading ? 'Reconstructing histories…' : `Enter test result for ${nextTest.test_name}`}
+        title={loading ? 'Reconstructing histories…' : `Enter test result for ${nextTest.test_name}`}
+        className="w-full flex items-center justify-center gap-2 py-3.5 text-sm font-bold transition active:scale-[0.98] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         style={{
           background: "linear-gradient(135deg, hsla(40,90%,45%,0.8), hsla(35,100%,52%,0.7))",
           color: "white",
           borderTop: "1px solid hsla(40,90%,50%,0.3)",
         }}
       >
-        {loading ? "Reconstructing histories…" : <>Enter Test Result <ArrowRight size={15} /></>}
+        {loading ? (
+          "Reconstructing histories…"
+        ) : (
+          <>
+            Enter Test Result <ArrowRight size={15} aria-hidden="true" />
+          </>
+        )}
       </button>
     </motion.div>
   );

@@ -46,4 +46,24 @@ describe("TestSelector component", () => {
     const element = TestSelector({ nextTest, loading: true });
     expect(element).not.toBeNull();
   });
+
+  it("applies correct accessibility attributes and title tooltips to button", () => {
+    const nextTest = { test_name: "Streak Test", category: "home" };
+
+    // Idle state
+    const elementIdle = TestSelector({ nextTest, loading: false });
+    const buttonIdle = elementIdle.props.children[1];
+    expect(buttonIdle.props.type).toBe("button");
+    expect(buttonIdle.props["aria-busy"]).toBe(false);
+    expect(buttonIdle.props["aria-label"]).toBe("Enter test result for Streak Test");
+    expect(buttonIdle.props.title).toBe("Enter test result for Streak Test");
+    expect(buttonIdle.props.className).toContain("focus-visible:ring-2");
+
+    // Loading state
+    const elementLoading = TestSelector({ nextTest, loading: true });
+    const buttonLoading = elementLoading.props.children[1];
+    expect(buttonLoading.props["aria-busy"]).toBe(true);
+    expect(buttonLoading.props["aria-label"]).toBe("Reconstructing histories…");
+    expect(buttonLoading.props.title).toBe("Reconstructing histories…");
+  });
 });
