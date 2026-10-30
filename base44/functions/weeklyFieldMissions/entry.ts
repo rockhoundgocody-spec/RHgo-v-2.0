@@ -41,8 +41,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── 1. List all users ──
-    const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    // ── 1. List all users & global hotspots in parallel (hoisted static query) ──
+    const [users, hotspots] = await Promise.all([
+      base44.asServiceRole.entities.User.list('-created_date', 500),
+      base44.asServiceRole.entities.Hotspot.list('-trust_score', 200),
+    ]);
 
     let processed = 0;
     let notified = 0;
@@ -66,7 +69,6 @@ Deno.serve(async (req) => {
         const userLng = lastWithCoords?.lng;
 
         // ── 3. hotspot_manager logic: find nearby unvisited zones ──
-        const hotspots = await base44.asServiceRole.entities.Hotspot.list('-trust_score', 200);
 
         // Unvisited = hotspot has at least one mineral the user hasn't collected
         let unvisited = hotspots.filter((h) => {
@@ -162,9 +164,9 @@ Return exactly 3 missions as JSON.`;
 
         const missions = result?.missions || [];
 
-        // ── 5. Create Quest records ──
-        for (const m of missions) {
-          await base44.asServiceRole.entities.Quest.create({
+        // ── 5. Create Quest records in bulk to avoid sequential HTTP request waterfalls ──
+        if (missions.length > 0) {
+          const questPayloads = missions.map((m) => ({
             owner_email: user.email,
             title: m.title,
             description: m.description,
@@ -177,7 +179,8 @@ Return exactly 3 missions as JSON.`;
             status: 'active',
             progress: 0,
             expires_at: getExpiry(m.quest_type || 'daily'),
-          });
+          }));
+          await base44.asServiceRole.entities.Quest.bulkCreate(questPayloads);
         }
 
         // ── 6. Push notification to device ──
