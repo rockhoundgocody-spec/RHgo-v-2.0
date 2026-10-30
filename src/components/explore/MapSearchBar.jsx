@@ -57,17 +57,24 @@ export default function MapSearchBar({ hotspots, onSelect }) {
           onFocus={() => setFocused(true)}
           placeholder="Search hotspots, minerals, states…"
           aria-label="Search hotspots, minerals, states"
+          role="combobox"
+          aria-expanded={focused && Boolean(query.trim())}
+          aria-autocomplete="list"
+          aria-controls="map-search-results"
           className="flex-1 bg-transparent text-[12px] text-white/80 placeholder-white/30 outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ml-2"
         />
         {query && (
-          <button onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
+          <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
             <X size={14} />
           </button>
         )}
       </div>
 
-      {query.trim() && results.length > 0 && (
+      {focused && query.trim() && (
         <div
+          id="map-search-results"
+          role="listbox"
+          aria-label="Search results"
           className="absolute top-full mt-1.5 left-0 right-0 rounded-2xl overflow-hidden z-[1001]"
           style={{
             background: 'hsla(240,30%,8%,.97)',
@@ -76,21 +83,31 @@ export default function MapSearchBar({ hotspots, onSelect }) {
             boxShadow: '0 12px 40px hsla(240,50%,5%,.6)',
           }}
         >
-          {results.map(h => (
-            <button
-              key={h.id}
-              onClick={() => handleSelect(h)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
-            >
-              <MapPin size={13} className="text-amethyst-glow shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
-                <div className="text-[10px] text-white/40 truncate">
-                  {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+          {results.length > 0 ? (
+            results.map(h => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => handleSelect(h)}
+                role="option"
+                aria-selected="false"
+                aria-label={`Select ${h.name}${h.state ? `, ${h.state}` : ''}`}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/5 border-b border-white/5 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 relative z-10"
+              >
+                <MapPin size={13} className="text-amethyst-glow shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-white/85 truncate">{h.name}</div>
+                  <div className="text-[10px] text-white/40 truncate">
+                    {h.state || '—'} · {(h.minerals || []).slice(0, 3).join(', ')}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-3 text-center text-[11px] text-white/50" role="status">
+              No hotspots or minerals found matching &quot;{query.trim()}&quot;
+            </div>
+          )}
         </div>
       )}
     </div>
