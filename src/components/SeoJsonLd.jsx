@@ -49,7 +49,7 @@ export default function SeoJsonLd({ data = DEFAULT_GRAPH } = {}) {
     if (!el) {
       el = document.createElement('script');
       el.id = SCRIPT_ID;
-      el.type = 'application/ld+json';
+      el.setAttribute('type', 'application/ld+json');
       document.head.appendChild(el);
     }
     el.textContent = JSON.stringify(data);
