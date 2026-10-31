@@ -35,6 +35,14 @@ export default function Login() {
   const finish = async (accessToken) => {
     persistBase44Session(base44, accessToken, remember);
     await checkUserAuth();
+    // Confirm the fresh token really resolves a session before leaving this
+    // screen. If it doesn't, say so — dropping the user back on the form with
+    // no message is what made a failed sign-in look like nothing happened.
+    const live = await base44.auth.isAuthenticated().catch(() => false);
+    if (!live) {
+      setError("That account signed in, but the session didn't start. Try again in a moment.");
+      return;
+    }
     clearGateChoice();
     if (window.location.pathname !== target) navigate(target, { replace: true });
   };
@@ -130,7 +138,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading || !email || !password}
-          className="w-full min-h-12 rounded-full font-bold text-[#04140e] disabled:opacity-38"
+          className="w-full min-h-12 rounded-lg font-bold text-xs uppercase tracking-[0.3em] text-[#04140e] transition-all duration-300 ease-out hover:shadow-[0_10px_28px_-10px_rgba(46,230,166,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(46,230,166,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
           style={{ background: "linear-gradient(180deg,#2EE6A6,#1DBF7A)" }}
         >
           {loading ? (

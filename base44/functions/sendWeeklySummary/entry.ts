@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { chunkValues, collectPages, groupDigestRecords } from './operations.ts';
+import { sendPushToEmail } from '../../shared/webPush.ts';
 
 /**
  * sendWeeklySummary — scheduled weekly digest.
@@ -73,6 +74,17 @@ Deno.serve(async (req) => {
           body,
         });
         sent += 1;
+
+        // The recap also reaches the status bar, for anyone who opted in.
+        await sendPushToEmail(base44, user.email, {
+          category: 'missions',
+          title: 'Your week in stones is ready',
+          body: recent.length
+            ? `${recent.length} new find${recent.length === 1 ? '' : 's'} logged this week.`
+            : 'Your weekly recap and hunt tip are ready.',
+          tag: 'weekly-recap',
+          url: '/collection',
+        }).catch(() => {});
       } catch (e) {
         errors.push({ email: user.email, error: String(e?.message || e) });
       }

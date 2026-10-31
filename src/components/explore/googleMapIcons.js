@@ -65,22 +65,49 @@ export function hotspotPinEl({ color, isActive, isGlowing, hasGap, difficulty, h
   const size  = highContrast ? (isActive ? 42 : 34) : (isActive ? 36 : 28);
   const badge = DIFF_BADGE[difficulty] || '●';
   const ring  = hasGap ? `<circle cx="22" cy="22" r="18" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.8"/>` : '';
-  const pulse = isGlowing ? `
-    <circle cx="22" cy="22" r="17" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.4">
-      <animate attributeName="r" values="14;20;14" dur="2.5s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
-    </circle>` : '';
   const coreR = isActive ? 14 : highContrast ? 12 : 10;
+
+  // ── Breath: every hotspot pulses so the map never reads as a still image.
+  // Active / glowing pins breathe faster and brighter.
+  const loud = isActive || isGlowing;
+  const pulseDur = isActive ? 1.9 : isGlowing ? 2.4 : 3.4;
+  const pulseHi = loud ? 0.62 : 0.4;
+  const pulse = `
+    <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${loud ? color : '#ffffff'}" stroke-width="${isActive ? 2 : 1.4}" opacity="${pulseHi}">
+      <animate attributeName="r" values="${coreR};${coreR + (isActive ? 9 : 7)};${coreR}" dur="${pulseDur}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="${pulseHi};0;${pulseHi}" dur="${pulseDur}s" repeatCount="indefinite"/>
+    </circle>`;
+
+  // ── Iridescence: four hue arcs orbiting the core over a soft colour bloom,
+  // so the pin shimmers instead of reading as one flat colour.
+  const irisR = coreR + 3.5;
+  const arc = irisR * 1.05;
+  const step = irisR * 1.5708;               // a quarter of the circumference
+  const gap = 6.283 * irisR - arc;
+  const irisOpacity = highContrast ? 0.55 : 1;
+  const iridescent = `
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="${isActive ? 4.5 : 7}s" repeatCount="indefinite"/>
+      <circle cx="22" cy="22" r="${irisR}" fill="none" stroke="#c084fc" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${arc} ${gap}" opacity="${irisOpacity}"/>
+      <circle cx="22" cy="22" r="${irisR}" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${arc} ${gap}" stroke-dashoffset="${-step}" opacity="${irisOpacity * 0.9}"/>
+      <circle cx="22" cy="22" r="${irisR}" fill="none" stroke="#9FE8D0" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${arc} ${gap}" stroke-dashoffset="${-step * 2}" opacity="${irisOpacity * 0.85}"/>
+      <circle cx="22" cy="22" r="${irisR}" fill="none" stroke="#fcd34d" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${arc} ${gap}" stroke-dashoffset="${-step * 3}" opacity="${irisOpacity * 0.8}"/>
+    </g>
+    <circle cx="22" cy="22" r="${irisR}" fill="none" stroke="#e879f9" stroke-width="4" opacity="${highContrast ? 0.18 : 0.3}" style="filter:blur(2px)"/>`;
+
   const halo  = highContrast ? `<circle cx="22" cy="22" r="${coreR + 4}" fill="#0a0f1e" opacity="0.85"/>` : '';
-  const highlight = !highContrast ? `<circle cx="18" cy="18" r="${coreR * 0.35}" fill="white" opacity="0.25"/>` : '';
+  const highlight = !highContrast ? `<circle cx="18" cy="18" r="${coreR * 0.35}" fill="white" opacity="0.32"/>` : '';
+  // Subtle glow on the hotspot icon itself
+  const iconGlow = highContrast ? '' : ' style="filter:drop-shadow(0 0 3px rgba(255,255,255,0.85))"';
+
   return toEl(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 44 44">
-      ${pulse}${ring}${halo}
-      <circle cx="22" cy="22" r="${coreR}" fill="${color}" opacity="${highContrast ? 1 : 0.92}"
-        style="filter:drop-shadow(0 0 ${isActive ? 8 : 4}px ${highContrast ? '#0a0f1e' : color})"/>
-      <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.6)'}" stroke-width="${highContrast ? 3 : isActive ? 2 : 1.5}"/>
+      ${pulse}${iridescent}${ring}${halo}
+      <circle cx="22" cy="22" r="${coreR}" fill="${color}" opacity="${highContrast ? 1 : 0.95}"
+        style="filter:drop-shadow(0 0 ${isActive ? 9 : 5}px ${highContrast ? '#0a0f1e' : color})"/>
+      <circle cx="22" cy="22" r="${coreR}" fill="none" stroke="${highContrast ? '#ffffff' : 'rgba(255,255,255,0.62)'}" stroke-width="${highContrast ? 3 : isActive ? 2 : 1.5}"/>
       ${highlight}
-      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold"${highContrast ? ' stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
+      <text x="22" y="27" text-anchor="middle" font-size="${isActive ? 13 : highContrast ? 12 : 9}" fill="white" font-weight="bold"${iconGlow}${highContrast ? ' stroke="#0a0f1e" stroke-width="0.8" paint-order="stroke"' : ''}>${badge}</text>
     </svg>`);
 }
 

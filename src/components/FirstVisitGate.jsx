@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import IntroOrb from '@/components/hub/IntroOrb.jsx';
+import LiquidCrystalOrb from '@/components/visuals/LiquidCrystalOrb';
+import GeodesicOrbBackground from '@/components/visuals/GeodesicOrbBackground';
 import { base44 } from '@/api/base44Client';
 import GoogleIcon from '@/components/GoogleIcon';
 import HomeFeatures from '@/components/HomeFeatures.jsx';
@@ -47,6 +48,7 @@ export default function FirstVisitGate({ onChoice }) {
       className="fixed inset-0 z-[9999] overflow-y-auto overflow-x-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 40%, hsl(265 50% 12%) 0%, hsl(245 35% 4%) 100%)' }}
     >
+      <GeodesicOrbBackground />
       <div aria-hidden="true" className="fixed inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 24 }).map((_, i) => (
           <motion.div
@@ -71,12 +73,7 @@ export default function FirstVisitGate({ onChoice }) {
           transition={{ duration: 0.8 }}
           className="w-full max-w-sm flex flex-col items-center gap-6 relative z-10"
         >
-          <motion.div
-            animate={{ y: [0, -8, 0], scale: [1, 1.04, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <IntroOrb size={72} />
-          </motion.div>
+          <LiquidCrystalOrb size={144} />
 
           <div className="text-center">
             <h1 className="text-white font-bold text-xl tracking-tight">Welcome to RockHound-GO</h1>

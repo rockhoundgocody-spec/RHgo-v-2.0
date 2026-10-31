@@ -32,7 +32,7 @@ export default function CookieConsentBanner() {
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-0 left-0 right-0 z-[9999] flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pointer-events-none"
+      className="fixed bottom-0 left-0 right-0 z-[9999] flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom,0px)+104px)] lg:pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pointer-events-none"
     >
       <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-[rgba(159,232,208,0.22)] bg-[rgba(17,16,25,0.96)] backdrop-blur-xl shadow-2xl p-4">
         <div className="flex items-start gap-3">

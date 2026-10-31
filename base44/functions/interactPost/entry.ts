@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { sendPushToEmail } from '../../shared/webPush.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -34,6 +35,14 @@ Deno.serve(async (req) => {
       });
 
       const myReaction = newReactors.find(r => r.email === user.email)?.type || null;
+
+      // Status-bar alert to the find's owner — never to whoever reacted.
+      await alertPostOwner(base44, post, user, {
+        title: `${firstName(user)} reacted to your find`,
+        body: `New reaction on ${post.mineral_name || 'your find'}.`,
+        tag: `community-react-${post_id}`,
+      }).catch(() => {});
+
       return Response.json({ reactions: counts, myReaction });
     }
 
@@ -54,6 +63,12 @@ Deno.serve(async (req) => {
         comment_count: comments.length,
       });
 
+      await alertPostOwner(base44, post, user, {
+        title: `${firstName(user)} commented on your find`,
+        body: text.slice(0, 140),
+        tag: `community-comment-${post_id}`,
+      }).catch(() => {});
+
       return Response.json({ comments, comment_count: comments.length });
     }
 
@@ -62,3 +77,14 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function firstName(user) {
+  return user?.full_name?.split(' ')?.[0] || 'A rockhound';
+}
+
+/** Alerts the post's owner, skipping their own activity on their own post. */
+function alertPostOwner(base44, post, actor, { title, body, tag }) {
+  const owner = post.owner_email || post.created_by;
+  if (!owner || owner === actor.email) return Promise.resolve({ delivered: 0, failed: 0 });
+  return sendPushToEmail(base44, owner, { category: 'community', title, body, url: '/community', tag });
+}
