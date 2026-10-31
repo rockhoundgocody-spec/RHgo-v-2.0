@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 const state = vi.hoisted(() => ({ scene: null, camera: null }));
 vi.mock('three', async importOriginal => {
