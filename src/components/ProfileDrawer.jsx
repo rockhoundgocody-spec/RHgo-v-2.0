@@ -15,7 +15,7 @@ function DrawerHeader({ onClose }) {
         className="p-1 hover:bg-white/10 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
         aria-label="Close drawer"
       >
-        <X size={18} className="text-white/60" />
+        <X size={18} className="text-white/60" aria-hidden="true" />
       </button>
     </div>
   );

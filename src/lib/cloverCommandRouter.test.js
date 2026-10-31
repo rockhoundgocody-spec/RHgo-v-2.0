@@ -25,6 +25,18 @@ describe('Clover voice routing', () => {
     expect(applyCloverUtterance('what do you see').navigateTo).toBe('/scan?live=1');
   });
 
+  it('lets a spoken command work her own ears', () => {
+    expect(parseCloverCommand('mute').intent).toBe(INTENTS.MUTE);
+    expect(applyCloverUtterance('Clover, mute yourself').setMuted).toBe(true);
+    expect(applyCloverUtterance('unmute').setMuted).toBe(false);
+    expect(applyCloverUtterance('can you hear me').setMuted).toBe(false);
+  });
+
+  it('leaves ordinary sentences alone when it looks for commands', () => {
+    expect(parseCloverCommand('the muted colors in this jasper').intent).toBe(INTENTS.ASK);
+    expect(parseCloverCommand('where is the gate').intent).toBe(INTENTS.ASK);
+  });
+
   it('sends research and vault questions to the server brain', () => {
     const research = applyCloverUtterance('research BLM casual collecting rules');
     expect(research.handled).toBe(false);

@@ -84,6 +84,14 @@ export function applyCloverUtterance(raw, { pathname = '/', specimens = [] } = {
     return { handled: true, reply: routed.reply, endSession: true };
   }
 
+  if (routed.intent === INTENTS.MUTE) {
+    return { handled: true, reply: routed.reply, setMuted: true };
+  }
+
+  if (routed.intent === INTENTS.UNMUTE) {
+    return { handled: true, reply: routed.reply, setMuted: false };
+  }
+
   if (routed.intent === INTENTS.WAKE) {
     return { handled: true, reply: routed.reply || 'Here.' };
   }

@@ -1,5 +1,6 @@
 import React from 'react';
 import DesktopDock from '@/components/nav/DesktopDock';
+import IconRail from '@/components/hub/IconRail.jsx';
 
 /**
  * DesktopShell — "Gemological Observational Terminal"
@@ -40,31 +41,16 @@ export default function DesktopShell({ children }) {
       </div>
 
       <div className="rhgo-desktop-workspace">
-        <section className="rhgo-desktop-panel intel" aria-hidden>
-          <div className="orb-wrap"><div className="orb" /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
+        <section className="rhgo-desktop-panel intel">
+          <IconRail side="left" />
         </section>
 
         <section className="rhgo-desktop-panel center">
           {children}
         </section>
 
-        <section className="rhgo-desktop-panel log" aria-hidden>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
-          <div className="micro-lines"><i /><i /><i /></div>
-          <div className="mini-card" />
+        <section className="rhgo-desktop-panel log">
+          <IconRail side="right" />
         </section>
       </div>
 

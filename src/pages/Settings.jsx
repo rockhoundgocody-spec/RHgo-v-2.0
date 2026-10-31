@@ -6,6 +6,7 @@ import CloverVoiceSection from '@/components/settings/CloverVoiceSection.jsx';
 import DangerZoneSection from '@/components/settings/DangerZoneSection.jsx';
 import FieldModeSection from '@/components/settings/FieldModeSection.jsx';
 import NotificationsSection from '@/components/settings/NotificationsSection.jsx';
+import PushAlertsSection from '@/components/settings/PushAlertsSection.jsx';
 import SavedSitePacksSection from '@/components/settings/SavedSitePacksSection.jsx';
 import StealthPrivacySection from '@/components/settings/StealthPrivacySection.jsx';
 import StorageSection from '@/components/settings/StorageSection.jsx';
@@ -109,6 +110,7 @@ export default function Settings() {
       <PermissionsPrompt />
       <StealthPrivacySection privacyLevel={settings.privacyLevel} onChange={(value) => handleChange('privacyLevel', value)} />
       <NotificationsSection settings={settings} onToggle={handleToggle} />
+      <PushAlertsSection />
       <FieldModeSection offlineMode={settings.offlineMode} onToggle={() => handleToggle('offlineMode')} />
       <StorageSection />
       <SavedSitePacksSection />

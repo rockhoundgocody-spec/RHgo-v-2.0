@@ -3,14 +3,15 @@
  * in a hands-free loop. Visual state follows listening / thinking / speaking.
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { Check } from 'lucide-react';
+import LiquidCrystalOrb from '@/components/visuals/LiquidCrystalOrb';
 const AmethystOrb = React.lazy(() => import('@/components/visuals/AmethystOrb.jsx'));
 import WaterRipple from '@/components/visuals/WaterRipple.jsx';
 import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
 import useCloverConversation from './useCloverConversation.js';
-import { playOrbChime, playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
-import { Zap } from 'lucide-react';
+import { playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { on } from '@/lib/cloverWake';
 
 const OPENERS = [
@@ -20,15 +21,16 @@ const OPENERS = [
   "I'm listening. What did you find?",
 ];
 
-export default function HeroOrb({ companion, size = 148 }) {
+export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
   const [ripples, setRipples] = useState([]);
   const [abilitiesModal, setAbilitiesModal] = useState(null);
   const [customOrbState, setCustomOrbState] = useState(null);
   const containerRef = useRef(null);
   const { getInteraction, injectTap } = useLiquidInteraction();
-  const clover = useCloverConversation({ companion });
+  const clover = useCloverConversation({ companion, recentFinds });
 
   const [wakePulse, setWakePulse] = useState(false);
+  const [commandPulse, setCommandPulse] = useState(false);
   const startRef = useRef(clover.start);
   startRef.current = clover.start;
   useEffect(() => on('wake', () => {
@@ -36,6 +38,12 @@ export default function HeroOrb({ companion, size = 148 }) {
     setTimeout(() => setWakePulse(false), 900);
     triggerOrbHaptic('pulse');
     startRef.current(OPENERS[Math.floor(Math.random() * OPENERS.length)]);
+  }), []);
+
+  // Confirmation flash the moment a spoken command lands and she acts on it.
+  useEffect(() => on('command', () => {
+    setCommandPulse(true);
+    setTimeout(() => setCommandPulse(false), 1400);
   }), []);
 
   const luckyMineral = getLuckyMineralOfTheDay();
@@ -105,22 +113,63 @@ export default function HeroOrb({ companion, size = 148 }) {
               <span className="clover-listen-ring" style={{ animationDelay: '0.7s' }} />
             </>
           )}
-          <React.Suspense fallback={<div style={{ width: size, height: size }} />}>
-            <AmethystOrb
-              size={size}
-              orbState={orbState}
-              speaking={clover.phase === 'speaking'}
-              listening={clover.phase === 'listening'}
-              thinking={clover.phase === 'thinking'}
-              level={companion?.level || 1}
-              getInteraction={getInteraction}
-              getAmplitude={clover.getAmplitude}
-              getSpectrum={clover.getSpectrum}
-            />
-          </React.Suspense>
+          <div className="absolute pointer-events-none" style={{ left: -size * .22, top: -size * .134 }}>
+          <LiquidCrystalOrb
+            mercury
+            size={size * 1.44}
+            getLive={() => {
+              const amp = Math.min(1, Math.max(0, Number(clover.getAmplitude?.()) || 0));
+              const base = { listening: .45, speaking: .5, thinking: .3, blessing: .8 }[orbState] || 0;
+              return {
+                energy: Math.min(1, base + amp * .6),
+                amber: orbState === 'thinking' || orbState === 'blessing' ? .85 : orbState === 'listening' ? .25 : .55,
+              };
+            }}
+          />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <React.Suspense fallback={null}>
+              <AmethystOrb
+                size={size * .78}
+                orbState={orbState}
+                speaking={clover.phase === 'speaking'}
+                listening={clover.phase === 'listening'}
+                thinking={clover.phase === 'thinking'}
+                level={companion?.level || 1}
+                getInteraction={getInteraction}
+                getAmplitude={clover.getAmplitude}
+                getSpectrum={clover.getSpectrum}
+              />
+            </React.Suspense>
+            {/* Physical depth: recessed seat, core shadow, curved specular, bounce light */}
+            <div className="absolute rounded-full pointer-events-none" style={{
+              width: size * .8, height: size * .8,
+              boxShadow: '0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.18), 0 10px 22px rgba(0,0,0,.6), inset 0 -14px 26px rgba(0,0,0,.55)',
+              background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 9%, transparent 22%), radial-gradient(circle at 60% 82%, rgba(255,190,90,.22) 0%, transparent 30%), radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%)',
+            }} />
+          </div>
+          <div className="absolute left-1/2 -translate-x-1/2 rounded-full pointer-events-none" style={{
+            bottom: -size * .08, width: size * .7, height: size * .1,
+            background: 'radial-gradient(ellipse, rgba(0,0,0,.6) 0%, transparent 70%)', filter: 'blur(4px)',
+          }} />
           {ripples.map((r) => (
             <WaterRipple key={r.id} x={r.x} y={r.y} onDone={() => setRipples((rs) => rs.filter((rp) => rp.id !== r.id))} />
           ))}
+          {commandPulse && (
+            <>
+              <span
+                className="absolute inset-0 rounded-full pointer-events-none animate-ping"
+                style={{ border: '2px solid #F2C14E', boxShadow: '0 0 26px #F2C14E66' }}
+              />
+              <span
+                className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center pointer-events-none"
+                style={{ background: '#9FE8D0', color: '#0a0a14', boxShadow: '0 0 14px #9FE8D088' }}
+                aria-hidden
+              >
+                <Check size={13} strokeWidth={3} />
+              </span>
+            </>
+          )}
         </div>
 
         <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-white/35">
@@ -137,39 +186,24 @@ export default function HeroOrb({ companion, size = 148 }) {
               phase={clover.phase}
               messages={clover.messages}
               interim={clover.interim}
+              muted={clover.muted}
+              onToggleMute={clover.toggleMute}
+              onStop={clover.end}
               onClose={clover.end}
               onHunt={() => {}}
               huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
               onListen={clover.nudge}
+              getWaveBars={clover.getWaveBars}
+              onOpenAbilities={() => {
+                triggerOrbHaptic('pulse');
+                setAbilitiesModal('resonance');
+              }}
+              resonanceClaimed={isResonanceClaimed}
             />
           </div>
         )}
-
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <button
-            onClick={() => {
-              playOrbChime(639, 2.0);
-              triggerOrbHaptic('pulse');
-              setAbilitiesModal('resonance');
-            }}
-            className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
-            style={{
-              background: isResonanceClaimed
-                ? 'hsla(45,70%,20%,0.3)'
-                : 'linear-gradient(135deg, hsla(45,100%,50%,0.35), hsla(28,95%,45%,0.35))',
-              border: isResonanceClaimed
-                ? '1px solid hsla(45,60%,50%,0.3)'
-                : '1px solid hsla(45,100%,60%,0.5)',
-              color: isResonanceClaimed ? 'hsl(45,80%,75%)' : '#fef08a',
-            }}
-            title="Daily Geode Resonance"
-          >
-            <Zap size={12} className={isResonanceClaimed ? 'text-amber-400' : 'text-amber-300 animate-pulse'} />
-            <span>{isResonanceClaimed ? 'Resonance Active' : 'Daily Challenge'}</span>
-          </button>
-        </div>
       </div>
 
       <OrbAbilitiesModal

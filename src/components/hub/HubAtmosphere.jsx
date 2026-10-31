@@ -21,6 +21,9 @@ export default function HubAtmosphere() {
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       <div className="hub-aurora" />
       <div className="hub-aurora hub-aurora-secondary" />
+      {/* The room's liquid surface — flows on the same tempo as her shell */}
+      <div className="hub-iridescent" />
+      <div className="hub-iridescent hub-iridescent-b" />
       <div className="hub-grid" />
       <div className="hub-vignette" />
       <div className="hub-scanline" />

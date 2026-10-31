@@ -84,6 +84,13 @@ export default function FloatingCloverCompanion() {
               phase={clover.phase}
               messages={clover.messages}
               interim={clover.interim}
+              muted={clover.muted}
+              onToggleMute={clover.toggleMute}
+              getWaveBars={clover.getWaveBars}
+              onStop={() => {
+                setExpanded(false);
+                clover.end();
+              }}
               onClose={() => {
                 setExpanded(false);
                 clover.end();

@@ -35,6 +35,19 @@ describe('LandAccessPanel', () => {
     expect(html).toContain('focus-visible:ring-hud-cyan/60');
   });
 
+  it('suppresses permit links with non-HTTP/HTTPS protocols or malicious schemes', () => {
+    const hotspot = {
+      name: 'Malicious Mine',
+      access_status: 'restricted',
+      permit_required: true,
+      permit_url: 'javascript:alert(document.cookie)',
+    };
+    const html = renderToStaticMarkup(<LandAccessPanel hotspot={hotspot} />);
+    expect(html).toContain('Permit Required');
+    expect(html).not.toContain('href="javascript:alert(document.cookie)"');
+    expect(html).not.toContain('Get permit →');
+  });
+
   it('renders claim info and closed warnings when site is closed', () => {
     const hotspot = {
       name: 'Forbidden Hollow',

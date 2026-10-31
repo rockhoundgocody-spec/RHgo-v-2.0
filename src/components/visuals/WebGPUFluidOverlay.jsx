@@ -213,7 +213,7 @@ export default function WebGPUFluidOverlay({
         renderer.dispose();
       }
     };
-     
+
   }, [resolution, intensity]);
 
   return (

@@ -90,3 +90,43 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+/**
+ * Push delivery: this is what reaches the user when the app is fully closed —
+ * the browser wakes the service worker for the message and it shows the alert
+ * in the status bar.
+ */
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { body: event.data ? event.data.text() : '' };
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'RockHound GO', {
+      body: payload.body || '',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: payload.tag || 'rhgo-alert',
+      data: { url: payload.url || '/' },
+    })
+  );
+});
+
+/**
+ * Status-bar notifications: tapping one brings the app to the front at the
+ * right screen, opening it if it was closed out.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(event.notification?.data?.url || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((client) => client.url.startsWith(self.location.origin));
+      if (open) return open.focus().then(() => (open.navigate ? open.navigate(target) : undefined));
+      return self.clients.openWindow(target);
+    })
+  );
+});
