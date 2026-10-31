@@ -94,23 +94,40 @@ describe('HolographicVaultView', () => {
     const tree = HolographicVaultView({ specimens: mockSpecimens });
     expect(tree).not.toBeNull();
     expect(tree.type).toBe('div');
+    expect(tree.props.role).toBe('region');
+    expect(tree.props['aria-roledescription']).toBe('carousel');
+    expect(tree.props['aria-label']).toBe('Specimen vault carousel');
+    expect(tree.props.tabIndex).toBe(0);
+    expect(tree.props.className).toContain('focus-visible:ring-amethyst-glow');
 
     const [, navigator, pedestalCard] = tree.props.children;
 
     // Check Carousel Navigator
     const [prevBtn, counterSpan, nextBtn] = navigator.props.children;
 
+    expect(prevBtn.props.type).toBe('button');
     expect(prevBtn.props['aria-label']).toBe('Previous specimen');
+    expect(prevBtn.props.title).toBe('Previous specimen');
+    expect(prevBtn.props.children.props['aria-hidden']).toBe('true');
     expect(prevBtn.props.className).toContain('focus-visible:ring-2');
     expect(prevBtn.props.className).toContain('focus-visible:ring-amethyst-glow');
 
     expect(counterSpan.props.children).toEqual(['Vault ', 1, ' of ', 2]);
+    expect(counterSpan.props['aria-live']).toBe('polite');
+    expect(counterSpan.props['aria-atomic']).toBe('true');
 
+    expect(nextBtn.props.type).toBe('button');
     expect(nextBtn.props['aria-label']).toBe('Next specimen');
+    expect(nextBtn.props.title).toBe('Next specimen');
+    expect(nextBtn.props.children.props['aria-hidden']).toBe('true');
     expect(nextBtn.props.className).toContain('focus-visible:ring-2');
 
     // Check Pedestal Card Specimen Info
     const motionDiv = pedestalCard.props.children;
+    expect(motionDiv.props.role).toBe('group');
+    expect(motionDiv.props['aria-roledescription']).toBe('slide');
+    expect(motionDiv.props['aria-label']).toBe('1 of 2: Amethyst Crystal');
+
     const [imageContainer, , detailsContainer, metricsContainer, linkContainer] = motionDiv.props.children;
 
     // Image & Rarity
@@ -196,5 +213,26 @@ describe('HolographicVaultView', () => {
 
     const prevUpdater = mockSetCurrentIndex.mock.calls[1][0];
     expect(prevUpdater(0)).toBe(1); // (0 - 1 + 2) % 2 = 1
+  });
+
+  it('supports keyboard navigation via ArrowLeft and ArrowRight keys', () => {
+    const tree = HolographicVaultView({ specimens: mockSpecimens });
+
+    const preventDefaultRight = vi.fn();
+    tree.props.onKeyDown({ key: 'ArrowRight', preventDefault: preventDefaultRight });
+    expect(preventDefaultRight).toHaveBeenCalledTimes(1);
+    expect(triggerOrbHaptic).toHaveBeenLastCalledWith('tap');
+    expect(mockSetCurrentIndex).toHaveBeenCalledTimes(1);
+
+    const preventDefaultLeft = vi.fn();
+    tree.props.onKeyDown({ key: 'ArrowLeft', preventDefault: preventDefaultLeft });
+    expect(preventDefaultLeft).toHaveBeenCalledTimes(1);
+    expect(triggerOrbHaptic).toHaveBeenLastCalledWith('tap');
+    expect(mockSetCurrentIndex).toHaveBeenCalledTimes(2);
+
+    const preventDefaultOther = vi.fn();
+    tree.props.onKeyDown({ key: 'Enter', preventDefault: preventDefaultOther });
+    expect(preventDefaultOther).not.toHaveBeenCalled();
+    expect(mockSetCurrentIndex).toHaveBeenCalledTimes(2);
   });
 });
