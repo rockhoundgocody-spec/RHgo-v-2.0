@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
+import IconRail from '@/components/hub/IconRail.jsx';
+import useOrbSize from '@/hooks/useOrbSize';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
@@ -30,6 +32,7 @@ function useIsDesktop() {
 export default function Hub() {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
+  const orbSize = useOrbSize(isDesktop);
   const [user, setUser] = useState(null);
   const [companion, setCompanion] = useState(null);
   const [recentFinds, setRecentFinds] = useState([]);
@@ -96,7 +99,8 @@ export default function Hub() {
       <HubAtmosphere />
       <HudGridBackdrop />
 
-      <div className="relative z-10 w-full flex items-center justify-center gap-10 xl:gap-16 px-4 lg:px-10">
+      <div className="relative z-10 w-full flex items-center justify-center gap-4 px-4 lg:px-10">
+        {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="left" /></div>}
         <div className="flex-1 flex justify-center"><div className="relative">
           <div
             className="absolute inset-0 -m-10 rounded-full pointer-events-none"
@@ -105,8 +109,9 @@ export default function Hub() {
               filter: 'blur(10px)',
             }}
           />
-          <HeroOrb companion={companion} recentFinds={recentFinds} size={isDesktop ? 340 : 232} />
+          <HeroOrb companion={companion} recentFinds={recentFinds} size={orbSize} />
         </div></div>
+        {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="right" /></div>}
 
       </div>
     </div>

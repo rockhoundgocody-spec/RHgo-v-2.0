@@ -70,7 +70,7 @@ export function useFocusTrap(containerRef, options = {}) {
         last.focus?.();
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
-        last.focus?.();
+        first.focus?.();
       }
     };
 
