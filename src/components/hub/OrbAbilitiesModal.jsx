@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Compass, Zap, Star, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLuckyMineralOfTheDay, playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
 import { fetchGeologyAt } from '@/lib/macrostrat';
 import { base44 } from '@/api/base44Client';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
   const [loading, setLoading] = useState(false);
   const [strataData, setStrataData] = useState(null);
   const [claimed, setClaimed] = useState(false);
   const [justClaimed, setJustClaimed] = useState(false);
+  const modalRef = useRef(null);
+  const titleId = useId();
   const luckyMineral = getLuckyMineralOfTheDay();
+
+  useFocusTrap(modalRef, {
+    active: open,
+    onClose,
+  });
 
   const todayKey = `rhgo_resonance_${luckyMineral.dateKey}`;
 
@@ -103,11 +111,16 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.94, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 30 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-sm rounded-3xl p-5 overflow-hidden shadow-2xl"
+          className="relative w-full max-w-sm rounded-3xl p-5 overflow-hidden shadow-2xl focus:outline-none"
           style={{
             background: 'linear-gradient(165deg, hsl(250 30% 12%) 0%, hsl(245 25% 7%) 100%)',
             border: '1px solid hsla(270,50%,55%,0.35)',
@@ -115,11 +128,12 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
           }}
         >
           <button
+            type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/40 hover:text-white transition p-1"
-            aria-label="Close"
+            className="absolute top-4 right-4 text-white/40 hover:text-white transition p-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
+            aria-label="Close dialog"
           >
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           </button>
 
           {/* ── RESONANCE / BLESSING MODE ── */}
@@ -129,11 +143,12 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                   style={{ background: 'hsla(45,100%,50%,0.2)', border: '1px solid hsla(45,100%,60%,0.4)' }}
+                  aria-hidden="true"
                 >
                   <Zap size={20} className="text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white leading-tight">Daily Geode Resonance</h3>
+                  <h3 id={titleId} className="text-base font-black text-white leading-tight">Daily Geode Resonance</h3>
                   <p className="text-[11px] text-white/50">Clover's planetary harmonic blessing</p>
                 </div>
               </div>
@@ -170,19 +185,20 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
               {/* Action Button */}
               {!claimed ? (
                 <Button
+                  type="button"
                   onClick={handleClaimResonance}
-                  className="w-full h-12 text-sm font-extrabold rounded-2xl text-white shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  className="w-full h-12 text-sm font-extrabold rounded-2xl text-white shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
                   style={{
                     background: 'linear-gradient(135deg, hsl(45 95% 50%), hsl(28 90% 48%))',
                     boxShadow: '0 4px 25px hsla(45,95%,50%,0.4)',
                   }}
                 >
-                  <Sparkles size={16} />
+                  <Sparkles size={16} aria-hidden="true" />
                   Harmonize & Claim (+50 XP)
                 </Button>
               ) : (
                 <div className="p-3 rounded-2xl flex items-center justify-center gap-2 text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 text-xs font-bold">
-                  <CheckCircle2 size={16} />
+                  <CheckCircle2 size={16} aria-hidden="true" />
                   {justClaimed ? 'Harmonized! +50 XP Active Today' : 'Resonance Active Today ✓'}
                 </div>
               )}
@@ -196,11 +212,12 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                   style={{ background: 'hsla(195,100%,50%,0.2)', border: '1px solid hsla(195,100%,60%,0.4)' }}
+                  aria-hidden="true"
                 >
                   <Compass size={20} className="text-hud-cyan animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white leading-tight">Lithosphere Strata Radar</h3>
+                  <h3 id={titleId} className="text-base font-black text-white leading-tight">Lithosphere Strata Radar</h3>
                   <p className="text-[11px] text-white/50">Real-time bedrock & formation scan</p>
                 </div>
               </div>
@@ -249,9 +266,10 @@ export default function OrbAbilitiesModal({ open, mode, onClose, onAction }) {
               )}
 
               <Button
+                type="button"
                 onClick={loadStrata}
                 variant="outline"
-                className="w-full h-10 text-xs font-bold rounded-xl border-white/15 text-white/80 hover:bg-white/5"
+                className="w-full h-10 text-xs font-bold rounded-xl border-white/15 text-white/80 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
               >
                 Refresh Coordinates
               </Button>
