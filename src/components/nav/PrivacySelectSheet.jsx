@@ -64,12 +64,36 @@ export default function PrivacySelectSheet({ value, onChange }) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
+                aria-label="Close location privacy options"
                 className="text-white/40 hover:text-white text-xs px-2 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
               >
                 Done
               </button>
             </div>
-            <div className="p-3 space-y-1.5 max-h-[60vh] overflow-y-auto">
+            <div
+              role="listbox"
+              aria-labelledby={titleId}
+              className="p-3 space-y-1.5 max-h-[60vh] overflow-y-auto"
+              onKeyDown={(e) => {
+                const options = Array.from(e.currentTarget.querySelectorAll('[role="option"]'));
+                const currentIndex = options.indexOf(document.activeElement);
+                if (currentIndex === -1) return;
+
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  options[(currentIndex + 1) % options.length]?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  options[(currentIndex - 1 + options.length) % options.length]?.focus();
+                } else if (e.key === 'Home') {
+                  e.preventDefault();
+                  options[0]?.focus();
+                } else if (e.key === 'End') {
+                  e.preventDefault();
+                  options[options.length - 1]?.focus();
+                }
+              }}
+            >
               {OPTIONS.map((opt) => {
                 const isSelected = opt.value === value;
                 return (
@@ -77,6 +101,7 @@ export default function PrivacySelectSheet({ value, onChange }) {
                     key={opt.value}
                     type="button"
                     role="option"
+                    aria-selected={isSelected}
                     aria-checked={isSelected}
                     onClick={() => {
                       onChange?.(opt.value);
