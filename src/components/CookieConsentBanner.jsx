@@ -36,7 +36,7 @@ export default function CookieConsentBanner() {
     >
       <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-[rgba(159,232,208,0.22)] bg-[rgba(17,16,25,0.96)] backdrop-blur-xl shadow-2xl p-4">
         <div className="flex items-start gap-3">
-          <Cookie className="w-5 h-5 mt-0.5 text-[#9FE8D0] shrink-0" />
+          <Cookie className="w-5 h-5 mt-0.5 text-[#9FE8D0] shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] leading-snug text-[#E8EEF2]">
               We use cookies for anonymous traffic analytics to improve the field
@@ -46,7 +46,7 @@ export default function CookieConsentBanner() {
               <button
                 type="button"
                 onClick={handleAccept}
-                className="flex-1 min-h-10 rounded-full font-bold text-[12px] text-[#04140e]"
+                className="flex-1 min-h-10 rounded-full font-bold text-[12px] text-[#04140e] hover:brightness-110 active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2EE6A6] motion-reduce:transform-none motion-reduce:transition-none"
                 style={{ background: 'linear-gradient(180deg,#2EE6A6,#1DBF7A)' }}
               >
                 Accept
@@ -54,7 +54,7 @@ export default function CookieConsentBanner() {
               <button
                 type="button"
                 onClick={handleDecline}
-                className="flex-1 min-h-10 rounded-full font-semibold text-[12px] text-[#9AA8B0] border border-[rgba(232,238,242,0.14)]"
+                className="flex-1 min-h-10 rounded-full font-semibold text-[12px] text-[#9AA8B0] hover:text-white hover:border-[rgba(232,238,242,0.3)] active:scale-[0.98] transition border border-[rgba(232,238,242,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0] motion-reduce:transform-none motion-reduce:transition-none"
               >
                 Decline
               </button>
@@ -63,10 +63,11 @@ export default function CookieConsentBanner() {
           <button
             type="button"
             onClick={handleDecline}
-            aria-label="Dismiss"
-            className="shrink-0 p-1 text-[#5C6B74] hover:text-[#9AA8B0]"
+            aria-label="Dismiss cookie consent"
+            title="Dismiss cookie consent"
+            className="shrink-0 p-1 text-[#5C6B74] hover:text-[#9AA8B0] rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9FE8D0]"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
