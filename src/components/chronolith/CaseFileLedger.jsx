@@ -20,20 +20,21 @@ export default function CaseFileLedger({
     <>
       <button
         onClick={onToggleLedger}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition"
+        aria-expanded={showLedger}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
         style={{ background: 'hsla(220,40%,5%,0.6)', border: '1px solid hsla(270,20%,25%,0.2)' }}
       >
         <div className="flex items-center gap-2">
-          <FileText size={13} className="text-white/40" />
+          <FileText size={13} className="text-white/40" aria-hidden="true" />
           <span className="text-xs font-semibold text-white/60">Case File</span>
           <span className="text-[9px] text-white/30">
             {evidence.length} evidence · {contradictions.length} contradictions · {missing.length} missing
           </span>
         </div>
         {showLedger ? (
-          <ChevronUp size={14} className="text-white/30" />
+          <ChevronUp size={14} className="text-white/30" aria-hidden="true" />
         ) : (
-          <ChevronDown size={14} className="text-white/30" />
+          <ChevronDown size={14} className="text-white/30" aria-hidden="true" />
         )}
       </button>
 
@@ -47,7 +48,7 @@ export default function CaseFileLedger({
           {contradictions.length > 0 && (
             <div>
               <div className="text-[8px] uppercase tracking-widest text-red-400/60 mb-1.5 px-1 flex items-center gap-1">
-                <AlertTriangle size={9} /> Contradiction Ledger
+                <AlertTriangle size={9} aria-hidden="true" /> Contradiction Ledger
               </div>
               <div className="space-y-1.5">
                 {contradictions.map((c, i) => {
@@ -78,7 +79,7 @@ export default function CaseFileLedger({
           {evidence.length > 0 && (
             <div>
               <div className="text-[8px] uppercase tracking-widest text-cyan-400/60 mb-1.5 px-1 flex items-center gap-1">
-                <FileText size={9} /> Evidence Ledger
+                <FileText size={9} aria-hidden="true" /> Evidence Ledger
               </div>
               <div className="space-y-1">
                 {evidence.map((e, i) => (
@@ -107,7 +108,7 @@ export default function CaseFileLedger({
           {missing.length > 0 && (
             <div>
               <div className="text-[8px] uppercase tracking-widest text-amber-400/60 mb-1.5 px-1 flex items-center gap-1">
-                <Target size={9} /> Missing Evidence — Missions
+                <Target size={9} aria-hidden="true" /> Missing Evidence — Missions
               </div>
               <div className="space-y-1">
                 {missing.map((m, i) => (

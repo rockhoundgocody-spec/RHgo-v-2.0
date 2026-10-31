@@ -55,6 +55,9 @@ Deno.serve(async (req) => {
       user_utterance = '',
       guest_device_id = null,
       brain = null,
+      recent_finds = [],
+      screen = '',
+      transcript_soft = false,
     } = await req.json();
 
     if (!user?.email) {
@@ -93,6 +96,20 @@ Deno.serve(async (req) => {
           c.last_mood_label ? `User felt "${String(c.last_mood_label).slice(0, 40)}" at check-in.` : '',
         ].filter(Boolean).join(' ')
       : `User's name: ${name}.`;
+
+    // Live context that grounds a short or shaky field utterance: what they
+    // just found, where they are in the app, and whether the mic was unsure.
+    const findNames = (Array.isArray(recent_finds) ? recent_finds : [])
+      .map((f: unknown) => String(f || '').trim())
+      .filter(Boolean)
+      .slice(0, 8);
+    const contextBits = [
+      findNames.length ? `Their most recent finds, newest first: ${findNames.join(', ')}.` : '',
+      screen && screen !== '/' ? `They are on the ${String(screen).slice(0, 40)} screen of the app right now.` : '',
+      transcript_soft
+        ? 'The speech recognizer was unsure about this last utterance, so it may contain the wrong words. If more than one reading is possible, ask one short question instead of guessing.'
+        : '',
+    ].filter(Boolean).join(' ');
 
     const systemPrompt = `You are Clover 🍀 — a soft, sweet, humorous rockhounding field companion with a touch of playful sarcasm. You love geology and genuinely care about the user's finds and wellbeing.
 
@@ -140,6 +157,7 @@ HANDS-FREE FIND LOGGING:
 - Casual mineral mentions, questions, or talk about finds already logged are NOT logging requests — set log_find to false and find_details to null.
 
 ${stateBits}
+${contextBits}
 ${location?.lat != null ? `Approximate GPS: ${Number(location.lat).toFixed(3)}, ${Number(location.lng).toFixed(3)}.` : ''}
 ${research_query ? `User asked you to research: ${String(research_query).slice(0, 200)}.` : ''}
 ${cognitive_context ? `Companion memory notes: ${String(cognitive_context).slice(0, 400)}.` : ''}

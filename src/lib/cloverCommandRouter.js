@@ -14,6 +14,8 @@ export const INTENTS = Object.freeze({
   DIG_UNLOCK: "dig_unlock",
   PAPERWORK: "paperwork",
   TELEGRAM: "telegram",
+  MUTE: "mute",
+  UNMUTE: "unmute",
   ASK: "ask",
   STAND_DOWN: "stand_down",
   UNKNOWN: "unknown",
@@ -35,8 +37,24 @@ export function parseCloverCommand(raw, state = {}) {
 
   if (!rest) return pack(INTENTS.WAKE, woke, rest, { reply: "Here." });
 
-  if (/stand\s*down|stop listening|go idle/.test(q)) {
+  if (
+    /\bstand\s*down\b/.test(q)
+    || /^(?:stop|enough|that'?s all|that'?s enough|all done)$/.test(q)
+    || /\b(?:stop listening|stop talking|be quiet|quiet down|shut up|hush)\b/.test(q)
+  ) {
     return pack(INTENTS.STAND_DOWN, woke, rest, { reply: "Standing down." });
+  }
+
+  // Her own ears: "mute" closes the mic but keeps the conversation open.
+  if (
+    /^(?:mute|mute yourself|mute the mic|mute your mic)\b/.test(q)
+    || /\bmute (?:yourself|the mic|your mic|it)\b/.test(q)
+  ) {
+    return pack(INTENTS.MUTE, woke, rest, { reply: "Muted. Tap the mic when you want me back." });
+  }
+
+  if (/\b(?:unmute|un-mute|un mute|listen again|start listening|can you hear me)\b/.test(q)) {
+    return pack(INTENTS.UNMUTE, woke, rest, { reply: "I can hear you again." });
   }
 
   const brain = matchBrain(q);

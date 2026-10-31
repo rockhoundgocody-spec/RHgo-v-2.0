@@ -200,7 +200,7 @@ export default function WebGPUOpalShader({
         renderer.dispose();
       }
     };
-     
+
   }, [intensity, speed, hueShift]);
 
   return (

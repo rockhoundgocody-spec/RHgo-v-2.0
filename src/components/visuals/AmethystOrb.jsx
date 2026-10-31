@@ -1,39 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { lazyPart } from '@/lib/lazyPart';
-import SphereVolume from './SphereVolume.jsx';
 import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
+import { flowAt, FLOW_ANGLE_DEG } from '@/lib/liquidFlow';
 
 /**
- * Two-layer black opal orb:
- *   Layer 1 (main): Black opal core with iridescent liquid-gas fire
- *   Layer 2 (overlay): Low-opacity amethyst gas shell for depth + brand tint
+ * Clover — her visual form. A prismatic shell of iridescent liquid glass
+ * wrapped around a molten amber core, cut from black volcanic glass.
+ * The glow layers, growth rings and liquid motion around her are unchanged.
  */
-// CSS black-opal stand-in: shown while the WebGL/WebGPU shader chunk loads,
-// and permanently if it can't (offline, no GPU). Keeps Three.js (~0.5 MB)
-// out of the app's first download.
-function OpalFallback() {
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0"
-      style={{
-        background:
-          'radial-gradient(circle at 32% 30%, hsla(190,100%,62%,0.55) 0%, transparent 38%),' +
-          'radial-gradient(circle at 70% 62%, hsla(330,90%,62%,0.45) 0%, transparent 42%),' +
-          'radial-gradient(circle at 44% 76%, hsla(45,100%,62%,0.32) 0%, transparent 36%),' +
-          'radial-gradient(circle at 62% 28%, hsla(160,90%,55%,0.35) 0%, transparent 30%),' +
-          'radial-gradient(circle at 50% 50%, hsl(265 55% 11%) 0%, hsl(250 50% 4%) 100%)',
-      }}
-    />
-  );
-}
-const BlackOpalShader = lazyPart(() => import('./BlackOpalShader.jsx'), OpalFallback);
-const WebGPUOpalShader = lazyPart(() => import('./WebGPUOpalShader.jsx'), OpalFallback);
-const WebGPUFluidOverlay = lazyPart(() => import('./WebGPUFluidOverlay.jsx'));
+const CLOVER_SHELL_IMG =
+  'https://media.base44.com/images/public/69f35dd14650b54681c835ec/0d03d24e8_generated_9797e11b.png';
 
 // orbState: 'idle' | 'listening' | 'thinking' | 'speaking'
 const STATE_CONFIG = {
@@ -82,18 +61,49 @@ export default function AmethystOrb({
   const haloRef = useRef(null);
   const auraRef = useRef(null);
   const auraInnerRef = useRef(null);
+  const mercuryRef = useRef(null);
+  const sheenRef = useRef(null);
+  const shadowRef = useRef(null);
+  // Phone tilt (-1 … 1 per axis) — she leans and drifts with the device
+  const tiltRef = useRef({ x: 0, y: 0 });
   const reduceMotion = useReducedMotion();
   const visible = usePageVisible();
-  // Try WebGPU first; fall back to WebGL shader if unsupported / init fails.
-  // Reduced-motion users get the lighter WebGL path AND no fluid overlay.
-  const [useWebGPU, setUseWebGPU] = useState(
-    typeof navigator !== 'undefined' && !!navigator.gpu && !detectInitialReduce()
-  );
+
+  // Phone tilt — she leans and drifts as the device turns, so she reads as a
+  // body floating inside the screen rather than a picture stuck onto it.
+  useEffect(() => {
+    if (reduceMotion) return;
+    const onOrient = (e) => {
+      if (e.gamma == null && e.beta == null) return;
+      tiltRef.current.x = Math.max(-1, Math.min(1, (e.gamma || 0) / 32));
+      tiltRef.current.y = Math.max(-1, Math.min(1, ((e.beta || 0) - 40) / 32));
+    };
+    const DOE = window.DeviceOrientationEvent;
+    let wantsGesture = false;
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      wantsGesture = true; // iOS needs a grant from a user gesture
+    } else if (DOE) {
+      window.addEventListener('deviceorientation', onOrient, true);
+    }
+    const askForTilt = async () => {
+      try {
+        if ((await DOE.requestPermission()) === 'granted') {
+          window.addEventListener('deviceorientation', onOrient, true);
+        }
+      } catch { /* declined — the pointer lean still applies */ }
+    };
+    if (wantsGesture) window.addEventListener('pointerdown', askForTilt, { once: true, passive: true });
+    return () => {
+      window.removeEventListener('deviceorientation', onOrient, true);
+      if (wantsGesture) window.removeEventListener('pointerdown', askForTilt);
+    };
+  }, [reduceMotion]);
+
   // Smooth state transitions — lerp current config toward target
   const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
   // Eased transform values — the orb glides toward its target pose each frame
   // instead of snapping, giving the liquid-metal its buttery follow-through.
-  const poseRef = useRef({ tx: 0, ty: 0, scale: 1, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
+  const poseRef = useRef({ tx: 0, ty: 0, scale: 1, rot: 0, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
 
   useEffect(() => {
     if (!visible) return;
@@ -114,6 +124,8 @@ export default function AmethystOrb({
       const spec = getSpectrum ? getSpectrum() : { bass: 0, mid: 0, treble: 0 };
       const bass = spec.bass || 0;
       const treble = spec.treble || 0;
+      // Live voice level — her mercury skin answers the voice itself, not just the state
+      const lvl = Math.min(1, Math.max(a * 1.7, bass * 0.6));
 
       // Lerp toward target state intensity for smooth transitions
       const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
@@ -122,9 +134,15 @@ export default function AmethystOrb({
       const { pulseScale, auraScale } = lerpedState.current;
 
       // Breathing speed varies by state
-      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.7;
-      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.018 * pulseScale;
-      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.12 * auraScale;
+      const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.85;
+      // Her breath is what the eye reads as alive — deep enough to see at rest
+      const idlePulse = (Math.sin(t * breathSpeed) * 0.5 + 0.5) * 0.035 * pulseScale;
+      const idleAura  = (Math.sin(t * breathSpeed * 0.6 + 1.2) * 0.5 + 0.5) * 0.14 * auraScale;
+      // Levitation — she hovers above the surface instead of sitting on it
+      const bob = reduceMotion ? 0 : Math.sin(t * 0.55) * size * 0.022;
+      const bob01 = Math.sin(t * 0.55) * 0.5 + 0.5;
+      // Device tilt — she drifts and leans as the phone turns
+      const tilt = reduceMotion ? { x: 0, y: 0 } : tiltRef.current;
 
       // ── Liquid-metal interaction layer ──────────────────────────────
       // Always-on organic wobble (two offset sine waves) gives the orb a
@@ -180,8 +198,9 @@ export default function AmethystOrb({
       const velShimmer = ix ? ix.velocity * 0.025 : 0;
 
       // Target pose for this frame
-      const targetTx = leanX + wobX * size;
-      const targetTy = leanY + wobY * size + driftY;
+      const targetTx = leanX + wobX * size + tilt.x * size * 0.05;
+      const targetTy = leanY + wobY * size + driftY + bob + tilt.y * size * 0.035;
+      const targetRot = tilt.x * 2.5;
       const targetScale = scaleBase - squish + velShimmer;
       const targetScaleY = scaleBase - squish * 0.7 + velShimmer;
 
@@ -192,15 +211,21 @@ export default function AmethystOrb({
       p.tx += (targetTx - p.tx) * 0.18;
       p.ty += (targetTy - p.ty) * 0.18;
       p.scale += (targetScale - p.scale) * 0.22;
+      p.rot += (targetRot - p.rot) * 0.12;
       const pScaleY = p.scale + (targetScaleY - targetScale) * 0.5;
 
       if (wrapRef.current) {
         wrapRef.current.style.transform =
-          `translate(${p.tx}px, ${p.ty}px) scale(${p.scale}, ${pScaleY})`;
+          `translate(${p.tx}px, ${p.ty}px) rotate(${p.rot}deg) scale(${p.scale}, ${pScaleY})`;
+      }
+      // Ground shadow answers the float: higher up, smaller and softer
+      if (shadowRef.current) {
+        shadowRef.current.style.opacity = String(0.5 - bob01 * 0.2);
+        shadowRef.current.style.transform = `scaleX(${0.9 + (1 - bob01) * 0.16})`;
       }
 
       // Halo + aura also ease for a cohesive liquid follow
-      const tHaloO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.22;
+      const tHaloO = 0.45 + idleAura + a * 0.45 + proxBoost * 0.22 + lvl * 0.18;
       const tHaloS = 1 + idlePulse * 2 + a * 0.18 + bass * 0.1 + proxBoost * 0.06;
       const tAuraO = 0.5 + idleAura * 1.5 + a * 0.5 + treble * 0.2 + proxBoost * 0.3;
       const tAuraS = 1 + idlePulse * 1.5 + a * 0.08 + bass * 0.06 + proxBoost * 0.04;
@@ -223,6 +248,25 @@ export default function AmethystOrb({
       if (auraInnerRef.current) {
         auraInnerRef.current.style.opacity = String(p.auraIO);
       }
+
+      // ── Liquid-mercury skin ──────────────────────────────────────────
+      // She rides the room's own current: the same diagonal surge the Hub
+      // backdrop flows on (src/lib/liquidFlow.js), so shell and backdrop read
+      // as one liquid. Voice level brightens, widens and quickens the flow.
+      const flow = flowAt(t);
+      const swirl = reduceMotion ? 0 : flow.x * 16 + lvl * 22;
+      if (mercuryRef.current) {
+        mercuryRef.current.style.opacity = String(0.3 + lvl * 0.5);
+        mercuryRef.current.style.transform = reduceMotion
+          ? 'none'
+          : `rotate(${swirl}deg) scale(${1.02 + flow.swell * 0.035 + lvl * 0.06})`;
+      }
+      if (sheenRef.current) {
+        sheenRef.current.style.opacity = String(0.2 + lvl * 0.62);
+        sheenRef.current.style.transform = reduceMotion
+          ? `scale(${1 + lvl * 0.12})`
+          : `translate(${flow.x * size * 0.35}px, ${flow.y * size * 0.35}px) scale(${1 + flow.swell * 0.05 + lvl * 0.22}, ${1 + lvl * 0.45})`;
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -237,13 +281,25 @@ export default function AmethystOrb({
   return (
     <div
       ref={wrapRef}
-      className={cn(
-        'relative transition-transform isolate',
-        !getAmplitude && (effectiveState === 'speaking' ? 'animate-orb-speak' : 'animate-amethyst-pulse'),
-        className
-      )}
+      className={cn('relative isolate', className)}
       style={{ width: size, height: size, willChange: 'transform' }}
     >
+      {/* Ground shadow — the contact patch that sells the float */}
+      <div
+        ref={shadowRef}
+        aria-hidden
+        className="pointer-events-none absolute rounded-[50%] blur-xl"
+        style={{
+          left: '16%',
+          right: '16%',
+          bottom: `-${Math.round(size * 0.18)}px`,
+          height: Math.round(size * 0.2),
+          background: 'radial-gradient(ellipse at 50% 50%, hsla(265,60%,3%,0.8) 0%, hsla(265,60%,5%,0.4) 52%, transparent 76%)',
+          opacity: 0.45,
+          willChange: 'transform, opacity',
+        }}
+      />
+
       {/* HOVERING AFTERGLOW — outer wide bloom, color shifts per state */}
       <div
         ref={auraRef}
@@ -310,108 +366,108 @@ export default function AmethystOrb({
 
       <div
         className="relative w-full h-full rounded-full overflow-hidden transition-shadow duration-700"
-        style={{ boxShadow: cfg.boxShadow }}
+        style={{
+          // Concave bowl: dark along the top edge, under-lit along the bottom,
+          // so the shell reads as glass with real depth
+          boxShadow: `${cfg.boxShadow}, inset 0 ${Math.round(size * 0.11)}px ${Math.round(size * 0.18)}px -${Math.round(size * 0.1)}px hsla(210,75%,6%,0.62), inset 0 -${Math.round(size * 0.1)}px ${Math.round(size * 0.16)}px -${Math.round(size * 0.11)}px hsla(45,100%,84%,0.3)`,
+          background: '#FBFDFC',
+        }}
       >
-        {/* LAYER 1 — Black opal main (audio-reactive via amp + spectrum)
-            WebGPU + TSL when available; WebGL fallback otherwise. */}
-        <div className="absolute inset-0">
-          {useWebGPU ? (
-            <WebGPUOpalShader
-              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
-              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
-              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-              onUnsupported={() => setUseWebGPU(false)}
-            />
-          ) : (
-            <BlackOpalShader
-              intensity={effectiveState === 'speaking' ? 1.85 : effectiveState === 'listening' ? 1.65 : effectiveState === 'thinking' ? 1.7 : 1.5}
-              speed={effectiveState === 'speaking' ? 0.55 : effectiveState === 'thinking' ? 0.48 : effectiveState === 'listening' ? 0.42 : 0.32}
-              hueShift={effectiveState === 'speaking' ? 1.6 : effectiveState === 'listening' ? 0.8 : effectiveState === 'thinking' ? 1.2 : 0}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-            />
-          )}
-        </div>
-
-        {/* LAYER 1.5 — Real compute fluid overlay (WebGPU only).
-            Disabled entirely under reduced-motion or when speaking is off
-            on idle Hub view to save GPU. */}
-        {useWebGPU && !reduceMotion && speaking && (
-          <div className="absolute inset-0">
-            <WebGPUFluidOverlay
-              resolution={96}
-              intensity={1.4}
-              getAmplitude={getAmplitude}
-              getSpectrum={getSpectrum}
-              onUnsupported={() => setUseWebGPU(false)}
-            />
-          </div>
-        )}
-
-        {/* Multi-color mineral shimmer wash — bright cyan/teal/rose/gold instead of purple tint */}
-        <div
-          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30"
-          style={{
-            background:
-              'radial-gradient(circle at 35% 30%, hsla(43,47%,91%,0.22) 0%, hsla(283,38%,80%,0.18) 40%, hsla(165,43%,69%,0.16) 70%, hsla(43,47%,91%,0.10) 100%)',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-30"
-          style={{
-            background:
-              'radial-gradient(circle at 65% 70%, hsla(283,38%,80%,0.24) 0%, hsla(165,43%,69%,0.18) 35%, hsla(43,47%,91%,0.14) 60%, transparent 80%)',
-          }}
+        {/* Her form — the prismatic shell she wears: iridescent liquid glass
+            over a molten amber core, cut from black volcanic glass. Held just
+            inside the rim so the whole mineral silhouette stays visible at any
+            size. */}
+        <img
+          src={CLOVER_SHELL_IMG}
+          alt="Clover"
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-contain select-none"
+          style={{ transform: 'scale(1.22)' }}
         />
 
-        {/* Prismatic refraction ring & caustics */}
+        {/* Amber spines — two counter-rotating sets, shaded like brushed gold */}
+        {[1, -1].map((dir) => (
+          <motion.div
+            key={dir}
+            aria-hidden
+            className="absolute inset-0 pointer-events-none rounded-full"
+            animate={reduceMotion ? undefined : { rotate: dir * 360 }}
+            transition={{ duration: dir > 0 ? 28 : 40, repeat: Infinity, ease: 'linear' }}
+            style={{
+              mixBlendMode: 'screen',
+              opacity: 0.55,
+              background: `repeating-conic-gradient(from ${dir > 0 ? 0 : 11}deg, transparent 0deg, hsla(40,100%,38%,0.5) 3deg, hsla(46,100%,72%,0.95) 5deg, hsla(50,100%,96%,1) 5.6deg, hsla(36,95%,30%,0.6) 7.5deg, transparent 10deg ${dir > 0 ? 22 : 30}deg)`,
+              WebkitMaskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
+              maskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
+            }}
+          />
+        ))}
+
+        {/* LIQUID MERCURY SKIN — molten silver flowing across her shell.
+            Swirls endlessly; brightens, widens and quickens with the voice. */}
         <div
+          ref={mercuryRef}
+          aria-hidden
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
-            background: 'radial-gradient(circle, transparent 72%, hsla(43,47%,91%,0.35) 86%, hsla(283,38%,80%,0.3) 93%, hsla(165,43%,69%,0.4) 98%, transparent 100%)',
+            mixBlendMode: 'soft-light',
+            opacity: 0.3,
+            willChange: 'transform, opacity',
+            background: 'conic-gradient(from 200deg, transparent 0deg, hsla(0,0%,100%,0.85) 34deg, hsla(190,100%,88%,0.55) 62deg, transparent 108deg, hsla(285,70%,90%,0.45) 168deg, transparent 232deg, hsla(45,100%,88%,0.6) 296deg, transparent 360deg)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 60%, transparent 78%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 60%, transparent 78%)',
+          }}
+        />
+        <div
+          ref={sheenRef}
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
             mixBlendMode: 'screen',
+            opacity: 0.28,
+            willChange: 'transform, opacity',
+            // Band lies across the flow diagonal, so it sweeps along the same
+            // travel line as the dashboard backdrop.
+            background: `linear-gradient(${90 + FLOW_ANGLE_DEG}deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)`,
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
           }}
         />
 
-        {/* Volumetric sphere shading — pure CSS, no WebGL context */}
-        <SphereVolume />
+        {/* Specular reflection — the screen's light landing on her glass */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            left: '21%',
+            top: '13%',
+            width: '34%',
+            height: '19%',
+            borderRadius: '9999px',
+            background: 'radial-gradient(ellipse at 50% 50%, hsla(0,0%,100%,0.85) 0%, hsla(190,100%,95%,0.45) 42%, transparent 74%)',
+            filter: 'blur(3px)',
+            transform: 'rotate(-26deg)',
+            mixBlendMode: 'screen',
+            opacity: 0.5,
+          }}
+        />
 
-        {/* PHOTON-SPHERE RING — luminous annulus with dark center.
-            Keeps existing shader colors visible in the ring band and the
-            outer rim; the center is masked to the page background so the orb
-            reads as light orbiting a dark core. Drift/breathing motion is
-            untouched — these are pure pointer-events-none overlays. */}
+        {/* Frost rim — the hairline edge that seats her in the glass */}
         <div
+          aria-hidden
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
-            background:
-              'radial-gradient(circle, #0a0a14 0%, #0a0a14 30%, rgba(10,10,20,0.55) 38%, transparent 47%)',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full"
-          style={{
-            background: `radial-gradient(circle, transparent 40%, ${cfg.haloBase} 46%, ${cfg.auraBase} 52%, transparent 60%)`,
-            mixBlendMode: 'screen',
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none rounded-full opacity-50"
-          style={{
-            background: `conic-gradient(from 0deg, transparent 0deg, ${cfg.haloBase} 30deg, transparent 60deg, ${cfg.auraBase} 120deg, transparent 150deg, ${cfg.haloBase} 240deg, transparent 270deg, ${cfg.auraBase} 330deg, transparent 360deg)`,
-            mixBlendMode: 'screen',
+            boxShadow: 'inset 0 0 0 1px hsla(0,0%,100%,0.55), inset 0 14px 26px -16px hsla(210,70%,12%,0.45)',
           }}
         />
 
         {label && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <div className="text-white/95 font-semibold tracking-wider text-lg glow-amethyst">
+            <div className="font-semibold tracking-wider text-lg" style={{ color: '#0a0a14' }}>
               {label}
             </div>
             {sublabel && (
-              <div className="text-amethyst/80 text-xs uppercase tracking-[0.3em] mt-1">
+              <div className="text-xs uppercase tracking-[0.3em] mt-1" style={{ color: 'hsla(210,25%,28%,0.85)' }}>
                 {sublabel}
               </div>
             )}
@@ -420,12 +476,4 @@ export default function AmethystOrb({
       </div>
     </div>
   );
-}
-
-function detectInitialReduce() {
-  if (typeof window === 'undefined') return false;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
-  const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4;
-  const lowCores = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
-  return !!(lowMem || lowCores);
 }
