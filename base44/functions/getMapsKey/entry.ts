@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from '@base44/sdk';
 
 /**
  * Maps key endpoint — auth-gated.
@@ -7,16 +7,34 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * are designed for browser use and should be referrer-restricted in the
  * Google Cloud console.
  */
-Deno.serve(async (req) => {
+export async function handleGetMapsKeyRequest(
+  req: Request,
+  opts?: {
+    createClientFromRequest?: typeof createClientFromRequest;
+    envGet?: (key: string) => string | undefined;
+  }
+): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
+    const clientFactory = opts?.createClientFromRequest || createClientFromRequest;
+    const base44 = clientFactory(req);
     const user = await base44.auth.me().catch(() => null);
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const key = Deno.env.get('GOOGLE_MAPS_API_KEY') || Deno.env.get('google_maps') || null;
+    const getEnv =
+      opts?.envGet ||
+      ((key: string) =>
+        typeof Deno !== 'undefined'
+          ? Deno.env.get(key)
+          : (globalThis.process?.env?.[key] as string | undefined));
+    const key = getEnv('GOOGLE_MAPS_API_KEY') || getEnv('google_maps') || null;
     return Response.json({ ok: !!key, key });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('getMapsKey error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
+
+if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+  Deno.serve((req) => handleGetMapsKeyRequest(req));
+}
