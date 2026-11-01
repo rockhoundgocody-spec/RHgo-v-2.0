@@ -5,7 +5,7 @@
  *
  * All hooks are called unconditionally before any early return.
  */
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useId } from 'react';
 import { Link } from 'react-router-dom';
 import { X, MapPin, Award, Star, Shield, AlertTriangle, CheckCircle2, ChevronRight, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { BADGES } from '@/lib/badgeDefinitions.js';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import LandAccessPanel from '@/components/explore/LandAccessPanel.jsx';
 import { base44 } from '@/api/base44Client';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 const LAND_LABEL = {
   public:         { label: 'Public Land',      color: '#34d399' },
@@ -85,6 +86,13 @@ export default function HotspotDetailSheet({
   onClose,
 }) {
   // ── ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURN ──────────────────────
+  const sheetRef = useRef(null);
+  const titleId = useId();
+
+  useFocusTrap(sheetRef, {
+    active: Boolean(hotspot),
+    onClose,
+  });
 
   const land = LAND_LABEL[hotspot?.land_type] || LAND_LABEL.unknown;
   const isPublic = ['public','blm','forest_service','state_park'].includes(hotspot?.land_type);
@@ -163,11 +171,16 @@ export default function HotspotDetailSheet({
     <AnimatePresence>
       <motion.div
         key="detail"
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 280 }}
-        className="absolute bottom-0 inset-x-0 z-[2000] rounded-t-3xl overflow-hidden"
+        className="absolute bottom-0 inset-x-0 z-[2000] rounded-t-3xl overflow-hidden focus:outline-none"
         style={{
           maxHeight: '80vh',
           background: 'linear-gradient(180deg, hsla(245,32%,10%,0.99) 0%, hsla(240,26%,6%,1) 100%)',
@@ -192,7 +205,7 @@ export default function HotspotDetailSheet({
           <div className="px-5 pt-2 pb-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h2 className="text-white font-bold text-lg leading-tight truncate">{hotspot.name}</h2>
+                <h2 id={titleId} className="text-white font-bold text-lg leading-tight truncate">{hotspot.name}</h2>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <span
                     className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border"
@@ -214,8 +227,10 @@ export default function HotspotDetailSheet({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label="Close hotspot details"
+                title="Close hotspot details"
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-white/50"
                 style={{ background: 'hsla(255,30%,20%,0.5)', border: '1px solid hsla(255,30%,40%,0.2)' }}
               >
