@@ -108,7 +108,7 @@ export default function MapFilterSheet({
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
                 style={{ background: 'hsla(255,30%,12%,0.8)', border: '1px solid hsla(255,30%,25%,0.3)' }}>
-                <Search size={16} className="text-white/30" />
+                <Search size={16} className="text-white/30" aria-hidden="true" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -117,7 +117,7 @@ export default function MapFilterSheet({
                 />
                 {search && (
                   <button onClick={() => setSearch('')} aria-label="Clear search" className="text-white/30 hover:text-white/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm">
-                    <X size={14} />
+                    <X size={14} aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -175,9 +175,9 @@ export default function MapFilterSheet({
                       >
                         <span className="text-white text-sm capitalize">{mineral}</span>
                         {active ? (
-                          <Check size={16} style={{ color: '#9FE8D0' }} />
+                          <Check size={16} style={{ color: '#9FE8D0' }} aria-hidden="true" />
                         ) : (
-                          <Plus size={16} className="text-white/30" />
+                          <Plus size={16} className="text-white/30" aria-hidden="true" />
                         )}
                       </button>
                     );
@@ -192,7 +192,7 @@ export default function MapFilterSheet({
 
               {/* Feedback */}
               <div className="flex items-center justify-center gap-1.5 pt-4 pb-2 text-white/30 text-xs">
-                <MessageCircle size={12} />
+                <MessageCircle size={12} aria-hidden="true" />
                 <span>How can we improve map filters?</span>
               </div>
             </div>
