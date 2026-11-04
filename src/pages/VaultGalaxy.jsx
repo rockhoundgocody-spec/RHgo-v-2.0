@@ -163,6 +163,12 @@ export default function VaultGalaxy() {
             <div>
               <div className="text-white font-black text-lg tracking-tight leading-none flex items-center gap-2">
                 <Orbit size={18} className="text-amethyst-glow" /> Vault Galaxy
+                {!user && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+                    style={{ background: 'rgba(159,232,208,0.12)', color: '#9FE8D0', border: '1px solid rgba(159,232,208,0.3)' }}>
+                    Guest Mode
+                  </span>
+                )}
               </div>
               <div className="text-white/55 text-[10px] uppercase tracking-[0.22em] mt-1">
                 {isSample

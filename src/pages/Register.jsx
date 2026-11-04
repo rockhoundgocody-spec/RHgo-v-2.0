@@ -205,6 +205,20 @@ export default function Register() {
         <GoogleIcon className="w-4 h-4" />
         Sign in with Google
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          try {
+            localStorage.setItem("rhgo_guest_mode", "1");
+          } catch {
+            /* ignore */
+          }
+          navigate(target || "/", { replace: true });
+        }}
+        className="w-full min-h-11 mt-2.5 rounded-full border border-[rgba(46,230,166,0.3)] bg-[rgba(46,230,166,0.08)] text-[#9FE8D0] text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-[rgba(46,230,166,0.14)] transition"
+      >
+        Continue in Guest Mode
+      </button>
       <p className="text-center text-[11px] text-[#5C6B74] mt-4 leading-relaxed">
         By creating an account you agree to our{" "}
         <Link to="/terms" className="text-[#2EE6A6] underline-offset-2 hover:underline">Terms</Link>

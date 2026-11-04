@@ -8,6 +8,7 @@ import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from 'rea
 import 'leaflet/dist/leaflet.css';
 import { Crosshair, Loader2, MapPin, Navigation, Search, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { updateGuestSpecimen } from '@/lib/useEntityQuery';
 
 const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const US_CENTER = [39.5, -98.35];
@@ -146,11 +147,16 @@ export default function FoundLocationPicker({
     setSaving(true);
     setError('');
     try {
-      await base44.entities.Specimen.update(persistId, {
+      const payload = {
         found_at: next.found_at || '',
         lat: next.lat ?? null,
         lng: next.lng ?? null,
-      });
+      };
+      if (String(persistId).startsWith('guest_')) {
+        updateGuestSpecimen(persistId, payload);
+      } else {
+        await base44.entities.Specimen.update(persistId, payload);
+      }
     } catch (err) {
       setError(err?.message || "Couldn't save that location. Try again.");
     } finally {

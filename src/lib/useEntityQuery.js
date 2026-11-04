@@ -23,9 +23,33 @@ export function saveGuestSpecimen(specimen) {
       created_date: new Date().toISOString(),
       ...specimen,
     };
-    const next = [record, ...list];
+    const next = [record, ...list.filter((item) => item.id !== record.id)];
     window.localStorage?.setItem(GUEST_SPECIMENS_KEY, JSON.stringify(next.slice(0, 200)));
     return record;
+  } catch {
+    return null;
+  }
+}
+
+export function getGuestSpecimen(id) {
+  if (!id) return null;
+  return readGuestSpecimens().find((item) => item.id === id) || null;
+}
+
+export function updateGuestSpecimen(id, patch) {
+  if (typeof window === 'undefined' || !id || !patch) return null;
+  try {
+    const list = readGuestSpecimens();
+    let updated = null;
+    const next = list.map((item) => {
+      if (item.id !== id) return item;
+      updated = { ...item, ...patch, updated_date: new Date().toISOString() };
+      return updated;
+    });
+    if (updated) {
+      window.localStorage?.setItem(GUEST_SPECIMENS_KEY, JSON.stringify(next));
+    }
+    return updated;
   } catch {
     return null;
   }

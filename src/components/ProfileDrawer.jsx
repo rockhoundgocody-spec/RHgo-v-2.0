@@ -22,7 +22,7 @@ function DrawerHeader({ onClose }) {
 }
 
 function UserInfoSection({ user }) {
-  if (!user) return null;
+  const guestName = typeof window !== 'undefined' ? localStorage.getItem('rhgo_guest_name') || 'Guest Explorer' : 'Guest Explorer';
 
   return (
     <div className="p-6 border-b border-white/10">
@@ -31,15 +31,13 @@ function UserInfoSection({ user }) {
           <User size={20} className="text-amethyst-glow" />
         </div>
         <div>
-          <div className="font-semibold text-white">{user.full_name}</div>
-          <div className="text-xs text-white/50">{user.email}</div>
+          <div className="font-semibold text-white">{user?.full_name || guestName}</div>
+          <div className="text-xs text-white/50">{user?.email || 'Guest Mode · Stored on this device'}</div>
         </div>
       </div>
-      {user.role && (
-        <div className="inline-block px-3 py-1 rounded-full bg-amethyst/20 border border-amethyst/30 text-xs text-amethyst-glow font-mono uppercase tracking-wider">
-          {user.role}
-        </div>
-      )}
+      <div className="inline-block px-3 py-1 rounded-full bg-amethyst/20 border border-amethyst/30 text-xs text-amethyst-glow font-mono uppercase tracking-wider">
+        {user?.role || 'GUEST MODE'}
+      </div>
     </div>
   );
 }
@@ -68,7 +66,21 @@ function MenuList({ menuItems }) {
   );
 }
 
-function LogoutButton({ onLogout }) {
+function LogoutButton({ user, onLogout, onSignIn }) {
+  if (!user) {
+    return (
+      <div className="p-4">
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="w-full flex items-center justify-center gap-2 p-3 rounded-xl font-bold text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/50"
+          style={{ background: '#9FE8D0', color: '#0a0a14' }}
+        >
+          <span>Sign In to Sync Cloud</span>
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="p-4">
       <button
@@ -174,7 +186,14 @@ export default function ProfileDrawer() {
             <DrawerHeader onClose={() => setIsOpen(false)} />
             <UserInfoSection user={user} />
             <MenuList menuItems={menuItems} />
-            <LogoutButton onLogout={handleLogout} />
+            <LogoutButton
+              user={user}
+              onLogout={handleLogout}
+              onSignIn={() => {
+                setIsOpen(false);
+                navigate('/signin');
+              }}
+            />
           </div>
         </>
       )}

@@ -10,6 +10,7 @@ import GlassPanel from '@/components/visuals/GlassPanel.jsx';
 import ShareSpecimenButton from '@/components/collection/ShareSpecimenButton.jsx';
 import FoundLocationPicker from '@/components/scan/FoundLocationPicker.jsx';
 import { exportToCsv } from '@/lib/specimenExport';
+import { getGuestSpecimen, updateGuestSpecimen } from '@/lib/useEntityQuery';
 
 const RARITY_CONFIG = {
   common:    { label: 'Common',    color: '#94a3b8', glow: 'hsla(215,20%,55%,0.35)',  gradient: 'from-slate-900 to-slate-800',   border: 'border-white/10' },
@@ -67,9 +68,18 @@ export default function SpecimenDetail() {
   const [busyAction, setBusyAction] = useState(null);
   const queryClient = useQueryClient();
 
+  const isGuestRecord = String(id || '').startsWith('guest_');
+
   const { data: specimen, isLoading } = useQuery({
     queryKey: ['specimen', id],
-    queryFn: () => base44.entities.Specimen.get(id),
+    queryFn: async () => {
+      if (isGuestRecord) return getGuestSpecimen(id);
+      try {
+        return await base44.entities.Specimen.get(id);
+      } catch {
+        return getGuestSpecimen(id);
+      }
+    },
     enabled: !!id,
   });
 
@@ -77,9 +87,14 @@ export default function SpecimenDetail() {
     if (verifying || !id) return;
     setVerifying(true);
     try {
-      await base44.functions.invoke('progressiveVerify', { specimen_id: id });
-      await base44.entities.Specimen.update(id, { verified: true });
-      queryClient.invalidateQueries(['specimen', id]);
+      if (isGuestRecord) {
+        updateGuestSpecimen(id, { verified: true });
+        queryClient.setQueryData(['specimen', id], (prev) => (prev ? { ...prev, verified: true } : prev));
+      } else {
+        await base44.functions.invoke('progressiveVerify', { specimen_id: id });
+        await base44.entities.Specimen.update(id, { verified: true });
+        queryClient.invalidateQueries(['specimen', id]);
+      }
     } catch (e) {
       console.error('Verification failed:', e);
     } finally {
@@ -91,7 +106,11 @@ export default function SpecimenDetail() {
     if (busyAction) return;
     setBusyAction(key);
     try {
-      await base44.entities.Specimen.update(id, patch);
+      if (isGuestRecord) {
+        updateGuestSpecimen(id, patch);
+      } else {
+        await base44.entities.Specimen.update(id, patch);
+      }
       queryClient.setQueryData(['specimen', id], (prev) => (prev ? { ...prev, ...patch } : prev));
     } finally {
       setBusyAction(null);

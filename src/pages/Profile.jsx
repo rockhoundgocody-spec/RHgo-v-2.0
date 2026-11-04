@@ -8,10 +8,13 @@ import SkillsSection from '@/components/profile/SkillsSection.jsx';
 import LiquidMineralBadge from '@/components/badges/LiquidMineralBadge.jsx';
 import { useBadgeAwarderContext } from '@/lib/BadgeAwarderContext';
 import RarityBadgeShowcase from '@/components/profile/RarityBadgeShowcase.jsx';
+import { readGuestSpecimens } from '@/lib/useEntityQuery';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [guestName, setGuestName] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('rhgo_guest_name') || 'Guest Explorer' : 'Guest Explorer'));
+  const [editingGuestName, setEditingGuestName] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ findings: 0, badges: 0, rarityCounts: { common: 0, uncommon: 0, rare: 0, legendary: 0 } });
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -23,6 +26,7 @@ export default function Profile() {
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
+      if (!u?.email) throw new Error('guest');
       setUser(u);
       const [specimens, badges, profiles] = await Promise.all([
         base44.entities.Specimen.filter({ created_by: u.email }),
@@ -36,8 +40,14 @@ export default function Profile() {
       const battles = await base44.entities.BattleResult.filter({ owner_email: u.email }, '-created_date', 10).catch(() => []);
       setBattleHistory(battles);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+    }).catch(() => {
+      const guestSpecimens = readGuestSpecimens();
+      const rarityCounts = { common: 0, uncommon: 0, rare: 0, legendary: 0 };
+      for (const x of guestSpecimens) { if (rarityCounts[x.rarity] != null) rarityCounts[x.rarity]++; }
+      setStats({ findings: guestSpecimens.length, badges: earnedCodes.size, rarityCounts });
+      setLoading(false);
+    });
+  }, [earnedCodes.size]);
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -108,16 +118,59 @@ export default function Profile() {
             </label>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-white truncate">{user?.full_name || 'Rockhound'}</h1>
-            <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition rounded px-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
-            >
-              {uploading ? 'Uploading…' : 'Change avatar'}
-            </button>
+            {!user && editingGuestName ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const clean = guestName.trim() || 'Guest Explorer';
+                  setGuestName(clean);
+                  try { localStorage.setItem('rhgo_guest_name', clean); } catch {}
+                  setEditingGuestName(false);
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  maxLength={32}
+                  autoFocus
+                  className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white text-sm font-bold outline-none focus:border-[#9FE8D0]"
+                />
+                <button type="submit" className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ background: '#9FE8D0', color: '#0a0a14' }}>
+                  Save
+                </button>
+              </form>
+            ) : (
+              <h1 className="text-xl font-bold text-white truncate">{user?.full_name || guestName}</h1>
+            )}
+            <p className="text-white/40 text-xs truncate mt-0.5">
+              {user?.email || 'Guest Mode · Stored locally on this device'}
+            </p>
+            {user ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="text-[10px] text-amethyst-glow/70 hover:text-amethyst-glow mt-1 transition rounded px-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/70"
+              >
+                {uploading ? 'Uploading…' : 'Change avatar'}
+              </button>
+            ) : (
+              <div className="flex items-center gap-3 mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingGuestName(true)}
+                  className="text-[10px] text-[#9FE8D0] hover:underline font-semibold"
+                >
+                  Edit guest name
+                </button>
+                <span className="text-white/20">·</span>
+                <Link to="/signin" className="text-[10px] text-amethyst-glow/80 hover:text-amethyst-glow">
+                  Sign in to sync cloud →
+                </Link>
+              </div>
+            )}
           </div>
         </GlassPanel>
       </div>
@@ -140,8 +193,10 @@ export default function Profile() {
           </button>
         </GlassPanel>
         <GlassPanel className="p-5 text-center">
-          <div className="text-[13px] font-bold text-hud-cyan tracking-widest mt-1">{user?.role === 'admin' ? 'ADMIN' : 'MEMBER'}</div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Role</div>
+          <div className="text-[13px] font-bold text-hud-cyan tracking-widest mt-1">
+            {user?.role === 'admin' ? 'ADMIN' : user ? 'MEMBER' : 'GUEST'}
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Mode</div>
         </GlassPanel>
       </div>
 
@@ -351,13 +406,23 @@ export default function Profile() {
         )}
       </GlassPanel>
 
-      {/* Logout */}
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-rose-500/25 text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/8 transition text-sm font-medium"
-      >
-        <LogOut size={15} /> Sign out
-      </button>
+      {/* Logout or Cloud Sync */}
+      {user ? (
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-rose-500/25 text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/8 transition text-sm font-medium"
+        >
+          <LogOut size={15} /> Sign out
+        </button>
+      ) : (
+        <Link
+          to="/signin"
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition active:scale-95"
+          style={{ background: '#9FE8D0', color: '#0a0a14' }}
+        >
+          Sign in to back up Guest finds to the cloud
+        </Link>
+      )}
     </div>
   );
 }

@@ -12,11 +12,13 @@ import CollectionDashboard from '@/components/collection/CollectionDashboard.jsx
 import EmptyState from '@/components/visuals/EmptyState.jsx';
 import { SkeletonGrid } from '@/components/visuals/SkeletonCard.jsx';
 import { useEntityList } from '@/lib/useEntityQuery';
+import { useAuth } from '@/lib/AuthContext';
 import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
 const RARITY_FILTERS = ['all', 'common', 'uncommon', 'rare', 'legendary'];
 
 export default function Collection() {
+  const { isAuthenticated } = useAuth();
   const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
   const [view, setView] = useState('crystal'); // 'crystal' | 'gallery' | 'grid' | 'map' | 'dashboard'
   const [rarityFilter, setRarityFilter] = useState('all');
@@ -43,9 +45,17 @@ export default function Collection() {
     <div className="px-4 pt-6 pb-24 max-w-md mx-auto">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">GeoDex</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-white tracking-tight">GeoDex</h1>
+            {!isAuthenticated && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(159,232,208,0.12)', color: '#9FE8D0', border: '1px solid rgba(159,232,208,0.3)' }}>
+                Guest Mode
+              </span>
+            )}
+          </div>
           <p className="text-white/35 text-[11px] uppercase tracking-[0.25em] mt-0.5">
-            {specimens.length} {specimens.length === 1 ? 'specimen' : 'specimens'} etched
+            {specimens.length} {specimens.length === 1 ? 'specimen' : 'specimens'} etched {!isAuthenticated ? '· on this device' : ''}
           </p>
         </div>
         {/* View toggle */}

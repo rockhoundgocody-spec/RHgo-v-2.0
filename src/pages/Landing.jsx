@@ -74,7 +74,12 @@ export default function Landing() {
         {/* Two buttons */}
         <motion.div {...rise(1.1)} className="w-full max-w-xs space-y-3">
           <Link
-            to="/scan"
+            to="/"
+            onClick={() => {
+              try {
+                localStorage.setItem('rhgo_guest_mode', '1');
+              } catch { /* */ }
+            }}
             className="relative overflow-hidden w-full py-3.5 rounded-2xl font-bold text-[15px] text-center flex items-center justify-center transition active:scale-95"
             style={{
               background: '#9FE8D0',
@@ -86,7 +91,17 @@ export default function Landing() {
               style={{ background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent)' }}
               animate={{ x: ['0%', '450%'] }}
               transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 3.2, ease: 'easeInOut', delay: 2 }} />
-            <span className="relative">Scan one free</span>
+            <span className="relative">Enter in Guest Mode — Free</span>
+          </Link>
+          <Link
+            to="/scan"
+            className="w-full py-3 rounded-2xl font-semibold text-sm text-[#9FE8D0] text-center flex items-center justify-center transition active:scale-95 hover:text-white"
+            style={{
+              background: 'rgba(159,232,208,0.08)',
+              border: '1px solid rgba(159,232,208,0.28)',
+            }}
+          >
+            Open Scanner Directly
           </Link>
           <button
             type="button"
