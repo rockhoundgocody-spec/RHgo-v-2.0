@@ -63,6 +63,8 @@ export default function AmethystOrb({
   const auraInnerRef = useRef(null);
   const coreSceneRef = useRef(null);
   const coreCausticRef = useRef(null);
+  const coreFlareRef = useRef(null);
+  const flareRef = useRef(0);
   const mercuryRef = useRef(null);
   const sheenRef = useRef(null);
   const shadowRef = useRef(null);
@@ -184,9 +186,12 @@ export default function AmethystOrb({
           // Scroll parallax drift
           driftY = ix.scrollV * size * 0.025;
 
-          // Tap squish — quick compress, decays exponentially
+          // Tap squish — quick compress, decays exponentially, plus inner core flare
           if (ix.tapImpulse > 0.001) {
             squish = ix.tapImpulse * 0.07;
+            if (ix.tapImpulse > flareRef.current) {
+              flareRef.current = ix.tapImpulse;
+            }
             ix.tapImpulse *= 0.88;
           }
 
@@ -256,28 +261,39 @@ export default function AmethystOrb({
       // radial pulse), completely decoupled from the 16s / 34° backdrop and
       // outer mercury orb behind it, with subtle counter-parallax so the core
       // floats inside its glass chamber as a separate living layer.
-      const core = coreFlowAt(t, lvl);
+      const flare = flareRef.current;
+      if (flare > 0.002) {
+        flareRef.current *= 0.9;
+      } else {
+        flareRef.current = 0;
+      }
+
+      const core = coreFlowAt(t, lvl, flare);
       if (coreSceneRef.current) {
         if (reduceMotion) {
-          coreSceneRef.current.style.transform = 'scale(1.22)';
+          coreSceneRef.current.style.transform = `scale(${1.22 + flare * 0.06})`;
         } else {
-          const coreX = core.x * size * 0.044 - p.tx * 0.32;
-          const coreY = core.y * size * 0.038 - p.ty * 0.32;
-          const coreRot = core.twist * 8.5 - p.rot * 1.4;
-          const coreScaleX = 1.22 + core.pulse * 0.068 + lvl * 0.055;
-          const coreScaleY = 1.22 + (1 - core.pulse) * 0.048 + core.swell * 0.03 + lvl * 0.065;
+          const coreX = core.x * size * 0.048 - p.tx * 0.32;
+          const coreY = core.y * size * 0.042 - p.ty * 0.32;
+          const coreRot = core.spin + core.twist * 22 - p.rot * 1.4;
+          const coreScaleX = 1.22 + core.pulse * 0.075 + lvl * 0.055 + flare * 0.085;
+          const coreScaleY = 1.22 + (1 - core.pulse) * 0.055 + core.swell * 0.035 + lvl * 0.065 + flare * 0.085;
           coreSceneRef.current.style.transform =
             `translate3d(${coreX}px, ${coreY}px, 0) rotate(${coreRot}deg) scale(${coreScaleX}, ${coreScaleY})`;
         }
       }
       if (coreCausticRef.current) {
-        coreCausticRef.current.style.opacity = String(0.42 + core.caustic * 0.32 + lvl * 0.24);
+        coreCausticRef.current.style.opacity = String(Math.min(1, 0.46 + core.caustic * 0.34 + lvl * 0.24 + flare * 0.38));
         coreCausticRef.current.style.transform = reduceMotion
           ? 'none'
-          : `translate3d(${-core.y * size * 0.07}px, ${core.x * size * 0.07}px, 0) rotate(${-core.twist * 28}deg) scale(${0.94 + core.pulse * 0.18 + lvl * 0.12})`;
+          : `translate3d(${-core.y * size * 0.075}px, ${core.x * size * 0.075}px, 0) rotate(${-core.spin * 1.35 - core.twist * 42}deg) scale(${0.95 + core.pulse * 0.2 + lvl * 0.12 + flare * 0.22})`;
+      }
+      if (coreFlareRef.current) {
+        coreFlareRef.current.style.opacity = String(flare * 0.78);
+        coreFlareRef.current.style.transform = `scale(${0.78 + flare * 0.42}) rotate(${core.spin * 1.6}deg)`;
       }
 
-      const swirl = reduceMotion ? 0 : core.twist * 22 + core.x * 14 + lvl * 24;
+      const swirl = reduceMotion ? 0 : core.spin * 0.85 + core.twist * 34 + core.x * 18 + lvl * 28;
       if (mercuryRef.current) {
         mercuryRef.current.style.opacity = String(0.32 + core.caustic * 0.14 + lvl * 0.48);
         mercuryRef.current.style.transform = reduceMotion
@@ -304,6 +320,7 @@ export default function AmethystOrb({
   return (
     <div
       ref={wrapRef}
+      onPointerDown={() => { flareRef.current = 1; }}
       className={cn('relative isolate', className)}
       style={{ width: size, height: size, willChange: 'transform' }}
     >
@@ -425,14 +442,30 @@ export default function AmethystOrb({
           }}
         />
 
-        {/* Amber spines — two counter-rotating sets, shaded like brushed gold */}
+        {/* Subtle inner-core flare triggered on tap */}
+        <div
+          ref={coreFlareRef}
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            mixBlendMode: 'screen',
+            opacity: 0,
+            willChange: 'transform, opacity',
+            background:
+              'radial-gradient(circle at 50% 50%, hsla(48,100%,92%,0.9) 0%, hsla(42,100%,66%,0.65) 22%, hsla(185,100%,72%,0.42) 44%, transparent 66%)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 38%, transparent 66%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 38%, transparent 66%)',
+          }}
+        />
+
+        {/* Amber spines — two counter-rotating sets, shaded like brushed gold, spinning fast */}
         {[1, -1].map((dir) => (
           <motion.div
             key={dir}
             aria-hidden
             className="absolute inset-0 pointer-events-none rounded-full"
             animate={reduceMotion ? undefined : { rotate: dir * 360 }}
-            transition={{ duration: dir > 0 ? 28 : 40, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: dir > 0 ? 6.5 : 9.5, repeat: Infinity, ease: 'linear' }}
             style={{
               mixBlendMode: 'screen',
               opacity: 0.55,

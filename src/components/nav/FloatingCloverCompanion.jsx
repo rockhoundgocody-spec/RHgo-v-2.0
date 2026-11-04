@@ -1,16 +1,18 @@
 /**
  * FloatingCloverCompanion — persistent Clover on every page except Hub HeroOrb.
- * Visual of HeroOrb / AmethystOrb is unchanged.
+ * Can be minimized into a compact live pill while staying in an active hands-free
+ * conversation, and interrupted at any time to steer the conversation.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { on } from '@/lib/cloverWake';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Maximize2, Mic, Square } from 'lucide-react';
 import AmethystOrb from '@/components/visuals/AmethystOrb.jsx';
 import CloverVoicePanel from '@/components/hub/CloverVoicePanel.jsx';
 import useCloverConversation from '@/components/hub/useCloverConversation.js';
-import { playOrbChime, triggerOrbHaptic } from '@/lib/orbAudio';
+import { triggerOrbHaptic } from '@/lib/orbAudio';
 
 export default function FloatingCloverCompanion() {
   const location = useLocation();
@@ -31,7 +33,7 @@ export default function FloatingCloverCompanion() {
   sendRef.current = clover.send;
 
   useEffect(() => on('wake', () => {
-    if (hiddenRef.current) return; // HeroOrb handles the Hub
+    if (hiddenRef.current) return;
     setWakePulse(true);
     setTimeout(() => setWakePulse(false), 900);
     triggerOrbHaptic('pulse');
@@ -39,7 +41,6 @@ export default function FloatingCloverCompanion() {
     startRef.current("I'm here. What do you need?");
   }), []);
 
-  // "Ask Clover" from anywhere in the app (e.g. a star in the Vault Galaxy).
   useEffect(() => on('clover:ask', (question) => {
     if (hiddenRef.current || !question) return;
     setExpanded(true);
@@ -49,25 +50,32 @@ export default function FloatingCloverCompanion() {
 
   if (isHub || isAdminOrDocs) return null;
 
+  const isTalkingOrActive = clover.phase !== 'idle';
+
   const handleOrbClick = () => {
-    playOrbChime(528, 1.2);
     triggerOrbHaptic('tap');
     clover.unlock?.();
-    if (!expanded || clover.phase === 'idle' || clover.phase === 'resting') {
+
+    if (clover.phase === 'idle' || clover.phase === 'resting') {
       setExpanded(true);
-      if (clover.phase === 'idle' || clover.phase === 'resting') {
-        const openers = [
-          "Here, hound. What are we checking?",
-          "Clover's up. Find or site?",
-          "Talk. I'll pull the vault or open scan.",
-        ];
-        clover.start(openers[Math.floor(Math.random() * openers.length)]);
-      } else {
-        clover.nudge();
-      }
-    } else {
-      clover.nudge();
+      const openers = [
+        "Here, hound. What are we checking?",
+        "Clover's up. Find or site?",
+        "Talk. I'll pull the vault or open scan.",
+      ];
+      clover.start(openers[Math.floor(Math.random() * openers.length)]);
+      return;
     }
+
+    // If Clover is speaking or thinking, tapping the orb interrupts her immediately
+    // so the user can change the flow of conversation.
+    if (clover.phase === 'speaking' || clover.phase === 'thinking') {
+      clover.nudge();
+      return;
+    }
+
+    // While listening, tapping the orb toggles the panel between minimized and expanded
+    setExpanded((prev) => !prev);
   };
 
   return (
@@ -75,18 +83,20 @@ export default function FloatingCloverCompanion() {
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="pointer-events-auto mb-3"
+            exit={{ opacity: 0, scale: 0.9, y: 14 }}
+            className="pointer-events-auto mb-2.5"
           >
             <CloverVoicePanel
+              compact
               phase={clover.phase}
               messages={clover.messages}
               interim={clover.interim}
               muted={clover.muted}
               onToggleMute={clover.toggleMute}
               getWaveBars={clover.getWaveBars}
+              onMinimize={() => setExpanded(false)}
               onStop={() => {
                 setExpanded(false);
                 clover.end();
@@ -95,12 +105,57 @@ export default function FloatingCloverCompanion() {
                 setExpanded(false);
                 clover.end();
               }}
-              onHunt={() => {}}
-              huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
               onListen={clover.nudge}
             />
+          </motion.div>
+        )}
+
+        {!expanded && isTalkingOrActive && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 8 }}
+            className="pointer-events-auto mb-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 border border-hud-cyan/35 bg-background/90 backdrop-blur-md shadow-lg"
+          >
+            <span className="h-2 w-2 rounded-full bg-hud-cyan animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-wider text-hud">
+              {clover.phase === 'speaking'
+                ? 'Speaking'
+                : clover.phase === 'thinking'
+                ? 'Thinking'
+                : clover.phase === 'listening'
+                ? 'Listening'
+                : 'Paused'}
+            </span>
+            {(clover.phase === 'speaking' || clover.phase === 'thinking') && (
+              <button
+                type="button"
+                onClick={() => clover.nudge()}
+                aria-label="Interrupt Clover"
+                className="px-1.5 py-0.5 rounded-full bg-hud-cyan/20 border border-hud-cyan/50 text-[9px] font-mono font-bold uppercase text-hud hover:bg-hud-cyan/30"
+              >
+                <Mic size={10} className="inline mr-0.5" />
+                Interrupt
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              aria-label="Expand Clover chat box"
+              className="p-1 rounded-full text-foreground/70 hover:text-foreground"
+            >
+              <Maximize2 size={11} />
+            </button>
+            <button
+              type="button"
+              onClick={() => clover.end()}
+              aria-label="End Clover conversation"
+              className="p-1 rounded-full text-destructive hover:opacity-80"
+            >
+              <Square size={10} fill="currentColor" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

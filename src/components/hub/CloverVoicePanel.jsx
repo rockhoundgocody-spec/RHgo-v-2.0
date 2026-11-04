@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
+import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Minimize2, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { lookupMineralIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
@@ -11,7 +11,7 @@ import CloverVoiceControls from './CloverVoiceControls.jsx';
  * the browser can't do speech input.
  */
 export default function CloverVoicePanel({
-  phase, messages, interim, onClose, onHunt, huntLoading,
+  phase, messages, interim, onClose, onMinimize, compact = false, onHunt, huntLoading,
   suggestions, onDismissSuggestions, voiceSupported, onSend, onListen,
   muted, onToggleMute, onStop, getWaveBars, onOpenAbilities, resonanceClaimed,
 }) {
@@ -32,44 +32,66 @@ export default function CloverVoicePanel({
     }
   }, [messages, interim, suggestions, detectedMineral, expandedIntel]);
 
+  const visibleMessages = compact ? messages.slice(-2) : messages;
+
   return (
     <div
       id="clover-voice-panel"
       role="region"
       aria-label="Clover Voice Companion"
-      className="mt-4 w-full max-w-[300px] rounded-2xl overflow-hidden flex flex-col"
+      className={`${compact ? 'w-[244px]' : 'mt-3 w-full max-w-[280px]'} rounded-2xl overflow-hidden flex flex-col`}
       style={{
-        background: 'hsla(255,30%,14%,0.97)',
+        background: 'hsla(255,30%,14%,0.96)',
         border: '1px solid hsla(270,50%,55%,0.25)',
-        boxShadow: '0 8px 40px -8px hsla(270,80%,40%,0.4)',
-        maxHeight: 300,
+        boxShadow: '0 8px 32px -8px hsla(270,80%,40%,0.38)',
+        maxHeight: compact ? 215 : 260,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-white/8">
+      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-white/8">
         <span className="text-[11px] font-semibold text-amethyst-glow tracking-wide flex items-center gap-1.5">
           Clover 🍀 {isKid && <span className="text-[9px] text-amber-300 font-bold">(Explorer Buddy)</span>}
         </span>
-        <button
-          onClick={onHunt}
-          disabled={huntLoading}
-          className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
-          aria-label="Get hunt suggestions"
-        >
-          {huntLoading ? <Loader2 size={12} className="animate-spin" /> : <Target size={12} />}
-          <span>Hunt</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {onHunt && !compact && (
+            <button
+              type="button"
+              onClick={onHunt}
+              disabled={huntLoading}
+              className="flex items-center gap-1 text-[10px] font-semibold text-amethyst-glow disabled:opacity-40 active:scale-90 transition rounded px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+              aria-label="Get hunt suggestions"
+            >
+              {huntLoading ? <Loader2 size={11} className="animate-spin" /> : <Target size={11} />}
+              <span>Hunt</span>
+            </button>
+          )}
+          {onMinimize && (
+            <button
+              type="button"
+              onClick={onMinimize}
+              aria-label="Minimize Clover panel while keeping conversation active"
+              title="Minimize (keep talking)"
+              className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
+            >
+              <Minimize2 size={12} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Transcript */}
-      <div ref={transcriptRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ minHeight: 90 }}>
-        {messages.map((m, i) => (
+      <div
+        ref={transcriptRef}
+        className="flex-1 overflow-y-auto px-2.5 py-1.5 space-y-1.5"
+        style={{ minHeight: compact ? 52 : 72 }}
+      >
+        {visibleMessages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className="max-w-[90%] px-3 py-2 rounded-xl text-[11px] leading-relaxed"
+              className="max-w-[92%] px-2.5 py-1.5 rounded-xl text-[11px] leading-snug"
               style={m.role === 'user'
                 ? { background: 'hsla(270,60%,40%,0.4)', border: '1px solid hsla(270,60%,60%,0.2)', color: 'hsl(280,80%,93%)' }
-                : { background: 'hsla(255,25%,20%,0.6)', border: '1px solid hsla(255,20%,40%,0.2)', color: 'rgba(255,255,255,0.78)' }}
+                : { background: 'hsla(255,25%,20%,0.6)', border: '1px solid hsla(255,20%,40%,0.2)', color: 'rgba(255,255,255,0.82)' }}
             >
               {m.content}
               {m.role !== 'user' && m.sources?.length > 0 && <SourceChips sources={m.sources} />}

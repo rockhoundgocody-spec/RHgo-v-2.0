@@ -11,7 +11,7 @@ import useLiquidInteraction from '@/lib/useLiquidInteraction';
 import OrbAbilitiesModal from './OrbAbilitiesModal.jsx';
 import CloverVoicePanel from './CloverVoicePanel.jsx';
 import useCloverConversation from './useCloverConversation.js';
-import { playOrbBreath, triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
+import { triggerOrbHaptic, getLuckyMineralOfTheDay } from '@/lib/orbAudio';
 import { on } from '@/lib/cloverWake';
 
 const OPENERS = [
@@ -72,7 +72,6 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
     addRipple(e);
     if (e.clientX != null) injectTap(e.clientX, e.clientY);
     clover.unlock?.();
-    playOrbBreath(0.5);
     triggerOrbHaptic('tap');
 
     if (clover.phase === 'idle' || clover.phase === 'resting') {

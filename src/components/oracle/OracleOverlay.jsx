@@ -23,6 +23,8 @@ export default function OracleOverlay() {
   const [thinking, setThinking] = useState(false);
   const [muted, setMuted] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+  const turnIdRef = useRef(0);
   const scrollRef = useRef(null);
   const liveModeRef = useRef(false);
   liveModeRef.current = liveMode;
@@ -57,7 +59,9 @@ export default function OracleOverlay() {
 
   const sendMessage = useCallback(async (textOverride) => {
     const text = (textOverride ?? input).trim();
-    if (!text || thinking) return;
+    if (!text) return;
+    const myTurn = ++turnIdRef.current;
+    stopSpeak();
     const next = [...messages, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
@@ -91,11 +95,12 @@ export default function OracleOverlay() {
     } catch {
       replyText = "I couldn't reach the Oracle service. Please try again in a moment.";
     } finally {
-      setThinking(false);
+      if (turnIdRef.current === myTurn) setThinking(false);
     }
+    if (turnIdRef.current !== myTurn) return;
     setMessages((m) => [...m, { role: 'assistant', content: replyText }]);
     if (!muted) speak(replyText);
-  }, [handleDictation, input, messages, muted, speak, thinking]);
+  }, [handleDictation, input, messages, muted, speak, stopSpeak]);
 
   const handleVoiceResult = useCallback((transcript) => {
     setInput('');
@@ -143,13 +148,57 @@ export default function OracleOverlay() {
 
   if (!open) return null;
 
+  if (minimized) {
+    return (
+      <div className="fixed bottom-24 right-4 z-[60] flex items-center gap-2 rounded-full px-3 py-1.5 glass-panel border border-hud-cyan/40 shadow-xl">
+        <div className="w-7 h-7 shrink-0">
+          <React.Suspense fallback={<div style={{ width: 28, height: 28 }} />}>
+            <AmethystOrb size={28} speaking={speaking} listening={listening} thinking={thinking} getAmplitude={getAmplitude} />
+          </React.Suspense>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-hud">
+          {speaking ? 'Speaking' : thinking ? 'Thinking' : listening ? 'Listening' : 'Clover Live'}
+        </span>
+        {(speaking || thinking) && (
+          <button
+            type="button"
+            onClick={() => {
+              turnIdRef.current += 1;
+              stopSpeak();
+              setThinking(false);
+              if (micSupported) startListen();
+            }}
+            className="px-2 py-0.5 rounded-full bg-hud-cyan/20 border border-hud-cyan/50 text-[9px] font-mono font-bold uppercase text-hud"
+          >
+            Interrupt
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setMinimized(false)}
+          className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-semibold text-white hover:bg-white/20"
+        >
+          Expand
+        </button>
+        <button
+          type="button"
+          onClick={closeOracle}
+          className="p-1 rounded-full text-white/60 hover:text-white"
+          aria-label="Close"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4">
+    <div className="fixed bottom-20 right-3 z-[60] flex items-end justify-end pointer-events-none">
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal="false"
         aria-labelledby="oracle-title"
-        className="glass-panel w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl flex flex-col max-h-[90vh] sm:max-h-[80vh] overflow-hidden"
+        className="pointer-events-auto glass-panel w-[310px] max-w-[92vw] rounded-2xl flex flex-col max-h-[52vh] overflow-hidden shadow-2xl"
       >
         {/* header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
@@ -208,6 +257,29 @@ export default function OracleOverlay() {
             aria-label={muted ? 'Unmute' : 'Mute'}
           >
             {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+          {(speaking || thinking) && (
+            <button
+              type="button"
+              onClick={() => {
+                turnIdRef.current += 1;
+                stopSpeak();
+                setThinking(false);
+                if (micSupported) startListen();
+              }}
+              className="px-2 py-1 rounded-md bg-hud-cyan/20 border border-hud-cyan/50 text-[10px] font-mono font-bold uppercase text-hud"
+            >
+              Interrupt
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setMinimized(true)}
+            className="px-2 py-1 rounded-md text-[10px] font-mono uppercase text-white/70 hover:text-white hover:bg-white/10"
+            aria-label="Minimize while talking"
+            title="Minimize while talking"
+          >
+            Min
           </button>
           <button
             onClick={closeOracle}

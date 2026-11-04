@@ -53,6 +53,17 @@ export default function CloverVoiceControls({
           {speaking && <Loader2 size={11} className="animate-spin" style={{ color: tone }} />}
         </span>
 
+        {(phase === 'speaking' || phase === 'thinking') && (
+          <button
+            type="button"
+            onClick={() => onListen?.()}
+            aria-label="Interrupt Clover and speak"
+            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-hud-cyan/50 bg-hud-cyan/15 text-hud hover:bg-hud-cyan/25 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
+          >
+            Interrupt
+          </button>
+        )}
+
         {phase === 'resting' && !muted && (
           <button
             type="button"

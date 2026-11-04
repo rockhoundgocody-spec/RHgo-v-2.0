@@ -34,6 +34,7 @@ export default function useCloverConversation({
   const recentFindsRef = useRef(recentFinds);
   const sendRef = useRef(null);
   const sayRef = useRef(null);
+  const turnIdRef = useRef(0);
 
   phaseRef.current = phase;
   mutedRef.current = muted;
@@ -80,6 +81,7 @@ export default function useCloverConversation({
 
   const { start: startBargeIn, stop: stopBargeIn } = useBargeIn(() => {
     if (!activeRef.current || mutedRef.current) return;
+    turnIdRef.current += 1;
     stopSpeech();
     beginListening();
   });
@@ -95,6 +97,12 @@ export default function useCloverConversation({
 
   const send = useCallback(async (text, meta) => {
     if (!activeRef.current || !text?.trim()) return;
+
+    const myTurnId = ++turnIdRef.current;
+    // Allow interrupting ongoing speech or previous thinking turn immediately
+    stopSpeech();
+    stopBargeIn();
+    voiceStop();
 
     setInterim('');
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
@@ -173,7 +181,7 @@ export default function useCloverConversation({
         : "I lost you for a second there. Still with me?";
     }
 
-    if (!activeRef.current) return;
+    if (!activeRef.current || turnIdRef.current !== myTurnId) return;
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-HISTORY_TURNS);
     setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
@@ -275,6 +283,7 @@ export default function useCloverConversation({
   }, [say, unlock]);
 
   const end = useCallback(() => {
+    turnIdRef.current += 1;
     activeRef.current = false;
     stopSpeech();
     voiceStop();
@@ -285,8 +294,10 @@ export default function useCloverConversation({
 
   const nudge = useCallback(() => {
     if (!activeRef.current) return;
-    if (mutedRef.current) { setPhase('resting'); return; }
-    if (phaseRef.current === 'speaking') { stopSpeech(); stopBargeIn(); }
+    turnIdRef.current += 1;
+    stopSpeech();
+    stopBargeIn();
+    if (mutedRef.current) { setMuted(false); }
     quietTurnsRef.current = 0;
     beginListening();
   }, [stopSpeech, stopBargeIn, beginListening]);
