@@ -4,7 +4,7 @@ import OrbParticles from './OrbParticles.jsx';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import usePageVisible from '@/lib/usePageVisible';
-import { flowAt, FLOW_ANGLE_DEG } from '@/lib/liquidFlow';
+import { coreFlowAt, CORE_FLOW_ANGLE_DEG } from '@/lib/liquidFlow';
 
 /**
  * Clover — her visual form. A prismatic shell of iridescent liquid glass
@@ -61,6 +61,8 @@ export default function AmethystOrb({
   const haloRef = useRef(null);
   const auraRef = useRef(null);
   const auraInnerRef = useRef(null);
+  const coreSceneRef = useRef(null);
+  const coreCausticRef = useRef(null);
   const mercuryRef = useRef(null);
   const sheenRef = useRef(null);
   const shadowRef = useRef(null);
@@ -249,23 +251,44 @@ export default function AmethystOrb({
         auraInnerRef.current.style.opacity = String(p.auraIO);
       }
 
-      // ── Liquid-mercury skin ──────────────────────────────────────────
-      // She rides the room's own current: the same diagonal surge the Hub
-      // backdrop flows on (src/lib/liquidFlow.js), so shell and backdrop read
-      // as one liquid. Voice level brightens, widens and quickens the flow.
-      const flow = flowAt(t);
-      const swirl = reduceMotion ? 0 : flow.x * 16 + lvl * 22;
+      // ── Independent inner-circle scene motion ────────────────────────
+      // Driven by coreFlowAt (9.4s figure-8 orbit on a -52° cross-axis + 5.8s
+      // radial pulse), completely decoupled from the 16s / 34° backdrop and
+      // outer mercury orb behind it, with subtle counter-parallax so the core
+      // floats inside its glass chamber as a separate living layer.
+      const core = coreFlowAt(t, lvl);
+      if (coreSceneRef.current) {
+        if (reduceMotion) {
+          coreSceneRef.current.style.transform = 'scale(1.22)';
+        } else {
+          const coreX = core.x * size * 0.044 - p.tx * 0.32;
+          const coreY = core.y * size * 0.038 - p.ty * 0.32;
+          const coreRot = core.twist * 8.5 - p.rot * 1.4;
+          const coreScaleX = 1.22 + core.pulse * 0.068 + lvl * 0.055;
+          const coreScaleY = 1.22 + (1 - core.pulse) * 0.048 + core.swell * 0.03 + lvl * 0.065;
+          coreSceneRef.current.style.transform =
+            `translate3d(${coreX}px, ${coreY}px, 0) rotate(${coreRot}deg) scale(${coreScaleX}, ${coreScaleY})`;
+        }
+      }
+      if (coreCausticRef.current) {
+        coreCausticRef.current.style.opacity = String(0.42 + core.caustic * 0.32 + lvl * 0.24);
+        coreCausticRef.current.style.transform = reduceMotion
+          ? 'none'
+          : `translate3d(${-core.y * size * 0.07}px, ${core.x * size * 0.07}px, 0) rotate(${-core.twist * 28}deg) scale(${0.94 + core.pulse * 0.18 + lvl * 0.12})`;
+      }
+
+      const swirl = reduceMotion ? 0 : core.twist * 22 + core.x * 14 + lvl * 24;
       if (mercuryRef.current) {
-        mercuryRef.current.style.opacity = String(0.3 + lvl * 0.5);
+        mercuryRef.current.style.opacity = String(0.32 + core.caustic * 0.14 + lvl * 0.48);
         mercuryRef.current.style.transform = reduceMotion
           ? 'none'
-          : `rotate(${swirl}deg) scale(${1.02 + flow.swell * 0.035 + lvl * 0.06})`;
+          : `rotate(${swirl}deg) scale(${1.02 + core.swell * 0.045 + lvl * 0.06})`;
       }
       if (sheenRef.current) {
-        sheenRef.current.style.opacity = String(0.2 + lvl * 0.62);
+        sheenRef.current.style.opacity = String(0.22 + core.pulse * 0.14 + lvl * 0.58);
         sheenRef.current.style.transform = reduceMotion
           ? `scale(${1 + lvl * 0.12})`
-          : `translate(${flow.x * size * 0.35}px, ${flow.y * size * 0.35}px) scale(${1 + flow.swell * 0.05 + lvl * 0.22}, ${1 + lvl * 0.45})`;
+          : `translate3d(${core.x * size * 0.32}px, ${core.y * size * 0.32}px, 0) scale(${1 + core.swell * 0.06 + lvl * 0.22}, ${1 + core.pulse * 0.05 + lvl * 0.45})`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -378,11 +401,28 @@ export default function AmethystOrb({
             inside the rim so the whole mineral silhouette stays visible at any
             size. */}
         <img
+          ref={coreSceneRef}
           src={CLOVER_SHELL_IMG}
           alt="Clover"
           draggable={false}
           className="absolute inset-0 w-full h-full object-contain select-none"
-          style={{ transform: 'scale(1.22)' }}
+          style={{ transform: 'scale(1.22)', willChange: 'transform' }}
+        />
+
+        {/* Living molten-amber & prismatic caustic core inside the inner circle */}
+        <div
+          ref={coreCausticRef}
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-full"
+          style={{
+            mixBlendMode: 'screen',
+            opacity: 0.55,
+            willChange: 'transform, opacity',
+            background:
+              'radial-gradient(circle at 46% 44%, hsla(44,100%,68%,0.52) 0%, hsla(32,100%,54%,0.28) 26%, hsla(188,100%,65%,0.22) 48%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 45%, transparent 72%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 45%, transparent 72%)',
+          }}
         />
 
         {/* Amber spines — two counter-rotating sets, shaded like brushed gold */}
@@ -426,9 +466,9 @@ export default function AmethystOrb({
             mixBlendMode: 'screen',
             opacity: 0.28,
             willChange: 'transform, opacity',
-            // Band lies across the flow diagonal, so it sweeps along the same
-            // travel line as the dashboard backdrop.
-            background: `linear-gradient(${90 + FLOW_ANGLE_DEG}deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)`,
+            // Band lies across the inner core's independent cross-axis, separate
+            // from the backdrop's 34° travel line.
+            background: `linear-gradient(${90 + CORE_FLOW_ANGLE_DEG}deg, transparent 28%, hsla(0,0%,100%,0.34) 44%, hsla(185,100%,92%,0.5) 50%, hsla(45,100%,90%,0.32) 56%, transparent 72%)`,
             WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
             maskImage: 'radial-gradient(circle at 50% 50%, #000 58%, transparent 76%)',
           }}
