@@ -7,6 +7,7 @@ import {
   readLastGps,
   watchGps,
   rankHotspots,
+  hasNearbyHotspot,
   escapeHtml,
 } from './geo';
 
@@ -210,6 +211,46 @@ describe('geo library', () => {
 
       const h1 = ranked.find((h) => h.id === '1');
       expect(h1.gapCount).toBe(1); // 'Jasper' is uncollected
+    });
+  });
+
+  describe('hasNearbyHotspot', () => {
+    const mockHotspots = [
+      { id: '1', lat: 45.5, lng: -122.6, name: 'Close spot' },
+      { id: '2', lat: 46.0, lng: -122.0, name: 'Medium spot' },
+      { id: '3', lat: 48.0, lng: -120.0, name: 'Far spot' },
+    ];
+
+    it('returns true when userLocation is missing or invalid', () => {
+      expect(hasNearbyHotspot(mockHotspots, null)).toBe(true);
+      expect(hasNearbyHotspot(mockHotspots, { lat: null, lng: -122.6 })).toBe(true);
+    });
+
+    it('returns false when hotspot array is empty or not an array', () => {
+      const userLocation = { lat: 45.5, lng: -122.6 };
+      expect(hasNearbyHotspot([], userLocation)).toBe(false);
+      expect(hasNearbyHotspot(null, userLocation)).toBe(false);
+    });
+
+    it('returns true immediately when a hotspot is within maxDistanceMi', () => {
+      const userLocation = { lat: 45.51, lng: -122.61 };
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 75)).toBe(true);
+    });
+
+    it('returns false when all hotspots are farther than maxDistanceMi', () => {
+      // Miami, FL location
+      const userLocation = { lat: 25.7617, lng: -80.1918 };
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 75)).toBe(false);
+    });
+
+    it('safely skips invalid hotspots without coordinates', () => {
+      const mixedHotspots = [
+        { id: 'inv1', lat: null, lng: -122.6 },
+        { id: 'inv2', lat: 'invalid', lng: -122.6 },
+        { id: 'valid', lat: 45.51, lng: -122.61 },
+      ];
+      const userLocation = { lat: 45.5, lng: -122.6 };
+      expect(hasNearbyHotspot(mixedHotspots, userLocation, 10)).toBe(true);
     });
   });
 
