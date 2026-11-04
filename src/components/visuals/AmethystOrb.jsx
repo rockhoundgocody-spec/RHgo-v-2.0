@@ -273,27 +273,29 @@ export default function AmethystOrb({
         if (reduceMotion) {
           coreSceneRef.current.style.transform = `scale(${1.22 + flare * 0.06})`;
         } else {
-          const coreX = core.x * size * 0.048 - p.tx * 0.32;
-          const coreY = core.y * size * 0.042 - p.ty * 0.32;
-          const coreRot = core.spin + core.twist * 22 - p.rot * 1.4;
-          const coreScaleX = 1.22 + core.pulse * 0.075 + lvl * 0.055 + flare * 0.085;
-          const coreScaleY = 1.22 + (1 - core.pulse) * 0.055 + core.swell * 0.035 + lvl * 0.065 + flare * 0.085;
+          // Fluid drift & volume-breathing distortion (no spinning)
+          const coreX = core.x * size * 0.058 - p.tx * 0.32;
+          const coreY = core.y * size * 0.052 - p.ty * 0.32;
+          const coreTilt = core.twist * 5.5 - p.rot * 1.1;
+          const coreScaleX = 1.22 + core.pulse * 0.065 - core.swell * 0.025 + lvl * 0.055 + flare * 0.075;
+          const coreScaleY = 1.22 + (1 - core.pulse) * 0.06 + core.swell * 0.03 + lvl * 0.065 + flare * 0.075;
           coreSceneRef.current.style.transform =
-            `translate3d(${coreX}px, ${coreY}px, 0) rotate(${coreRot}deg) scale(${coreScaleX}, ${coreScaleY})`;
+            `translate3d(${coreX}px, ${coreY}px, 0) rotate(${coreTilt}deg) skew(${core.skewX}deg, ${core.skewY}deg) scale(${coreScaleX}, ${coreScaleY})`;
         }
       }
       if (coreCausticRef.current) {
         coreCausticRef.current.style.opacity = String(Math.min(1, 0.46 + core.caustic * 0.34 + lvl * 0.24 + flare * 0.38));
         coreCausticRef.current.style.transform = reduceMotion
           ? 'none'
-          : `translate3d(${-core.y * size * 0.075}px, ${core.x * size * 0.075}px, 0) rotate(${-core.spin * 1.35 - core.twist * 42}deg) scale(${0.95 + core.pulse * 0.2 + lvl * 0.12 + flare * 0.22})`;
+          : `translate3d(${-core.y * size * 0.085}px, ${core.x * size * 0.085}px, 0) rotate(${-core.twist * 14}deg) skew(${-core.skewY * 1.2}deg, ${core.skewX * 1.2}deg) scale(${0.96 + core.pulse * 0.18 + lvl * 0.12 + flare * 0.2}, ${1.04 - core.pulse * 0.12 + core.swell * 0.14 + flare * 0.2})`;
       }
       if (coreFlareRef.current) {
         coreFlareRef.current.style.opacity = String(flare * 0.78);
-        coreFlareRef.current.style.transform = `scale(${0.78 + flare * 0.42}) rotate(${core.spin * 1.6}deg)`;
+        coreFlareRef.current.style.transform =
+          `translate3d(${core.x * size * 0.03}px, ${core.y * size * 0.03}px, 0) scale(${0.82 + flare * 0.38})`;
       }
 
-      const swirl = reduceMotion ? 0 : core.spin * 0.85 + core.twist * 34 + core.x * 18 + lvl * 28;
+      const swirl = reduceMotion ? 0 : core.twist * 16 + core.x * 14 + lvl * 22;
       if (mercuryRef.current) {
         mercuryRef.current.style.opacity = String(0.32 + core.caustic * 0.14 + lvl * 0.48);
         mercuryRef.current.style.transform = reduceMotion
@@ -458,17 +460,25 @@ export default function AmethystOrb({
           }}
         />
 
-        {/* Amber spines — two counter-rotating sets, shaded like brushed gold, spinning fast */}
+        {/* Amber filaments — gentle fluid undulation instead of spinning */}
         {[1, -1].map((dir) => (
           <motion.div
             key={dir}
             aria-hidden
             className="absolute inset-0 pointer-events-none rounded-full"
-            animate={reduceMotion ? undefined : { rotate: dir * 360 }}
-            transition={{ duration: dir > 0 ? 6.5 : 9.5, repeat: Infinity, ease: 'linear' }}
+            animate={
+              reduceMotion
+                ? undefined
+                : {
+                    rotate: dir > 0 ? [-7, 9, -7] : [8, -10, 8],
+                    scaleX: dir > 0 ? [0.97, 1.04, 0.97] : [1.03, 0.96, 1.03],
+                    scaleY: dir > 0 ? [1.03, 0.97, 1.03] : [0.97, 1.04, 0.97],
+                  }
+            }
+            transition={{ duration: dir > 0 ? 7.5 : 9.8, repeat: Infinity, ease: 'easeInOut' }}
             style={{
               mixBlendMode: 'screen',
-              opacity: 0.55,
+              opacity: 0.5,
               background: `repeating-conic-gradient(from ${dir > 0 ? 0 : 11}deg, transparent 0deg, hsla(40,100%,38%,0.5) 3deg, hsla(46,100%,72%,0.95) 5deg, hsla(50,100%,96%,1) 5.6deg, hsla(36,95%,30%,0.6) 7.5deg, transparent 10deg ${dir > 0 ? 22 : 30}deg)`,
               WebkitMaskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
               maskImage: 'radial-gradient(circle, transparent 14%, #000 22%, #000 46%, transparent 64%)',
