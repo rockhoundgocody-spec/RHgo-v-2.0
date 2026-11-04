@@ -104,7 +104,7 @@ export default function AmethystOrb({
   }, [reduceMotion]);
 
   // Smooth state transitions — lerp current config toward target
-  const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0 });
+  const lerpedState = useRef({ pulseScale: 1.0, auraScale: 1.0, speakGlow: 0 });
   // Eased transform values — the orb glides toward its target pose each frame
   // instead of snapping, giving the liquid-metal its buttery follow-through.
   const poseRef = useRef({ tx: 0, ty: 0, scale: 1, rot: 0, haloO: 0.7, haloS: 1, auraO: 0.5, auraS: 1, auraIO: 0.45 });
@@ -133,9 +133,11 @@ export default function AmethystOrb({
 
       // Lerp toward target state intensity for smooth transitions
       const cfg = STATE_CONFIG[effectiveState] || STATE_CONFIG.idle;
+      const targetSpeakGlow = effectiveState === 'speaking' ? 1 : 0;
       lerpedState.current.pulseScale += (cfg.idlePulseScale - lerpedState.current.pulseScale) * 0.04;
       lerpedState.current.auraScale  += (cfg.idleAuraScale  - lerpedState.current.auraScale)  * 0.04;
-      const { pulseScale, auraScale } = lerpedState.current;
+      lerpedState.current.speakGlow  += (targetSpeakGlow    - lerpedState.current.speakGlow)  * 0.12;
+      const { pulseScale, auraScale, speakGlow } = lerpedState.current;
 
       // Breathing speed varies by state
       const breathSpeed = effectiveState === 'thinking' ? 1.8 : effectiveState === 'listening' ? 1.1 : 0.85;
@@ -284,10 +286,17 @@ export default function AmethystOrb({
         }
       }
       if (coreCausticRef.current) {
-        coreCausticRef.current.style.opacity = String(Math.min(1, 0.46 + core.caustic * 0.34 + lvl * 0.24 + flare * 0.38));
+        const speakDrive = speakGlow * (0.45 + lvl * 0.85) + lvl * 0.55;
+        const causticOpacity = Math.min(1, 0.46 + core.caustic * 0.34 + speakDrive * 0.65 + flare * 0.38);
+        const causticBright = 1 + speakGlow * 0.55 + lvl * 0.95 + flare * 0.45;
+        const causticSat = 1 + speakGlow * 0.45 + lvl * 0.6;
+        const flowRange = size * (0.085 + speakGlow * 0.045 + lvl * 0.06);
+        const scaleBoost = speakGlow * 0.16 + lvl * 0.28 + flare * 0.2;
+        coreCausticRef.current.style.opacity = String(causticOpacity);
+        coreCausticRef.current.style.filter = `brightness(${causticBright.toFixed(2)}) saturate(${causticSat.toFixed(2)})`;
         coreCausticRef.current.style.transform = reduceMotion
-          ? 'none'
-          : `translate3d(${-core.y * size * 0.085}px, ${core.x * size * 0.085}px, 0) rotate(${-core.twist * 14}deg) skew(${-core.skewY * 1.2}deg, ${core.skewX * 1.2}deg) scale(${0.96 + core.pulse * 0.18 + lvl * 0.12 + flare * 0.2}, ${1.04 - core.pulse * 0.12 + core.swell * 0.14 + flare * 0.2})`;
+          ? `scale(${1 + scaleBoost * 0.5})`
+          : `translate3d(${-core.y * flowRange}px, ${core.x * flowRange}px, 0) rotate(${-core.twist * (14 + speakDrive * 12)}deg) skew(${-core.skewY * (1.2 + speakDrive * 0.8)}deg, ${core.skewX * (1.2 + speakDrive * 0.8)}deg) scale(${0.96 + core.pulse * 0.18 + scaleBoost}, ${1.04 - core.pulse * 0.12 + core.swell * 0.14 + scaleBoost})`;
       }
       if (coreFlareRef.current) {
         coreFlareRef.current.style.opacity = String(flare * 0.78);
@@ -435,12 +444,12 @@ export default function AmethystOrb({
           className="absolute inset-0 pointer-events-none rounded-full"
           style={{
             mixBlendMode: 'screen',
-            opacity: 0.55,
-            willChange: 'transform, opacity',
+            opacity: 0.58,
+            willChange: 'transform, opacity, filter',
             background:
-              'radial-gradient(circle at 46% 44%, hsla(44,100%,68%,0.52) 0%, hsla(32,100%,54%,0.28) 26%, hsla(188,100%,65%,0.22) 48%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 45%, transparent 72%)',
-            maskImage: 'radial-gradient(circle at 50% 50%, #000 45%, transparent 72%)',
+              'radial-gradient(circle at 46% 44%, hsla(48,100%,85%,0.82) 0%, hsla(42,100%,64%,0.58) 22%, hsla(32,100%,54%,0.38) 38%, hsla(188,100%,68%,0.32) 56%, transparent 74%)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 50%, #000 48%, transparent 74%)',
+            maskImage: 'radial-gradient(circle at 50% 50%, #000 48%, transparent 74%)',
           }}
         />
 
