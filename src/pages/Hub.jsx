@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import IconRail from '@/components/hub/IconRail.jsx';
 import MonthlyMineralsHud from '@/components/hub/MonthlyMineralsHud.jsx';
+import HubSpecimenDashboard from '@/components/hub/HubSpecimenDashboard.jsx';
 import useOrbSize from '@/hooks/useOrbSize';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
@@ -94,13 +95,13 @@ export default function Hub() {
 
   return (
     <div
-      className={`relative ${isDesktop ? 'h-full min-h-0' : 'min-h-screen'} flex flex-col items-center justify-center overflow-hidden`}
+      className={`relative ${isDesktop ? 'h-full min-h-0 overflow-y-auto' : 'min-h-screen'} flex flex-col items-center justify-start py-6 pb-28 overflow-x-hidden`}
       style={{ background: '#0a0a14' }}
     >
       <HubAtmosphere />
       <HudGridBackdrop />
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center gap-5 px-4 lg:px-10">
+      <div className="relative z-10 w-full flex flex-col items-center justify-center gap-3.5 px-4 lg:px-10 my-auto">
         <div className="w-full flex items-center justify-center gap-4">
           {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="left" /></div>}
           <div className="flex-1 flex justify-center"><div className="relative">
@@ -117,6 +118,7 @@ export default function Hub() {
         </div>
 
         <MonthlyMineralsHud user={user} />
+        <HubSpecimenDashboard user={user} />
       </div>
     </div>
   );
