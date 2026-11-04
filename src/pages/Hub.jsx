@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import HeroOrb from '@/components/hub/HeroOrb.jsx';
 import IconRail from '@/components/hub/IconRail.jsx';
+import MonthlyMineralsHud from '@/components/hub/MonthlyMineralsHud.jsx';
 import useOrbSize from '@/hooks/useOrbSize';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
@@ -99,20 +100,23 @@ export default function Hub() {
       <HubAtmosphere />
       <HudGridBackdrop />
 
-      <div className="relative z-10 w-full flex items-center justify-center gap-4 px-4 lg:px-10">
-        {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="left" /></div>}
-        <div className="flex-1 flex justify-center"><div className="relative">
-          <div
-            className="absolute inset-0 -m-10 rounded-full pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle, hsla(190,100%,62%,0.16), hsla(165,80%,55%,0.06) 55%, transparent 72%)',
-              filter: 'blur(10px)',
-            }}
-          />
-          <HeroOrb companion={companion} recentFinds={recentFinds} size={orbSize} />
-        </div></div>
-        {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="right" /></div>}
+      <div className="relative z-10 w-full flex flex-col items-center justify-center gap-5 px-4 lg:px-10">
+        <div className="w-full flex items-center justify-center gap-4">
+          {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="left" /></div>}
+          <div className="flex-1 flex justify-center"><div className="relative">
+            <div
+              className="absolute inset-0 -m-10 rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, hsla(190,100%,62%,0.16), hsla(165,80%,55%,0.06) 55%, transparent 72%)',
+                filter: 'blur(10px)',
+              }}
+            />
+            <HeroOrb companion={companion} recentFinds={recentFinds} size={orbSize} />
+          </div></div>
+          {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="right" /></div>}
+        </div>
 
+        <MonthlyMineralsHud user={user} />
       </div>
     </div>
   );
