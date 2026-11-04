@@ -1,10 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
+const GUEST_SPECIMENS_KEY = 'rhgo_guest_specimens';
+
+export function readGuestSpecimens() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage?.getItem(GUEST_SPECIMENS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveGuestSpecimen(specimen) {
+  if (typeof window === 'undefined' || !specimen) return null;
+  try {
+    const list = readGuestSpecimens();
+    const record = {
+      id: specimen.id || `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      created_date: new Date().toISOString(),
+      ...specimen,
+    };
+    const next = [record, ...list];
+    window.localStorage?.setItem(GUEST_SPECIMENS_KEY, JSON.stringify(next.slice(0, 200)));
+    return record;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Tiny wrapper around base44.entities.<Name>.list() with sensible
  * stale times — repeated mounts of the same page don't refetch
- * within 60s.
+ * within 60s. Falls back cleanly for unauthenticated guest visitors.
  */
 export function useEntityList(entityName, sortKey, limit, options = {}) {
   // Support old 2-arg call: useEntityList(name, sort, options={})
@@ -15,11 +45,21 @@ export function useEntityList(entityName, sortKey, limit, options = {}) {
   const { fields, skip, ...queryOptions } = options;
   return useQuery({
     queryKey: ['entity', entityName, 'list', sortKey ?? null, limit ?? null, skip ?? null, fields ?? null],
-    queryFn: () => {
+    queryFn: async () => {
       const e = base44.entities[entityName];
-      // Optimization (Bolt): Pass fields array to base44 entity list() to project required fields only,
-      // reducing network response payload size and JSON parsing memory footprint.
-      return e.list(sortKey, limit, skip, fields);
+      try {
+        const rows = await e.list(sortKey, limit, skip, fields);
+        if (entityName === 'Specimen') {
+          const guestRows = readGuestSpecimens();
+          if (guestRows.length > 0 && (!rows || rows.length === 0)) return guestRows;
+        }
+        return rows || [];
+      } catch {
+        if (entityName === 'Specimen') {
+          return readGuestSpecimens();
+        }
+        return [];
+      }
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,

@@ -26,11 +26,10 @@ import { logCollectedWeight } from '@/components/hub/CollectionWeightTracker.jsx
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech.jsx';
 import { progressQuestsForSpecimen } from '@/lib/questProgress';
 import {
-  consumeGuestScan,
-  getGuestQuota,
   getOrCreateGuestId,
   stashPendingGuestReport,
 } from '@/lib/guestDevice';
+import { saveGuestSpecimen } from '@/lib/useEntityQuery';
 
 const VOICE_LINES = {
   high: (n) => `That's ${n}. I'm pretty sure about this one.`,
@@ -75,18 +74,9 @@ export default function Scan() {
 
   const [me, setMe] = useState(null);
   const [authReady, setAuthReady] = useState(false);
-  const { isPaid, loading: subLoading } = useSubscription(me);
-  const monthKey = `rhgo_scans_${new Date().toISOString().slice(0, 7)}`;
-  const [scansUsed, setScansUsed] = useState(() => Number(localStorage.getItem(monthKey) || 0));
-  const [guestQuota, setGuestQuota] = useState(() => getGuestQuota());
+  useSubscription(me);
   const isGuest = authReady && !me;
-  const canScan = !authReady || subLoading
-    ? false
-    : isPaid
-      ? true
-      : isGuest
-        ? guestQuota.allowed
-        : scansUsed < 5;
+  const canScan = authReady;
 
   useEffect(() => {
     base44.auth.me()
@@ -95,33 +85,24 @@ export default function Scan() {
       .finally(() => setAuthReady(true));
   }, []);
 
-  // Live Specimen Eyes: preview labels while aiming (members only).
+  // Live Specimen Eyes: preview labels while aiming (free for everyone).
   // Clover's "what do you see?" opens /scan?live=1 with them switched on.
   const [searchParams] = useSearchParams();
   const wantsLive = searchParams.get('live') === '1';
   const [eyesOn, setEyesOn] = useState(false);
-  const membersOnlyToast = () => toast({
-    title: 'Live labels are for members',
-    description: 'Create a free account to see live labels as you aim.',
-  });
   useEffect(() => {
     if (!authReady || !wantsLive) return;
-    if (me) setEyesOn(true);
-    else membersOnlyToast();
-  }, [authReady, wantsLive, me]);
+    setEyesOn(true);
+  }, [authReady, wantsLive]);
   const eyes = useLiveEyes({
     videoRef: camera.videoRef,
-    enabled: eyesOn && !!me && stage === 'camera' && !camera.error,
+    enabled: eyesOn && stage === 'camera' && !camera.error,
     ready: camera.ready,
     region: beachName,
     wetDry,
     onUnauthorized: () => setEyesOn(false),
   });
   const toggleEyes = () => {
-    if (!me) {
-      membersOnlyToast();
-      return;
-    }
     setEyesOn((on) => !on);
   };
 
@@ -179,35 +160,15 @@ export default function Scan() {
       // Macrostrat geology, regional priors, learned corrections and the
       // handbook checks — and meters guest and free-tier scans where they
       // can't be bypassed.
-      let identified;
-      try {
-        const res = await base44.functions.invoke('identifySpecimen', {
-          image_url: file_url,
-          lat: gpsCoords?.lat, lng: gpsCoords?.lng,
-          save: false,
-          wet_dry: wetDry,
-          beach_name: beachName,
-          ...(isGuest ? { guest_device_id: getOrCreateGuestId() } : {}),
-        });
-        identified = res?.data;
-      } catch (idErr) {
-        const status = idErr?.status;
-        const code = idErr?.data?.code || idErr?.code;
-        if (isGuest && status === 429) {
-          setStage('guestLimit');
-          return;
-        }
-        if (!isGuest && (status === 402 || code === 'scan_quota')) {
-          const used = idErr?.data?.quota?.used;
-          if (typeof used === 'number') {
-            localStorage.setItem(monthKey, String(used));
-            setScansUsed(used);
-          }
-          setStage('freeLimit');
-          return;
-        }
-        throw idErr;
-      }
+      const res = await base44.functions.invoke('identifySpecimen', {
+        image_url: file_url,
+        lat: gpsCoords?.lat, lng: gpsCoords?.lng,
+        save: false,
+        wet_dry: wetDry,
+        beach_name: beachName,
+        ...(isGuest ? { guest_device_id: getOrCreateGuestId() } : {}),
+      });
+      const identified = res?.data;
 
       const resultData = identified?.identification && typeof identified.identification === 'object'
         ? { ...identified.identification }
@@ -216,7 +177,6 @@ export default function Scan() {
       if (identified?.context_integrity) resultData.context_integrity = identified.context_integrity;
       if (identified?.handbook) resultData.handbook = identified.handbook;
       if (identified?.essence) resultData.essence = identified.essence;
-      const serverQuota = identified?.quota;
 
       const cutoutUrl = await cutoutPromise;
       const finalUrl = cutoutUrl || file_url;
@@ -233,15 +193,7 @@ export default function Scan() {
       });
 
       if (isGuest) {
-        setGuestQuota(consumeGuestScan());
         stashPendingGuestReport({ result: enriched, primaryUrl: finalUrl, gpsCoords, beachName });
-      } else if (!isPaid) {
-        if (typeof serverQuota?.used === 'number') {
-          localStorage.setItem(monthKey, String(serverQuota.used));
-          setScansUsed(serverQuota.used);
-        } else {
-          setScansUsed(u => { const n = u + 1; localStorage.setItem(monthKey, String(n)); return n; });
-        }
       }
 
       if (!isGuest && voiceEnabled && enriched?.top_match) {
@@ -304,11 +256,35 @@ export default function Scan() {
       return;
     }
     if (isGuest) {
-      // Soft save: stash locally, show confirmation — never hard-redirect to login
+      const place = foundLocation?.found_at || foundLocation?.lat != null
+        ? foundLocation
+        : { found_at: beachName, lat: gpsCoords?.lat, lng: gpsCoords?.lng, source: 'gps' };
+      const savedGuest = saveGuestSpecimen({
+        mineral_name: result.top_match,
+        common_name: result.scientific_name || result.top_match,
+        image_url: primaryUrl,
+        ai_confidence: result.confidence,
+        ai_candidates: result.candidates,
+        notes: buildSpecimenNotes(result),
+        rarity: result.rarity,
+        found_date: new Date().toISOString().split('T')[0],
+        found_at: place.found_at || beachName || null,
+        lat: place.lat ?? null,
+        lng: place.lng ?? null,
+        disposition,
+        collected: disposition === 'collected',
+        left_in_place: disposition === 'left_in_place',
+        provenance,
+        ...(fieldReport?.field_habit ? { field_habit: fieldReport.field_habit } : {}),
+        ...(fieldReport?.field_luster ? { field_luster: fieldReport.field_luster } : {}),
+        ...(fieldReport?.field_matrix ? { field_matrix: fieldReport.field_matrix } : {}),
+        ...(fieldReport?.field_next_test ? { field_next_test: fieldReport.field_next_test } : {}),
+      });
+      if (savedGuest?.id) setSavedId(savedGuest.id);
       stashPendingGuestReport({ result, primaryUrl, gpsCoords, beachName, foundLocation, disposition, fieldReport, legalConfirmed: !!meta.legalConfirmed });
       setSheetOpen(false);
       setStage('guestSaved');
-      setTimeout(resetToCamera, 2500);
+      setTimeout(resetToCamera, 2000);
       return;
     }
     setSheetOpen(false);
@@ -536,7 +512,7 @@ export default function Scan() {
         />
       )}
 
-      {stage === 'camera' && eyesOn && !!me && !camera.error && (
+      {stage === 'camera' && eyesOn && !camera.error && (
         <LiveEyesOverlay
           eyes={eyes}
           onLock={handleShutter}

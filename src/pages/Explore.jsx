@@ -137,15 +137,8 @@ export default function Explore() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data: rawHotspots = [], isLoading: loading, isOffline, cachedAt } = useOfflineHotspots();
-  // Logged-out visitors see approximate coordinates (rounded to 2 decimal places)
-  const hotspots = useMemo(
-    () => isAuthenticated ? rawHotspots : rawHotspots.map(h => ({
-      ...h,
-      lat: typeof h.lat === 'number' ? Math.round(h.lat * 100) / 100 : h.lat,
-      lng: typeof h.lng === 'number' ? Math.round(h.lng * 100) / 100 : h.lng,
-    })),
-    [rawHotspots, isAuthenticated]
-  );
+  // Full hotspot coordinates are unlocked for everyone (signed-in or guest)
+  const hotspots = rawHotspots;
   const { data: specimens = [] } = useQuery({
     queryKey: ['specimens-explore'],
     queryFn: () => base44.entities.Specimen.list('-found_date', 500),
@@ -215,9 +208,8 @@ export default function Explore() {
     const match = hotspots.find((h) => h.id === spot || (h.name && h.name.toLowerCase() === key));
     if (!match) return;
     setActiveId(match.id);
-    if (isAuthenticated) setDetailHotspot(match);
-    else { setTeaserHotspot(match); setTeaserOpen(true); }
-  }, [hotspots, isAuthenticated]);
+    setDetailHotspot(match);
+  }, [hotspots]);
 
   // Collected minerals set
   const collectedMinerals = useMemo(
@@ -351,9 +343,8 @@ export default function Explore() {
   }, [navigate]);
 
   const handleMarkerClick = useCallback(h => {
-    if (!isAuthenticated) { setTeaserHotspot(h); setTeaserOpen(true); return; }
     setActiveId(h.id); setDetailHotspot(h);
-  }, [isAuthenticated]);
+  }, []);
   const handleCloseDetail = useCallback(() => { setDetailHotspot(null); setActiveId(null); }, []);
   const handleSearchSelect = useCallback((h) => { setActiveId(h.id); handleMarkerClick(h); }, [handleMarkerClick]);
 
@@ -437,28 +428,13 @@ export default function Explore() {
           <MapSearchBar hotspots={hotspots} onSelect={handleSearchSelect} />
         </div>
 
-        {/* Expedition planner — teaser button for logged-out visitors */}
+        {/* Expedition planner — unlocked for everyone */}
         <div className="pointer-events-auto relative">
-          {isAuthenticated ? (
-            <ExpeditionPlanner
-              hotspots={hotspots} specimens={specimens} userLocation={userLocation}
-              onRouteChange={route => { setExpeditionRoute(route); if (route.length>0) setActiveLayer('expedition'); }}
-              onHotspotFocus={h => { setActiveId(h.id); setDetailHotspot(h); }}
-            />
-          ) : (
-            <button
-              onClick={() => { setTeaserHotspot(null); setTeaserOpen(true); }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider border transition-all active:scale-95"
-              style={{
-                background: 'hsla(240,30%,8%,0.82)',
-                border: '1px solid hsla(270,30%,40%,0.25)',
-                color: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(16px)',
-              }}
-            >
-              <Route size={13} /> Plan Expedition
-            </button>
-          )}
+          <ExpeditionPlanner
+            hotspots={hotspots} specimens={specimens} userLocation={userLocation}
+            onRouteChange={route => { setExpeditionRoute(route); if (route.length>0) setActiveLayer('expedition'); }}
+            onHotspotFocus={h => { setActiveId(h.id); setDetailHotspot(h); }}
+          />
         </div>
 
         <AnimatePresence>
@@ -573,8 +549,8 @@ export default function Explore() {
         )}
       </div>
 
-      {/* ── Hotspot detail sheet (pin tap) — authenticated only ── */}
-      {isAuthenticated && detailHotspot && (
+      {/* ── Hotspot detail sheet (pin tap) — unlocked for everyone ── */}
+      {detailHotspot && (
         <HotspotDetailSheet
           hotspot={detailHotspot}
           specimens={specimens}
@@ -584,7 +560,7 @@ export default function Explore() {
         />
       )}
 
-      {/* ── Sign-up teaser modal — logged-out visitors ── */}
+      {/* ── Sign-up teaser modal ── */}
       <ExpeditionTeaserModal
         open={teaserOpen}
         onClose={() => { setTeaserOpen(false); setTeaserHotspot(null); }}
@@ -592,8 +568,8 @@ export default function Explore() {
         hotspotName={teaserHotspot ? teaserHotspot.name : null}
       />
 
-      {/* ── Bottom list sheet — authenticated only ── */}
-      {isAuthenticated && !detailHotspot && (
+      {/* ── Bottom list sheet — unlocked for everyone ── */}
+      {!detailHotspot && (
         <div className="absolute bottom-0 inset-x-0 z-[1000] pointer-events-none">
           <AnimatePresence mode="wait">
             {sheetOpen ? (

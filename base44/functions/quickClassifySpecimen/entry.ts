@@ -61,9 +61,6 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch(() => null);
-    if (!user?.email) {
-      return Response.json({ error: 'Sign in to use live labels', code: 'auth_required' }, { status: 401 });
-    }
 
     const body = await req.json().catch(() => ({}));
     const fileUrl = typeof body?.file_url === 'string' ? body.file_url : '';
@@ -75,7 +72,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url must be from a trusted storage domain' }, { status: 400 });
     }
 
-    const burst = burstCheck(user.email);
+    const callerKey = user?.email || String(body?.guest_device_id || 'guest');
+    const burst = burstCheck(callerKey);
     if (!burst.ok) {
       return Response.json(
         { error: 'Live labels are going too fast', code: 'live_burst', retry_after_ms: burst.retryAfterMs },
@@ -83,13 +81,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const meter = await meterLiveCall(base44 as never, user);
-    if (!meter.ok) {
-      return Response.json(
-        { error: 'Live labels are used up for today', code: 'live_budget', meter },
-        { status: 429 },
-      );
-    }
+    const meter = { ok: true, paid: true, used: null, limit: null, resetAt: '' };
 
     const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',

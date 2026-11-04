@@ -168,19 +168,8 @@ Deno.serve(async (req) => {
     } = body;
 
     const isGuest = !user?.email;
-    if (isGuest) {
-      if (save || share_to_map) {
-        return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
-      }
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'identify', { consume: true });
-      if (!gate.ok) {
-        return Response.json(
-          { error: gate.error || 'Guest free scan already used', resetAt: gate.resetAt },
-          { status: gate.status || 429 },
-        );
-      }
-    } else if (!user?.email) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (isGuest && (save || share_to_map)) {
+      return Response.json({ error: 'Sign in to save finds' }, { status: 401 });
     }
 
     const storedLocation = getStoredLocation(lat, lng, geo_privacy);
@@ -274,19 +263,8 @@ Deno.serve(async (req) => {
       }
     } catch { /* learning context is best-effort */ }
 
-    // ── FREE-TIER METERING (members) ─────────────────────────────────────────
-    // Only a fresh identification costs a scan; re-sending a result to save it
-    // (prefilled_result) does not.
-    let quota = null;
-    if (!isGuest && !prefilled_result) {
-      quota = await checkMemberScanQuota(base44 as never, { email: user.email, role: user.role });
-      if (!quota.ok) {
-        return Response.json(
-          { error: 'You have used your free scans for this month', code: 'scan_quota', quota },
-          { status: 402 },
-        );
-      }
-    }
+    // ── OPEN BETA: UNLIMITED FREE SCANS ──────────────────────────────────────
+    let quota = { ok: true, paid: true, used: null, limit: null, resetAt: null };
 
     const conditionNote = isGreatLakes ? '' : wet_dry === 'wet'
       ? ' CONDITION: specimen is WET — banding, coral patterns and translucency read stronger; waxy lusters are enhanced.'

@@ -118,45 +118,6 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      return (
-        <main id="main-content" tabIndex={-1} className="outline-none">
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/signin" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth" element={<AuthToLoginRedirect />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/new-password" element={<ResetPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/agate-guide" element={<AgateGuide />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/docs" element={<Docs />} />
-            <Route path="/clubs" element={<Clubs />} />
-            <Route path="/find-of-the-week" element={<FindOfTheWeek />} />
-            <Route path="/live" element={<Live />} />
-            <Route path="/live/:streamId" element={<LiveStreamView />} />
-            <Route path="/scan" element={<Scan />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/oauth/consent" element={<OAuthConsent />} />
-            <Route path="/connect" element={<Connect />} />
-            <Route path="/" element={<Landing />} />
-            {SIGNED_IN_PATHS.map((p) => (
-              <Route key={p} path={p} element={<SignInFirst />} />
-            ))}
-            {/* Unknown URLs get a real "not found" page (noindex) instead of the landing page. */}
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
-        </Suspense>
-        </main>
-      );
     }
   }
 

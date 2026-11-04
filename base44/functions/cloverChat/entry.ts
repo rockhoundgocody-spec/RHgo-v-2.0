@@ -60,15 +60,9 @@ Deno.serve(async (req) => {
       transcript_soft = false,
     } = await req.json();
 
-    if (!user?.email) {
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'cloverChat', { consume: true });
-      if (!gate.ok) {
-        return Response.json(
-          { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },
-          { status: gate.status || 429 },
-        );
-      }
-    }
+    // Open Beta: Clover chat is free and unlimited for both signed-in and guest explorers.
+    void guest_device_id;
+    void enforceGuestRate;
 
     const c = companion;
     const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);

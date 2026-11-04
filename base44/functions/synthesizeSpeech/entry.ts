@@ -21,15 +21,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing text' }, { status: 400 });
     }
 
-    if (!user?.email) {
-      const gate = await enforceGuestRate(base44 as never, guest_device_id, 'synthesizeSpeech', { consume: true });
-      if (!gate.ok) {
-        return Response.json(
-          { error: gate.error || 'Guest rate limit exceeded', resetAt: gate.resetAt },
-          { status: gate.status || 429 },
-        );
-      }
-    }
+    // Open Beta: Clover voice synthesis is free and unlimited for all explorers.
+    void guest_device_id;
+    void enforceGuestRate;
 
     const allowed = ['river', 'honey', 'sunny', 'storm', 'spark'];
     const chosen = allowed.includes(voice) ? voice : 'honey';

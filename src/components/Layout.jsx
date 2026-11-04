@@ -24,12 +24,9 @@ const OracleLiveOverlay = lazyPart(() => import('@/components/oracle/OracleLiveO
 
 const PRIMARY_ROOTS = ['/', '/explore', '/scan', '/collection', '/market'];
 
-// Layout routes a logged-out visitor may view. Everything else under the
-// Layout is protected and redirects to /signin.
-const PUBLIC_LAYOUT_ROUTES = ['/explore', '/scan', '/agate-guide', '/live', '/find-of-the-week', '/clubs', '/docs', '/about', '/contact'];
+// All Layout routes are open to everyone (signed-in or guest) — no login wall.
 export function isPublicLayoutRoute(pathname) {
-  if (pathname === '/') return true;
-  return PUBLIC_LAYOUT_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return Boolean(pathname);
 }
 
 const secondaryRoutes = [
@@ -223,16 +220,16 @@ export default function Layout() {
           reduceMotion={reduceMotion}
         />
 
-        {!isAdminOrDocs && isAuthenticated && !isFullscreenCamera && (
+        {!isAdminOrDocs && !isFullscreenCamera && (
           <CrystalNav activeTab={activeTab} onTabClick={handleTabClick} pathname={location.pathname} />
         )}
 
-        {!isFullscreenCamera && isAuthenticated && <HotspotProximityWatcher />}
+        {!isFullscreenCamera && <HotspotProximityWatcher />}
         {!isFullscreenCamera && isAuthenticated && <StreakReminderBanner />}
-        {!isFullscreenCamera && isAuthenticated && <OracleOverlays />}
+        {!isFullscreenCamera && <OracleOverlays />}
         {isAuthenticated && <BadgeUnlockWatcher />}
-        {!isFullscreenCamera && isAuthenticated && <FloatingCloverCompanion />}
-        {!isFullscreenCamera && isAuthenticated && (
+        {!isFullscreenCamera && <FloatingCloverCompanion />}
+        {!isFullscreenCamera && (
           <>
             <WakeWordListener />
             <CloverNotifications />

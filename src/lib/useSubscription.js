@@ -66,11 +66,11 @@ export function useSubscription(user) {
     return () => { cancelled = true; };
   }, [user?.email, reloadKey]);
 
-  // Trialing and past-due (Stripe still retrying) subscribers keep access;
-  // see subscriptionAccess.js — the same rule the server enforces.
-  const isPaid = isPaidSubscription(subscription);
-  const isPro = isPaid && subscription?.tier === 'field_pro';
-  const isFamily = isPaid && subscription?.tier === 'family';
+  // Open Beta: all features are unlocked free for everyone, with optional supporter tiers.
+  const hasActivePaidSub = isPaidSubscription(subscription);
+  const isPaid = true;
+  const isPro = true;
+  const isFamily = hasActivePaidSub ? subscription?.tier === 'family' : true;
 
   // Call after Stripe webhook confirms payment to refresh locally.
   // Bumping reloadKey re-runs the effect — previously this cleared state but
