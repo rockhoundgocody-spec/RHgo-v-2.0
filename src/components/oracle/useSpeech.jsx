@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { assessTranscript } from '@/lib/cloverVoice';
+import { assessTranscript, prepareTextForSpeech } from '@/lib/cloverVoice';
+
+// In-memory LRU cache of decoded AudioBuffers so common openers, quiz lines,
+// and repeated phrases play instantaneously with zero network delay.
+const TTS_BUFFER_CACHE = new Map();
+const MAX_CACHE_ENTRIES = 24;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useSpeechSynthesis
-// Google Cloud TTS via synthesizeSpeech backend → Web Audio analyser for
-// amplitude/spectrum. Falls back to browser TTS on backend failure.
+// Google Cloud TTS via synthesizeSpeech backend → Warm Web Audio vocal chain +
+// analyser for amplitude/spectrum. Falls back to browser TTS on backend failure.
 // ─────────────────────────────────────────────────────────────────────────────
 export function useSpeechSynthesis() {
   const [speaking, setSpeaking] = useState(false);
@@ -89,37 +94,81 @@ export function useSpeechSynthesis() {
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
 
-      const { getOrCreateGuestId } = await import('@/lib/guestDevice');
-      const res = await base44.functions.invoke('synthesizeSpeech', {
-        text:  String(text).slice(0, 800),
-        voice: voiceConfig.voice || 'honey',
-        guest_device_id: getOrCreateGuestId(),
-      });
+      const spokenText = prepareTextForSpeech(String(text)).slice(0, 800);
+      const chosenVoice = voiceConfig.voice || 'honey';
+      const cacheKey = `${chosenVoice}::${spokenText}`;
 
-      const audioUrl = res?.data?.audioUrl;
-      if (!audioUrl) throw new Error('No audio URL returned');
+      let audioBuffer = TTS_BUFFER_CACHE.get(cacheKey);
+      if (!audioBuffer) {
+        const { getOrCreateGuestId } = await import('@/lib/guestDevice');
+        const res = await base44.functions.invoke('synthesizeSpeech', {
+          text:  spokenText,
+          voice: chosenVoice,
+          guest_device_id: getOrCreateGuestId(),
+        });
 
-      const audioRes = await fetch(audioUrl);
-      if (!audioRes.ok) throw new Error('Audio fetch failed');
-      const arrayBuf = await audioRes.arrayBuffer();
+        const audioUrl = res?.data?.audioUrl;
+        if (!audioUrl) throw new Error('No audio URL returned');
 
-      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
-      const audioBuffer = await ctx.decodeAudioData(arrayBuf);
+        const audioRes = await fetch(audioUrl);
+        if (!audioRes.ok) throw new Error('Audio fetch failed');
+        const arrayBuf = await audioRes.arrayBuffer();
+
+        if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
+        audioBuffer = await ctx.decodeAudioData(arrayBuf);
+
+        if (TTS_BUFFER_CACHE.size >= MAX_CACHE_ENTRIES) {
+          const oldestKey = TTS_BUFFER_CACHE.keys().next().value;
+          TTS_BUFFER_CACHE.delete(oldestKey);
+        }
+        TTS_BUFFER_CACHE.set(cacheKey, audioBuffer);
+      }
 
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.55;
+      analyser.smoothingTimeConstant = 0.52;
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      // Play at the engine's natural pace — slowing playback pitch-shifts the
-      // voice down and makes it sound robotic/computerized.
-      source.playbackRate.value = 1.0;
+      const rate = Number(voiceConfig.rate);
+      source.playbackRate.value = Number.isFinite(rate) ? Math.min(1.18, Math.max(0.88, rate)) : 0.98;
+
+      // Vocal presence & outdoor clarity chain:
+      // 1) 85Hz high-pass removes low rumble
+      // 2) 220Hz warm body boost (+1.5dB)
+      // 3) 3.1kHz articulation boost (+2dB) for crisp consonants in wind
+      // 4) Gentle compressor evens out volume
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 85;
+
+      const warmth = ctx.createBiquadFilter();
+      warmth.type = 'peaking';
+      warmth.frequency.value = 220;
+      warmth.Q.value = 0.9;
+      warmth.gain.value = 1.5;
+
+      const presence = ctx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 3100;
+      presence.Q.value = 1.1;
+      presence.gain.value = 2.0;
+
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -20;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 2.5;
+      compressor.attack.value = 0.005;
+      compressor.release.value = 0.14;
 
       const gainNode = ctx.createGain();
-      gainNode.gain.value = voiceConfig.volume ?? 0.95;
+      gainNode.gain.value = voiceConfig.volume ?? 0.96;
 
-      source.connect(analyser);
+      source.connect(highpass);
+      highpass.connect(warmth);
+      warmth.connect(presence);
+      presence.connect(compressor);
+      compressor.connect(analyser);
       analyser.connect(gainNode);
       gainNode.connect(ctx.destination);
       sourceRef.current = source;
@@ -174,17 +223,20 @@ export function useSpeechSynthesis() {
 function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceConfig = {}) {
   if (!window.speechSynthesis) { setSpeaking(false); return; }
 
+  const cleanText = prepareTextForSpeech(String(text));
+
   const _speak = () => {
-    const utter    = new SpeechSynthesisUtterance(String(text));
+    const utter    = new SpeechSynthesisUtterance(cleanText);
     utter.lang     = 'en-US';
     utter.rate     = voiceConfig.rate || 0.96;
-    utter.pitch    = voiceConfig.pitch || 1.02;
+    utter.pitch    = voiceConfig.pitch || 1.03;
     utter.volume   = voiceConfig.volume ?? 1.0;
     const voices   = window.speechSynthesis.getVoices();
-    // Prioritize Irish-American female voice (en-IE / Moira), smooth warm natural female voices, and avoid British (en-GB).
+    // Prioritize natural neural/premium voices and warm Irish-American female voices, avoiding British (en-GB).
     const isNotBritish = (v) => !/en[-_]GB|british|uk\s*english/i.test(v.lang + ' ' + v.name);
     const best     = voices.find((v) => isNotBritish(v) && /en[-_]IE|irish|moira|orla|niamh/i.test(v.lang + ' ' + v.name))
-                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /samantha|karen|victoria|ava|zoe|allison|female/i.test(v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /natural|neural|premium|enhanced|ava|allison|samantha|zoe/i.test(v.name))
+                  || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang) && /karen|victoria|female/i.test(v.name))
                   || voices.find((v) => isNotBritish(v) && /en[-_]US/i.test(v.lang))
                   || voices.find((v) => isNotBritish(v))
                   || voices[0];

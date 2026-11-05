@@ -107,6 +107,7 @@ export default function FloatingCloverCompanion() {
               }}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
+              onSpeak={clover.say}
               onListen={clover.nudge}
             />
           </motion.div>

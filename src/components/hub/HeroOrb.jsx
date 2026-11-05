@@ -193,6 +193,7 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
               huntLoading={false}
               voiceSupported={clover.voiceSupported}
               onSend={clover.send}
+              onSpeak={clover.say}
               onListen={clover.nudge}
               getWaveBars={clover.getWaveBars}
               onOpenAbilities={() => {

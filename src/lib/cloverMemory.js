@@ -53,9 +53,48 @@ function createDefaultMemory() {
     recentLocalities: [],
     recentDiscoveries: [],
     episodicNotes: [],
+    masteredTerms: [],
+    quizStreak: 0,
+    lastQuizDate: null,
     lastTopic: null,
     lastActiveAt: null,
     huntingStyle: 'beachcomber', // 'beachcomber' | 'quarry_hunter' | 'mineralogist' | 'casual'
+  };
+}
+
+/**
+ * Records a rockhounding term mastered via the daily terminology quiz into
+ * Clover's persistent cognitive memory and updates the daily streak.
+ */
+export function recordMasteredTerm(term, completedDaily = false) {
+  if (!term) return getTerminologyMastery();
+  const memory = loadCloverMemory();
+  const list = Array.isArray(memory.masteredTerms) ? memory.masteredTerms : [];
+  if (!list.includes(term)) {
+    memory.masteredTerms = [term, ...list].slice(0, 60);
+  }
+  if (completedDaily) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (memory.lastQuizDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      memory.quizStreak = memory.lastQuizDate === yesterday ? (memory.quizStreak || 0) + 1 : 1;
+      memory.lastQuizDate = today;
+    }
+  }
+  memory.lastTopic = term;
+  memory.lastActiveAt = Date.now();
+  saveCloverMemory(memory);
+  return getTerminologyMastery();
+}
+
+export function getTerminologyMastery() {
+  const memory = loadCloverMemory();
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    masteredTerms: Array.isArray(memory.masteredTerms) ? memory.masteredTerms : [],
+    masteredCount: Array.isArray(memory.masteredTerms) ? memory.masteredTerms.length : 0,
+    quizStreak: memory.quizStreak || 0,
+    completedToday: memory.lastQuizDate === today,
   };
 }
 
@@ -171,6 +210,9 @@ export function getCognitiveMemoryContext() {
   if (favs) context += ` Prized specimens: ${favs}.`;
   if (locs) context += ` Visited localities: ${locs}.`;
   if (memory.lastTopic) context += ` Last focus: ${memory.lastTopic}.`;
+  if (Array.isArray(memory.masteredTerms) && memory.masteredTerms.length > 0) {
+    context += ` Mastered field terms (${memory.masteredTerms.length}): ${memory.masteredTerms.slice(0, 8).join(', ')}.`;
+  }
   if (notes) context += ` Past conversation notes: ${notes}.`;
   context += ` User mode: ${memory.preferredMode}.]`;
 

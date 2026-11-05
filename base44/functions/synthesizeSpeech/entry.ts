@@ -28,8 +28,21 @@ Deno.serve(async (req) => {
     const allowed = ['river', 'honey', 'sunny', 'storm', 'spark'];
     const chosen = allowed.includes(voice) ? voice : 'honey';
 
+    const cleanSpeechText = text
+      .replace(/[*_`~#]+/g, '')
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+      .replace(/SiO₂/g, 'silica')
+      .replace(/CaCO₃/g, 'calcium carbonate')
+      .replace(/FeS₂/g, 'iron sulfide')
+      .replace(/\bMohs\b/g, 'Moze')
+      .replace(/\bdruzy\b/gi, 'droozy')
+      .replace(/\s*[—–]\s*/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+      .slice(0, 800);
+
     const result = await base44.integrations.Core.GenerateSpeech({
-      text: text.slice(0, 800),
+      text: cleanSpeechText || text.slice(0, 800),
       voice: chosen,
       language_code: 'en',
     });

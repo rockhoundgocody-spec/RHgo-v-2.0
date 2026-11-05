@@ -329,7 +329,7 @@ export default function useCloverConversation({
 
   return {
     phase, messages, interim, muted, toggleMute, getWaveBars,
-    start, end, stop: end, nudge, send, unlock,
+    start, end, stop: end, nudge, send, say, unlock,
     active: phase !== 'idle',
     voiceSupported,
     getAmplitude, getSpectrum,

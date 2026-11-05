@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Minimize2, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit } from 'lucide-react';
+import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Minimize2, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { lookupMineralIntelligence } from '@/lib/mindatApi';
+import { lookupMineralIntelligence, lookupTermIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
+import { getTerminologyMastery } from '@/lib/cloverMemory';
 import CloverVoiceControls from './CloverVoiceControls.jsx';
+import CloverDailyTermQuiz from './CloverDailyTermQuiz.jsx';
 
 const QUICK_TEST_PROMPTS = [
   { label: 'Scratch Test', prompt: 'Walk me through a quick Mohs scratch test on this specimen.' },
@@ -21,16 +23,19 @@ const QUICK_TEST_PROMPTS = [
  */
 export default function CloverVoicePanel({
   phase, messages, interim, onClose, onMinimize, compact = false, onHunt, huntLoading,
-  suggestions, onDismissSuggestions, voiceSupported, onSend, onListen,
+  suggestions, onDismissSuggestions, voiceSupported, onSend, onSpeak, onListen,
   muted, onToggleMute, onStop, getWaveBars, onOpenAbilities, resonanceClaimed,
 }) {
   const transcriptRef = useRef(null);
   const [draft, setDraft] = useState('');
   const [expandedIntel, setExpandedIntel] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const isKid = useKidMode();
+  const mastery = useMemo(() => getTerminologyMastery(), [quizOpen, messages.length]);
 
   const lastMsg = messages[messages.length - 1]?.content || '';
   const detectedMineral = useMemo(() => lookupMineralIntelligence(lastMsg), [lastMsg]);
+  const detectedTerm = useMemo(() => lookupTermIntelligence(lastMsg), [lastMsg]);
   const kidMineral = useMemo(() => detectedMineral ? getKidFriendlyMineral(detectedMineral.name) : null, [detectedMineral]);
 
   // Scroll only the panel's internal transcript — never the page.
@@ -39,7 +44,7 @@ export default function CloverVoicePanel({
     if (transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     }
-  }, [messages, interim, suggestions, detectedMineral, expandedIntel]);
+  }, [messages, interim, suggestions, detectedMineral, detectedTerm, expandedIntel, quizOpen]);
 
   const visibleMessages = compact ? messages.slice(-2) : messages;
 
@@ -62,6 +67,27 @@ export default function CloverVoicePanel({
           Clover 🍀 {isKid && <span className="text-[9px] text-amber-300 font-bold">(Explorer Buddy)</span>}
         </span>
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setQuizOpen((v) => !v)}
+            aria-pressed={quizOpen}
+            aria-label="Toggle daily rockhounding terminology quiz"
+            className="relative flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
+            style={{
+              background: quizOpen ? 'hsla(165,80%,40%,0.28)' : 'hsla(195,80%,45%,0.16)',
+              border: '1px solid hsla(175,80%,60%,0.35)',
+              color: '#9FE8D0',
+            }}
+          >
+            <BookOpen size={10} />
+            <span>Quiz</span>
+            {!mastery.completedToday && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"
+                title="Today's terminology quiz is ready"
+              />
+            )}
+          </button>
           {onHunt && !compact && (
             <button
               type="button"
@@ -159,6 +185,38 @@ export default function CloverVoicePanel({
               </div>
             )}
           </div>
+        )}
+
+        {/* Field Slang & Terminology Card when a term is mentioned */}
+        {detectedTerm && !quizOpen && (
+          <div
+            className="rounded-xl p-2 space-y-1 text-[10.5px]"
+            style={{
+              background: 'hsla(195,45%,16%,0.75)',
+              border: '1px solid hsla(185,80%,60%,0.32)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-hud flex items-center gap-1">
+                <BookOpen size={11} />
+                <span>Field Term: {detectedTerm.term}</span>
+              </span>
+              {detectedTerm.category && (
+                <span className="text-[8.5px] font-mono uppercase tracking-wider text-amber-300/80">
+                  {detectedTerm.category}
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-white/75 leading-snug">{detectedTerm.meaning}</p>
+          </div>
+        )}
+
+        {/* Daily Quick-Tap Rockhounding Terminology Quiz */}
+        {quizOpen && (
+          <CloverDailyTermQuiz
+            onSpeak={onSpeak}
+            onClose={() => setQuizOpen(false)}
+          />
         )}
 
         {/* What she's hearing right now */}

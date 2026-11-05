@@ -57,7 +57,62 @@ const REPAIRS = [
   [/\bfeld\s*spar\b/gi, 'feldspar'],
   [/\bgarnett\b/gi, 'garnet'],
   [/\btoe\s*paz\b/gi, 'topaz'],
+  [/\bleave\s*her\s*right\b/gi, 'leaverite'],
+  [/\bleaver\s*right\b/gi, 'leaverite'],
+  [/\bdrew\s*zee\b/gi, 'druzy'],
+  [/\bbot\s*ree\s*oil\b/gi, 'botryoidal'],
+  [/\bpeg\s*ma\s*tight\b/gi, 'pegmatite'],
+  [/\bsue\s*doe\s*morph\b/gi, 'pseudomorph'],
+  [/\ben\s*high\s*dro\b/gi, 'enhydro'],
+  [/\bcon\s*coy\s*dull\b/gi, 'conchoidal'],
+  [/\bcab\s*a\s*shawn\b/gi, 'cabochon'],
+  [/\bsag\s*a\s*night\b/gi, 'sagenite'],
+  [/\bsep\s*tarian\b/gi, 'septarian'],
 ];
+
+const SPEECH_PRONUNCIATIONS = [
+  [/SiO₂/g, 'silica'],
+  [/CaCO₃/g, 'calcium carbonate'],
+  [/FeS₂/g, 'iron sulfide'],
+  [/CaF₂/g, 'calcium fluoride'],
+  [/CaSO₄·2H₂O/g, 'hydrated calcium sulfate'],
+  [/Be₃Al₂Si₆O₁₈(?::Mn³⁺)?/g, 'beryllium aluminum silicate'],
+  [/\b365\s*nm\b/gi, '365 nanometer'],
+  [/\b254\s*nm\b/gi, '254 nanometer'],
+  [/\bMohs\b/g, 'Moze'],
+  [/\bdruzy\b/gi, 'droozy'],
+  [/\bbotryoidal\b/gi, 'bot-ree-oydal'],
+  [/\bchatoyancy\b/gi, 'sha-toy-an-see'],
+  [/\bconchoidal\b/gi, 'kon-koy-dal'],
+  [/\bmiarolitic\b/gi, 'my-ar-oh-litic'],
+  [/\bleaverite\b/gi, 'leaver-ite'],
+  [/\bgossan\b/gi, 'goss-an'],
+  [/\bcabochon\b/gi, 'cab-oh-shon'],
+];
+
+/**
+ * Prepares Clover's reply text for natural, melodic voice synthesis:
+ * strips emojis/markdown, expands chemical formulas, and guides mineral pronunciation.
+ */
+export function prepareTextForSpeech(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  let out = raw
+    // Strip markdown bold/italic/code markers
+    .replace(/[*_`~#]+/g, '')
+    // Strip emojis & pictographs so TTS never reads "four leaf clover emoji"
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+    // Convert numeric ranges like "6.5 – 7.0" to "6.5 to 7.0"
+    .replace(/(\d+(?:\.\d+)?)\s*[–—-]\s*(\d+(?:\.\d+)?)/g, '$1 to $2')
+    // Convert em-dashes and slash separators into natural breath pauses
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/\b([A-Za-z]+)\s*\/\s*([A-Za-z]+)\b/g, '$1 or $2');
+
+  for (const [pattern, spoken] of SPEECH_PRONUNCIATIONS) {
+    out = out.replace(pattern, spoken);
+  }
+
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
 
 /** Drops the thinking noises the engine wrote down at the edges. */
 export function stripFillers(text) {
