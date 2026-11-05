@@ -69,9 +69,8 @@ async function fetchBedrockContext(gps: { lat: number; lng: number } | null): Pr
   }
 }
 
-// deno-lint-ignore no-explicit-any
 async function loadVault(
-  base44: any,
+  base44: ReturnType<typeof createClientFromRequest>,
   user: { email?: string } | null,
   location: { lat: number; lng: number } | null,
   guestSpecimens: Row[] = [],
