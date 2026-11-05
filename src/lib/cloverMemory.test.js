@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   loadCloverMemory,
-  saveCloverMemory,
   recordDiscoveryToMemory,
+  recordConversationEpisode,
+  syncCollectionToMemory,
   getCognitiveMemoryContext,
   clearCloverMemoryForTest,
 } from './cloverMemory';
@@ -29,10 +30,20 @@ describe('cloverMemory', () => {
     expect(mem.favoriteMinerals).toContain('Lake Superior Agate');
   });
 
-  it('generates cognitive memory context string', () => {
-    recordDiscoveryToMemory({ top_match: 'Yooperlite', rarity: 'legendary' });
+  it('generates cognitive memory context string with episodic notes and synced collection', () => {
+    recordDiscoveryToMemory({ top_match: 'Yooperlite', rarity: 'legendary', location_name: 'Lake Superior' });
+    syncCollectionToMemory([
+      { mineral_name: 'Red beryl', rarity: 'legendary', found_at: 'Wah Wah Mountains' },
+    ]);
+    recordConversationEpisode({
+      userText: 'How do I test quartz vs calcite?',
+      assistantReply: 'Try a quick scratch test with a steel knife or a drop of weak acid.',
+      citedSources: [{ label: 'Red beryl', place: 'Wah Wah Mountains' }],
+    });
     const ctx = getCognitiveMemoryContext();
     expect(ctx).toContain('Yooperlite');
-    expect(ctx).toContain('Cognitive Memory');
+    expect(ctx).toContain('Red beryl');
+    expect(ctx).toContain('Wah Wah Mountains');
+    expect(ctx).toContain('Past conversation notes');
   });
 });

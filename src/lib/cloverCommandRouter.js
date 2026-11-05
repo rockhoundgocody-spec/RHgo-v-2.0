@@ -8,6 +8,7 @@ export const INTENTS = Object.freeze({
   WAKE: "wake",
   BRAIN_SWAP: "brain_swap",
   PULL: "pull",
+  NAVIGATE: "navigate",
   RESEARCH: "research",
   EYES: "eyes",
   DIG_LOCK: "dig_lock",
@@ -85,10 +86,18 @@ export function parseCloverCommand(raw, state = {}) {
     });
   }
 
-  if (/\b(what do you see|eyes on|look at (this|my)|camera)\b/.test(q)) {
+  if (/\b(what do you see|eyes on|look at (this|my)|camera|live scan|live eyes)\b/.test(q)) {
     return pack(INTENTS.EYES, woke, rest, {
       reply: "Eyes on. Show me the specimen.",
       usesScanCamera: true,
+    });
+  }
+
+  const nav = matchNaturalNavigation(q);
+  if (nav) {
+    return pack(INTENTS.NAVIGATE, woke, rest, {
+      route: nav.route,
+      reply: nav.reply,
     });
   }
 
@@ -167,11 +176,59 @@ function labelBrain(id) {
   return "Grok";
 }
 
+const NAV_VERBS = /^(?:go to|take me to|switch to|head to|bring up|launch|start|open|show me|view)\s+(?:the\s+|my\s+)?/i;
+
+function matchNaturalNavigation(q) {
+  if (/^(?:scan a rock|scan this|identify this rock|open scan|open scanner|start a scan)$/.test(q)) {
+    return { route: "/scan", reply: "Opening the scanner." };
+  }
+  if (/^(?:compare|compare specimens|compare rocks|side by side)$/.test(q)) {
+    return { route: "/compare", reply: "Opening specimen comparison." };
+  }
+  if (/^(?:start a reality trial|run chronolith|open chronolith)$/.test(q)) {
+    return { route: "/chronolith", reply: "Opening Chronolith." };
+  }
+  if (!NAV_VERBS.test(q)) return null;
+  const target = q.replace(NAV_VERBS, "").replace(/\s+(?:page|screen|tab|view|please)$/i, "").trim();
+  const mapped = directScreenRoute(target);
+  return mapped;
+}
+
+function directScreenRoute(target) {
+  const t = String(target || "").toLowerCase().trim();
+  if (!t) return null;
+  if (/^(?:scan|scanner|rock scanner|mineral scanner)$/.test(t)) return { route: "/scan", reply: "Opening the scanner." };
+  if (/^(?:explore|map|hotspot map|hotspots|dig sites|collecting map)$/.test(t)) return { route: "/explore", reply: "Pulling up the hotspot map." };
+  if (/^(?:collection|my collection|cabinet|geodex|specimens|my rocks|my finds)$/.test(t)) return { route: "/collection", reply: "Opening your collection." };
+  if (/^(?:vault|vault galaxy|galaxy|3d vault)$/.test(t)) return { route: "/vault", reply: "Opening the Vault Galaxy." };
+  if (/^(?:chronolith|reality trial|scientific court)$/.test(t)) return { route: "/chronolith", reply: "Opening Chronolith." };
+  if (/^(?:compare|comparison|side by side)$/.test(t)) return { route: "/compare", reply: "Opening specimen comparison." };
+  if (/^(?:expeditions?|trips?|trip planner|field trips?|memory capsules?)$/.test(t)) return { route: "/expeditions", reply: "Opening expeditions." };
+  if (/^(?:community|social|feed|community feed)$/.test(t)) return { route: "/community", reply: "Opening the community feed." };
+  if (/^(?:find of the week|weekly ballot|ballot)$/.test(t)) return { route: "/find-of-the-week", reply: "Opening Find of the Week." };
+  if (/^(?:clubs?|rock clubs?|mineral clubs?|chapters?)$/.test(t)) return { route: "/clubs", reply: "Opening club chapters." };
+  if (/^(?:agate guide|agates guide)$/.test(t)) return { route: "/agate-guide", reply: "Opening the Agate Guide." };
+  if (/^(?:live|live streams?|broadcast)$/.test(t)) return { route: "/live", reply: "Opening live broadcasts." };
+  if (/^(?:quests?|missions?|field missions?|daily quests?)$/.test(t)) return { route: "/quests", reply: "Opening field quests." };
+  if (/^(?:badges?|achievements?)$/.test(t)) return { route: "/badges", reply: "Opening your badges." };
+  if (/^(?:leaderboard|rankings?|top hunters?)$/.test(t)) return { route: "/leaderboard", reply: "Opening the leaderboard." };
+  if (/^(?:private log|rock log|field notes|private rock log)$/.test(t)) return { route: "/private-log", reply: "Opening your private rock log." };
+  if (/^(?:market|marketplace|shop)$/.test(t)) return { route: "/market", reply: "Opening the marketplace." };
+  if (/^(?:settings|preferences)$/.test(t)) return { route: "/settings", reply: "Opening settings." };
+  if (/^(?:profile|my profile|account)$/.test(t)) return { route: "/profile", reply: "Opening your profile." };
+  if (/^(?:home|hub|main screen)$/.test(t)) return { route: "/", reply: "Back to the Hub." };
+  return null;
+}
+
 export function routeForTarget(target) {
-  const t = String(target || "").toLowerCase();
+  const t = String(target || "").toLowerCase().trim();
+  const screen = directScreenRoute(t);
+  if (screen) return screen.route;
   if (/invoice|listing|coa/.test(t)) return "/market";
   if (/\b(map|hotspots?)\b/.test(t)) return "/explore";
   if (/trip|itinerary|expedition/.test(t)) return "/expeditions";
+  if (/\bchronolith\b/.test(t)) return "/chronolith";
+  if (/\bagate guide\b/.test(t)) return "/agate-guide";
   // Specimens, sites and anything else: open the Vault Galaxy on it.
   return `/vault?q=${encodeURIComponent(target)}`;
 }

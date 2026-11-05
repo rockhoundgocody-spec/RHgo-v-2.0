@@ -36,6 +36,8 @@ const STOP = new Set([
 ]);
 
 const RECENCY = /\b(last|latest|recent|recently|newest|today|yesterday|this week)\b/i;
+const NEARBY = /\b(near|nearby|around here|closest|close by|local|dig|collect|spot|site|hotspot|where can i|legal|blm|permit)\b/i;
+const RARITY_Q = /\b(rare|rarest|legendary|best|prized|top|favorite|uncommon)\b/i;
 const MAX_RECORDS = 6;
 
 const str = (v: unknown, max = 400) => (v == null ? '' : String(v)).replace(/\s+/g, ' ').trim().slice(0, max);
@@ -51,6 +53,14 @@ export function tokenize(text: unknown): string[] {
 
 function specimenItem(s: Row): Omit<VaultItem, 'key'> {
   const label = str(s.mineral_name || s.common_name, 120) || 'Unnamed specimen';
+  const fieldProps = [
+    s.field_habit ? `habit: ${str(s.field_habit, 60)}` : '',
+    s.field_luster ? `luster: ${str(s.field_luster, 60)}` : '',
+    s.field_matrix ? `matrix: ${str(s.field_matrix, 60)}` : '',
+    s.field_next_test ? `next test: ${str(s.field_next_test, 80)}` : '',
+    typeof s.ai_confidence === 'number' ? `ID confidence ${Math.round(s.ai_confidence * 100)}%` : '',
+    s.verified ? 'verified' : '',
+  ].filter(Boolean).join(', ');
   return {
     type: 'specimen',
     id: str(s.id, 64),
@@ -58,7 +68,12 @@ function specimenItem(s: Row): Omit<VaultItem, 'key'> {
     place: str(s.found_at, 120),
     date: str(s.found_date || s.created_date, 10),
     rarity: str(s.rarity, 20),
-    text: [s.common_name && s.common_name !== s.mineral_name ? `aka ${s.common_name}` : '', s.disposition ? `disposition ${s.disposition}` : '', s.notes]
+    text: [
+      s.common_name && s.common_name !== s.mineral_name ? `aka ${s.common_name}` : '',
+      s.disposition ? `disposition ${s.disposition}` : '',
+      fieldProps,
+      s.notes,
+    ]
       .filter(Boolean).map((t) => str(t, 600)).join('. '),
     route: `/specimen/${str(s.id, 64)}`,
   };
@@ -105,9 +120,12 @@ function siteItem(h: Row, distanceKm: number | null): Omit<VaultItem, 'key'> {
       distanceKm != null ? `${Math.round(distanceKm)} km away` : '',
       h.land_type ? `land: ${str(h.land_type, 40)}` : '',
       h.access_status ? `access: ${str(h.access_status, 40)}` : '',
+      h.claim_type && h.claim_type !== 'none' ? `claim: ${str(h.claim_type, 40)}` : '',
       h.permit_required ? `permit required${h.permit_cost ? ` (${str(h.permit_cost, 40)})` : ''}` : '',
+      h.seasonal_dates ? `season: ${str(h.seasonal_dates, 60)}` : '',
+      h.difficulty ? `difficulty: ${str(h.difficulty, 25)}` : '',
       minerals ? `minerals: ${minerals}` : '',
-      str(h.collecting_rules || h.rules, 300),
+      str(h.collecting_rules || h.rules || h.access_notes, 300),
     ].filter(Boolean).join('. '),
     route: `/explore?hotspot=${str(h.id, 64)}`,
   };
@@ -147,6 +165,8 @@ export function retrieve(vault: VaultItem[], query: string, k = MAX_RECORDS): Va
   const q = tokenize(query);
   const qText = ` ${q.join(' ')} `;
   const wantsRecent = RECENCY.test(query);
+  const wantsNearby = NEARBY.test(query);
+  const wantsRare = RARITY_Q.test(query);
   const newest = [...vault].filter((v) => v.type !== 'site').sort((a, b) => b.date.localeCompare(a.date));
   const recentRank = new Map(newest.slice(0, 5).map((v, i) => [v.key, 5 - i]));
 
@@ -164,6 +184,8 @@ export function retrieve(vault: VaultItem[], query: string, k = MAX_RECORDS): Va
     const labelPhrase = label.join(' ');
     if (label.length > 1 && qText.includes(` ${labelPhrase} `)) score += 4;
     if (wantsRecent) score += recentRank.get(item.key) || 0;
+    if (wantsNearby && item.type === 'site') score += 3;
+    if (wantsRare && (item.rarity === 'legendary' || item.rarity === 'rare')) score += 3;
     return { item, score };
   });
 

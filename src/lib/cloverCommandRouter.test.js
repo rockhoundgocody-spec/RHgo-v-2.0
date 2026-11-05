@@ -37,6 +37,14 @@ describe('Clover voice routing', () => {
     expect(parseCloverCommand('where is the gate').intent).toBe(INTENTS.ASK);
   });
 
+  it('routes natural voice navigation to app screens', () => {
+    expect(applyCloverUtterance('take me to Chronolith').navigateTo).toBe('/chronolith');
+    expect(applyCloverUtterance('open the agate guide').navigateTo).toBe('/agate-guide');
+    expect(applyCloverUtterance('compare specimens').navigateTo).toBe('/compare');
+    expect(applyCloverUtterance('go to my collection').navigateTo).toBe('/collection');
+    expect(applyCloverUtterance('scan a rock').navigateTo).toBe('/scan');
+  });
+
   it('sends research and vault questions to the server brain', () => {
     const research = applyCloverUtterance('research BLM casual collecting rules');
     expect(research.handled).toBe(false);

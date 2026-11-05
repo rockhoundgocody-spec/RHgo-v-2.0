@@ -19,16 +19,75 @@ const BRAIN_MODELS: Record<string, string> = {
 
 type Row = Record<string, unknown>;
 
+const ALLOWED_ROUTES = new Set([
+  '/',
+  '/scan',
+  '/scan?live=1',
+  '/explore',
+  '/collection',
+  '/vault',
+  '/chronolith',
+  '/compare',
+  '/expeditions',
+  '/community',
+  '/find-of-the-week',
+  '/clubs',
+  '/agate-guide',
+  '/live',
+  '/quests',
+  '/badges',
+  '/leaderboard',
+  '/private-log',
+  '/market',
+  '/settings',
+  '/profile',
+]);
+
+async function fetchBedrockContext(gps: { lat: number; lng: number } | null): Promise<string> {
+  if (!gps) return '';
+  try {
+    const res = await fetch(
+      `https://macrostrat.org/api/v2/geologic_units/map?lat=${gps.lat}&lng=${gps.lng}`,
+      { signal: AbortSignal.timeout(3500) },
+    );
+    if (!res.ok) return '';
+    const json = await res.json();
+    const units = Array.isArray(json?.success?.data) ? json.success.data.slice(0, 3) : [];
+    if (!units.length) return '';
+    const summary = units.map((u: Row) => {
+      const parts = [
+        u.name || u.strat_name,
+        u.age ? `age: ${u.age}` : '',
+        u.lith ? `lithology: ${u.lith}` : '',
+        u.descrip ? String(u.descrip).slice(0, 160) : '',
+      ].filter(Boolean);
+      return parts.join(' | ');
+    }).join(' ; ');
+    return `LIVE BEDROCK GEOLOGY AT USER GPS (Macrostrat): ${summary}. Use this bedrock context when discussing what minerals form here, host rock matrix, or local collecting potential.`;
+  } catch {
+    return '';
+  }
+}
+
 // deno-lint-ignore no-explicit-any
-async function loadVault(base44: any, user: { email: string }, location: { lat: number; lng: number } | null): Promise<VaultItem[]> {
+async function loadVault(
+  base44: any,
+  user: { email?: string } | null,
+  location: { lat: number; lng: number } | null,
+  guestSpecimens: Row[] = [],
+): Promise<VaultItem[]> {
   const safe = (p: Promise<unknown>) => p.then((r) => (Array.isArray(r) ? (r as Row[]) : [])).catch(() => [] as Row[]);
-  // User-scoped client: row-level security limits every read to the caller's own records.
-  const [specimens, logs, capsules, hotspots] = await Promise.all([
-    safe(base44.entities.Specimen.list('-created_date', 200)),
-    safe(base44.entities.PrivateRockLog.filter({ owner_email: user.email }, '-created_date', 60)),
-    safe(base44.entities.MemoryCapsule.filter({ owner_email: user.email }, '-created_date', 30)),
-    location ? safe(base44.entities.Hotspot.list('-created_date', 400)) : Promise.resolve([] as Row[]),
+  // User-scoped client for personal records; public Hotspot read works for both signed-in and guest users.
+  const [cloudSpecimens, logs, capsules, hotspots] = await Promise.all([
+    user?.email ? safe(base44.entities.Specimen.list('-created_date', 200)) : Promise.resolve([] as Row[]),
+    user?.email ? safe(base44.entities.PrivateRockLog.filter({ owner_email: user.email }, '-created_date', 60)) : Promise.resolve([] as Row[]),
+    user?.email ? safe(base44.entities.MemoryCapsule.filter({ owner_email: user.email }, '-created_date', 30)) : Promise.resolve([] as Row[]),
+    location ? safe(base44.asServiceRole.entities.Hotspot.list('-created_date', 400)) : Promise.resolve([] as Row[]),
   ]);
+  const cleanGuests = (Array.isArray(guestSpecimens) ? guestSpecimens : [])
+    .filter((s) => s && typeof s === 'object')
+    .slice(0, 60);
+  const specimens = [...cloudSpecimens, ...cleanGuests];
   return buildVault({ specimens, logs, capsules, hotspots }, location);
 }
 
@@ -56,6 +115,7 @@ Deno.serve(async (req) => {
       guest_device_id = null,
       brain = null,
       recent_finds = [],
+      guest_specimens = [],
       screen = '',
       transcript_soft = false,
     } = await req.json();
@@ -67,16 +127,19 @@ Deno.serve(async (req) => {
     const c = companion;
     const name = (user?.full_name?.split(' ')[0] || 'explorer').slice(0, 40);
 
-    // ── Vault grounding: the hunter's own records, retrieved for this turn ──
+    // ── Vault + Bedrock grounding: the hunter's own records & live geology ──
     const gps = location && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))
       ? { lat: Number(location.lat), lng: Number(location.lng) }
       : null;
-    const vault = user?.email ? await loadVault(base44, user, gps) : [];
+    const [vault, bedrockContext] = await Promise.all([
+      loadVault(base44, user, gps, Array.isArray(guest_specimens) ? guest_specimens : []),
+      fetchBedrockContext(gps),
+    ]);
     const lastUserLine = [...history].reverse().find((m) => m?.role === 'user')?.content || '';
     const question = String(user_utterance || lastUserLine || '').slice(0, 400);
     const records = vault.length ? retrieve(vault, question) : [];
-    const vaultBlock = user?.email
-      ? `\n\nTHE HUNTER'S VAULT (their own logged records — the only source for anything about their finds, sites or trips):\nVAULT SUMMARY: ${summarize(vault)}\n${records.length ? `VAULT RECORDS:\n${formatRecords(records)}` : 'VAULT RECORDS: none match this question.'}`
+    const vaultBlock = vault.length || user?.email
+      ? `\n\nTHE HUNTER'S VAULT & NEARBY SITES (their own logged records + nearby verified hotspots — the only source for anything about their finds, sites or trips):\nVAULT SUMMARY: ${summarize(vault)}\n${records.length ? `VAULT RECORDS:\n${formatRecords(records)}` : 'VAULT RECORDS: none match this question.'}`
       : '';
     const researched = !!research_query;
 
@@ -145,16 +208,25 @@ Format rules:
 - Leave the door open without forcing it — a question sometimes, an easy observation the rest of the time
 - Never say "I'm an AI" — you're Clover, a companion
 
+GEOLOGICAL & FIELD DIAGNOSTIC INTELLIGENCE:
+- When helping identify or distinguish a mineral (e.g. quartz vs calcite, agate vs jasper, gold vs pyrite/chalcopyrite, Red beryl vs topaz/garnet), offer one concrete, practical field test: Mohs scratch test (copper penny ~3.5, steel knife ~5.5, quartz 7), unglazed porcelain streak color, cleavage planes vs conchoidal fracture, heft/specific gravity, vinegar/weak acid fizz for carbonates, magnetism, or UV fluorescence.
+- Connect your answer to the live Macrostrat bedrock formation or nearby hotspot geology when present below.
+- Respect legal land access: if a nearby site record mentions BLM, Forest Service, State Park, permit required, or active mining claims, remind the user naturally about surface-collection rules or permits.
+
+NATURAL VOICE NAVIGATION:
+- If the user asks to open, go to, or use an app feature (e.g. "take me to Chronolith", "let's compare my specimens", "open the agate guide", "show me the hotspot map", "open the scanner", "show my collection"), set navigate_to to the matching route from: "/", "/scan", "/scan?live=1", "/explore", "/collection", "/vault", "/chronolith", "/compare", "/expeditions", "/community", "/find-of-the-week", "/clubs", "/agate-guide", "/live", "/quests", "/badges", "/leaderboard", "/private-log", "/market", "/settings", "/profile". Otherwise set navigate_to to null.
+
 HANDS-FREE FIND LOGGING:
-- If the user is dictating a specimen they found and want recorded (e.g. "log a rose quartz I found by the creek", "I just found...", "record this find", "add this to my collection"), set log_find to true and copy their full find description verbatim into find_details.
+- If the user is dictating a specimen they found and want recorded (e.g. "log a rose quartz I found by the creek", "save this find", "record this find", "add this to my collection"), set log_find to true and copy their full find description verbatim into find_details.
 - When logging, your reply should briefly confirm you're saving it plus one short warm reaction — do NOT ask a follow-up question.
 - Casual mineral mentions, questions, or talk about finds already logged are NOT logging requests — set log_find to false and find_details to null.
 
 ${stateBits}
 ${contextBits}
 ${location?.lat != null ? `Approximate GPS: ${Number(location.lat).toFixed(3)}, ${Number(location.lng).toFixed(3)}.` : ''}
+${bedrockContext}
 ${research_query ? `User asked you to research: ${String(research_query).slice(0, 200)}.` : ''}
-${cognitive_context ? `Companion memory notes: ${String(cognitive_context).slice(0, 400)}.` : ''}
+${cognitive_context ? `Companion memory notes: ${String(cognitive_context).slice(0, 700)}.` : ''}
 ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utterance).slice(0, 280)}".` : ''}${vaultBlock}`;
 
     const trimmedHistory = history.slice(-12).map((m) => ({
@@ -164,7 +236,7 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
     }));
 
     const recent = trimmedHistory.map((m) => `${m.label}: ${m.content}`).join('\n');
-    const fullPrompt = `${systemPrompt}\n\n${recent}\n\nRespond as Clover. Output ONLY a JSON object exactly like: {"reply": "<what you say>", "log_find": <true|false>, "find_details": "<verbatim find description, or null>", "sources": ["<vault keys you used, e.g. S2>"]}`;
+    const fullPrompt = `${systemPrompt}\n\n${recent}\n\nRespond as Clover. Output ONLY a JSON object exactly like: {"reply": "<what you say>", "log_find": <true|false>, "find_details": "<verbatim find description, or null>", "navigate_to": "<route path or null>", "sources": ["<vault keys you used, e.g. S2>"]}`;
 
     const llmParams: Record<string, unknown> = {
       prompt: fullPrompt,
@@ -174,6 +246,7 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
           reply: { type: 'string' },
           log_find: { type: 'boolean' },
           find_details: { type: 'string' },
+          navigate_to: { type: 'string' },
           sources: { type: 'array', items: { type: 'string' } },
         },
         required: ['reply', 'log_find'],
@@ -222,10 +295,14 @@ ${user_utterance ? `Latest noisy transcript to interpret: "${String(user_utteran
     const support = records.map((r) => `${r.label} ${r.place} ${r.text}`).join(' ');
     reply = guardPrices(reply, support, researched).reply;
 
+    const rawNav = parsed?.navigate_to ? String(parsed.navigate_to).trim() : '';
+    const validNav = ALLOWED_ROUTES.has(rawNav) ? rawNav : null;
+
     return Response.json({
       reply,
       log_find: !!parsed?.log_find && !!cleanDetails,
       find_details: cleanDetails,
+      navigate_to: validNav,
       sources: [
         ...cited.map(publicSource),
         ...(researched ? [{ key: 'web', type: 'web', id: null, label: 'Live web research', place: null, route: null }] : []),

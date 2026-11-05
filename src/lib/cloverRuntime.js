@@ -100,6 +100,14 @@ export function applyCloverUtterance(raw, { pathname = '/', specimens = [] } = {
     return { handled: true, reply: routed.reply, navigateTo: '/scan?live=1' };
   }
 
+  if (routed.intent === INTENTS.NAVIGATE) {
+    return {
+      handled: true,
+      reply: routed.reply || 'On it.',
+      navigateTo: routed.route || '/',
+    };
+  }
+
   if (routed.intent === INTENTS.PULL) {
     const hits = pullFromVault(routed.target, vault);
     const reply = hits.length

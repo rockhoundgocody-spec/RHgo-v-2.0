@@ -47,12 +47,14 @@ function createDefaultMemory() {
   return {
     version: 2,
     userName: 'Explorer',
-    preferredMode: 'kid', // 'kid' | 'pro'
+    preferredMode: 'pro', // 'kid' | 'pro'
     totalScans: 0,
     favoriteMinerals: [],
     recentLocalities: [],
     recentDiscoveries: [],
     episodicNotes: [],
+    lastTopic: null,
+    lastActiveAt: null,
     huntingStyle: 'beachcomber', // 'beachcomber' | 'quarry_hunter' | 'mineralogist' | 'casual'
   };
 }
@@ -61,25 +63,93 @@ function createDefaultMemory() {
  * Record a new mineral discovery into episodic memory.
  */
 export function recordDiscoveryToMemory(specimen) {
-  if (!specimen?.top_match) return;
+  const mineralName = specimen?.top_match || specimen?.mineral_name;
+  if (!mineralName) return;
   const memory = loadCloverMemory();
   memory.totalScans += 1;
 
+  const location = specimen.location_name || specimen.found_at || null;
   const discoveryEntry = {
-    mineral: specimen.top_match,
+    mineral: mineralName,
     timestamp: Date.now(),
     rarity: specimen.rarity || 'common',
-    location: specimen.location_name || null,
+    location,
   };
 
   memory.recentDiscoveries = [discoveryEntry, ...memory.recentDiscoveries].slice(0, 20);
 
-  if (!memory.favoriteMinerals.includes(specimen.top_match)) {
+  if (location && !memory.recentLocalities.includes(location)) {
+    memory.recentLocalities = [location, ...memory.recentLocalities].slice(0, 12);
+  }
+
+  if (!memory.favoriteMinerals.includes(mineralName)) {
     if (specimen.rarity === 'rare' || specimen.rarity === 'legendary') {
-      memory.favoriteMinerals.push(specimen.top_match);
+      memory.favoriteMinerals.push(mineralName);
     }
   }
 
+  memory.lastTopic = mineralName;
+  memory.lastActiveAt = Date.now();
+  saveCloverMemory(memory);
+}
+
+/**
+ * Synchronize the user's loaded specimen collection (cloud or guest) into
+ * Clover's cognitive memory so cross-session stats and localities stay current.
+ */
+export function syncCollectionToMemory(specimens = []) {
+  if (!Array.isArray(specimens) || specimens.length === 0) return;
+  const memory = loadCloverMemory();
+  memory.totalScans = Math.max(memory.totalScans || 0, specimens.length);
+
+  for (const s of specimens.slice(0, 25)) {
+    const mineral = s.mineral_name || s.common_name;
+    const loc = s.found_at || s.location_name;
+    if (loc && !memory.recentLocalities.includes(loc)) {
+      memory.recentLocalities = [loc, ...memory.recentLocalities].slice(0, 12);
+    }
+    if (mineral && (s.rarity === 'rare' || s.rarity === 'legendary') && !memory.favoriteMinerals.includes(mineral)) {
+      memory.favoriteMinerals = [mineral, ...memory.favoriteMinerals].slice(0, 10);
+    }
+  }
+
+  if (memory.recentDiscoveries.length === 0) {
+    memory.recentDiscoveries = specimens.slice(0, 10).map((s) => ({
+      mineral: s.mineral_name || s.common_name || 'Specimen',
+      timestamp: Date.now(),
+      rarity: s.rarity || 'common',
+      location: s.found_at || null,
+    }));
+  }
+
+  saveCloverMemory(memory);
+}
+
+/**
+ * Record a conversational exchange into Clover's cross-session episodic memory.
+ */
+export function recordConversationEpisode({ userText, assistantReply, citedSources = [] } = {}) {
+  const u = String(userText || '').trim();
+  const a = String(assistantReply || '').trim();
+  if (!u && !a) return;
+
+  const memory = loadCloverMemory();
+  const citedLabels = Array.isArray(citedSources)
+    ? citedSources.map((s) => s?.label).filter(Boolean).slice(0, 2)
+    : [];
+
+  const summary = `Asked: "${u.slice(0, 90)}" → Clover: "${a.slice(0, 110)}"${citedLabels.length ? ` [${citedLabels.join(', ')}]` : ''}`;
+  memory.episodicNotes = [summary, ...(memory.episodicNotes || []).filter((n) => n !== summary)].slice(0, 8);
+
+  if (citedLabels[0]) {
+    memory.lastTopic = citedLabels[0];
+  }
+  for (const src of citedSources || []) {
+    if (src?.place && !memory.recentLocalities.includes(src.place)) {
+      memory.recentLocalities = [src.place, ...memory.recentLocalities].slice(0, 12);
+    }
+  }
+  memory.lastActiveAt = Date.now();
   saveCloverMemory(memory);
 }
 
@@ -88,12 +158,20 @@ export function recordDiscoveryToMemory(specimen) {
  */
 export function getCognitiveMemoryContext() {
   const memory = loadCloverMemory();
-  const recent = memory.recentDiscoveries.slice(0, 3).map(d => d.mineral).join(', ');
-  const favs = memory.favoriteMinerals.slice(0, 3).join(', ');
+  const recent = (memory.recentDiscoveries || [])
+    .slice(0, 4)
+    .map((d) => (d.location ? `${d.mineral} (${d.location})` : d.mineral))
+    .join(', ');
+  const favs = (memory.favoriteMinerals || []).slice(0, 4).join(', ');
+  const locs = (memory.recentLocalities || []).slice(0, 4).join(', ');
+  const notes = (memory.episodicNotes || []).slice(0, 3).join(' | ');
 
   let context = `[Cognitive Memory: User has ${memory.totalScans} total discoveries cataloged.`;
   if (recent) context += ` Recent finds: ${recent}.`;
   if (favs) context += ` Prized specimens: ${favs}.`;
+  if (locs) context += ` Visited localities: ${locs}.`;
+  if (memory.lastTopic) context += ` Last focus: ${memory.lastTopic}.`;
+  if (notes) context += ` Past conversation notes: ${notes}.`;
   context += ` User mode: ${memory.preferredMode}.]`;
 
   return context;

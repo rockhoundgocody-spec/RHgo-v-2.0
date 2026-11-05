@@ -9,6 +9,8 @@ import useOrbSize from '@/hooks/useOrbSize';
 import HubAtmosphere from '@/components/hub/HubAtmosphere.jsx';
 import { toast } from '@/components/ui/use-toast';
 import { reclaimGuestReport } from '@/lib/reclaimGuestReport';
+import { readGuestSpecimens } from '@/lib/useEntityQuery';
+import { syncCollectionToMemory } from '@/lib/cloverMemory';
 import HudGridBackdrop from '@/components/landing/HudGridBackdrop.jsx';
 
 function useIsDesktop() {
@@ -49,10 +51,18 @@ export default function Hub() {
         if (u?.email) {
           const specimens = await base44.entities.Specimen.list('-found_date', 12).catch(() => []);
           if (cancelled) return;
-          setRecentFinds((specimens || []).map((s) => s.mineral_name).filter(Boolean));
+          const all = [...(specimens || []), ...readGuestSpecimens()];
+          syncCollectionToMemory(all);
+          setRecentFinds(all.map((s) => s.mineral_name).filter(Boolean));
+        } else {
+          const guest = readGuestSpecimens();
+          syncCollectionToMemory(guest);
+          setRecentFinds(guest.map((s) => s.mineral_name).filter(Boolean));
         }
       } catch {
-        /* unauthenticated home is handled by HomeGate */
+        const guest = readGuestSpecimens();
+        syncCollectionToMemory(guest);
+        if (!cancelled) setRecentFinds(guest.map((s) => s.mineral_name).filter(Boolean));
       }
     })();
 

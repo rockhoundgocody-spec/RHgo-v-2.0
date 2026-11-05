@@ -4,10 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { useSpeechSynthesis } from '@/components/oracle/useSpeech';
 import useVoiceInput from '@/components/oracle/useVoiceInput';
 import useBargeIn from './useBargeIn';
-import { getCognitiveMemoryContext } from '@/lib/cloverMemory';
+import { getCognitiveMemoryContext, recordConversationEpisode } from '@/lib/cloverMemory';
 import { applyCloverUtterance, getCloverBrain } from '@/lib/cloverRuntime';
 import { setCloverBusy, emit, emitCommand } from '@/lib/cloverWake';
 import { rejectionLine } from '@/lib/cloverVoice';
+import { readGuestSpecimens } from '@/lib/useEntityQuery';
 
 const MAX_QUIET_TURNS = 3;
 const HISTORY_TURNS = 12;
@@ -109,7 +110,8 @@ export default function useCloverConversation({
     historyRef.current = [...historyRef.current, { role: 'user', content: text }].slice(-HISTORY_TURNS);
     setPhase('thinking');
 
-    const local = applyCloverUtterance(text, { pathname: location.pathname });
+    const guestSpecimens = readGuestSpecimens();
+    const local = applyCloverUtterance(text, { pathname: location.pathname, specimens: guestSpecimens });
     if (local.navigateTo && local.navigateTo !== location.pathname) {
       try { navigate(local.navigateTo); } catch {}
     }
@@ -122,6 +124,7 @@ export default function useCloverConversation({
       if (!activeRef.current) return;
       historyRef.current = [...historyRef.current, { role: 'assistant', content: local.reply }].slice(-HISTORY_TURNS);
       setMessages((prev) => [...prev, { role: 'assistant', content: local.reply }]);
+      recordConversationEpisode({ userText: text, assistantReply: local.reply });
       say(local.reply);
       emitCommand(text); // routed and acted on — confirm it on screen
       if (local.endSession) {
@@ -143,11 +146,14 @@ export default function useCloverConversation({
       let gps = null;
       try { gps = JSON.parse(sessionStorage.getItem('rhgo_last_gps') || 'null'); } catch {}
       const { getOrCreateGuestId } = await import('@/lib/guestDevice');
+      const guestFindNames = guestSpecimens.map((s) => s.mineral_name || s.common_name).filter(Boolean);
+      const mergedRecentFinds = [...new Set([...recentFindsRef.current, ...guestFindNames])].slice(0, 8);
       const res = await base44.functions.invoke('cloverChat', {
         history: historyRef.current,
         companion,
         todays_finds: todaysSpecimens,
-        recent_finds: recentFindsRef.current.slice(0, 8),
+        recent_finds: mergedRecentFinds,
+        guest_specimens: guestSpecimens.slice(0, 40),
         screen: location.pathname,
         // A shaky transcript tells Clover to ask rather than confidently guess.
         transcript_soft: !!meta?.soft,
@@ -164,6 +170,12 @@ export default function useCloverConversation({
       sources = Array.isArray(data?.sources) ? data.sources : [];
       // An open Vault Galaxy flies to the record Clover answered from.
       if (data?.focus?.id) emit('vault:focus', data.focus);
+      if (data?.navigate_to && data.navigate_to !== location.pathname) {
+        try {
+          navigate(data.navigate_to);
+          emitCommand(text);
+        } catch {}
+      }
 
       if (data?.log_find && data?.find_details) {
         try {
@@ -182,6 +194,7 @@ export default function useCloverConversation({
     }
 
     if (!activeRef.current || turnIdRef.current !== myTurnId) return;
+    recordConversationEpisode({ userText: text, assistantReply: reply, citedSources: sources });
     historyRef.current = [...historyRef.current, { role: 'assistant', content: reply }].slice(-HISTORY_TURNS);
     setMessages((prev) => [...prev, { role: 'assistant', content: reply, sources }]);
     say(reply);
