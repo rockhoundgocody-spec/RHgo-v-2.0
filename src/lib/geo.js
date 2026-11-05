@@ -97,6 +97,24 @@ export function rankHotspots(hotspots, { userLocation, collectedMinerals = new S
     });
 }
 
+/**
+ * Fast early-exit check to determine if any hotspot is within maxDistanceMi.
+ * Avoids full array mapping, gap counting, and O(N log N) sorting overhead of rankHotspots.
+ */
+export function hasNearbyHotspot(hotspots, userLocation, maxDistanceMi = 75) {
+  if (!userLocation || !Array.isArray(hotspots) || hotspots.length === 0) return false;
+  for (let i = 0; i < hotspots.length; i++) {
+    const h = hotspots[i];
+    if (typeof h?.lat === 'number' && typeof h?.lng === 'number') {
+      const d = haversineMi(userLocation, h);
+      if (d != null && d <= maxDistanceMi) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')

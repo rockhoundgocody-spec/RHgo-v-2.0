@@ -7,6 +7,7 @@ import {
   readLastGps,
   watchGps,
   rankHotspots,
+  hasNearbyHotspot,
   escapeHtml,
 } from './geo';
 
@@ -210,6 +211,47 @@ describe('geo library', () => {
 
       const h1 = ranked.find((h) => h.id === '1');
       expect(h1.gapCount).toBe(1); // 'Jasper' is uncollected
+    });
+  });
+
+  describe('hasNearbyHotspot', () => {
+    const mockHotspots = [
+      { id: '1', lat: 45.5, lng: -122.6, name: 'Portland Site' },
+      { id: '2', lat: 47.6, lng: -122.3, name: 'Seattle Site' }, // ~145 miles away
+    ];
+
+    it('returns false for empty or invalid inputs', () => {
+      expect(hasNearbyHotspot(null, { lat: 45.5, lng: -122.6 })).toBe(false);
+      expect(hasNearbyHotspot([], { lat: 45.5, lng: -122.6 })).toBe(false);
+      expect(hasNearbyHotspot(mockHotspots, null)).toBe(false);
+    });
+
+    it('returns true when a hotspot is within maxDistanceMi', () => {
+      // Point 5 miles from Portland site
+      const userLocation = { lat: 45.52, lng: -122.65 };
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 75)).toBe(true);
+    });
+
+    it('returns false when all hotspots exceed maxDistanceMi', () => {
+      // User in Spokane (~230 miles from Seattle, ~290 miles from Portland)
+      const userLocation = { lat: 47.65, lng: -117.42 };
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 75)).toBe(false);
+    });
+
+    it('ignores hotspots with invalid or missing lat/lng coordinates', () => {
+      const invalidHotspots = [
+        { id: 'bad1', lat: null, lng: -122.6 },
+        { id: 'bad2', lat: 45.5, lng: null },
+        { id: 'bad3' },
+      ];
+      const userLocation = { lat: 45.5, lng: -122.6 };
+      expect(hasNearbyHotspot(invalidHotspots, userLocation, 75)).toBe(false);
+    });
+
+    it('respects a custom maxDistanceMi parameter', () => {
+      const userLocation = { lat: 45.52, lng: -122.65 }; // ~2.5 miles from h1
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 1)).toBe(false);
+      expect(hasNearbyHotspot(mockHotspots, userLocation, 5)).toBe(true);
     });
   });
 
