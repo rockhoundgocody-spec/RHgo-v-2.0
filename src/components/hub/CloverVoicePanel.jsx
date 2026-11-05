@@ -6,6 +6,15 @@ import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
 import CloverVoiceControls from './CloverVoiceControls.jsx';
 
+const QUICK_TEST_PROMPTS = [
+  { label: 'Scratch Test', prompt: 'Walk me through a quick Mohs scratch test on this specimen.' },
+  { label: 'Acid / Fizz', prompt: 'How do I run a vinegar or acid fizz test for calcite vs quartz?' },
+  { label: 'Slag vs Stone', prompt: 'How can I tell if this piece is industrial slag glass or a natural mineral?' },
+  { label: 'Streak & Heft', prompt: 'How do I check streak color and specific gravity heft in the field?' },
+  { label: 'UV Check', prompt: 'What does UV fluorescence tell me on this find?' },
+  { label: 'Hound Slang', prompt: 'Teach me a piece of rockhound field slang or slag terminology.' },
+];
+
 /**
  * CloverVoicePanel — the conversation surface. Voice-first: no text box unless
  * the browser can't do speech input.
@@ -208,6 +217,30 @@ export default function CloverVoicePanel({
       </div>
 
       <div className="px-3 py-2 border-t border-white/8 space-y-2">
+        {onSend && (
+          <div
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+            role="group"
+            aria-label="Quick geological test prompts"
+          >
+            {QUICK_TEST_PROMPTS.map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                disabled={phase === 'thinking'}
+                onClick={() => onSend(chip.prompt)}
+                className="shrink-0 px-2 py-1 rounded-lg text-[10px] font-mono font-semibold tracking-wide transition active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
+                style={{
+                  background: 'hsla(195,85%,45%,0.14)',
+                  border: '1px solid hsla(190,90%,65%,0.32)',
+                  color: 'hsl(188,100%,82%)',
+                }}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
         <CloverVoiceControls
           phase={phase}
           muted={muted}

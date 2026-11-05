@@ -109,7 +109,59 @@ export const MINERAL_REGISTRY = {
     key_diagnostics: 'Pale brass-yellow color, greenish-black streak, striations on cube or pyritohedron faces.',
     field_test: 'Streak test produces a dark greenish-black powder. Brittle (shatters when struck, unlike malleable gold).',
   },
+  'red beryl': {
+    name: 'Red beryl',
+    ima_status: 'Variety of Beryl (Be₃Al₂Si₆O₁₈)',
+    formula: 'Be₃Al₂Si₆O₁₈:Mn³⁺',
+    crystal_system: 'Hexagonal',
+    hardness: '7.5 – 8.0 Mohs',
+    cleavage: 'Imperfect basal {0001}',
+    luster: 'Vitreous',
+    specific_gravity: '2.66 – 2.70',
+    uv_fluorescence: 'Inert',
+    key_diagnostics: 'Gooseberry-red hexagonal prisms hosted in topaz-bearing rhyolite vugs (Wah Wah Mountains & Thomas Range, Utah).',
+    field_test: 'Scratches quartz (7.0). Look for hexagonal barrel habit inside gray miarolitic rhyolite cavities.',
+  },
+  'slag': {
+    name: 'Industrial Slag / Cullet Glass',
+    ima_status: 'Anthropogenic Smelter Byproduct (Amorphous Silicate)',
+    formula: 'CaO–SiO₂–Al₂O₃–FeO (variable)',
+    crystal_system: 'Amorphous (Non-crystalline)',
+    hardness: '5.0 – 6.0 Mohs',
+    cleavage: 'None (Sharp conchoidal glass fracture)',
+    luster: 'Vitreous to sub-metallic or frothy',
+    specific_gravity: '2.3 – 3.6 (varies with iron content)',
+    uv_fluorescence: 'Occasionally weak green/orange from trace uranium or manganese flux',
+    key_diagnostics: 'Spherical gas bubbles (vesicles), swirled flow striae, ropy puddle skin, unnatural electric blues/greens (e.g. Leland Blue).',
+    field_test: 'Check with a 10x loupe for round trapped air bubbles and pitted bubble craters; softer than quartz (steel file or quartz tip scratches it).',
+  },
+  'obsidian': {
+    name: 'Obsidian (Volcanic Glass)',
+    ima_status: 'Natural Rhyolitic Glass',
+    formula: 'SiO₂ (~70–75% with MgO, Fe₃O₄)',
+    crystal_system: 'Amorphous (Mineraloid)',
+    hardness: '5.0 – 5.5 Mohs',
+    cleavage: 'None (Razor-sharp conchoidal fracture)',
+    luster: 'Vitreous (jet-black to mahogany/sheen)',
+    specific_gravity: '2.40',
+    uv_fluorescence: 'Inert',
+    key_diagnostics: 'Translucent smoky edges against sunlight, cristobalite "snowflakes" or aligned magnetite sheen; lacks the big frothy craters of foundry slag.',
+    field_test: 'Hold thin edge to bright sky to check smoky translucency and confirm volcanic geology context.',
+  },
 };
+
+export const FIELD_SLANG_GLOSSARY = [
+  { term: 'Leaverite', meaning: 'Slang for "leave \'er right there" — a common or weathered rock not worth packing out.' },
+  { term: 'Slag / Cullet', meaning: 'Vitreous smelter or glassworks waste with round gas vesicles and swirl striae; often mistaken for agate, obsidian, or meteorites.' },
+  { term: 'Leland Blue', meaning: 'Prized cobalt-blue iron-smelting slag cobbles wave-tumbled along Lake Michigan beaches.' },
+  { term: 'Vug / Pocket', meaning: 'An open crystal-lined cavity inside bedrock or vein matrix where euhedral crystals grow unobstructed.' },
+  { term: 'Float', meaning: 'Loose mineral fragments eroded downslope from an uphill vein or outcrop — trace float uphill to find the source lode.' },
+  { term: 'Floater', meaning: 'A complete, doubly-terminated crystal or cluster that grew or healed free of matrix attachment points.' },
+  { term: 'Druzy / Druse', meaning: 'A sparkling carpet of tiny, tightly packed quartz or calcite micro-crystals coating a rock surface.' },
+  { term: 'Peeler', meaning: 'A Lake Superior agate whose weathered outer rind peels cleanly along concentric fortification bands.' },
+  { term: 'Gossan', meaning: 'Rusty, oxidized "iron hat" caprock above a weathered sulfide deposit — a classic pathfinder for ore minerals.' },
+  { term: 'Tailings / Dump', meaning: 'Waste rock piles outside historic mine workings where collectors hunt overlooked specimens.' },
+];
 
 /**
  * Searches the mineral registry for matches against names or query strings.
@@ -130,6 +182,15 @@ export function lookupMineralIntelligence(query) {
   }
 
   // Common keywords fallback
+  if (q.includes('slag') || q.includes('cullet') || q.includes('leland blue') || q.includes('smelter') || q.includes('vesicle')) {
+    return MINERAL_REGISTRY['slag'];
+  }
+  if (q.includes('red beryl') || q.includes('wah wah')) {
+    return MINERAL_REGISTRY['red beryl'];
+  }
+  if (q.includes('obsidian') || q.includes('volcanic glass')) {
+    return MINERAL_REGISTRY['obsidian'];
+  }
   if (q.includes('quartz') || q.includes('flint') || q.includes('chert')) {
     return MINERAL_REGISTRY['agate'];
   }
