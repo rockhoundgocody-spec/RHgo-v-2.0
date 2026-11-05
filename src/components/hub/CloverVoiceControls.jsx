@@ -3,10 +3,10 @@ import { Mic, MicOff, Square, Loader2, Zap } from 'lucide-react';
 import VoiceWaveform from './VoiceWaveform.jsx';
 
 const LABEL = {
-  listening: 'Listening',
-  thinking: 'Thinking',
-  speaking: 'Speaking',
-  resting: 'Paused',
+  listening: 'Listening · Speak freely',
+  thinking: 'Thinking · Speak to add more',
+  speaking: 'Speaking · Talk to jump in',
+  resting: 'Paused · Tap to talk',
   idle: 'Ready',
 };
 
@@ -57,10 +57,10 @@ export default function CloverVoiceControls({
           <button
             type="button"
             onClick={() => onListen?.()}
-            aria-label="Interrupt Clover and speak"
-            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-hud-cyan/50 bg-hud-cyan/15 text-hud hover:bg-hud-cyan/25 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
+            aria-label="Jump in and talk to Clover"
+            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-hud-cyan/50 bg-hud-cyan/20 text-hud hover:bg-hud-cyan/30 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
           >
-            Interrupt
+            🎤 Jump In
           </button>
         )}
 

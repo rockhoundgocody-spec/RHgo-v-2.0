@@ -106,10 +106,30 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
             <span className="absolute inset-0 rounded-full pointer-events-none animate-ping"
               style={{ border: '2px solid #9FE8D0', boxShadow: '0 0 30px #9FE8D080' }} />
           )}
-          {(orbState === 'listening' || orbState === 'speaking') && (
+          {orbState === 'listening' && (
             <>
               <span className="clover-listen-ring" style={{ animationDelay: '0s' }} />
               <span className="clover-listen-ring" style={{ animationDelay: '0.7s' }} />
+            </>
+          )}
+          {orbState === 'speaking' && (
+            <>
+              <span
+                className="clover-listen-ring"
+                style={{
+                  animationDelay: '0s',
+                  borderColor: 'hsla(280, 95%, 76%, 0.75)',
+                  boxShadow: '0 0 32px hsla(280, 100%, 70%, 0.45)',
+                }}
+              />
+              <span
+                className="clover-listen-ring"
+                style={{
+                  animationDelay: '0.55s',
+                  borderColor: 'hsla(190, 100%, 70%, 0.65)',
+                  boxShadow: '0 0 28px hsla(190, 100%, 60%, 0.35)',
+                }}
+              />
             </>
           )}
           <div className="absolute pointer-events-none" style={{ left: -size * .22, top: -size * .134 }}>
@@ -171,16 +191,16 @@ export default function HeroOrb({ companion, recentFinds = [], size = 148 }) {
           )}
         </div>
 
-        <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-white/35">
-          {clover.phase === 'listening' ? 'Listening'
-            : clover.phase === 'speaking' ? 'Speaking'
-            : clover.phase === 'thinking' ? 'Thinking'
-            : clover.phase === 'resting' ? 'Tap to keep talking'
-            : 'Tap Clover to talk'}
+        <p className="mt-2 text-[11px] font-semibold tracking-wide text-white/70 text-center min-h-[18px]">
+          {clover.phase === 'listening' ? '🎤 Listening — take your time, I wait until you finish'
+            : clover.phase === 'speaking' ? '🔊 Clover is talking — just speak to jump in'
+            : clover.phase === 'thinking' ? '🧠 Thinking — keep talking if you have more to add'
+            : clover.phase === 'resting' ? '👆 Tap Clover to keep talking'
+            : '👆 Tap Clover to talk'}
         </p>
 
         {clover.phase !== 'idle' && (
-          <div className="mt-3 w-full flex justify-center px-2">
+          <div className="mt-2.5 w-full flex justify-center px-2">
             <CloverVoicePanel
               phase={clover.phase}
               messages={clover.messages}

@@ -66,7 +66,11 @@ export function parseCloverCommand(raw, state = {}) {
     });
   }
 
-  const pull = q.match(/^(pull|open|show|find)\s+(?:up\s+)?(?:the\s+)?(.+)$/);
+  const isQuestion =
+    q.endsWith("?") ||
+    /\b(what|how|why|when|where|who|can|could|would|is|are|does|do|tell me|explain|mean|meaning|test|difference)\b/i.test(q);
+
+  const pull = !isQuestion && q.match(/^(pull|open|show|find)\s+(?:up\s+)?(?:the\s+)?(.+)$/);
   if (pull) {
     const target = pull[2].replace(/\s+for me.*$/, "").trim();
     return pack(INTENTS.PULL, woke, rest, {
@@ -179,6 +183,9 @@ function labelBrain(id) {
 const NAV_VERBS = /^(?:go to|take me to|switch to|head to|bring up|launch|start|open|show me|view)\s+(?:the\s+|my\s+)?/i;
 
 function matchNaturalNavigation(q) {
+  if (q.endsWith("?") || /\b(what|how|why|when|where|explain|tell me|mean)\b/i.test(q)) {
+    return null;
+  }
   if (/^(?:scan a rock|scan this|identify this rock|open scan|open scanner|start a scan)$/.test(q)) {
     return { route: "/scan", reply: "Opening the scanner." };
   }

@@ -27,28 +27,42 @@ export function useSpeechSynthesis() {
   const startAmpLoop = useCallback((analyser) => {
     analyserRef.current = analyser;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    const freqBuf = new Uint8Array(analyser.frequencyBinCount);
+    const freqBuf = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
 
     const tick = () => {
-      analyser.getByteFrequencyData(freqBuf);
-      const len = freqBuf.length;
-      const bassEnd = Math.floor(len * 0.1);
-      const midEnd  = Math.floor(len * 0.45);
+      let b = 0, m = 0, t = 0, amp = 0;
+      if (analyser && freqBuf) {
+        analyser.getByteFrequencyData(freqBuf);
+        const len = freqBuf.length;
+        const bassEnd = Math.floor(len * 0.1);
+        const midEnd  = Math.floor(len * 0.45);
 
-      let bassSum = 0, midSum = 0, trebleSum = 0;
-      for (let i = 0;        i < bassEnd; i++) bassSum   += freqBuf[i];
-      for (let i = bassEnd;  i < midEnd;  i++) midSum    += freqBuf[i];
-      for (let i = midEnd;   i < len;     i++) trebleSum += freqBuf[i];
+        let bassSum = 0, midSum = 0, trebleSum = 0;
+        for (let i = 0;        i < bassEnd; i++) bassSum   += freqBuf[i];
+        for (let i = bassEnd;  i < midEnd;  i++) midSum    += freqBuf[i];
+        for (let i = midEnd;   i < len;     i++) trebleSum += freqBuf[i];
 
-      const b   = bassSum   / (bassEnd * 255);
-      const m   = midSum    / ((midEnd - bassEnd) * 255);
-      const t   = trebleSum / ((len - midEnd) * 255);
-      const amp = b * 0.5 + m * 0.35 + t * 0.15;
+        b   = bassSum   / (bassEnd * 255);
+        m   = midSum    / ((midEnd - bassEnd) * 255);
+        t   = trebleSum / ((len - midEnd) * 255);
+        amp = b * 0.5 + m * 0.35 + t * 0.15;
+      }
 
-      bassRef.current      += (b   - bassRef.current)      * 0.15;
-      midRef.current       += (m   - midRef.current)       * 0.15;
-      trebleRef.current    += (t   - trebleRef.current)    * 0.15;
-      amplitudeRef.current += (amp - amplitudeRef.current) * 0.12;
+      // Guarantee lively speaking animation even if browser TTS fallback is active
+      // or audio buffer has soft passages so Clover visually pulses while heard.
+      if (amp < 0.04) {
+        const now = performance.now() * 0.008;
+        const cadence = 0.32 + 0.28 * Math.sin(now * 1.9) + 0.18 * Math.cos(now * 3.1);
+        b = Math.max(b, cadence * 0.85);
+        m = Math.max(m, cadence);
+        t = Math.max(t, cadence * 0.65);
+        amp = Math.max(amp, cadence * 0.9);
+      }
+
+      bassRef.current      += (b   - bassRef.current)      * 0.18;
+      midRef.current       += (m   - midRef.current)       * 0.18;
+      trebleRef.current    += (t   - trebleRef.current)    * 0.18;
+      amplitudeRef.current += (amp - amplitudeRef.current) * 0.16;
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -241,7 +255,7 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
                   || voices.find((v) => isNotBritish(v))
                   || voices[0];
     if (best) utter.voice = best;
-    utter.onstart  = () => setSpeaking(true);
+    utter.onstart  = () => { setSpeaking(true); startAmpLoop(null); };
     utter.onend    = () => { setSpeaking(false); stopAmpLoop(); };
     utter.onerror  = (e) => { if (e.error !== 'interrupted') { setSpeaking(false); stopAmpLoop(); } };
     window.speechSynthesis.cancel();
@@ -273,7 +287,8 @@ function _browserFallback(text, setSpeaking, startAmpLoop, stopAmpLoop, voiceCon
 //   the engine scored below the floor is refused (onRejected) rather than acted
 //   on, and field words the engine mis-heard are repaired first
 // ─────────────────────────────────────────────────────────────────────────────
-const SILENCE_TIMEOUT_MS = 2800;
+const SILENCE_TIMEOUT_MS = 4200;
+const END_OF_THOUGHT_PAUSE_MS = 1650;
 
 export function useSpeechRecognition({ onResult, onInterim, onRejected } = {}) {
   const [listening, setListening] = useState(false);
@@ -284,21 +299,27 @@ export function useSpeechRecognition({ onResult, onInterim, onRejected } = {}) {
   onInterimRef.current  = onInterim;
   onRejectedRef.current = onRejected;
 
-  const recRef       = useRef(null);
-  const silenceTimer = useRef(null);
-  const deadRef      = useRef(false);
-  const gotFinalRef  = useRef(false);
-  const blockedRef   = useRef(false); // fatal error (mic denied) — stop restart loops
+  const recRef          = useRef(null);
+  const silenceTimer    = useRef(null);
+  const endThoughtTimer = useRef(null);
+  const deadRef         = useRef(false);
+  const gotFinalRef     = useRef(false);
+  const blockedRef      = useRef(false); // fatal error (mic denied) — stop restart loops
 
   const SR = typeof window !== 'undefined'
     ? (window.SpeechRecognition || window.webkitSpeechRecognition)
     : null;
   const supported = !!SR;
 
-  const _clearTimer = () => { clearTimeout(silenceTimer.current); silenceTimer.current = null; };
+  const _clearTimer = () => {
+    clearTimeout(silenceTimer.current);
+    silenceTimer.current = null;
+    clearTimeout(endThoughtTimer.current);
+    endThoughtTimer.current = null;
+  };
 
   const _resetSilenceTimer = useCallback((rec) => {
-    _clearTimer();
+    clearTimeout(silenceTimer.current);
     silenceTimer.current = setTimeout(() => {
       try { rec?.stop(); } catch {}
     }, SILENCE_TIMEOUT_MS);
@@ -326,57 +347,69 @@ export function useSpeechRecognition({ onResult, onInterim, onRejected } = {}) {
     rec.lang             = 'en-US';
     recRef.current       = rec;
 
+    const commitAccumulatedSpeech = (fullTranscript, minConfidence) => {
+      if (deadRef.current) return;
+      const verdict = assessTranscript(fullTranscript, minConfidence);
+      onInterimRef.current?.('');
+      gotFinalRef.current = true;
+
+      if (verdict.ok) {
+        deadRef.current = true;
+        _clearTimer();
+        try { rec.stop(); } catch {}
+        onResultRef.current?.(verdict.text, {
+          confidence: verdict.confidence,
+          soft: verdict.soft,
+          reason: verdict.reason,
+        });
+      } else if (verdict.reason !== 'empty') {
+        deadRef.current = true;
+        _clearTimer();
+        try { rec.stop(); } catch {}
+        onRejectedRef.current?.(verdict.reason);
+      }
+    };
+
     rec.onresult = (e) => {
       let interim   = '';
-      let finalText = '';
-      let finalConf = null; // null = the engine reported no score at all
+      let fullFinal = '';
+      let finalConf = null;
 
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      // Read ALL results from index 0 so taking a breath mid-sentence never loses
+      // the first half of what the user said.
+      for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];
         let best = r[0];
         for (let a = 1; a < r.length; a++) {
           if ((r[a].confidence || 0) > (best.confidence || 0)) best = r[a];
         }
         if (r.isFinal) {
-          finalText += best.transcript;
+          fullFinal += ' ' + best.transcript;
           const score = Number(best.confidence);
           if (Number.isFinite(score) && score > 0) {
             finalConf = finalConf == null ? score : Math.min(finalConf, score);
           }
         } else {
-          interim += best.transcript;
+          interim += ' ' + best.transcript;
         }
       }
 
-      if (interim || finalText) _resetSilenceTimer(rec);
-
-      // Interim text is shown raw: it changes many times a second, and running
-      // the repair patterns on every partial would cost frames for no gain.
-      if (interim && onInterimRef.current) {
-        onInterimRef.current(String(interim).replace(/\s+/g, ' ').trim());
+      const combinedPreview = `${fullFinal} ${interim}`.replace(/\s+/g, ' ').trim();
+      if (combinedPreview) {
+        _resetSilenceTimer(rec);
+        onInterimRef.current?.(combinedPreview);
       }
 
-      if (finalText) {
-        // The confidence gate lives in cloverVoice, which also repairs the
-        // field words the engine mis-hears before anything acts on the text.
-        const verdict = assessTranscript(finalText, finalConf);
-        onInterimRef.current?.('');
-        gotFinalRef.current = true;
-
-        if (verdict.ok) {
-          deadRef.current = true;
-          try { rec.stop(); } catch {}
-          onResultRef.current?.(verdict.text, {
-            confidence: verdict.confidence,
-            soft: verdict.soft,
-            reason: verdict.reason,
-          });
-        } else if (verdict.reason !== 'empty') {
-          deadRef.current = true;
-          try { rec.stop(); } catch {}
-          onRejectedRef.current?.(verdict.reason);
-        }
-        // 'empty' — a cough, a door, wind. Keep listening instead of answering noise.
+      // Wait for a genuine end-of-thought pause (1.65s of quiet after speaking)
+      // instead of cutting the user off on their first breath.
+      clearTimeout(endThoughtTimer.current);
+      if (fullFinal.trim() || interim.trim()) {
+        endThoughtTimer.current = setTimeout(() => {
+          const textToCommit = `${fullFinal} ${interim}`.replace(/\s+/g, ' ').trim();
+          if (textToCommit) {
+            commitAccumulatedSpeech(textToCommit, finalConf);
+          }
+        }, END_OF_THOUGHT_PAUSE_MS);
       }
     };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Minimize2, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, Target, Gem, Keyboard, ChevronDown, ChevronUp, Minimize2, Sparkles, MapPin, NotebookPen, Route, Globe, Orbit, BookOpen, Home, Compass, Camera, Award } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { lookupMineralIntelligence, lookupTermIntelligence } from '@/lib/mindatApi';
 import useKidMode from '@/lib/useKidMode';
 import { getKidFriendlyMineral } from '@/lib/kidFriendlyData';
@@ -9,12 +9,20 @@ import CloverVoiceControls from './CloverVoiceControls.jsx';
 import CloverDailyTermQuiz from './CloverDailyTermQuiz.jsx';
 
 const QUICK_TEST_PROMPTS = [
-  { label: 'Scratch Test', prompt: 'Walk me through a quick Mohs scratch test on this specimen.' },
-  { label: 'Acid / Fizz', prompt: 'How do I run a vinegar or acid fizz test for calcite vs quartz?' },
-  { label: 'Slag vs Stone', prompt: 'How can I tell if this piece is industrial slag glass or a natural mineral?' },
-  { label: 'Streak & Heft', prompt: 'How do I check streak color and specific gravity heft in the field?' },
-  { label: 'UV Check', prompt: 'What does UV fluorescence tell me on this find?' },
-  { label: 'Hound Slang', prompt: 'Teach me a piece of rockhound field slang or slag terminology.' },
+  { label: '🪨 Scratch Test', prompt: 'Walk me through a simple scratch test on my rock.' },
+  { label: '🫧 Fizz Test', prompt: 'How do I do a vinegar fizz test for calcite vs quartz?' },
+  { label: '🔥 Slag or Real?', prompt: 'How can I tell if this is industrial slag glass or a real mineral?' },
+  { label: '⚖️ Streak & Heft', prompt: 'How do I check streak color and weight heft in the field?' },
+  { label: '🔦 UV Glow', prompt: 'What does UV blacklight glow tell me about this rock?' },
+  { label: '🗣️ Rock Slang', prompt: 'Teach me a fun piece of rockhound slang or slag terminology.' },
+];
+
+const KID_EASY_SCREENS = [
+  { to: '/', label: 'Home', icon: Home },
+  { to: '/explore', label: 'Map', icon: Compass },
+  { to: '/scan', label: 'Scan', icon: Camera },
+  { to: '/collection', label: 'My Rocks', icon: Gem },
+  { to: '/badges', label: 'Badges', icon: Award },
 ];
 
 /**
@@ -31,6 +39,8 @@ export default function CloverVoicePanel({
   const [expandedIntel, setExpandedIntel] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const isKid = useKidMode();
+  const navigate = useNavigate();
+  const location = useLocation();
   const mastery = useMemo(() => getTerminologyMastery(), [quizOpen, messages.length]);
 
   const lastMsg = messages[messages.length - 1]?.content || '';
@@ -58,7 +68,7 @@ export default function CloverVoicePanel({
         background: 'hsla(255,30%,14%,0.96)',
         border: '1px solid hsla(270,50%,55%,0.25)',
         boxShadow: '0 8px 32px -8px hsla(270,80%,40%,0.38)',
-        maxHeight: compact ? 215 : 260,
+        maxHeight: compact ? 295 : 335,
       }}
     >
       {/* Header */}
@@ -114,11 +124,40 @@ export default function CloverVoicePanel({
         </div>
       </div>
 
-      {/* Transcript */}
+      {/* Super-Easy 1-Tap Screen Switcher so even a kid can hop anywhere */}
+      <div
+        className="grid grid-cols-5 gap-1 px-2 py-1.5 border-b border-white/8"
+        role="navigation"
+        aria-label="Quick screen navigation"
+        style={{ background: 'hsla(245,28%,10%,0.65)' }}
+      >
+        {KID_EASY_SCREENS.map(({ to, label, icon: Icon }) => {
+          const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+          return (
+            <button
+              key={to}
+              type="button"
+              onClick={() => navigate(to)}
+              aria-current={active ? 'page' : undefined}
+              className="flex flex-col items-center justify-center gap-0.5 py-1 rounded-lg text-[9.5px] font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hud-cyan/60"
+              style={
+                active
+                  ? { background: 'hsla(165,80%,40%,0.25)', border: '1px solid #9FE8D0', color: '#9FE8D0' }
+                  : { background: 'hsla(250,20%,18%,0.5)', border: '1px solid hsla(0,0%,100%,0.08)', color: 'rgba(255,255,255,0.75)' }
+              }
+            >
+              <Icon size={12} />
+              <span className="leading-none truncate max-w-full">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Transcript — fixed height so Clover never shifts or jumps around while answering */}
       <div
         ref={transcriptRef}
-        className="flex-1 overflow-y-auto px-2.5 py-1.5 space-y-1.5"
-        style={{ minHeight: compact ? 52 : 72 }}
+        className="overflow-y-auto px-2.5 py-1.5 space-y-1.5"
+        style={{ height: compact ? 88 : 112 }}
       >
         {visibleMessages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>

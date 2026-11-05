@@ -111,7 +111,7 @@ export default function Hub() {
       <HubAtmosphere />
       <HudGridBackdrop />
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center gap-3.5 px-4 lg:px-10 my-auto">
+      <div className="relative z-10 w-full flex flex-col items-center justify-start gap-3.5 px-4 lg:px-10 pt-2">
         <div className="w-full flex items-center justify-center gap-4">
           {!isDesktop && <div className="hidden md:block shrink-0"><IconRail side="left" /></div>}
           <div className="flex-1 flex justify-center"><div className="relative">

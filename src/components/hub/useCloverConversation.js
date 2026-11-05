@@ -170,7 +170,13 @@ export default function useCloverConversation({
       sources = Array.isArray(data?.sources) ? data.sources : [];
       // An open Vault Galaxy flies to the record Clover answered from.
       if (data?.focus?.id) emit('vault:focus', data.focus);
-      if (data?.navigate_to && data.navigate_to !== location.pathname) {
+      // Only navigate when the user explicitly asked to go somewhere — never move
+      // screens while Clover is answering a question.
+      const isExplicitNavRequest =
+        /\b(go to|take me to|switch to|head to|open|bring up|launch)\b/i.test(text) &&
+        !/\b(what|how|why|when|where|can|could|is|are|does|do|explain|tell me)\b/i.test(text) &&
+        !String(text).trim().endsWith('?');
+      if (isExplicitNavRequest && data?.navigate_to && data.navigate_to !== location.pathname) {
         try {
           navigate(data.navigate_to);
           emitCommand(text);
@@ -200,6 +206,15 @@ export default function useCloverConversation({
     say(reply);
   }, [companion, todaysSpecimens, onFindLogged, say, location.pathname, navigate, stopSpeech, voiceStop, stopBargeIn]);
   sendRef.current = send;
+
+  // Allow vocal interruption while Clover is thinking ("before she responds")
+  // so the user can add more detail or correct themselves without waiting.
+  useEffect(() => {
+    if (phase === 'thinking' && !muted) {
+      startBargeIn();
+      return () => stopBargeIn();
+    }
+  }, [phase, muted, startBargeIn, stopBargeIn]);
 
   useEffect(() => {
     if (phase !== 'speaking') return;
