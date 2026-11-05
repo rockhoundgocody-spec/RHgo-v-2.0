@@ -88,7 +88,7 @@ export default function SpecimenCard({ specimen, index }) {
             className="w-full h-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Gem size={36} style={{ color: rarity.color, opacity: 0.4 }} />
+            <Gem size={36} style={{ color: rarity.color, opacity: 0.4 }} aria-hidden="true" />
           </div>
         )}
         {/* Holographic wash */}
@@ -135,13 +135,13 @@ export default function SpecimenCard({ specimen, index }) {
         <div className="flex items-center gap-3 text-[9px] text-white/35">
           {specimen.found_date && (
             <span className="flex items-center gap-1">
-              <Calendar size={8} />
+              <Calendar size={8} aria-hidden="true" />
               {specimen.found_date}
             </span>
           )}
           {specimen.found_at && (
             <span className="flex items-center gap-1 truncate">
-              <MapPin size={8} />
+              <MapPin size={8} aria-hidden="true" />
               {specimen.found_at}
             </span>
           )}
@@ -158,7 +158,7 @@ export default function SpecimenCard({ specimen, index }) {
             aria-label={expanded ? 'Collapse specimen lore' : 'Expand specimen lore'}
             className="flex items-center gap-1 text-[9px] uppercase tracking-[0.2em] text-white/25 hover:text-white/50 transition py-1.5 px-2 rounded-lg border border-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 motion-reduce:transition-none"
           >
-            {expanded ? <><ChevronUp size={10} /> Less</> : <><ChevronDown size={10} /> Lore</>}
+            {expanded ? <><ChevronUp size={10} aria-hidden="true" /> Less</> : <><ChevronDown size={10} aria-hidden="true" /> Lore</>}
           </button>
         </div>
 
