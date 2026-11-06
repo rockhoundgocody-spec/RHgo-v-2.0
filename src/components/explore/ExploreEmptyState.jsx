@@ -76,6 +76,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
         <div className="space-y-2">
           {nearest.map(h => (
             <button
+              aria-label={`Select hotspot: ${h.name}`}
               key={h.id}
               onClick={() => onSelectHotspot(h)}
               className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/60"
@@ -112,6 +113,7 @@ export default function ExploreEmptyState({ hotspots, userLocation, onSelectHots
       <div className="space-y-2">
         {GUIDANCE_CARDS.map(card => (
           <button
+            aria-label={card.title}
             key={card.action}
             onClick={() => onAction(card.action)}
             className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
