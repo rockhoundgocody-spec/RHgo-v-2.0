@@ -9,3 +9,9 @@
 **Learning:** Bottom sheet modals containing form controls and toggles (like `CreateListingSheet.jsx`) often lack key screen reader hooks (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`) and label associations. Non-native switches without `role="switch"` and `aria-checked` fail to communicate toggle state to assistive technologies, while missing `focus-visible` styles leave keyboard navigation invisible.
 
 **Action:** Wrap bottom sheet modals in `role="dialog"` with `aria-modal="true"` and `aria-labelledby`, hook `window.addEventListener('keydown')` for `Escape` dismissal, generate matching input/label IDs with React's `useId()`, and apply `role="switch"`, `aria-checked`, and `focus-visible` ring utility classes to custom toggle controls.
+
+## 2026-11-07 - Expedition Teaser Modal Accessibility
+
+**Learning:** Promotional gating modals (like `ExpeditionTeaserModal.jsx`) that trap focus and visually block the interface often lack native keyboard dismissal, stranding keyboard-only users who cannot easily reach the "Close" button.
+
+**Action:** When building custom modals, bottom sheets, or overlays (e.g., using framer-motion), always implement a `keydown` event listener in a `useEffect` hook to allow users to dismiss the dialog using the 'Escape' key, ensuring keyboard accessibility.
