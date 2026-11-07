@@ -5,7 +5,7 @@
  * Message: "Sign up free to plan a multi-stop expedition to find [minerals]."
  * CTA routes to /register.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Route, X, Sparkles, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -13,6 +13,15 @@ import { Link } from 'react-router-dom';
 export default function ExpeditionTeaserModal({ open, onClose, minerals = [], hotspotName = null }) {
   const topMinerals = minerals.slice(0, 3).filter(Boolean);
   const mineralText = topMinerals.join(', ');
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
