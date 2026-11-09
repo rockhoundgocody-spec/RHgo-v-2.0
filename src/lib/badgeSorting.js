@@ -1,24 +1,28 @@
+// Performance Optimization: Decorate-sort-undecorate (Schwartzian transform)
+// Precomputing sort keys in a single O(N) pass avoids repeated Set.has() calls,
+// object property lookups, and dictionary rank index searches in O(N log N) comparator executions.
 export function sortBadgesForDisplay(badges, earnedCodes, rarityFilter, rarityOrder, sortMode = 'rarity', earnedRecords = {}) {
   const rarityRank = Object.fromEntries(rarityOrder.map((rarity, index) => [rarity, index]));
   const filtered = rarityFilter === 'all'
     ? badges
     : badges.filter((badge) => badge.rarity === rarityFilter);
 
-  const earnedFirst = (a, b) => (earnedCodes.has(a.code) ? 0 : 1) - (earnedCodes.has(b.code) ? 0 : 1);
+  const decorated = filtered.map((badge) => ({
+    badge,
+    earned: earnedCodes.has(badge.code) ? 0 : 1,
+    name: badge.title || '',
+    date: earnedRecords[badge.code]?.earned_at || '',
+    rarity: rarityRank[badge.rarity] ?? -1,
+  }));
 
   if (sortMode === 'name') {
-    return [...filtered].sort((a, b) => earnedFirst(a, b) || a.title.localeCompare(b.title));
+    decorated.sort((a, b) => (a.earned - b.earned) || a.name.localeCompare(b.name));
+  } else if (sortMode === 'date') {
+    decorated.sort((a, b) => (a.earned - b.earned) || b.date.localeCompare(a.date));
+  } else {
+    // rarity (default) — highest rarity first within earned/locked groups
+    decorated.sort((a, b) => (a.earned - b.earned) || (b.rarity - a.rarity));
   }
-  if (sortMode === 'date') {
-    return [...filtered].sort((a, b) => {
-      const e = earnedFirst(a, b);
-      if (e) return e;
-      const ad = earnedRecords[a.code]?.earned_at || '';
-      const bd = earnedRecords[b.code]?.earned_at || '';
-      // most-recently-earned first; unearned fall after (handled by earnedFirst)
-      return bd.localeCompare(ad);
-    });
-  }
-  // rarity (default) — highest rarity first within earned/locked groups
-  return [...filtered].sort((a, b) => earnedFirst(a, b) || (rarityRank[b.rarity] ?? -1) - (rarityRank[a.rarity] ?? -1));
+
+  return decorated.map((d) => d.badge);
 }
