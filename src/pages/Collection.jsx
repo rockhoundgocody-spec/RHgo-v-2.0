@@ -17,6 +17,32 @@ import PullToRefresh from '@/components/nav/PullToRefresh.jsx';
 
 const RARITY_FILTERS = ['all', 'common', 'uncommon', 'rare', 'legendary'];
 
+/**
+ * Computes grid summary stats (total, unique mineral count, rare+ count) in a single O(N) pass.
+ * Optimization (Bolt): Eliminates redundant .map() and .filter() array allocations,
+ * and avoids repeated Set creation on every component render.
+ */
+export function computeGridStats(specimens = []) {
+  const seenMinerals = new Set();
+  let rarePlus = 0;
+
+  for (let i = 0; i < specimens.length; i++) {
+    const s = specimens[i];
+    if (s) {
+      seenMinerals.add(s.mineral_name);
+      if (s.rarity === 'rare' || s.rarity === 'legendary') {
+        rarePlus++;
+      }
+    }
+  }
+
+  return {
+    total: specimens.length,
+    unique: seenMinerals.size,
+    rarePlus,
+  };
+}
+
 export default function Collection() {
   const { isAuthenticated } = useAuth();
   const { data: specimens = [], isLoading: loading, refetch } = useEntityList('Specimen', '-found_date');
@@ -24,6 +50,10 @@ export default function Collection() {
   const [rarityFilter, setRarityFilter] = useState('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [query, setQuery] = useState('');
+
+  // Optimization (Bolt): Single-pass computation of grid stats memoized on specimens,
+  // eliminating multiple array allocations (.map, .filter) and Set recreation on every render.
+  const gridStats = useMemo(() => computeGridStats(specimens), [specimens]);
 
   const filtered = useMemo(() => {
     let list = specimens;
@@ -166,18 +196,18 @@ export default function Collection() {
           <GlassPanel className="mb-5">
             <div className="grid grid-cols-3 divide-x divide-white/8 text-center py-5">
               <div>
-                <div className="text-3xl font-bold text-white tabular-nums">{specimens.length}</div>
+                <div className="text-3xl font-bold text-white tabular-nums">{gridStats.total}</div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Total</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white tabular-nums">
-                  {new Set(specimens.map((s) => s.mineral_name)).size}
+                  {gridStats.unique}
                 </div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Unique</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-amethyst-glow tabular-nums">
-                  {specimens.filter((s) => s.rarity === 'rare' || s.rarity === 'legendary').length}
+                  {gridStats.rarePlus}
                 </div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 mt-1.5">Rare+</div>
               </div>
