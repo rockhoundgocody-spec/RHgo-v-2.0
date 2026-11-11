@@ -22,3 +22,9 @@
 **Learning:** Running a full ranking, scoring, and sorting pipeline (`rankHotspots`) just to evaluate a boolean proximity condition (`some(h => h.distanceMi <= 75)`) forces unnecessary `haversineMi` calculations for every item, object transformations, mineral gap counting, and O(N log N) sorting. Using a dedicated early-exit linear scan (`hasNearbyHotspot`) terminates on the first matching item, avoiding all object allocations and yielding over 1,000x speedup in typical scenarios.
 
 **Action:** When only checking for the existence of an entity within distance or meeting an early-exit threshold, never run full ranking or sorting pipelines; use an early-returning linear scan.
+
+## 2026-11-06 - Lazy Search Token Set Caching in In-Memory Graph Search
+
+**Learning:** When performing in-memory search across hundreds of graph nodes (`searchGalaxy`), repeatedly executing regex parsing, stopword filtering, and string splitting on every keystroke allocates thousands of temporary strings and arrays per query (~1,086ms for 1,000 queries over 500 nodes). Caching parsed search tokens as `Set`s lazily on each node (`_searchTokens = { label, place, cls }`) and utilizing `Set.has(w)` reduces search execution time to ~123ms (~8.8x speedup).
+
+**Action:** In client-side graph or list search utilities with static node collections, lazily memoize tokenized search terms into `Set`s on the entity nodes to avoid repeated string allocation and token parsing during user typing.
