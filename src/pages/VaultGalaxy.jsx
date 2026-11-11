@@ -85,7 +85,8 @@ export default function VaultGalaxy() {
 
   const matches = useMemo(() => searchGalaxy(graph.nodes, query), [graph, query]);
   const matchIds = useMemo(() => (query.trim() ? matches.map((n) => n.id) : null), [matches, query]);
-  const selected = selectedId ? graph.nodes.find((n) => n.id === selectedId) : null;
+  // Performance Optimization: Use O(1) byId Map lookup instead of O(N) Array.find()
+  const selected = selectedId ? (graph.byId?.get(selectedId) || graph.nodes.find((n) => n.id === selectedId) || null) : null;
 
   const focusNode = useCallback((nodeId) => {
     if (!nodeId) return;

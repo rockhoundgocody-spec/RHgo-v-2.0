@@ -63,6 +63,7 @@ describe('buildGalaxy', () => {
 
   it('maps entity ids to stars and reports classes present', () => {
     expect(g.byRef.get('s3')).toBe('find:s3');
+    expect(g.byId.get('find:s3').label).toBe('Native Copper with Limonite/Goethite');
     expect(g.groups.map((x) => x.id).sort()).toEqual(['native', 'silicate', 'sulfate']);
   });
 
@@ -81,6 +82,14 @@ describe('searchGalaxy', () => {
   });
   it('matches by mineral class', () => {
     expect(searchGalaxy(g.nodes, 'native elements').map((n) => n.id)).toContain('find:s3');
+  });
+  it('reuses lazy search tokens across searches', () => {
+    searchGalaxy(g.nodes, 'agate');
+    const node = g.nodes.find((n) => n.id === 'find:s1');
+    expect(node._searchTokens).toBeDefined();
+    expect(node._searchTokens.label.has('agate')).toBe(true);
+    // Subsequent search should yield consistent results using cached tokens
+    expect(searchGalaxy(g.nodes, 'agate')[0].id).toBe('find:s1');
   });
   it('returns nothing for filler', () => {
     expect(searchGalaxy(g.nodes, 'hey clover pull the')).toEqual([]);
