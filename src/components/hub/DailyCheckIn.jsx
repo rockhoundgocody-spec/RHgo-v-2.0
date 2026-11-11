@@ -51,13 +51,18 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         Clover has been thinking of you. <span className="text-amethyst-glow">How are you feeling today?</span>
       </p>
 
-      <div className="flex gap-2 flex-wrap mb-4">
+      <div
+        role="radiogroup"
+        aria-label="Select your mood today"
+        className="flex gap-2 flex-wrap mb-4"
+      >
         {moods.map((m) => (
           <button
             key={m.key}
             type="button"
+            role="radio"
+            aria-checked={picked === m.key}
             onClick={() => setPicked(m.key)}
-            aria-pressed={picked === m.key}
             className={`min-h-[44px] px-3.5 py-2 rounded-full border text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50 ${
               picked === m.key
                 ? 'border-amethyst-glow bg-amethyst/20 text-white'
@@ -74,6 +79,11 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         type="text"
         value={intention}
         onChange={(e) => setIntention(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && picked && !submitting) {
+            submit();
+          }
+        }}
         placeholder="One small intention for today (optional)…"
         aria-label="Daily intention"
         className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amethyst/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
@@ -83,15 +93,17 @@ export default function DailyCheckIn({ companion, onCheckedIn }) {
         type="button"
         onClick={submit}
         disabled={!picked || submitting}
+        aria-busy={submitting}
+        aria-live="polite"
         className="mt-4 w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg border border-amethyst/40 bg-amethyst/15 hover:bg-amethyst/25 disabled:opacity-40 disabled:cursor-not-allowed text-amethyst-glow text-xs uppercase tracking-[0.3em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amethyst-glow/50"
       >
         {submitting ? (
           <>
-            <Loader2 size={14} className="animate-spin" /> Resting your companion…
+            <Loader2 size={14} className="animate-spin" aria-hidden="true" /> Resting your companion…
           </>
         ) : (
           <>
-            <Check size={14} /> Check In
+            <Check size={14} aria-hidden="true" /> Check In
           </>
         )}
       </button>
